@@ -50,7 +50,7 @@ Cost: the service uses Render's smallest paid instance ($7/month) plus the 5 GB 
 ### 4. Open it
 
 1. When the deploy shows **Live**, open the address at the top of the service page (something like `https://sourcebook-xxxx.onrender.com`).
-2. Your browser asks for a username and password. Type anything as the username and your `APP_PASSWORD` as the password.
+2. A Sourcebook sign-in page appears. Enter your `APP_PASSWORD`. You stay signed in on that device for a year; **Sign out** is on the dashboard.
 3. The dashboard shows **Acornhouse** and **Spoletto** with their pieces, images and drawings. Open each and check a few items.
 
 **iPad and iPhone:** open the address in Safari, tap **Share → Add to Home Screen**, and it opens full-screen like an app.

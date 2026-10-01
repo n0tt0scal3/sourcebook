@@ -11,8 +11,13 @@ const PORT = Number(process.env.PORT) || 3000;
 const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, "data"));
 const BLOB_DIR = path.join(DATA_DIR, "blobs");
 const DB_FILE = path.join(DATA_DIR, "db.json");
-const PUBLIC_DIR = path.join(__dirname, "public");
-const SEED_DIR = path.join(__dirname, "seed");
+// Works whether files were uploaded in their folders (public/, seed/, seed/blobs/)
+// or flattened into the top level, which GitHub's web uploader sometimes does.
+const exists = f => { try { return fs.existsSync(f); } catch (_) { return false; } };
+const PUBLIC_DIR = exists(path.join(__dirname, "public", "dashboard.html")) ? path.join(__dirname, "public") : __dirname;
+const FLAT_PUBLIC = PUBLIC_DIR === __dirname;
+const PUBLIC_FILES = new Set(["index.html", "dashboard.html", "claude-shim.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"]);
+const SEED_DIR = exists(path.join(__dirname, "seed", "db.json")) ? path.join(__dirname, "seed") : exists(path.join(__dirname, "db.json")) ? __dirname : path.join(__dirname, "seed");
 // Tolerate stray spaces or quote marks pasted into the Render setting.
 const APP_PASSWORD = String(process.env.APP_PASSWORD || "").trim().replace(/^(["'])(.*)\1$/, "$2").trim();
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
@@ -47,11 +52,18 @@ try { store = JSON.parse(fs.readFileSync(DB_FILE, "utf8")); } catch (_) { store 
 // First boot: import the exported book if the store is empty.
 if (!Object.keys(store).length && fs.existsSync(path.join(SEED_DIR, "db.json"))) {
   store = JSON.parse(fs.readFileSync(path.join(SEED_DIR, "db.json"), "utf8"));
-  const seedBlobs = path.join(SEED_DIR, "blobs");
-  if (fs.existsSync(seedBlobs)) for (const f of fs.readdirSync(seedBlobs)) {
-    const dest = path.join(BLOB_DIR, f);
-    if (!fs.existsSync(dest)) fs.copyFileSync(path.join(seedBlobs, f), dest);
+  // Uploaded files may sit in seed/blobs/, in seed/, or at the top level; their names are 32-character ids.
+  const isBlobName = f => /^[0-9a-f]{32}(\.json)?$/.test(f);
+  let copied = 0;
+  for (const dir of [path.join(SEED_DIR, "blobs"), SEED_DIR, __dirname]) {
+    if (!exists(dir)) continue;
+    for (const f of fs.readdirSync(dir)) {
+      if (!isBlobName(f)) continue;
+      const dest = path.join(BLOB_DIR, f);
+      if (!exists(dest)) { fs.copyFileSync(path.join(dir, f), dest); copied++; }
+    }
   }
+  console.log(`Copied ${copied} uploaded files from the seed`);
   fs.writeFileSync(DB_FILE, JSON.stringify(store));
   console.log(`Imported ${Object.keys(store).length} documents from seed/`);
 }
@@ -327,6 +339,7 @@ const server = http.createServer(async (req, res) => {
         return send(res, 200, data, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-cache" });
       }
       let f = p === "/" ? "/dashboard.html" : p;
+      if (FLAT_PUBLIC && !PUBLIC_FILES.has(f.slice(1))) return send(res, 404, "Not found");
       const full = path.join(PUBLIC_DIR, path.normalize(f).replace(/^(\.\.[\/\\])+/, ""));
       if (!full.startsWith(PUBLIC_DIR)) return send(res, 403, "Forbidden");
       try {
@@ -340,5 +353,6 @@ const server = http.createServer(async (req, res) => {
     if (!res.headersSent) send(res, e.status || 500, { code: e.code || (e.status === 413 ? "too_large" : "upstream_error"), message: e.message });
   }
 });
+if (!exists(path.join(PUBLIC_DIR, "dashboard.html")) || !exists(path.join(PUBLIC_DIR, "index.html"))) console.error("MISSING APP FILES: dashboard.html and index.html must be in the repository (in public/ or at the top level).");
 server.listen(PORT, () => console.log(`Sourcebook running on port ${PORT} · data in ${DATA_DIR}${APP_PASSWORD ? " · password on" : " · NO PASSWORD SET"}${ANTHROPIC_API_KEY ? "" : " · Claude off (no ANTHROPIC_API_KEY)"}`));
 process.on("SIGTERM", async () => { clearTimeout(saveTimer); try { fs.writeFileSync(DB_FILE, JSON.stringify(store)); } catch (_) {} process.exit(0); });

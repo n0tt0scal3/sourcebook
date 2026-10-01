@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#EEEDEA">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sourcebook">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="icon" href="/icon-192.png">
+<title>Sourcebook · Projects</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500&family=Noto+Sans+SC:wght@400;500&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --ground:#EEEDEA; --paper:#F7F6F4; --ink:#1A1918; --ink2:#4A4744; --muted:#8A8580;
+  --rule:#D6D3CE; --rule2:#E3E1DD; --accent:#2E3A8C; --accent-soft:#E3E5F2;
+  --ok:#3C6B4A; --warn:#A5621E; --crit:#A3322B; --scrim:rgba(20,19,18,.42);
+  --s0:#B9B4AD; --s1:#2E3A8C; --s2:#3C6B4A; --s3:#A5621E; --s4:#1A1918;
+  --display:"Bodoni Moda","Didot","Bodoni 72","Noto Serif SC","Songti SC",Georgia,serif;
+  --sans:"Hanken Grotesk","Noto Sans SC","PingFang SC",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--ground:#141413;--paper:#1C1B1A;--ink:#ECEAE6;--ink2:#BDB9B3;--muted:#86817B;--rule:#34322F;--rule2:#282725;--accent:#9AA6F0;--accent-soft:#262A45;--ok:#7FB08D;--warn:#D99A5B;--crit:#E07A72;--scrim:rgba(0,0,0,.6);--s0:#55514C;--s1:#9AA6F0;--s2:#7FB08D;--s3:#D99A5B;--s4:#ECEAE6}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+:root[lang="zh-CN"] *{font-synthesis:none}
+img{max-width:100%}[hidden]{display:none!important}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1320px;margin:0 auto;padding-inline:clamp(16px,4vw,48px);padding-block:0 80px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--ground);padding:8px 16px;font-size:13px;letter-spacing:.02em}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.sm{padding:5px 11px;font-size:12px}
+.btn.danger{background:transparent;border-color:var(--crit);color:var(--crit)}
+.linkbtn{background:none;border:0;padding:0;color:var(--ink2);text-decoration:underline;text-underline-offset:3px;font-size:13px}
+
+.mast{display:grid;grid-template-columns:1fr auto;gap:12px 24px;align-items:end;padding-block:28px 18px;border-bottom:1px solid var(--ink)}
+.mast h1{font-family:var(--display);font-weight:400;font-size:clamp(44px,7vw,92px);line-height:.95;letter-spacing:-.02em;margin:6px 0 0}
+.mast h1 em{font-style:italic}
+.side{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;align-self:stretch;gap:14px}
+.langtog{display:inline-flex;border:1px solid var(--ink)}
+.langtog button{background:transparent;border:0;padding:5px 11px;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--ink2)}
+.langtog button + button{border-left:1px solid var(--ink)}
+.langtog button[aria-pressed="true"]{background:var(--ink);color:var(--ground)}
+
+.sum{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--rule)}
+.sum div{padding:14px 14px 16px 0}
+.sum div + div{padding-left:14px;border-left:1px solid var(--rule2)}
+.sum b{display:block;font-family:var(--display);font-weight:400;font-size:clamp(26px,3vw,36px);line-height:1.1;margin-top:2px}
+.sum b.crit{color:var(--crit)}
+.sum small{display:block;color:var(--muted);font-size:12px}
+
+.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;padding-block:16px;border-bottom:1px solid var(--rule)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--rule);background:transparent;border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--ink2)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--ground)}
+.search{border:0;border-bottom:1px solid var(--rule);background:transparent;padding:6px 2px;min-width:0;width:min(280px,100%)}
+.search:focus{outline:none;border-color:var(--ink)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:40px 26px;padding-top:32px}
+.pcard{position:relative;display:flex;flex-direction:column;gap:12px;color:var(--ink);text-decoration:none}
+.cover{position:relative;aspect-ratio:4/3;overflow:hidden;background:var(--rule2);display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:3px}
+.cover img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.cover .main{grid-row:1/3}
+.cover.one{grid-template-columns:1fr}
+.cover.one .main{grid-row:auto}
+.pcard:hover .cover img{transform:scale(1.035)}
+.cover .empty{grid-column:1/-1;grid-row:1/-1;display:flex;align-items:flex-end;padding:18px;font-family:var(--display);font-style:italic;font-size:22px;color:var(--muted)}
+.badge{position:absolute;left:12px;top:12px;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;background:var(--crit);color:#fff}
+.badge.soon{background:var(--warn)}
+.badge.arch{background:var(--paper);color:var(--ink)}
+.phase{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.pcard h2{font-family:var(--display);font-weight:400;font-size:30px;line-height:1.05;margin:2px 0 0;text-wrap:balance}
+.where{color:var(--ink2);font-size:13.5px;margin-top:2px}
+.stagebar{display:flex;height:6px;background:var(--rule2);overflow:hidden;margin-top:4px}
+.stagebar i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend span::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+.meta{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule);padding-top:10px}
+.meta div{display:flex;flex-direction:column}
+.meta b{font-family:var(--mono);font-weight:500;font-size:14px}
+.meta span{font-size:11.5px;color:var(--muted)}
+.foot{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted)}
+.more{position:absolute;right:10px;top:10px;width:34px;height:34px;border-radius:50%;border:0;background:var(--paper);color:var(--ink);font-size:18px;line-height:1;opacity:.9;z-index:2}
+.menu{position:absolute;right:10px;top:50px;z-index:3;background:var(--paper);border:1px solid var(--ink);box-shadow:0 12px 30px rgba(0,0,0,.18);display:flex;flex-direction:column;min-width:200px;padding:6px}
+.menu button{background:none;border:0;text-align:left;padding:9px 10px;font-size:13.5px}
+.menu button:hover{background:var(--rule2)}
+.menu .danger{color:var(--crit)}
+.menu p{margin:6px 10px;font-size:13px;color:var(--ink2);max-width:28ch}
+.menu .row{display:flex;gap:8px;padding:4px 10px 8px}
+
+.newcard{border:1px dashed var(--ink2);background:transparent;aspect-ratio:4/3;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;padding:22px;text-align:left;gap:8px}
+.newcard b{font-family:var(--display);font-weight:400;font-size:30px;line-height:1.05}
+.newcard b::before{content:"+";display:block;font-size:44px;font-weight:300;line-height:1;margin-bottom:8px}
+.newcard span{color:var(--muted);font-size:13px;max-width:32ch}
+.empty-all{grid-column:1/-1;padding:40px 0;color:var(--muted);font-family:var(--display);font-style:italic;font-size:24px}
+
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:20}
+.sheet{position:fixed;z-index:21;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--paper);padding:calc(env(safe-area-inset-top,0px) + 22px) clamp(18px,4vw,40px) 40px;overflow-y:auto;animation:rise .3s cubic-bezier(.2,.7,.2,1)}
+@keyframes rise{from{transform:translateX(24px);opacity:.3}}
+.sheet h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,4vw,48px);margin:14px 0 20px}
+.top{display:flex;justify-content:space-between;align-items:center}
+.close{background:none;border:1px solid var(--rule);width:38px;height:38px;border-radius:50%;font-size:18px}
+form{display:flex;flex-direction:column;gap:16px}
+label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted)}
+.f{border:0;border-bottom:1px solid var(--rule);background:transparent;padding:8px 2px;font-size:16px;color:var(--ink)}
+.f:focus{outline:none;border-color:var(--ink)}
+.err{color:var(--crit);font-size:13px}
+
+@media (max-width:760px){.sum{grid-template-columns:1fr 1fr}.sum div:nth-child(odd){padding-left:0;border-left:0}.sum div:nth-child(n+3){border-top:1px solid var(--rule2)}}
+@media (max-width:560px){.mast{grid-template-columns:1fr}.side{flex-direction:row-reverse;justify-content:space-between;align-items:center}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div id="layer"></div>
+<script>
+(function(){
+"use strict";
+let lang="en";try{lang=localStorage.getItem("sb_lang")==="zh"?"zh":"en"}catch(_){}
+const T={
+ zh:{"Sourcebook · Studio":"选材手册 · 工作室","Projects":"项目","New project":"新建项目","Active projects":"进行中项目","Pieces in sourcing":"采购中项目","Orders overdue":"逾期未下单","Due in 3 weeks":"三周内需下单","Quoted value":"报价总额","Active":"进行中","Archived":"已归档","All":"全部","Search projects":"搜索项目","pieces":"个项目","drawings":"张图纸","quoted (CAD)":"报价（加元）","Updated":"更新于","Open":"打开","Archive":"归档","Restore":"恢复","Delete project…":"删除项目…","Delete this project, its pieces, drawings and images? This can't be undone.":"删除此项目及其所有项目、图纸和图片？此操作无法撤销。","Delete":"删除","Cancel":"取消","overdue":"项逾期","due soon":"项即将到期","archived":"已归档","No pictures yet":"暂无图片","Start a book for a new job: its lookbook, schedules and quotation.":"为新工作建立手册：效果册、清单与报价单。","Project name":"项目名称","Client":"客户","Location":"地点","Phase":"阶段","Create project":"创建项目","Give the project a name.":"请填写项目名称。","No projects match.":"没有匹配的项目。","No archived projects.":"没有已归档的项目。","just now":"刚刚","Concept":"概念","Specified":"已定规格","Approved":"已批准","Ordered":"已下单","Delivered":"已到场","across all projects":"所有项目合计","Couldn't reach the server. Check your connection and reload.":"无法连接服务器，请检查网络后重新加载。","Project options":"项目选项","Close":"关闭","Language":"语言"}};
+const t=s=>lang==="zh"?(T.zh[s]??s):s;
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const STAGES=["Concept","Specified","Approved","Ordered","Delivered"];
+const loc=()=>lang==="zh"?"zh-CN":"en-CA";
+const money=(n,c)=>(c==="CNY"?"¥":"$")+Math.round(n||0).toLocaleString(loc());
+function ago(iso){if(!iso)return"";const s=(Date.now()-Date.parse(iso))/1000;if(s<90)return t("just now");const rt=new Intl.RelativeTimeFormat(loc(),{numeric:"auto"});if(s<3600)return rt.format(-Math.round(s/60),"minute");if(s<86400)return rt.format(-Math.round(s/3600),"hour");if(s<86400*30)return rt.format(-Math.round(s/86400),"day");return new Date(iso).toLocaleDateString(loc(),{day:"numeric",month:"short",year:"numeric"})}
+let projects=[],state={filter:"active",q:"",menu:null,confirm:null,sheet:false,err:""},failed=false;
+try{const f=localStorage.getItem("sb_dash_filter");if(f)state.filter=f}catch(_){}
+
+async function load(){
+  try{const r=await fetch("/api/projects");if(!r.ok)throw 0;projects=(await r.json()).projects;failed=false}catch(_){failed=true}
+  render();
+}
+function render(){
+  document.documentElement.lang=lang==="zh"?"zh-CN":"en";
+  const active=projects.filter(p=>!p.archived);
+  const sum=k=>active.reduce((s,p)=>s+k(p),0);
+  const cad=sum(p=>p.quote.cad),cny=sum(p=>p.quote.cny);
+  const list=projects.filter(p=>state.filter==="all"||(state.filter==="archived"?p.archived:!p.archived)).filter(p=>!state.q||[p.name,p.client,p.location,p.phase].join(" ").toLowerCase().includes(state.q.toLowerCase()));
+  document.getElementById("app").innerHTML=`
+  <header class="mast"><div><div class="eyebrow">${t("Sourcebook · Studio")}</div><h1>${lang==="zh"?"项目":"<em>Projects</em>"}</h1></div>
+    <div class="side"><div class="langtog" role="group" aria-label="${t("Language")}"><button type="button" data-lang="en" aria-pressed="${lang==="en"}">EN</button><button type="button" data-lang="zh" aria-pressed="${lang==="zh"}">中文</button></div>
+    <button class="btn" data-a="new">${t("New project")}</button></div></header>
+  ${failed?`<p class="err" style="padding-top:14px">${t("Couldn't reach the server. Check your connection and reload.")}</p>`:""}
+  <section class="sum">
+    <div><span class="eyebrow">${t("Active projects")}</span><b>${active.length}</b></div>
+    <div><span class="eyebrow">${t("Pieces in sourcing")}</span><b>${sum(p=>p.counts.items-p.stages.Delivered)}</b></div>
+    <div><span class="eyebrow">${t("Orders overdue")}</span><b class="${sum(p=>p.overdue)?"crit":""}">${sum(p=>p.overdue)}</b></div>
+    <div><span class="eyebrow">${t("Due in 3 weeks")}</span><b>${sum(p=>p.dueSoon)}</b></div>
+    <div><span class="eyebrow">${t("Quoted value")}</span><b>${money(cad,"CAD")}</b><small class="mono">${money(cny,"CNY")} · ${t("across all projects")}</small></div>
+  </section>
+  <div class="bar"><div class="chips">${["active","archived","all"].map(f=>`<button class="chip" data-f="${f}" aria-pressed="${state.filter===f}">${t(f[0].toUpperCase()+f.slice(1))}</button>`).join("")}</div>
+    <input class="search" id="q" type="search" placeholder="${t("Search projects")}" value="${esc(state.q)}"></div>
+  <div class="grid">
+    ${list.map(card).join("")}
+    ${state.filter!=="archived"?`<button class="newcard" data-a="new"><b>${t("New project")}</b><span>${t("Start a book for a new job: its lookbook, schedules and quotation.")}</span></button>`:""}
+    ${!list.length&&(state.q||state.filter==="archived")?`<div class="empty-all">${state.filter==="archived"&&!state.q?t("No archived projects."):t("No projects match.")}</div>`:""}
+  </div>`;
+  renderLayer();
+}
+function card(p){
+  const n=p.counts.items||0;const imgs=[p.cover,...p.thumbs.filter(x=>x!==p.cover)].filter(Boolean).slice(0,3);
+  const colors=["var(--s0)","var(--s1)","var(--s2)","var(--s3)","var(--s4)"];
+  const menu=state.menu===p.id;const conf=state.confirm===p.id;
+  return`<article class="pcard">
+    <a href="/p/${encodeURIComponent(p.id)}" style="color:inherit;text-decoration:none;display:flex;flex-direction:column;gap:12px">
+      <div class="cover ${imgs.length<3?"one":""}">${imgs.length?imgs.slice(0,imgs.length<3?1:3).map((a,i)=>`<img class="${i===0?"main":""}" alt="" loading="lazy" src="/_blob/${a}">`).join(""):`<span class="empty">${t("No pictures yet")}</span>`}
+        ${p.archived?`<span class="badge arch">${t("archived")}</span>`:p.overdue?`<span class="badge">${p.overdue} ${t("overdue")}</span>`:p.dueSoon?`<span class="badge soon">${p.dueSoon} ${t("due soon")}</span>`:""}</div>
+      <div><div class="phase">${esc(p.phase||"")}</div><h2>${esc(p.name)}</h2><div class="where">${esc([p.client,p.location].filter(Boolean).join(" · "))}</div></div>
+      <div class="stagebar" aria-hidden="true">${n?STAGES.map((s,i)=>p.stages[s]?`<i style="width:${p.stages[s]/n*100}%;background:${colors[i]}"></i>`:"").join(""):""}</div>
+      <div class="legend">${STAGES.map((s,i)=>p.stages[s]?`<span style="--c:${colors[i]}">${t(s)} ${p.stages[s]}</span>`:"").join("")}</div>
+      <div class="meta"><div><b>${n}</b><span>${t("pieces")}</span></div><div><b>${p.counts.drawings}</b><span>${t("drawings")}</span></div><div><b>${money(p.quote.cad,"CAD")}</b><span>${t("quoted (CAD)")}</span></div></div>
+      <div class="foot"><span>${t("Updated")} ${esc(ago(p.updated))}</span><span class="mono">${money(p.quote.cny,"CNY")}</span></div>
+    </a>
+    <button class="more" data-menu="${esc(p.id)}" aria-label="${t("Project options")}" aria-expanded="${menu}">⋯</button>
+    ${menu?`<div class="menu" role="menu">${conf?`<p>${t("Delete this project, its pieces, drawings and images? This can't be undone.")}</p><div class="row"><button class="btn danger sm" data-del="${esc(p.id)}">${t("Delete")}</button><button class="btn ghost sm" data-a="noconf">${t("Cancel")}</button></div>`
+      :`<button data-open="${esc(p.id)}">${t("Open")}</button><button data-arch="${esc(p.id)}">${p.archived?t("Restore"):t("Archive")}</button><button class="danger" data-conf="${esc(p.id)}">${t("Delete project…")}</button>`}</div>`:""}
+  </article>`;
+}
+function renderLayer(){
+  const L=document.getElementById("layer");
+  if(!state.sheet){L.innerHTML="";return}
+  if(L.innerHTML)return;
+  L.innerHTML=`<div class="scrim" data-a="close"></div><section class="sheet" role="dialog" aria-modal="true" aria-label="${t("New project")}">
+    <div class="top"><span class="eyebrow">${t("Sourcebook · Studio")}</span><button class="close" data-a="close" aria-label="${t("Close")}">×</button></div>
+    <h2>${t("New project")}</h2>
+    <form id="newp"><label>${t("Project name")}<input class="f" id="np-name" name="name" required autocomplete="off"></label>
+      <label>${t("Client")}<input class="f" id="np-client" name="client"></label>
+      <label>${t("Location")}<input class="f" id="np-loc" name="location"></label>
+      <label>${t("Phase")}<input class="f" id="np-phase" name="phase" placeholder="Schematic design"></label>
+      <p class="err" id="np-err"></p>
+      <div><button class="btn">${t("Create project")}</button></div></form></section>`;
+  setTimeout(()=>document.getElementById("np-name")?.focus(),50);
+}
+async function post(url,body){const r=await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});if(!r.ok)throw new Error("save");return r.json()}
+function slug(s){const b=String(s).toLowerCase().normalize("NFKD").replace(/[^\w]+/g,"-").replace(/^-+|-+$/g,"").slice(0,32)||"project";return b+"-"+Math.random().toString(36).slice(2,6)}
+async function createProject(f){
+  const d=Object.fromEntries(new FormData(f));const name=(d.name||"").trim();
+  if(!name){document.getElementById("np-err").textContent=t("Give the project a name.");return}
+  const id=slug(name);const now=new Date().toISOString();
+  try{
+    await post("/api/db/set",{path:`projects/${id}`,data:{created:now,archived:false}});
+    await post("/api/db/set",{path:`projects/${id}/project/main`,data:{name,client:(d.client||"").trim(),location:(d.location||"").trim(),phase:(d.phase||"").trim()}});
+    location.href="/p/"+encodeURIComponent(id);
+  }catch(_){document.getElementById("np-err").textContent=t("Couldn't reach the server. Check your connection and reload.")}
+}
+document.addEventListener("click",async e=>{
+  const el=e.target.closest("[data-a],[data-f],[data-lang],[data-menu],[data-open],[data-arch],[data-conf],[data-del]");
+  if(!el){if(state.menu&&!e.target.closest(".menu")){state.menu=null;state.confirm=null;render()}return}
+  if(el.dataset.lang){lang=el.dataset.lang;try{localStorage.setItem("sb_lang",lang)}catch(_){}render();return}
+  if(el.dataset.f){state.filter=el.dataset.f;try{localStorage.setItem("sb_dash_filter",state.filter)}catch(_){}render();return}
+  if(el.dataset.menu){e.preventDefault();state.menu=state.menu===el.dataset.menu?null:el.dataset.menu;state.confirm=null;render();return}
+  if(el.dataset.open){location.href="/p/"+encodeURIComponent(el.dataset.open);return}
+  if(el.dataset.conf){state.confirm=el.dataset.conf;render();return}
+  if(el.dataset.arch){const p=projects.find(x=>x.id===el.dataset.arch);state.menu=null;p.archived=!p.archived;render();try{await post("/api/db/update",{path:`projects/${p.id}`,data:{archived:p.archived}})}catch(_){load()}return}
+  if(el.dataset.del){const id=el.dataset.del;projects=projects.filter(x=>x.id!==id);state.menu=null;state.confirm=null;render();try{await post("/api/projects/delete",{id})}catch(_){load()}return}
+  const a=el.dataset.a;
+  if(a==="new"){state.sheet=true;renderLayer()}
+  else if(a==="close"){state.sheet=false;renderLayer()}
+  else if(a==="noconf"){state.confirm=null;render()}
+});
+document.addEventListener("submit",e=>{if(e.target.id==="newp"){e.preventDefault();createProject(e.target)}});
+document.addEventListener("input",e=>{if(e.target.id==="q"){state.q=e.target.value;const pos=e.target.selectionStart;render();const q=document.getElementById("q");q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(state.sheet){state.sheet=false;renderLayer()}else if(state.menu){state.menu=null;state.confirm=null;render()}}});
+let tmr=null;try{const es=new EventSource("/api/events");es.onmessage=()=>{clearTimeout(tmr);tmr=setTimeout(load,600)}}catch(_){}
+load();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: sourcebook
+    runtime: node
+    plan: 0.5c-512mb
+    buildCommand: echo "No build step needed"
+    startCommand: node server.js
+    healthCheckPath: /healthz
+    envVars:
+      - key: DATA_DIR
+        value: /opt/render/project/src/data
+      - key: APP_PASSWORD
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-5
+    disk:
+      name: sourcebook-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 5

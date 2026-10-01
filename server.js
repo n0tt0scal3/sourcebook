@@ -13,7 +13,8 @@ const BLOB_DIR = path.join(DATA_DIR, "blobs");
 const DB_FILE = path.join(DATA_DIR, "db.json");
 const PUBLIC_DIR = path.join(__dirname, "public");
 const SEED_DIR = path.join(__dirname, "seed");
-const APP_PASSWORD = process.env.APP_PASSWORD || "";
+// Tolerate stray spaces or quote marks pasted into the Render setting.
+const APP_PASSWORD = String(process.env.APP_PASSWORD || "").trim().replace(/^(["'])(.*)\1$/, "$2").trim();
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
 const MODELS = {
   default: process.env.ANTHROPIC_MODEL || "claude-sonnet-5",
@@ -147,13 +148,33 @@ async function readJSON(req, limit = 2 * 1024 * 1024) {
   const b = await readBody(req, limit);
   try { return JSON.parse(b.toString("utf8") || "{}"); } catch (_) { throw Object.assign(new Error("bad_json"), { status: 400 }); }
 }
+function samePass(given) {
+  const a = Buffer.from(String(given || "").trim()), b = Buffer.from(APP_PASSWORD);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+// Signed-in browsers carry a cookie derived from the password; changing the password signs everyone out.
+const SESSION = crypto.createHmac("sha256", APP_PASSWORD || "open").update("sourcebook-session-v1").digest("hex");
+function cookies(req) { return Object.fromEntries(String(req.headers.cookie || "").split(/;\s*/).filter(Boolean).map(c => { const i = c.indexOf("="); return [c.slice(0, i), decodeURIComponent(c.slice(i + 1))]; })); }
 function authorized(req) {
   if (!APP_PASSWORD) return true;
+  if (cookies(req).sb_session === SESSION) return true;
   const h = req.headers.authorization || "";
-  if (!h.startsWith("Basic ")) return false;
-  const [, pass = ""] = Buffer.from(h.slice(6), "base64").toString("utf8").split(/:(.*)/s);
-  const a = Buffer.from(pass), b = Buffer.from(APP_PASSWORD);
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
+  if (h.startsWith("Basic ")) { const s = Buffer.from(h.slice(6), "base64").toString("utf8"); return samePass(s.includes(":") ? s.slice(s.indexOf(":") + 1) : s); }
+  return false;
+}
+function loginPage(error) {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><link rel="apple-touch-icon" href="/icon-192.png"><link rel="manifest" href="/manifest.webmanifest"><title>Sign in · Sourcebook</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz@1,6..96&family=Hanken+Grotesk:wght@400;500&family=IBM+Plex+Mono&display=swap">
+<style>:root{--g:#EEEDEA;--p:#F7F6F4;--i:#1A1918;--m:#8A8580;--r:#D6D3CE;--c:#A3322B}@media(prefers-color-scheme:dark){:root{--g:#141413;--p:#1C1B1A;--i:#ECEAE6;--m:#86817B;--r:#34322F;--c:#E07A72}}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--g);color:var(--i);font:15px/1.5 "Hanken Grotesk",system-ui,sans-serif;padding:24px}
+main{width:min(380px,100%)}.e{font:11px "IBM Plex Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--m)}
+h1{font:italic 400 56px/1 "Bodoni Moda",Georgia,serif;margin:8px 0 28px}label{display:block;font-size:12px;color:var(--m)}
+input{width:100%;font:inherit;font-size:17px;color:var(--i);background:transparent;border:0;border-bottom:1px solid var(--r);padding:10px 2px;margin-top:4px}input:focus{outline:none;border-color:var(--i)}
+button{margin-top:22px;width:100%;padding:12px;font:inherit;background:var(--i);color:var(--g);border:1px solid var(--i);cursor:pointer}.err{color:var(--c);font-size:13px;margin-top:12px}</style></head>
+<body><main><div class="e">Sourcebook · Studio</div><h1>Sign in</h1>
+<form method="post" action="/login"><label for="pw">Password</label><input id="pw" name="password" type="password" autocomplete="current-password" autofocus required>
+${error ? '<p class="err">That password isn\'t right. Check it under Environment → APP_PASSWORD in Render.</p>' : ""}<button>Open Sourcebook</button></form></main></body></html>`;
 }
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".webmanifest": "application/manifest+json", ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon" };
 
@@ -190,7 +211,24 @@ const server = http.createServer(async (req, res) => {
   const p = url.pathname;
   try {
     if (p === "/healthz") return send(res, 200, "ok");
-    if (!authorized(req)) return send(res, 401, "Password required", { "WWW-Authenticate": 'Basic realm="Sourcebook", charset="UTF-8"' });
+    // Files the sign-in page and home-screen icon need before signing in
+    if (/^\/(icon-(192|512)\.png|manifest\.webmanifest)$/.test(p) && req.method === "GET") {
+      try { return send(res, 200, await fsp.readFile(path.join(PUBLIC_DIR, p)), { "Content-Type": MIME[path.extname(p)], "Cache-Control": "public, max-age=86400" }); } catch (_) { return send(res, 404, "Not found"); }
+    }
+    if (p === "/login" && req.method === "POST") {
+      const body = new URLSearchParams((await readBody(req, 10000)).toString("utf8"));
+      if (!APP_PASSWORD || samePass(body.get("password"))) {
+        res.writeHead(303, { Location: "/", "Set-Cookie": `sb_session=${SESSION}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000${req.headers["x-forwarded-proto"] === "https" ? "; Secure" : ""}` });
+        return res.end();
+      }
+      return send(res, 401, loginPage(true), { "Content-Type": "text/html; charset=utf-8" });
+    }
+    if (p === "/login") return send(res, 200, loginPage(false), { "Content-Type": "text/html; charset=utf-8" });
+    if (p === "/logout") { res.writeHead(303, { Location: "/login", "Set-Cookie": "sb_session=; Path=/; Max-Age=0" }); return res.end(); }
+    if (!authorized(req)) {
+      if (req.method === "GET" && !p.startsWith("/api/") && !p.startsWith("/_blob/")) { res.writeHead(303, { Location: "/login" }); return res.end(); }
+      return send(res, 401, { code: "not_signed_in", message: "Sign in again." });
+    }
 
     // live updates
     if (p === "/api/events") {

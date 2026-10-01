@@ -135,11 +135,18 @@ function projectSummaries() {
 
 /* ---------------- live updates (server-sent events) ---------------- */
 const clients = new Set();
+function liveUser(c) { return c.user.id === "owner" ? OWNER : people.users.find(x => x.id === c.user.id && !x.disabled) || null; }
 function broadcast(msg) {
   const line = `data: ${JSON.stringify(msg)}\n\n`;
-  for (const res of clients) { try { res.write(line); } catch (_) {} }
+  for (const c of clients) {
+    const u = liveUser(c); if (!u) continue;
+    try {
+      if (u.role !== "client") c.res.write(line);
+      else if (canRead(u, msg.path)) c.res.write(`data: ${JSON.stringify(msg.exists ? { ...msg, data: forUser(u, msg.path, msg.data) } : msg)}\n\n`);
+    } catch (_) {}
+  }
 }
-setInterval(() => { for (const res of clients) { try { res.write(": ping\n\n"); } catch (_) {} } }, 25000);
+setInterval(() => { for (const c of clients) { try { c.res.write(": ping\n\n"); } catch (_) {} } }, 25000);
 
 /* ---------------- helpers ---------------- */
 function send(res, code, body, headers = {}) {
@@ -164,15 +171,48 @@ function samePass(given) {
   const a = Buffer.from(String(given || "").trim()), b = Buffer.from(APP_PASSWORD);
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
-// Signed-in browsers carry a cookie derived from the password; changing the password signs everyone out.
-const SESSION = crypto.createHmac("sha256", APP_PASSWORD || "open").update("sourcebook-session-v1").digest("hex");
+
+/* ---------------- people and roles ---------------- */
+// admin: everything · agent: everything except managing people and deleting projects
+// client: only assigned projects, read-only apart from approvals and comments
+const ROLES = ["admin", "agent", "client"];
+const USERS_FILE = path.join(DATA_DIR, "users.json");
+let people = { secret: "", users: [] };
+try { people = JSON.parse(fs.readFileSync(USERS_FILE, "utf8")); } catch (_) {}
+if (!people.secret) { people.secret = crypto.randomBytes(32).toString("hex"); people.users = people.users || []; savePeople(); }
+function savePeople() { const tmp = USERS_FILE + ".tmp"; fs.writeFileSync(tmp, JSON.stringify(people, null, 1)); fs.renameSync(tmp, USERS_FILE); }
+function hashPass(pw, salt) { return crypto.scryptSync(String(pw), salt, 32).toString("hex"); }
+function checkPass(u, pw) { if (!u.hash || !u.salt) return false; const a = Buffer.from(hashPass(pw, u.salt), "hex"), b = Buffer.from(u.hash, "hex"); return a.length === b.length && crypto.timingSafeEqual(a, b); }
+// The studio password (APP_PASSWORD) always signs in as the owner, an admin. It's the way back in if a login is lost.
+const OWNER_VER = crypto.createHash("sha256").update("owner:" + APP_PASSWORD).digest("hex").slice(0, 12);
+const OWNER = { id: "owner", name: "Studio owner", email: "", role: "admin", projects: [] };
+const sign = v => crypto.createHmac("sha256", people.secret).update(v).digest("hex");
+function tokenFor(u) { const ver = u.id === "owner" ? OWNER_VER : String(u.ver || 0); const v = `${u.id}.${ver}`; return `${v}.${sign(v)}`; }
+const publicUser = u => ({ id: u.id, name: u.name, email: u.email, role: u.role, projects: u.projects || [] });
 function cookies(req) { return Object.fromEntries(String(req.headers.cookie || "").split(/;\s*/).filter(Boolean).map(c => { const i = c.indexOf("="); return [c.slice(0, i), decodeURIComponent(c.slice(i + 1))]; })); }
-function authorized(req) {
-  if (!APP_PASSWORD) return true;
-  if (cookies(req).sb_session === SESSION) return true;
+function currentUser(req) {
+  if (!APP_PASSWORD && !people.users.length) return OWNER; // nothing set up: open (local testing)
+  const tok = cookies(req).sb_session || "";
+  const m = tok.match(/^([A-Za-z0-9_-]{1,64})\.([0-9a-f]{1,64})\.([0-9a-f]{64})$/);
+  if (m) {
+    const v = `${m[1]}.${m[2]}`, good = Buffer.from(sign(v)), given = Buffer.from(m[3]);
+    if (good.length === given.length && crypto.timingSafeEqual(good, given)) {
+      if (m[1] === "owner") { if (APP_PASSWORD && m[2] === OWNER_VER) return OWNER; }
+      else { const u = people.users.find(x => x.id === m[1]); if (u && !u.disabled && String(u.ver || 0) === m[2]) return u; }
+    }
+  }
   const h = req.headers.authorization || "";
-  if (h.startsWith("Basic ")) { const s = Buffer.from(h.slice(6), "base64").toString("utf8"); return samePass(s.includes(":") ? s.slice(s.indexOf(":") + 1) : s); }
-  return false;
+  if (APP_PASSWORD && h.startsWith("Basic ")) { const s = Buffer.from(h.slice(6), "base64").toString("utf8"); if (samePass(s.includes(":") ? s.slice(s.indexOf(":") + 1) : s)) return OWNER; }
+  return null;
+}
+const projectOf = p => { const m = /^projects\/([^/]+)/.exec(p || ""); return m ? m[1] : null; };
+function canSeeProject(u, id) { return u.role !== "client" || (u.projects || []).includes(id); }
+function canRead(u, p) { if (u.role !== "client") return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
+// Internal fields a client never receives.
+const CLIENT_HIDDEN = ["notes"];
+function forUser(u, p, data) {
+  if (u.role !== "client" || !data || !/^projects\/[^/]+\/items\/[^/]+$/.test(p)) return data;
+  const o = { ...data }; CLIENT_HIDDEN.forEach(k => delete o[k]); return o;
 }
 function loginPage(error) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -183,10 +223,12 @@ function loginPage(error) {
 main{width:min(380px,100%)}.e{font:11px "IBM Plex Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--m)}
 h1{font:italic 400 56px/1 "Bodoni Moda",Georgia,serif;margin:8px 0 28px}label{display:block;font-size:12px;color:var(--m)}
 input{width:100%;font:inherit;font-size:17px;color:var(--i);background:transparent;border:0;border-bottom:1px solid var(--r);padding:10px 2px;margin-top:4px}input:focus{outline:none;border-color:var(--i)}
-button{margin-top:22px;width:100%;padding:12px;font:inherit;background:var(--i);color:var(--g);border:1px solid var(--i);cursor:pointer}.err{color:var(--c);font-size:13px;margin-top:12px}</style></head>
+.note{font-size:12px;color:var(--m);margin-top:18px}button{margin-top:22px;width:100%;padding:12px;font:inherit;background:var(--i);color:var(--g);border:1px solid var(--i);cursor:pointer}.err{color:var(--c);font-size:13px;margin-top:12px}</style></head>
 <body><main><div class="e">Sourcebook · Studio</div><h1>Sign in</h1>
-<form method="post" action="/login"><label for="pw">Password</label><input id="pw" name="password" type="password" autocomplete="current-password" autofocus required>
-${error ? '<p class="err">That password isn\'t right. Check it under Environment → APP_PASSWORD in Render.</p>' : ""}<button>Open Sourcebook</button></form></main></body></html>`;
+<form method="post" action="/login"><label for="em">Email</label><input id="em" name="email" type="email" autocomplete="username" autocapitalize="off" autofocus>
+<label for="pw" style="margin-top:18px">Password</label><input id="pw" name="password" type="password" autocomplete="current-password" required>
+${error ? '<p class="err">That email and password don\'t match. Studio owner: leave email blank and use the studio password.</p>' : ""}<button>Open Sourcebook</button>
+<p class="note">Studio owner: leave email blank and use the studio password.</p></form></main></body></html>`;
 }
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".webmanifest": "application/manifest+json", ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon" };
 
@@ -229,15 +271,21 @@ const server = http.createServer(async (req, res) => {
     }
     if (p === "/login" && req.method === "POST") {
       const body = new URLSearchParams((await readBody(req, 10000)).toString("utf8"));
-      if (!APP_PASSWORD || samePass(body.get("password"))) {
-        res.writeHead(303, { Location: "/", "Set-Cookie": `sb_session=${SESSION}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000${req.headers["x-forwarded-proto"] === "https" ? "; Secure" : ""}` });
+      const email = String(body.get("email") || "").trim().toLowerCase(), pw = body.get("password") || "";
+      let who = null;
+      if (!email) { if (APP_PASSWORD && samePass(pw)) who = OWNER; }
+      else { const u = people.users.find(x => x.email === email && !x.disabled); if (u && checkPass(u, pw)) who = u; else if (!u) hashPass(pw, "x"); }
+      if (who) {
+        res.writeHead(303, { Location: "/", "Set-Cookie": `sb_session=${tokenFor(who)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000${req.headers["x-forwarded-proto"] === "https" ? "; Secure" : ""}` });
         return res.end();
       }
+      await new Promise(r => setTimeout(r, 400));
       return send(res, 401, loginPage(true), { "Content-Type": "text/html; charset=utf-8" });
     }
     if (p === "/login") return send(res, 200, loginPage(false), { "Content-Type": "text/html; charset=utf-8" });
     if (p === "/logout") { res.writeHead(303, { Location: "/login", "Set-Cookie": "sb_session=; Path=/; Max-Age=0" }); return res.end(); }
-    if (!authorized(req)) {
+    const me = currentUser(req);
+    if (!me) {
       if (req.method === "GET" && !p.startsWith("/api/") && !p.startsWith("/_blob/")) { res.writeHead(303, { Location: "/login" }); return res.end(); }
       return send(res, 401, { code: "not_signed_in", message: "Sign in again." });
     }
@@ -246,18 +294,68 @@ const server = http.createServer(async (req, res) => {
     if (p === "/api/events") {
       res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive", "X-Accel-Buffering": "no" });
       res.write("retry: 3000\n\n");
-      clients.add(res); req.on("close", () => clients.delete(res));
+      const c = { res, user: me }; clients.add(c); req.on("close", () => clients.delete(c));
       return;
+    }
+
+    const deny = (msg) => send(res, 403, { code: "forbidden", message: msg || "Your role can't do that." });
+    const isAdmin = me.role === "admin", isClient = me.role === "client";
+
+    // who's signed in
+    if (p === "/api/me" && req.method === "GET") return send(res, 200, publicUser(me));
+    if (p === "/api/me/password" && req.method === "POST") {
+      const { current, next } = await readJSON(req);
+      if (me.id === "owner") return send(res, 400, { code: "invalid_argument", message: "The studio password is changed in Render (APP_PASSWORD)." });
+      if (!checkPass(me, current)) return send(res, 400, { code: "invalid_argument", message: "Your current password isn't right." });
+      if (String(next || "").length < 8) return send(res, 400, { code: "invalid_argument", message: "Use at least 8 characters." });
+      me.salt = crypto.randomBytes(16).toString("hex"); me.hash = hashPass(next, me.salt); me.ver = (me.ver || 0) + 1; savePeople();
+      res.writeHead(200, { "Content-Type": "application/json", "Set-Cookie": `sb_session=${tokenFor(me)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000${req.headers["x-forwarded-proto"] === "https" ? "; Secure" : ""}` });
+      return res.end(JSON.stringify({ ok: true }));
+    }
+
+    // people (admins only)
+    if (p.startsWith("/api/users")) {
+      if (!isAdmin) return deny("Only admins can manage people.");
+      if (p === "/api/users" && req.method === "GET") return send(res, 200, { users: people.users.map(u => ({ ...publicUser(u), created: u.created })) });
+      if (p === "/api/users/save" && req.method === "POST") {
+        const b = await readJSON(req);
+        const name = String(b.name || "").trim().slice(0, 120), email = String(b.email || "").trim().toLowerCase().slice(0, 200);
+        const role = ROLES.includes(b.role) ? b.role : null;
+        const projects = Array.isArray(b.projects) ? b.projects.filter(x => typeof x === "string" && SEG.test(x)).slice(0, 500) : [];
+        if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !role) return send(res, 400, { code: "invalid_argument", message: "Add a name, a valid email and a role." });
+        if (people.users.some(u => u.email === email && u.id !== b.id)) return send(res, 400, { code: "invalid_argument", message: "Someone already uses that email." });
+        let u = b.id ? people.users.find(x => x.id === b.id) : null;
+        if (b.id && !u) return send(res, 404, { code: "not_found" });
+        if (!u && String(b.password || "").length < 8) return send(res, 400, { code: "invalid_argument", message: "Set a password of at least 8 characters." });
+        if (b.password && String(b.password).length < 8) return send(res, 400, { code: "invalid_argument", message: "Use at least 8 characters for the password." });
+        if (u && u.id === me.id && role !== "admin") return send(res, 400, { code: "invalid_argument", message: "You can't remove your own admin role." });
+        if (!u) { u = { id: crypto.randomBytes(8).toString("hex"), created: new Date().toISOString(), ver: 0 }; people.users.push(u); }
+        const roleChanged = u.role && u.role !== role;
+        Object.assign(u, { name, email, role, projects: role === "client" ? projects : [] });
+        if (b.password) { u.salt = crypto.randomBytes(16).toString("hex"); u.hash = hashPass(b.password, u.salt); u.ver = (u.ver || 0) + 1; }
+        else if (roleChanged) u.ver = (u.ver || 0) + 1; // sign them out so the new role applies
+        savePeople();
+        return send(res, 200, { ok: true, user: publicUser(u) });
+      }
+      if (p === "/api/users/delete" && req.method === "POST") {
+        const { id } = await readJSON(req);
+        if (id === me.id) return send(res, 400, { code: "invalid_argument", message: "You can't remove yourself." });
+        people.users = people.users.filter(u => u.id !== id); savePeople();
+        return send(res, 200, { ok: true });
+      }
+      return send(res, 404, { code: "not_found" });
     }
 
     // full backup of the document store (files stay on the disk)
     if (p === "/api/export" && req.method === "GET") {
+      if (!isAdmin) return deny("Only admins can download backups.");
       return send(res, 200, JSON.stringify(store, null, 1), { "Content-Type": "application/json", "Content-Disposition": `attachment; filename="sourcebook-backup-${new Date().toISOString().slice(0, 10)}.json"` });
     }
 
     // projects
-    if (p === "/api/projects" && req.method === "GET") return send(res, 200, { projects: projectSummaries() });
+    if (p === "/api/projects" && req.method === "GET") return send(res, 200, { projects: projectSummaries().filter(x => canSeeProject(me, x.id)) });
     if (p === "/api/projects/delete" && req.method === "POST") {
+      if (!isAdmin) return deny("Only admins can delete projects. You can archive it instead.");
       const { id } = await readJSON(req);
       if (!validPath("projects/" + id, true)) return send(res, 400, { code: "invalid_argument" });
       const pre = `projects/${id}/`; let n = 0;
@@ -270,14 +368,16 @@ const server = http.createServer(async (req, res) => {
     if (p === "/api/db/doc" && req.method === "GET") {
       const dp = url.searchParams.get("path");
       if (!validPath(dp, true)) return send(res, 400, { code: "invalid_argument" });
+      if (!canRead(me, dp)) return deny();
       const d = store[dp];
-      return send(res, 200, d ? { exists: true, data: d.data, version: d.version } : { exists: false });
+      return send(res, 200, d ? { exists: true, data: forUser(me, dp, d.data), version: d.version } : { exists: false });
     }
     if (p === "/api/db/col" && req.method === "GET") {
       const cp = url.searchParams.get("path");
       if (!validPath(cp, false)) return send(res, 400, { code: "invalid_argument" });
+      if (!canRead(me, cp)) return deny();
       const depth = cp.split("/").length + 1, pre = cp + "/";
-      const docs = Object.entries(store).filter(([k]) => k.startsWith(pre) && k.split("/").length === depth).map(([k, v]) => ({ id: k.slice(pre.length), data: v.data, version: v.version }));
+      const docs = Object.entries(store).filter(([k]) => k.startsWith(pre) && k.split("/").length === depth).map(([k, v]) => ({ id: k.slice(pre.length), data: forUser(me, k, v.data), version: v.version }));
       return send(res, 200, { docs });
     }
     if (p.startsWith("/api/db/") && req.method === "POST") {
@@ -285,6 +385,43 @@ const server = http.createServer(async (req, res) => {
       const { path: dp, data } = await readJSON(req);
       if (!validPath(dp, true)) return send(res, 400, { code: "invalid_argument", message: "bad path" });
       const cur = store[dp];
+      const commit = (next) => {
+        store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: new Date().toISOString() };
+        persist(); broadcast({ path: dp, exists: true, data: next });
+        return send(res, 200, { ok: true, version: store[dp].version });
+      };
+      // Comments: anyone who can see the project may post; the author is always the signed-in person.
+      if (/^projects\/[^/]+\/comments\/[^/]+$/.test(dp)) {
+        if (!canRead(me, dp)) return deny();
+        if (op === "delete") {
+          if (cur && cur.data.by !== me.id && !isAdmin) return deny("You can only remove your own comments.");
+          if (cur) { delete store[dp]; persist(); broadcast({ path: dp, exists: false }); }
+          return send(res, 200, { ok: true });
+        }
+        if (cur && cur.data.by !== me.id) return deny("You can only edit your own comments.");
+        const text = String(data?.text || "").trim().slice(0, 4000);
+        if (!text || typeof data.itemId !== "string") return send(res, 400, { code: "invalid_argument", message: "Write a comment first." });
+        return commit({ itemId: data.itemId, text, by: me.id, name: me.name, role: me.role, at: cur?.data.at || new Date().toISOString(), ...(cur ? { edited: new Date().toISOString() } : {}) });
+      }
+      // Clients: only approve or request changes on a piece.
+      if (isClient) {
+        if (!canRead(me, dp)) return deny();
+        if (op !== "update" || !/^projects\/[^/]+\/items\/[^/]+$/.test(dp) || !cur) return deny("Clients can view, approve and comment.");
+        const keys = Object.keys(data || {});
+        if (keys.length !== 1 || keys[0] !== "clientReview") return deny("Clients can view, approve and comment.");
+        const r = data.clientReview;
+        const state = r && ["approved", "changes"].includes(r.state) ? r.state : null;
+        const next = { ...cur.data };
+        if (!state) delete next.clientReview;
+        else {
+          next.clientReview = { state, note: String(r.note || "").trim().slice(0, 2000), by: me.id, name: me.name, at: new Date().toISOString() };
+          if (state === "approved" && ["Concept", "Specified", undefined, ""].includes(next.status)) next.status = "Approved";
+        }
+        const out = commit(next);
+        return out;
+      }
+      // Agents can't remove a project from the registry (that's deleting it).
+      if (op === "delete" && /^projects\/[^/]+$/.test(dp) && !isAdmin) return deny("Only admins can delete projects.");
       if (op === "set" || op === "update") {
         if (!data || typeof data !== "object" || Array.isArray(data)) return send(res, 400, { code: "invalid_argument" });
         if (op === "update" && !cur) return send(res, 400, { code: "invalid_argument", message: "document does not exist" });
@@ -303,6 +440,7 @@ const server = http.createServer(async (req, res) => {
 
     // files
     if (p === "/api/assets" && req.method === "POST") {
+      if (isClient) return deny("Clients can't upload files.");
       const type = String(req.headers["content-type"] || "").split(";")[0].trim().toLowerCase();
       if (!ALLOWED_TYPES.has(type)) return send(res, 415, { code: "unsupported_type", message: "Use a PDF, JPG, PNG or WebP file." });
       const body = await readBody(req, MAX_UPLOAD);
@@ -327,6 +465,7 @@ const server = http.createServer(async (req, res) => {
 
     // Claude
     if (p === "/api/sample" && req.method === "POST") {
+      if (isClient) return deny("Not available for clients.");
       const body = await readJSON(req, 40 * 1024 * 1024);
       const out = await askClaude(body);
       return send(res, 200, out);
@@ -335,6 +474,7 @@ const server = http.createServer(async (req, res) => {
     // static app
     if (req.method === "GET") {
       if (/^\/p\/[A-Za-z0-9_\-.~:@+]{1,200}\/?$/.test(p)) {
+        if (!canSeeProject(me, decodeURIComponent(p.split("/")[2]))) { res.writeHead(303, { Location: "/" }); return res.end(); }
         const data = await fsp.readFile(path.join(PUBLIC_DIR, "index.html"));
         return send(res, 200, data, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-cache" });
       }
@@ -354,5 +494,5 @@ const server = http.createServer(async (req, res) => {
   }
 });
 if (!exists(path.join(PUBLIC_DIR, "dashboard.html")) || !exists(path.join(PUBLIC_DIR, "index.html"))) console.error("MISSING APP FILES: dashboard.html and index.html must be in the repository (in public/ or at the top level).");
-server.listen(PORT, () => console.log(`Sourcebook running on port ${PORT} · data in ${DATA_DIR}${APP_PASSWORD ? " · password on" : " · NO PASSWORD SET"}${ANTHROPIC_API_KEY ? "" : " · Claude off (no ANTHROPIC_API_KEY)"}`));
+server.listen(PORT, () => console.log(`Sourcebook running on port ${PORT} · data in ${DATA_DIR}${APP_PASSWORD ? " · password on" : " · NO PASSWORD SET"} · ${people.users.length} people${ANTHROPIC_API_KEY ? "" : " · Claude off (no ANTHROPIC_API_KEY)"}`));
 process.on("SIGTERM", async () => { clearTimeout(saveTimer); try { fs.writeFileSync(DB_FILE, JSON.stringify(store)); } catch (_) {} process.exit(0); });

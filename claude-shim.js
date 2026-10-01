@@ -133,8 +133,12 @@
   });
 
   /* ---------- user ---------- */
-  const user = Object.freeze({ isOwner: () => true, canEdit: () => true, can: () => true, id: async () => "owner", me: async () => ({ id: "owner", name: "" }), profiles: async () => ({}) });
+  // Who's signed in: admin, agent (sourcing agent) or client.
+  const mePromise = fetch("/api/me").then(r => r.ok ? r.json() : null).catch(() => null)
+    .then(m => { window.SOURCEBOOK_USER = m || { id: "owner", name: "", role: "admin" }; return window.SOURCEBOOK_USER; });
+  const role = () => (window.SOURCEBOOK_USER || {}).role || "admin";
+  const user = Object.freeze({ isOwner: () => role() === "admin", canEdit: () => role() !== "client", can: () => role() !== "client", role, id: async () => (await mePromise).id, me: async () => mePromise, profiles: async () => ({}) });
 
   const caps = { db, assets, sample, downloads, user };
-  window.claude = Object.freeze({ use: async name => caps[name] || null });
+  window.claude = Object.freeze({ use: async name => { await mePromise; if (role() === "client" && (name === "sample" || name === "assets")) return null; return caps[name] || null; } });
 })();

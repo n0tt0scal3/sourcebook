@@ -115,6 +115,20 @@ label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--mute
 .f{border:0;border-bottom:1px solid var(--rule);background:transparent;padding:8px 2px;font-size:16px;color:var(--ink)}
 .f:focus{outline:none;border-color:var(--ink)}
 .err{color:var(--crit);font-size:13px}
+.who{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;justify-content:flex-end;font-size:13px;color:var(--ink2)}
+.who .mono{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.hint{color:var(--muted);font-size:13px;margin:0}
+.plist{display:flex;flex-direction:column;border-top:1px solid var(--rule);margin-top:16px}
+.prow{display:flex;justify-content:space-between;gap:14px;align-items:center;text-align:left;background:none;border:0;border-bottom:1px solid var(--rule);padding:12px 2px}
+.prow>span:first-child{display:flex;flex-direction:column}.prow>span:first-child span{color:var(--muted);font-size:13px}
+.prow .mono{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);text-align:right;max-width:55%}
+.lbl{font-size:12px;color:var(--muted)}
+.rchip{flex-direction:row;align-items:center;gap:6px;color:var(--ink2);font-size:13px}.rchip input{margin:0}
+.rchip:has(input:checked){background:var(--ink);border-color:var(--ink);color:var(--ground)}
+.checks{display:flex;flex-direction:column;gap:8px;margin-top:8px;max-height:260px;overflow:auto}
+.ck{flex-direction:row;align-items:center;gap:8px;font-size:14px;color:var(--ink)}
+.row2{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--ground);padding:10px 18px;font-size:13px;z-index:40}
 
 @media (max-width:760px){.sum{grid-template-columns:1fr 1fr}.sum div:nth-child(odd){padding-left:0;border-left:0}.sum div:nth-child(n+3){border-top:1px solid var(--rule2)}}
 @media (max-width:560px){.mast{grid-template-columns:1fr}.side{flex-direction:row-reverse;justify-content:space-between;align-items:center}}
@@ -129,7 +143,7 @@ label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--mute
 "use strict";
 let lang="en";try{lang=localStorage.getItem("sb_lang")==="zh"?"zh":"en"}catch(_){}
 const T={
- zh:{"Sourcebook · Studio":"选材手册 · 工作室","Projects":"项目","New project":"新建项目","Active projects":"进行中项目","Pieces in sourcing":"采购中项目","Orders overdue":"逾期未下单","Due in 3 weeks":"三周内需下单","Quoted value":"报价总额","Active":"进行中","Archived":"已归档","All":"全部","Search projects":"搜索项目","pieces":"个项目","drawings":"张图纸","quoted (CAD)":"报价（加元）","Updated":"更新于","Open":"打开","Archive":"归档","Restore":"恢复","Delete project…":"删除项目…","Delete this project, its pieces, drawings and images? This can't be undone.":"删除此项目及其所有项目、图纸和图片？此操作无法撤销。","Delete":"删除","Cancel":"取消","overdue":"项逾期","due soon":"项即将到期","archived":"已归档","No pictures yet":"暂无图片","Start a book for a new job: its lookbook, schedules and quotation.":"为新工作建立手册：效果册、清单与报价单。","Project name":"项目名称","Client":"客户","Location":"地点","Phase":"阶段","Create project":"创建项目","Give the project a name.":"请填写项目名称。","No projects match.":"没有匹配的项目。","No archived projects.":"没有已归档的项目。","just now":"刚刚","Concept":"概念","Specified":"已定规格","Approved":"已批准","Ordered":"已下单","Delivered":"已到场","across all projects":"所有项目合计","Couldn't reach the server. Check your connection and reload.":"无法连接服务器，请检查网络后重新加载。","Project options":"项目选项","Close":"关闭","Language":"语言","Sign out":"退出登录"}};
+ zh:{"Sourcebook · Studio":"选材手册 · 工作室","Projects":"项目","New project":"新建项目","Active projects":"进行中项目","Pieces in sourcing":"采购中项目","Orders overdue":"逾期未下单","Due in 3 weeks":"三周内需下单","Quoted value":"报价总额","Active":"进行中","Archived":"已归档","All":"全部","Search projects":"搜索项目","pieces":"个项目","drawings":"张图纸","quoted (CAD)":"报价（加元）","Updated":"更新于","Open":"打开","Archive":"归档","Restore":"恢复","Delete project…":"删除项目…","Delete this project, its pieces, drawings and images? This can't be undone.":"删除此项目及其所有项目、图纸和图片？此操作无法撤销。","Delete":"删除","Cancel":"取消","overdue":"项逾期","due soon":"项即将到期","archived":"已归档","No pictures yet":"暂无图片","Start a book for a new job: its lookbook, schedules and quotation.":"为新工作建立手册：效果册、清单与报价单。","Project name":"项目名称","Client":"客户","Location":"地点","Phase":"阶段","Create project":"创建项目","Give the project a name.":"请填写项目名称。","No projects match.":"没有匹配的项目。","No archived projects.":"没有已归档的项目。","just now":"刚刚","Concept":"概念","Specified":"已定规格","Approved":"已批准","Ordered":"已下单","Delivered":"已到场","across all projects":"所有项目合计","Couldn't reach the server. Check your connection and reload.":"无法连接服务器，请检查网络后重新加载。","Project options":"项目选项","Close":"关闭","Language":"语言","Sign out":"退出登录","People":"成员","Admin":"管理员","Sourcing agent":"采购代理","Client":"客户","Add person":"添加成员","Name":"姓名","Email":"邮箱","Role":"角色","Password":"密码","New password":"新密码","Leave blank to keep the current password":"留空则保留当前密码","Projects they can see":"可查看的项目","Save":"保存","Remove":"移除","Remove this person? They'll be signed out.":"移除此成员？其将被退出登录。","Edit":"编辑","No people yet. Add your team and clients here; you can always sign in with the studio password.":"尚无成员。在此添加团队和客户；您始终可以使用工作室密码登录。","Admins manage people and can delete projects. Sourcing agents do everything else. Clients only see the projects you assign, and can approve pieces and comment.":"管理员管理成员并可删除项目。采购代理可执行其他所有操作。客户只能查看指定项目，并可批准和评论。","Change password":"修改密码","Current password":"当前密码","Password changed.":"密码已修改。","all projects":"全部项目","Signed in with the studio password":"使用工作室密码登录","Edit person":"编辑成员","Couldn't save.":"无法保存。"}};
 const t=s=>lang==="zh"?(T.zh[s]??s):s;
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const STAGES=["Concept","Specified","Approved","Ordered","Delivered"];
@@ -137,8 +151,13 @@ const loc=()=>lang==="zh"?"zh-CN":"en-CA";
 const money=(n,c)=>(c==="CNY"?"¥":"$")+Math.round(n||0).toLocaleString(loc());
 function ago(iso){if(!iso)return"";const s=(Date.now()-Date.parse(iso))/1000;if(s<90)return t("just now");const rt=new Intl.RelativeTimeFormat(loc(),{numeric:"auto"});if(s<3600)return rt.format(-Math.round(s/60),"minute");if(s<86400)return rt.format(-Math.round(s/3600),"hour");if(s<86400*30)return rt.format(-Math.round(s/86400),"day");return new Date(iso).toLocaleDateString(loc(),{day:"numeric",month:"short",year:"numeric"})}
 let projects=[],state={filter:"active",q:"",menu:null,confirm:null,sheet:false,err:""},failed=false;
+let me={id:"owner",name:"",role:"admin"},people=[];
+const ROLE={admin:"Admin",agent:"Sourcing agent",client:"Client"};
+const isAdmin=()=>me.role==="admin",isClient=()=>me.role==="client";
 try{const f=localStorage.getItem("sb_dash_filter");if(f)state.filter=f}catch(_){}
 
+async function loadMe(){try{const r=await fetch("/api/me");if(r.ok)me=await r.json()}catch(_){}}
+async function loadPeople(){try{const r=await fetch("/api/users");if(r.ok)people=(await r.json()).users}catch(_){}}
 async function load(){
   try{const r=await fetch("/api/projects");if(!r.ok)throw 0;projects=(await r.json()).projects;failed=false}catch(_){failed=true}
   render();
@@ -152,7 +171,8 @@ function render(){
   document.getElementById("app").innerHTML=`
   <header class="mast"><div><div class="eyebrow">${t("Sourcebook · Studio")}</div><h1>${lang==="zh"?"项目":"<em>Projects</em>"}</h1></div>
     <div class="side"><div class="langtog" role="group" aria-label="${t("Language")}"><button type="button" data-lang="en" aria-pressed="${lang==="en"}">EN</button><button type="button" data-lang="zh" aria-pressed="${lang==="zh"}">中文</button></div>
-    <button class="btn" data-a="new">${t("New project")}</button><a class="linkbtn" href="/logout">${t("Sign out")}</a></div></header>
+    ${isClient()?"":`<button class="btn" data-a="new">${t("New project")}</button>`}
+    <div class="who"><span>${esc(me.name||"")}</span><span class="mono">${t(ROLE[me.role]||"")}</span>${isAdmin()?`<button class="linkbtn" data-a="people">${t("People")}</button>`:""}${me.id!=="owner"?`<button class="linkbtn" data-a="pw">${t("Change password")}</button>`:""}<a class="linkbtn" href="/logout">${t("Sign out")}</a></div></div></header>
   ${failed?`<p class="err" style="padding-top:14px">${t("Couldn't reach the server. Check your connection and reload.")}</p>`:""}
   <section class="sum">
     <div><span class="eyebrow">${t("Active projects")}</span><b>${active.length}</b></div>
@@ -165,7 +185,7 @@ function render(){
     <input class="search" id="q" type="search" placeholder="${t("Search projects")}" value="${esc(state.q)}"></div>
   <div class="grid">
     ${list.map(card).join("")}
-    ${state.filter!=="archived"?`<button class="newcard" data-a="new"><b>${t("New project")}</b><span>${t("Start a book for a new job: its lookbook, schedules and quotation.")}</span></button>`:""}
+    ${state.filter!=="archived"&&!isClient()?`<button class="newcard" data-a="new"><b>${t("New project")}</b><span>${t("Start a book for a new job: its lookbook, schedules and quotation.")}</span></button>`:""}
     ${!list.length&&(state.q||state.filter==="archived")?`<div class="empty-all">${state.filter==="archived"&&!state.q?t("No archived projects."):t("No projects match.")}</div>`:""}
   </div>`;
   renderLayer();
@@ -184,13 +204,14 @@ function card(p){
       <div class="meta"><div><b>${n}</b><span>${t("pieces")}</span></div><div><b>${p.counts.drawings}</b><span>${t("drawings")}</span></div><div><b>${money(p.quote.cad,"CAD")}</b><span>${t("quoted (CAD)")}</span></div></div>
       <div class="foot"><span>${t("Updated")} ${esc(ago(p.updated))}</span><span class="mono">${money(p.quote.cny,"CNY")}</span></div>
     </a>
-    <button class="more" data-menu="${esc(p.id)}" aria-label="${t("Project options")}" aria-expanded="${menu}">⋯</button>
+    ${isClient()?"":`<button class="more" data-menu="${esc(p.id)}" aria-label="${t("Project options")}" aria-expanded="${menu}">⋯</button>
     ${menu?`<div class="menu" role="menu">${conf?`<p>${t("Delete this project, its pieces, drawings and images? This can't be undone.")}</p><div class="row"><button class="btn danger sm" data-del="${esc(p.id)}">${t("Delete")}</button><button class="btn ghost sm" data-a="noconf">${t("Cancel")}</button></div>`
-      :`<button data-open="${esc(p.id)}">${t("Open")}</button><button data-arch="${esc(p.id)}">${p.archived?t("Restore"):t("Archive")}</button><button class="danger" data-conf="${esc(p.id)}">${t("Delete project…")}</button>`}</div>`:""}
+      :`<button data-open="${esc(p.id)}">${t("Open")}</button><button data-arch="${esc(p.id)}">${p.archived?t("Restore"):t("Archive")}</button>${isAdmin()?`<button class="danger" data-conf="${esc(p.id)}">${t("Delete project…")}</button>`:""}`}</div>`:""}`}
   </article>`;
 }
 function renderLayer(){
   const L=document.getElementById("layer");
+  if(state.sheet==="people"||state.sheet==="person"||state.sheet==="pw"){L.innerHTML=otherSheet();return}
   if(!state.sheet){L.innerHTML="";return}
   if(L.innerHTML)return;
   L.innerHTML=`<div class="scrim" data-a="close"></div><section class="sheet" role="dialog" aria-modal="true" aria-label="${t("New project")}">
@@ -204,7 +225,26 @@ function renderLayer(){
       <div><button class="btn">${t("Create project")}</button></div></form></section>`;
   setTimeout(()=>document.getElementById("np-name")?.focus(),50);
 }
-async function post(url,body){const r=await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});if(!r.ok)throw new Error("save");return r.json()}
+function otherSheet(){
+  const top=`<div class="scrim" data-a="close"></div><section class="sheet" role="dialog" aria-modal="true"><div class="top"><span class="eyebrow">${t("Sourcebook · Studio")}</span><button class="close" data-a="close" aria-label="${t("Close")}">×</button></div>`;
+  if(state.sheet==="pw")return top+`<h2>${t("Change password")}</h2><form id="pwf"><label>${t("Current password")}<input class="f" type="password" name="current" autocomplete="current-password" required></label><label>${t("New password")}<input class="f" type="password" name="next" autocomplete="new-password" minlength="8" required></label><p class="err">${esc(state.err||"")}</p><div><button class="btn">${t("Save")}</button></div></form></section>`;
+  if(state.sheet==="people")return top+`<h2>${t("People")}</h2><p class="hint">${t("Admins manage people and can delete projects. Sourcing agents do everything else. Clients only see the projects you assign, and can approve pieces and comment.")}</p>
+    <div class="plist">${people.map(u=>`<button class="prow" data-person="${esc(u.id)}"><span><b>${esc(u.name)}</b><span>${esc(u.email)}</span></span><span class="mono">${t(ROLE[u.role])}${u.role==="client"?` · ${u.projects.length?u.projects.map(id=>esc((projects.find(p=>p.id===id)||{}).name||id)).join(", "):"—"}`:""}</span></button>`).join("")||`<p class="hint">${t("No people yet. Add your team and clients here; you can always sign in with the studio password.")}</p>`}</div>
+    <div style="margin-top:18px"><button class="btn" data-person="">${t("Add person")}</button></div></section>`;
+  const u=people.find(x=>x.id===state.person)||{role:"client",projects:[]};const isNew=!u.id;
+  const role=state.draftRole||u.role;
+  return top+`<h2>${isNew?t("Add person"):t("Edit person")}</h2><form id="personf">
+    <label>${t("Name")}<input class="f" name="name" value="${esc(u.name||"")}" required autocomplete="off"></label>
+    <label>${t("Email")}<input class="f" name="email" type="email" value="${esc(u.email||"")}" required autocomplete="off" autocapitalize="off"></label>
+    <div><span class="lbl">${t("Role")}</span><div class="chips" style="margin-top:6px">${["admin","agent","client"].map(r=>`<label class="chip rchip"><input type="radio" name="role" value="${r}" ${role===r?"checked":""} data-role> ${t(ROLE[r])}</label>`).join("")}</div></div>
+    <div ${role==="client"?"":"hidden"} id="projpick"><span class="lbl">${t("Projects they can see")}</span><div class="checks">${projects.map(p=>`<label class="ck"><input type="checkbox" name="projects" value="${esc(p.id)}" ${(u.projects||[]).includes(p.id)?"checked":""}> ${esc(p.name)}${p.client?` <span class="hint">· ${esc(p.client)}</span>`:""}</label>`).join("")}</div></div>
+    <label>${isNew?t("Password"):t("New password")}<input class="f" name="password" type="text" autocomplete="new-password" ${isNew?"required":""} minlength="8" placeholder="${isNew?"":t("Leave blank to keep the current password")}"></label>
+    <p class="err">${esc(state.err||"")}</p>
+    <div class="row2"><button class="btn">${t("Save")}</button><button type="button" class="btn ghost" data-a="people">${t("Cancel")}</button>${!isNew&&u.id!==me.id?(state.confirm==="u:"+u.id?`<button type="button" class="btn danger" data-deluser="${esc(u.id)}">${t("Remove")}</button>`:`<button type="button" class="linkbtn" data-a="confuser" style="margin-left:auto">${t("Remove")}</button>`):""}</div>
+    ${state.confirm==="u:"+u.id?`<p class="hint">${t("Remove this person? They'll be signed out.")}</p>`:""}
+  </form></section>`;
+}
+async function post(url,body){const r=await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.message||t("Couldn't save."));return j}
 function slug(s){const b=String(s).toLowerCase().normalize("NFKD").replace(/[^\w]+/g,"-").replace(/^-+|-+$/g,"").slice(0,32)||"project";return b+"-"+Math.random().toString(36).slice(2,6)}
 async function createProject(f){
   const d=Object.fromEntries(new FormData(f));const name=(d.name||"").trim();
@@ -217,7 +257,7 @@ async function createProject(f){
   }catch(_){document.getElementById("np-err").textContent=t("Couldn't reach the server. Check your connection and reload.")}
 }
 document.addEventListener("click",async e=>{
-  const el=e.target.closest("[data-a],[data-f],[data-lang],[data-menu],[data-open],[data-arch],[data-conf],[data-del]");
+  const el=e.target.closest("[data-a],[data-f],[data-lang],[data-menu],[data-open],[data-arch],[data-conf],[data-del],[data-person],[data-deluser]");
   if(!el){if(state.menu&&!e.target.closest(".menu")){state.menu=null;state.confirm=null;render()}return}
   if(el.dataset.lang){lang=el.dataset.lang;try{localStorage.setItem("sb_lang",lang)}catch(_){}render();return}
   if(el.dataset.f){state.filter=el.dataset.f;try{localStorage.setItem("sb_dash_filter",state.filter)}catch(_){}render();return}
@@ -226,16 +266,31 @@ document.addEventListener("click",async e=>{
   if(el.dataset.conf){state.confirm=el.dataset.conf;render();return}
   if(el.dataset.arch){const p=projects.find(x=>x.id===el.dataset.arch);state.menu=null;p.archived=!p.archived;render();try{await post("/api/db/update",{path:`projects/${p.id}`,data:{archived:p.archived}})}catch(_){load()}return}
   if(el.dataset.del){const id=el.dataset.del;projects=projects.filter(x=>x.id!==id);state.menu=null;state.confirm=null;render();try{await post("/api/projects/delete",{id})}catch(_){load()}return}
+  if(el.dataset.person!==undefined){state.person=el.dataset.person||null;state.draftRole=null;state.err="";state.confirm=null;state.sheet="person";renderLayer();return}
+  if(el.dataset.deluser){try{await post("/api/users/delete",{id:el.dataset.deluser});await loadPeople();state.sheet="people";state.confirm=null;renderLayer()}catch(err){state.err=err.message;renderLayer()}return}
   const a=el.dataset.a;
   if(a==="new"){state.sheet=true;renderLayer()}
+  else if(a==="people"){state.sheet="people";state.err="";state.confirm=null;await loadPeople();renderLayer()}
+  else if(a==="pw"){state.sheet="pw";state.err="";renderLayer()}
+  else if(a==="confuser"){state.confirm="u:"+state.person;renderLayer()}
   else if(a==="close"){state.sheet=false;renderLayer()}
   else if(a==="noconf"){state.confirm=null;render()}
 });
-document.addEventListener("submit",e=>{if(e.target.id==="newp"){e.preventDefault();createProject(e.target)}});
+document.addEventListener("submit",async e=>{
+  if(e.target.id==="newp"){e.preventDefault();createProject(e.target);return}
+  if(e.target.id==="personf"){e.preventDefault();const f=new FormData(e.target);
+    const body={id:state.person||undefined,name:f.get("name"),email:f.get("email"),role:f.get("role"),projects:f.getAll("projects"),password:f.get("password")||undefined};
+    try{await post("/api/users/save",body);await loadPeople();state.sheet="people";state.err="";renderLayer()}catch(err){state.err=err.message;const keep=Object.fromEntries(f);renderLayer();const g=document.getElementById("personf");if(g){g.name.value=keep.name||"";g.email.value=keep.email||"";g.password.value=keep.password||""}}
+    return}
+  if(e.target.id==="pwf"){e.preventDefault();const f=new FormData(e.target);
+    try{await post("/api/me/password",{current:f.get("current"),next:f.get("next")});state.sheet=false;renderLayer();alertMsg(t("Password changed."))}catch(err){state.err=err.message;renderLayer()}}
+});
+document.addEventListener("change",e=>{if(e.target.matches&&e.target.matches("[data-role]")){state.draftRole=e.target.value;const pp=document.getElementById("projpick");if(pp)pp.hidden=e.target.value!=="client"}});
+function alertMsg(m){const d=document.createElement("div");d.className="toast";d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
 document.addEventListener("input",e=>{if(e.target.id==="q"){state.q=e.target.value;const pos=e.target.selectionStart;render();const q=document.getElementById("q");q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(state.sheet){state.sheet=false;renderLayer()}else if(state.menu){state.menu=null;state.confirm=null;render()}}});
 let tmr=null;try{const es=new EventSource("/api/events");es.onmessage=()=>{clearTimeout(tmr);tmr=setTimeout(load,600)}}catch(_){}
-load();
+loadMe().then(load);
 })();
 </script>
 </body>

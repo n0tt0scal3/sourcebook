@@ -65,7 +65,11 @@ In the service's **Settings → Custom Domains**, add something like `sourcebook
 
 - **New project:** use **New project** on the dashboard. Each project gets its own address, e.g. `/p/harbour-loft-73nm`, which you can bookmark.
 - **Archive or delete:** use the ⋯ on a project card. Archived projects move to the Archived filter. Delete asks for confirmation and can't be undone.
-- **Sharing:** anyone with the address and password sees every project. See "Limits" for more.
+- **People:** admins open **People** on the dashboard to add someone with a name, email, role and starting password. They sign in with their email; each person can change their own password from the dashboard.
+  - **Admin:** everything, including managing people, deleting projects and downloading backups.
+  - **Sourcing agent:** everything else: create, edit, import, upload, read drawings, archive.
+  - **Client:** sees only the projects you tick for them; can view, approve a piece or request changes, and comment. Internal notes and the order schedule are hidden.
+- **Studio password:** leaving email blank and entering `APP_PASSWORD` always signs in as the owner (an admin). It's your way back in, so keep it private.
 
 ## Backups
 
@@ -96,14 +100,15 @@ Your data lives on the Render disk and the app's code lives in GitHub. An update
 
 | Setting | What it does |
 |---|---|
-| `APP_PASSWORD` | Password for the whole site. Leaving it empty makes the site public. Don't. |
+| `APP_PASSWORD` | Studio owner password (sign in with email left blank). Leaving it empty with no people set up makes the site public. Don't. |
 | `ANTHROPIC_API_KEY` | Enables image detection and drawing reading. |
 | `ANTHROPIC_MODEL` | Claude model used for reading images and drawings. Default `claude-sonnet-5`. |
 | `DATA_DIR` | Where data is stored. Must stay on the disk's mount path. |
 
 ## Limits
 
-- **One shared password, no individual accounts.** Everyone who signs in can see and change everything. Per-person logins would need a proper login system.
+- **Client prices are the quoted prices.** There's no separate supplier cost yet, so clients see the same unit prices as the quotation.
+- **Password resets are done by an admin** in People. There's no email "forgot password" link.
 - **One server instance.** Render disks attach to a single instance, so you can't scale out. This is fine for a studio's workload.
 - **Brief downtime on each deploy.** Render stops the old instance before starting the new one when a disk is attached, so there are a few seconds of downtime.
 - **Claude answers arrive all at once.** On this server they don't stream in, so detection shows its progress indicator until the whole answer is ready.

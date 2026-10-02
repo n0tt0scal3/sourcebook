@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#EEEDEA">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sourcebook">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="icon" href="/icon-192.png">
+<title>Sourcebook Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500&family=Noto+Sans+SC:wght@400;500&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --ground:#EEEDEA; --paper:#F7F6F4; --ink:#1A1918; --ink2:#4A4744; --muted:#8A8580;
+  --rule:#D6D3CE; --rule2:#E3E1DD; --accent:#2E3A8C; --accent-soft:#E3E5F2;
+  --ok:#3C6B4A; --warn:#A5621E; --crit:#A3322B; --scrim:rgba(20,19,18,.42);
+  --display:"Bodoni Moda","Didot","Bodoni 72","Noto Serif SC","Songti SC",Georgia,serif;
+  --sans:"Hanken Grotesk","Noto Sans SC","PingFang SC",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--ground:#141413;--paper:#1C1B1A;--ink:#ECEAE6;--ink2:#BDB9B3;--muted:#86817B;--rule:#34322F;--rule2:#282725;--accent:#9AA6F0;--accent-soft:#262A45;--ok:#7FB08D;--warn:#D99A5B;--crit:#E07A72;--scrim:rgba(0,0,0,.6)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+:root[lang="zh-CN"] *{font-synthesis:none}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1320px;margin:0 auto;padding-inline:clamp(16px,4vw,48px);padding-block:0 80px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--ground);padding:8px 16px;font-size:13px;letter-spacing:.02em}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.sm{padding:5px 11px;font-size:12px}
+.btn.danger{background:transparent;border-color:var(--crit);color:var(--crit)}
+.linkbtn{background:none;border:0;padding:0;color:var(--ink2);text-decoration:underline;text-underline-offset:3px;font-size:13px}
+.linkbtn.danger{color:var(--crit)}
+a.back{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--ink2);display:inline-block;padding:10px 12px 4px 0;margin:-10px 0 0}
+
+.mast{display:grid;grid-template-columns:1fr auto;gap:12px 24px;align-items:end;padding-block:28px 18px;border-bottom:1px solid var(--ink)}
+.mast h1{font-family:var(--display);font-weight:400;font-size:clamp(44px,7vw,92px);line-height:.95;letter-spacing:-.02em;margin:6px 0 0}
+.mast h1 em{font-style:italic}
+.side{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;align-self:stretch;gap:14px}
+.langtog{display:inline-flex;border:1px solid var(--ink)}
+.langtog button{background:transparent;border:0;padding:5px 11px;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--ink2)}
+.langtog button + button{border-left:1px solid var(--ink)}
+.langtog button[aria-pressed="true"]{background:var(--ink);color:var(--ground)}
+.who{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;justify-content:flex-end;font-size:13px;color:var(--ink2)}
+.who .mono{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+.sum{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--rule)}
+.sum div{padding:14px 14px 16px 0}
+.sum div + div{padding-left:14px;border-left:1px solid var(--rule2)}
+.sum b{display:block;font-family:var(--display);font-weight:400;font-size:clamp(26px,3vw,36px);line-height:1.1;margin-top:2px}
+
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ground);display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;justify-content:space-between;padding-block:14px;border-bottom:1px solid var(--rule)}
+.tabs{display:flex;gap:22px}
+.tab{background:none;border:0;padding:4px 0;font-size:14px;color:var(--muted);border-bottom:1px solid transparent}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.filters{display:flex;gap:10px 18px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-top:16px}
+.search{border:0;border-bottom:1px solid var(--rule);background:transparent;padding:6px 2px;min-width:0;width:min(240px,100%)}
+.search:focus{outline:none;border-color:var(--ink)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--rule);background:transparent;border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--ink2)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--ground)}
+
+/* people list */
+.people{margin-top:8px}
+.prow{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,2fr) minmax(0,1.1fr) 210px;gap:16px;align-items:center;padding:16px 0;border-bottom:1px solid var(--rule)}
+.prow.head{padding:12px 0;border-bottom:1px solid var(--ink)}
+.prow.head span{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.prow.off{opacity:.55}
+.pname{display:flex;gap:12px;align-items:center;min-width:0}
+.pname>span:last-child{display:flex;flex-direction:column;min-width:0}
+.pname b{font-weight:500}
+.pname .em{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.av{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:17px;background:var(--rule2);color:var(--ink)}
+.av.admin{background:var(--ink);color:var(--ground)}
+.av.client{background:var(--accent-soft);color:var(--accent)}
+.role{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+.access{font-size:13.5px;color:var(--ink2);min-width:0}
+.access .all{color:var(--ok)}
+.access .none{color:var(--warn)}
+.seen{font-size:12.5px;color:var(--muted)}
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border:1px solid currentColor;margin-left:6px;vertical-align:1px}
+.tag.off{color:var(--crit)}
+.tag.you{color:var(--accent)}
+.acts{display:flex;gap:8px;justify-content:flex-end}
+.owner{display:flex;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--rule);color:var(--ink2);font-size:13.5px}
+.empty{padding:36px 0;color:var(--muted);font-family:var(--display);font-style:italic;font-size:22px}
+
+/* access matrix */
+.mxwrap{overflow-x:auto;margin-top:20px;border:1px solid var(--rule);background:var(--paper)}
+table.mx{border-collapse:collapse;min-width:100%;font-size:13.5px}
+.mx th,.mx td{padding:10px 12px;border-bottom:1px solid var(--rule2);text-align:center;white-space:nowrap}
+.mx thead th{font-weight:500;vertical-align:bottom;border-bottom:1px solid var(--ink)}
+.mx thead th .role{display:block;font-size:9.5px;margin-top:2px;color:var(--muted)}
+.mx th.pj{text-align:left;position:sticky;left:0;background:var(--paper);z-index:1;min-width:200px;max-width:280px;white-space:normal}
+.mx th.pj b{font-family:var(--display);font-weight:400;font-size:18px;display:block;line-height:1.15}
+.mx th.pj span{color:var(--muted);font-size:12px}
+.mx tr.arch th.pj b{color:var(--muted)}
+.mx td.allc{color:var(--ok);font-family:var(--mono);font-size:11px;letter-spacing:.06em}
+.cell{width:28px;height:28px;border:1px solid var(--rule);background:transparent;display:inline-grid;place-items:center;font-size:15px;line-height:1;color:var(--ground)}
+.cell[aria-pressed="true"]{background:var(--ink);border-color:var(--ink)}
+.mx .allrow td{background:var(--ground)}
+.mx .allrow th{background:var(--ground)}
+.sw{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink2)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:16px;color:var(--muted);font-size:13px}
+
+/* sheets */
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:20}
+.sheet{position:fixed;z-index:21;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--paper);padding:calc(env(safe-area-inset-top,0px) + 22px) clamp(18px,4vw,40px) 40px;overflow-y:auto;animation:rise .3s cubic-bezier(.2,.7,.2,1)}
+@keyframes rise{from{transform:translateX(24px);opacity:.3}}
+.sheet h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,4vw,48px);margin:14px 0 20px}
+.top{display:flex;justify-content:space-between;align-items:center}
+.close{background:none;border:1px solid var(--rule);width:38px;height:38px;border-radius:50%;font-size:18px}
+form{display:flex;flex-direction:column;gap:18px}
+label.fl{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted)}
+.lbl{font-size:12px;color:var(--muted)}
+.f{border:0;border-bottom:1px solid var(--rule);background:transparent;padding:8px 2px;font-size:16px;color:var(--ink);width:100%}
+.f:focus{outline:none;border-color:var(--ink)}
+.pwrow{display:flex;gap:10px;align-items:flex-end}
+.pwrow .f{font-family:var(--mono);letter-spacing:.04em}
+.rchips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.rchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--ink2);cursor:pointer}
+.rchip input{margin:0}
+.rchip:has(input:checked){background:var(--ink);border-color:var(--ink);color:var(--ground)}
+.rhelp{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+.checks{display:flex;flex-direction:column;gap:8px;margin-top:8px;max-height:280px;overflow:auto;padding:2px}
+.ck{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink)}
+.ck span{color:var(--muted);font-size:12.5px}
+.toggle{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink)}
+.row2{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.err{color:var(--crit);font-size:13px;margin:0}
+.note{background:var(--ground);border:1px solid var(--rule);padding:14px 16px;font-size:13.5px;color:var(--ink2)}
+.note .pwshow{display:block;font-family:var(--mono);font-size:20px;letter-spacing:.06em;color:var(--ink);margin:8px 0;user-select:all;word-break:break-all}
+.danger-zone{border-top:1px solid var(--rule);padding-top:18px;margin-top:8px;display:flex;flex-direction:column;gap:12px}
+.danger-zone p{margin:0;font-size:13px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);background:var(--ink);color:var(--ground);padding:10px 18px;font-size:13px;z-index:40}
+
+@media (max-width:860px){
+  .prow{grid-template-columns:minmax(0,1fr) auto;gap:6px 14px}
+  .prow.head{display:none}
+  .prow .role,.prow .access,.prow .seen{grid-column:1;padding-left:50px}
+  .prow .acts{grid-column:2;grid-row:1}
+  .sum{grid-template-columns:1fr 1fr}.sum div:nth-child(odd){padding-left:0;border-left:0}.sum div:nth-child(n+3){border-top:1px solid var(--rule2)}
+}
+@media (max-width:560px){.mast{grid-template-columns:1fr}.side{flex-direction:row-reverse;justify-content:space-between;align-items:center}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div id="layer"></div>
+<script>
+(function(){
+"use strict";
+let lang="en";try{lang=localStorage.getItem("sb_lang")==="zh"?"zh":"en"}catch(_){}
+const ZH={"Sourcebook · Admin":"选材手册 · 管理","Admin":"管理","← Projects":"← 项目","Sign out":"退出登录","People":"成员","Project access":"项目权限","Add person":"添加成员","Search people":"搜索成员","All":"全部","Admins":"管理员","Sourcing agents":"采购代理","Clients":"客户","Admin":"管理员","Sourcing agent":"采购代理","Client":"客户","Name":"姓名","Role":"角色","Access":"权限","Last active":"最近活动","All projects":"全部项目","No projects yet":"尚无项目","Never signed in":"从未登录","Disabled":"已停用","You":"您","Edit":"编辑","Reset password":"重置密码","Studio owner":"工作室所有者","Signs in with the studio password (APP_PASSWORD in Render). Always an admin, so you can't be locked out.":"使用工作室密码登录（Render 中的 APP_PASSWORD）。始终为管理员，不会被锁定。","People":"成员","Active people":"活跃成员","Clients with access":"有权限的客户","Projects":"项目","No people yet. Add your team and clients.":"尚无成员。请添加团队成员和客户。","No one matches.":"没有匹配的成员。","Edit person":"编辑成员","Email":"邮箱","Password":"密码","Generate":"生成","Admins manage people and can delete projects and download backups.":"管理员管理成员，可删除项目和下载备份。","Sourcing agents create and edit projects. Choose all projects or only some.":"采购代理可创建和编辑项目，可选择全部或部分项目。","Clients only see the projects you choose. They can view, approve pieces and comment.":"客户只能查看您选择的项目，可查看、批准和评论。","Can see every project, including new ones":"可查看所有项目（包括新项目）","Projects they can see":"可查看的项目","Save":"保存","Cancel":"取消","Close":"关闭","Share this password with them. It won't be shown again.":"请将此密码告知对方，之后将不再显示。","Copy":"复制","Copied":"已复制","Done":"完成","Set a new password":"设置新密码","They'll be signed out on every device and need the new password.":"对方将在所有设备上退出，需要使用新密码登录。","Set password":"设置密码","Account":"账户","Sign out everywhere":"在所有设备上退出","Disable account":"停用账户","Enable account":"启用账户","Disabled people can't sign in. Their comments and reviews stay.":"停用后无法登录，其评论和审核会保留。","Remove person":"移除成员","Remove this person? Their comments and reviews stay, but they can't sign in again.":"移除此成员？其评论和审核会保留，但无法再登录。","Remove":"移除","Signed out on every device.":"已在所有设备上退出。","Saved":"已保存","Password updated. Share it with them.":"密码已更新，请告知对方。","Couldn't save.":"无法保存。","Tick who can open each project. Admins and agents set to all projects see everything.":"勾选可打开各项目的成员。管理员和设为全部项目的代理可查看所有内容。","always":"始终","all":"全部","Archived":"已归档","Language":"语言","Access updated":"权限已更新","No clients or limited agents yet. Add them under People.":"尚无客户或受限代理。请在成员中添加。","See all projects":"查看全部项目","just now":"刚刚","Concept":"概念"};
+const t=s=>lang==="zh"?(ZH[s]??s):s;
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const loc=()=>lang==="zh"?"zh-CN":"en-CA";
+const ROLE={admin:"Admin",agent:"Sourcing agent",client:"Client"};
+const ORDER={admin:0,agent:1,client:2};
+function ago(iso){if(!iso)return"";const s=(Date.now()-Date.parse(iso))/1000;if(s<90)return t("just now");const rt=new Intl.RelativeTimeFormat(loc(),{numeric:"auto"});if(s<3600)return rt.format(-Math.round(s/60),"minute");if(s<86400)return rt.format(-Math.round(s/3600),"hour");if(s<86400*30)return rt.format(-Math.round(s/86400),"day");return new Date(iso).toLocaleDateString(loc(),{day:"numeric",month:"short",year:"numeric"})}
+function initials(n){const p=String(n||"?").trim().split(/\s+/);return((p[0]||"?")[0]+(p.length>1?p[p.length-1][0]:"")).toUpperCase()}
+function genPassword(){const w="abcdefghjkmnpqrstuvwxyz",d="23456789";const r=n=>crypto.getRandomValues(new Uint32Array(1))[0]%n;let s="";for(let i=0;i<12;i++){s+=(i===4||i===8)?"-":(i%4===3?d[r(d.length)]:w[r(w.length)])}return s}
+
+let me={},users=[],projects=[],state={tab:"people",q:"",role:"all",sheet:null,id:null,err:"",shown:null,confirm:null,draft:null};
+try{const v=localStorage.getItem("sb_admin_tab");if(v)state.tab=v}catch(_){}
+
+async function api(url,body){const r=await fetch(url,body?{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)}:{});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.message||t("Couldn't save."));return j}
+async function load(){
+  try{const [m,u,p]=await Promise.all([api("/api/me"),api("/api/users"),api("/api/projects")]);me=m;users=u.users;projects=p.projects}catch(e){toast(e.message)}
+  render();
+}
+function toast(m){document.querySelectorAll(".toast").forEach(x=>x.remove());const d=document.createElement("div");d.className="toast";d.setAttribute("role","status");d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),2800)}
+const pname=id=>(projects.find(p=>p.id===id)||{}).name||id;
+
+function accessText(u){
+  if(u.role==="admin")return`<span class="all">${t("All projects")}</span>`;
+  if(u.role==="agent"&&u.allProjects)return`<span class="all">${t("All projects")}</span>`;
+  const ps=(u.projects||[]).filter(id=>projects.some(p=>p.id===id));
+  if(!ps.length)return`<span class="none">${t("No projects yet")}</span>`;
+  return esc(ps.map(pname).join(", "));
+}
+function render(){
+  document.documentElement.lang=lang==="zh"?"zh-CN":"en";
+  const list=users.filter(u=>state.role==="all"||u.role===state.role).filter(u=>!state.q||[u.name,u.email].join(" ").toLowerCase().includes(state.q.toLowerCase()))
+    .sort((a,b)=>(ORDER[a.role]-ORDER[b.role])||a.name.localeCompare(b.name));
+  const active=users.filter(u=>!u.disabled);
+  const clientsWith=users.filter(u=>u.role==="client"&&!u.disabled&&(u.projects||[]).some(id=>projects.some(p=>p.id===id))).length;
+  document.getElementById("app").innerHTML=`
+  <header class="mast"><div><a class="back" href="/">${t("← Projects")}</a><div class="eyebrow" style="margin-top:14px">${t("Sourcebook · Admin")}</div><h1>${lang==="zh"?"管理":"<em>Admin</em>"}</h1></div>
+    <div class="side"><div class="langtog" role="group" aria-label="${t("Language")}"><button type="button" data-lang="en" aria-pressed="${lang==="en"}">EN</button><button type="button" data-lang="zh" aria-pressed="${lang==="zh"}">中文</button></div>
+    <div class="who"><span>${esc(me.name||"")}</span><span class="mono">${t(ROLE[me.role]||"")}</span><a class="linkbtn" href="/logout">${t("Sign out")}</a></div></div></header>
+  <section class="sum">
+    <div><span class="eyebrow">${t("Active people")}</span><b>${active.length}</b></div>
+    <div><span class="eyebrow">${t("Sourcing agents")}</span><b>${active.filter(u=>u.role==="agent").length}</b></div>
+    <div><span class="eyebrow">${t("Clients with access")}</span><b>${clientsWith}</b></div>
+    <div><span class="eyebrow">${t("Projects")}</span><b>${projects.filter(p=>!p.archived).length}</b></div>
+  </section>
+  <div class="bar"><div class="tabs" role="tablist">${[["people","People"],["access","Project access"]].map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${state.tab===k}">${t(l)}</button>`).join("")}</div>
+    <button class="btn" data-a="add">${t("Add person")}</button></div>
+  ${state.tab==="people"?`<div class="filters"><div class="chips">${[["all","All"],["admin","Admins"],["agent","Sourcing agents"],["client","Clients"]].map(([k,l])=>`<button class="chip" data-role="${k}" aria-pressed="${state.role===k}">${t(l)}</button>`).join("")}</div><input class="search" id="q" type="search" placeholder="${t("Search people")}" value="${esc(state.q)}"></div>`:""}
+  ${state.tab==="people"?peopleView(list):accessView()}`;
+  renderLayer();
+}
+function peopleView(list){
+  return`<div class="people">
+    <div class="owner"><span class="av admin">★</span><span><b style="color:var(--ink)">${t("Studio owner")}</b>${me.id==="owner"?`<span class="tag you">${t("You")}</span>`:""}<br>${t("Signs in with the studio password (APP_PASSWORD in Render). Always an admin, so you can't be locked out.")}</span></div>
+    ${list.length?`<div class="prow head"><span>${t("Name")}</span><span>${t("Role")}</span><span>${t("Access")}</span><span>${t("Last active")}</span><span></span></div>`:""}
+    ${list.map(u=>`<div class="prow ${u.disabled?"off":""}">
+      <div class="pname"><span class="av ${u.role}">${esc(initials(u.name))}</span><span><b>${esc(u.name)}${u.id===me.id?`<span class="tag you">${t("You")}</span>`:""}${u.disabled?`<span class="tag off">${t("Disabled")}</span>`:""}</b><span class="em">${esc(u.email)}</span></span></div>
+      <span class="role">${t(ROLE[u.role])}</span>
+      <span class="access">${accessText(u)}</span>
+      <span class="seen">${u.lastSeen?esc(ago(u.lastSeen)):t("Never signed in")}</span>
+      <span class="acts"><button class="btn ghost sm" data-pw="${esc(u.id)}">${t("Reset password")}</button><button class="btn sm" data-edit="${esc(u.id)}">${t("Edit")}</button></span>
+    </div>`).join("")}
+    ${!list.length?`<div class="empty">${users.length?t("No one matches."):t("No people yet. Add your team and clients.")}</div>`:""}
+  </div>`;
+}
+function accessView(){
+  const cols=users.filter(u=>!u.disabled&&u.role!=="admin").sort((a,b)=>(ORDER[a.role]-ORDER[b.role])||a.name.localeCompare(b.name));
+  if(!cols.length)return`<p class="legend">${t("Tick who can open each project. Admins and agents set to all projects see everything.")}</p><div class="empty">${t("No clients or limited agents yet. Add them under People.")}</div>`;
+  const ps=projects.slice().sort((a,b)=>(a.archived-b.archived)||a.name.localeCompare(b.name));
+  return`<p class="legend">${t("Tick who can open each project. Admins and agents set to all projects see everything.")}</p>
+  <div class="mxwrap"><table class="mx"><thead><tr><th class="pj"><span class="eyebrow">${t("Projects")}</span></th>${cols.map(u=>`<th scope="col">${esc(u.name)}<span class="role">${t(ROLE[u.role])}</span></th>`).join("")}</tr></thead><tbody>
+    <tr class="allrow"><th class="pj" scope="row"><span>${t("See all projects")}</span></th>${cols.map(u=>u.role==="agent"?`<td><button class="cell" data-all="${esc(u.id)}" aria-pressed="${!!u.allProjects}" aria-label="${esc(u.name)}: ${t("All projects")}">${u.allProjects?"✓":""}</button></td>`:`<td class="muted">—</td>`).join("")}</tr>
+    ${ps.map(p=>`<tr class="${p.archived?"arch":""}"><th class="pj" scope="row"><b>${esc(p.name)}</b><span>${esc([p.client,p.archived?t("Archived"):""].filter(Boolean).join(" · "))}</span></th>${cols.map(u=>{
+      if(u.role==="agent"&&u.allProjects)return`<td class="allc">${t("all")}</td>`;
+      const on=(u.projects||[]).includes(p.id);return`<td><button class="cell" data-cell="${esc(u.id)}" data-proj="${esc(p.id)}" aria-pressed="${on}" aria-label="${esc(u.name)} · ${esc(p.name)}">${on?"✓":""}</button></td>`}).join("")}</tr>`).join("")}
+  </tbody></table></div>`;
+}
+
+/* ---------- sheets ---------- */
+function renderLayer(){
+  const L=document.getElementById("layer");
+  if(!state.sheet){L.innerHTML="";document.body.style.overflow="";return}
+  document.body.style.overflow="hidden";
+  const top=`<div class="scrim" data-a="close"></div><section class="sheet" role="dialog" aria-modal="true"><div class="top"><span class="eyebrow">${t("Sourcebook · Admin")}</span><button class="close" data-a="close" aria-label="${t("Close")}">×</button></div>`;
+  if(state.shown){L.innerHTML=top+`<h2>${esc(state.shown.title)}</h2><div class="note">${t("Share this password with them. It won't be shown again.")}<span class="pwshow" id="pwshow">${esc(state.shown.pw)}</span><span class="mono">${esc(state.shown.email)}</span></div><div class="row2" style="margin-top:18px"><button class="btn" data-a="copy">${t("Copy")}</button><button class="btn ghost" data-a="close">${t("Done")}</button></div></section>`;return}
+  const u=users.find(x=>x.id===state.id);
+  if(state.sheet==="pw"&&u){L.innerHTML=top+`<h2>${t("Reset password")}</h2><p class="muted" style="margin-top:-8px">${esc(u.name)} · ${esc(u.email)}</p>
+    <form id="pwf"><label class="fl">${t("Set a new password")}<div class="pwrow"><input class="f" id="np" name="password" autocomplete="new-password" minlength="8" required value="${esc(state.draft||genPassword())}"><button type="button" class="btn ghost sm" data-a="gen">${t("Generate")}</button></div></label>
+    <p class="rhelp">${t("They'll be signed out on every device and need the new password.")}</p><p class="err">${esc(state.err)}</p>
+    <div class="row2"><button class="btn">${t("Set password")}</button><button type="button" class="btn ghost" data-a="close">${t("Cancel")}</button></div></form></section>`;return}
+  if(state.sheet!=="edit")return;
+  const isNew=!u;const d=state.form||{role:u?u.role:"client",allProjects:u?u.allProjects:true,projects:u?(u.projects||[]):[]};state.form=d;
+  const roleHelp={admin:"Admins manage people and can delete projects and download backups.",agent:"Sourcing agents create and edit projects. Choose all projects or only some.",client:"Clients only see the projects you choose. They can view, approve pieces and comment."}[d.role];
+  const showPick=d.role==="client"||(d.role==="agent"&&!d.allProjects);
+  L.innerHTML=top+`<h2>${isNew?t("Add person"):t("Edit person")}</h2>
+  <form id="uf">
+    <label class="fl">${t("Name")}<input class="f" name="name" value="${esc(d.name??(u?u.name:""))}" required autocomplete="off"></label>
+    <label class="fl">${t("Email")}<input class="f" name="email" type="email" value="${esc(d.email??(u?u.email:""))}" required autocomplete="off" autocapitalize="off"></label>
+    <div><span class="lbl">${t("Role")}</span><div class="rchips">${["admin","agent","client"].map(r=>`<label class="rchip"><input type="radio" name="role" value="${r}" ${d.role===r?"checked":""} ${u&&u.id===me.id&&r!=="admin"?"disabled":""}> ${t(ROLE[r])}</label>`).join("")}</div><p class="rhelp">${t(roleHelp)}</p></div>
+    ${d.role==="agent"?`<label class="toggle"><input type="checkbox" name="allProjects" ${d.allProjects?"checked":""}> ${t("Can see every project, including new ones")}</label>`:""}
+    ${showPick?`<div><span class="lbl">${t("Projects they can see")}</span><div class="checks">${projects.slice().sort((a,b)=>(a.archived-b.archived)||a.name.localeCompare(b.name)).map(p=>`<label class="ck"><input type="checkbox" name="projects" value="${esc(p.id)}" ${d.projects.includes(p.id)?"checked":""}> ${esc(p.name)}${p.client||p.archived?` <span>· ${esc([p.client,p.archived?t("Archived"):""].filter(Boolean).join(" · "))}</span>`:""}</label>`).join("")}</div></div>`:""}
+    ${isNew?`<label class="fl">${t("Password")}<div class="pwrow"><input class="f" id="np" name="password" autocomplete="new-password" minlength="8" required value="${esc(d.password??genPassword())}"><button type="button" class="btn ghost sm" data-a="gen">${t("Generate")}</button></div></label>`:""}
+    <p class="err">${esc(state.err)}</p>
+    <div class="row2"><button class="btn">${t("Save")}</button><button type="button" class="btn ghost" data-a="close">${t("Cancel")}</button></div>
+    ${!isNew&&u.id!==me.id?`<div class="danger-zone"><span class="lbl">${t("Account")}</span>
+      <div class="row2"><button type="button" class="btn ghost sm" data-a="signout">${t("Sign out everywhere")}</button><button type="button" class="btn ghost sm" data-a="toggleoff">${u.disabled?t("Enable account"):t("Disable account")}</button></div>
+      <p>${t("Disabled people can't sign in. Their comments and reviews stay.")}</p>
+      ${state.confirm==="del"?`<p>${t("Remove this person? Their comments and reviews stay, but they can't sign in again.")}</p><div class="row2"><button type="button" class="btn danger sm" data-a="del">${t("Remove")}</button><button type="button" class="btn ghost sm" data-a="nodel">${t("Cancel")}</button></div>`:`<div><button type="button" class="linkbtn danger" data-a="askdel">${t("Remove person")}</button></div>`}
+    </div>`:""}
+  </form></section>`;
+}
+function readForm(){const f=document.getElementById("uf");if(!f)return;const fd=new FormData(f);const d=state.form;
+  d.name=fd.get("name");d.email=fd.get("email");d.role=fd.get("role")||d.role;if(f.allProjects)d.allProjects=f.allProjects.checked;
+  if(f.querySelector('[name="projects"]'))d.projects=fd.getAll("projects");if(fd.has("password"))d.password=fd.get("password")}
+
+document.addEventListener("click",async e=>{
+  const el=e.target.closest("[data-a],[data-tab],[data-role],[data-lang],[data-edit],[data-pw],[data-cell],[data-all]");if(!el)return;
+  if(el.dataset.lang){lang=el.dataset.lang;try{localStorage.setItem("sb_lang",lang)}catch(_){}render();return}
+  if(el.dataset.tab){state.tab=el.dataset.tab;try{localStorage.setItem("sb_admin_tab",state.tab)}catch(_){}render();return}
+  if(el.dataset.role&&!el.closest("form")){state.role=el.dataset.role;render();return}
+  if(el.dataset.edit){Object.assign(state,{sheet:"edit",id:el.dataset.edit,err:"",confirm:null,form:null,shown:null});renderLayer();return}
+  if(el.dataset.pw){Object.assign(state,{sheet:"pw",id:el.dataset.pw,err:"",draft:genPassword(),shown:null});renderLayer();return}
+  if(el.dataset.cell){const u=users.find(x=>x.id===el.dataset.cell);const p=el.dataset.proj;const on=el.getAttribute("aria-pressed")!=="true";
+    u.projects=on?[...new Set([...(u.projects||[]),p])]:(u.projects||[]).filter(x=>x!==p);render();
+    try{const r=await api("/api/users/access",{id:u.id,project:p,on});Object.assign(u,r.user);toast(t("Access updated"))}catch(err){toast(err.message);load()}return}
+  if(el.dataset.all){const u=users.find(x=>x.id===el.dataset.all);u.allProjects=!u.allProjects;render();
+    try{const r=await api("/api/users/access",{id:u.id,allProjects:u.allProjects});Object.assign(u,r.user);toast(t("Access updated"))}catch(err){toast(err.message);load()}return}
+  const a=el.dataset.a;
+  if(a==="add"){Object.assign(state,{sheet:"edit",id:null,err:"",confirm:null,form:null,shown:null});renderLayer()}
+  else if(a==="close"){Object.assign(state,{sheet:null,shown:null,form:null,confirm:null});renderLayer()}
+  else if(a==="gen"){const i=document.getElementById("np");if(i){i.value=genPassword();i.focus();i.select()}}
+  else if(a==="copy"){try{await navigator.clipboard.writeText(state.shown.pw);toast(t("Copied"))}catch(_){const r=document.createRange();r.selectNodeContents(document.getElementById("pwshow"));const s=getSelection();s.removeAllRanges();s.addRange(r)}}
+  else if(a==="askdel"){readForm();state.confirm="del";renderLayer()}
+  else if(a==="nodel"){readForm();state.confirm=null;renderLayer()}
+  else if(a==="del"){try{await api("/api/users/delete",{id:state.id});users=users.filter(x=>x.id!==state.id);Object.assign(state,{sheet:null,form:null,confirm:null});render()}catch(err){state.err=err.message;renderLayer()}}
+  else if(a==="signout"){try{await api("/api/users/signout",{id:state.id});toast(t("Signed out on every device."))}catch(err){toast(err.message)}}
+  else if(a==="toggleoff"){readForm();const u=users.find(x=>x.id===state.id);try{const r=await api("/api/users/save",{id:u.id,name:u.name,email:u.email,role:u.role,allProjects:u.allProjects,disabled:!u.disabled});Object.assign(u,r.user);render()}catch(err){state.err=err.message;renderLayer()}}
+});
+document.addEventListener("change",e=>{
+  if(e.target.closest&&e.target.closest("#uf")&&(e.target.name==="role"||e.target.name==="allProjects")){readForm();renderLayer()}
+});
+document.addEventListener("submit",async e=>{
+  e.preventDefault();
+  if(e.target.id==="uf"){readForm();const d=state.form;const u=users.find(x=>x.id===state.id);
+    const body={id:u?u.id:undefined,name:d.name,email:d.email,role:d.role,allProjects:d.role==="agent"?!!d.allProjects:undefined,projects:d.projects,password:u?undefined:d.password};
+    try{const r=await api("/api/users/save",body);
+      if(u)Object.assign(u,r.user);else users.push(r.user);
+      if(!u){state.shown={title:r.user.name,pw:d.password,email:r.user.email};state.form=null;render()}else{Object.assign(state,{sheet:null,form:null});render();toast(t("Saved"))}
+    }catch(err){state.err=err.message;renderLayer()}
+  }
+  if(e.target.id==="pwf"){const pw=new FormData(e.target).get("password");const u=users.find(x=>x.id===state.id);
+    try{await api("/api/users/password",{id:u.id,password:pw});state.shown={title:t("Password updated. Share it with them."),pw,email:u.email};renderLayer()}catch(err){state.draft=pw;state.err=err.message;renderLayer()}}
+});
+document.addEventListener("input",e=>{if(e.target.id==="q"){state.q=e.target.value;const pos=e.target.selectionStart;render();const q=document.getElementById("q");q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&state.sheet){Object.assign(state,{sheet:null,shown:null,form:null});renderLayer()}});
+load();
+})();
+</script>
+</body>
+</html>

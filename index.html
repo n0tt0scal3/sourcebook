@@ -258,6 +258,30 @@ textarea.f{resize:vertical;min-height:70px;border:1px solid var(--rule);padding:
 .sheet .hero .drophint{align-self:center;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--ink2);background:var(--paper);padding:4px 8px;opacity:.85}
 /* projects */
 .tabproj{font-weight:500}
+.model3d header .mono{font-size:11px;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mvbox{position:relative;aspect-ratio:4/3;background:radial-gradient(120% 90% at 50% 35%,#FBFAF8 0%,#ECEAE6 62%,#DEDBD5 100%);border:1px solid var(--rule);margin-top:10px;overflow:hidden}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .mvbox,:root:not([data-theme="light"]) #mvfull{background:radial-gradient(120% 90% at 50% 35%,#34322F 0%,#1F1E1C 65%,#151413 100%)}}
+.mvbox model-viewer,#mvfull model-viewer{width:100%;height:100%;display:block;--poster-color:transparent;background:transparent}
+.mvhint{position:absolute;left:12px;bottom:10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--muted);pointer-events:none}
+.mvfull{position:absolute;right:10px;top:10px;width:36px;height:36px;border-radius:50%;border:1px solid var(--rule);background:var(--paper);color:var(--ink);font-size:17px;line-height:1;z-index:2}
+.mvar{position:absolute;right:10px;bottom:10px;background:var(--ink);color:var(--ground);border:0;padding:7px 14px;font-size:12.5px}
+.mvprog{display:none}
+.mvtools{margin-top:10px;gap:16px}.linkbtn.danger{color:var(--crit)}
+.mvempty{display:flex;gap:16px;align-items:center;border:1px dashed var(--ink2);padding:22px 20px;margin-top:10px;cursor:pointer}
+.mvempty>span:last-child{display:flex;flex-direction:column;gap:2px}.mvempty b{font-family:var(--display);font-weight:400;font-size:22px}
+.mvempty.busy{cursor:default;border-style:solid;border-color:var(--rule)}
+.cube{flex:none;width:34px;height:34px;border:1.5px solid var(--ink2);transform:rotate(45deg) skew(-8deg,-8deg);opacity:.7}
+.spin{flex:none;width:22px;height:22px;border:2px solid var(--rule);border-top-color:var(--ink);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+[data-mdrop].imgdrop .mvempty,[data-mdrop].imgdrop .mvbox{outline:2px solid var(--accent);outline-offset:2px}
+.b3d{position:absolute;right:10px;bottom:10px;background:var(--paper);color:var(--ink);font-size:10.5px;letter-spacing:.08em;padding:3px 7px;border:1px solid var(--ink)}
+.hero3d{position:absolute;right:14px;top:14px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);padding:7px 14px;font-size:13px;z-index:2}
+#mvfull{position:fixed;inset:0;z-index:90;background:radial-gradient(120% 90% at 50% 40%,#FBFAF8 0%,#ECEAE6 60%,#D9D5CF 100%);display:flex;flex-direction:column;animation:fade .2s ease}
+#mvfull model-viewer{flex:1;min-height:0}
+.mvftop{display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 16px) clamp(16px,4vw,40px) 6px;color:var(--ink)}
+.mvftop>span{display:flex;flex-direction:column}.mvftop b{font-family:var(--display);font-weight:400;font-size:clamp(24px,3vw,36px)}
+#mvfull .mvhint{left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 16px)}
+#mvfull .mvar{right:auto;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 44px);padding:10px 20px;font-size:14px}
 .whoami{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;justify-content:flex-end;font-size:13px;color:var(--ink2)}
 .whoami .mono{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .rv{font-size:11.5px;letter-spacing:.02em}.rv.ok{color:var(--ok)}.rv.chg{color:var(--warn)}
@@ -1390,6 +1414,7 @@ function dropZone(el){
   if(sheet){
     if(ui.img||ui.detOpen||ui.importOpen||ui.editProject||ui.newProj)return null;
     if(ui.open==="new"||ui.mode==="edit"){const z=el.closest(".sheet .hero, .sheet .photofield");return z?{el:sheet.querySelector(".hero")||z,kind:"form"}:null}
+    const md=el.closest(".sheet [data-mdrop]");if(md&&ui.open)return{el:md,kind:"piece",id:ui.open};
     const h=el.closest(".sheet .hero");return h&&ui.open?{el:h,kind:"piece",id:ui.open}:null;
   }
   const c=el.closest(".card[data-open], .fincard[data-open]");if(c)return{el:c.querySelector(".plate, .finimg")||c,kind:"piece",id:c.dataset.open};
@@ -1410,6 +1435,8 @@ document.addEventListener("drop",e=>{
   if(e.target.closest&&e.target.closest("#drawsec,#gal-drop,#start-drop,.pick.add,#imp-drop"))return;
   e.preventDefault();hl(null);
   const z=dropZone(e.target);if(!z)return;
+  const mf=[...e.dataTransfer.files].find(isModelFile);
+  if(mf){if(z.kind==="piece"&&HOSTED&&assets)attachModel(z.id,mf);else toast("Open a product, then drop the model on its 3D model section.");return}
   const f=[...e.dataTransfer.files].find(x=>/^image\//.test(x.type));
   if(!f){toast(e.dataTransfer.files.length?"Use a JPG, PNG, WebP or GIF image.":"Save the image to your device first, then drop the file here.");return}
   if(z.kind==="piece")setPiecePhoto(z.id,f);
@@ -1424,6 +1451,67 @@ document.addEventListener("paste",e=>{
   e.preventDefault();
   if(ui.open==="new"||ui.mode==="edit")formPhoto(f);else setPiecePhoto(ui.open,f);
 });
+
+/* ---------- 3D models (GLB, with optional USDZ for Apple AR) ---------- */
+const MV_SRC="https://cdn.jsdelivr.net/npm/@google/model-viewer@4/dist/model-viewer.min.js";
+let mvLoad=null;const modelUp={};
+function loadMV(){if(window.customElements&&customElements.get("model-viewer"))return Promise.resolve();
+  if(!mvLoad)mvLoad=new Promise((res,rej)=>{const sc=document.createElement("script");sc.type="module";sc.src=MV_SRC;sc.onload=res;sc.onerror=()=>{mvLoad=null;rej(new Error("viewer"))};document.head.appendChild(sc)});return mvLoad}
+const MODEL_MAX=100*1024*1024;
+const isModelFile=f=>/\.(glb|usdz|gltf)$/i.test(f.name||"")||/^model\//.test(f.type||"");
+const hasModel=it=>!!(it&&it.model&&it.model.asset);
+const mb=n=>n>=1048576?(n/1048576).toFixed(n>=10485760?0:1)+" MB":Math.max(1,Math.round(n/1024))+" KB";
+function mvTag(it,cls){const m=it.model;return`<model-viewer class="${cls||""}" src="/_blob/${m.asset}" ${it.modelUsdz&&it.modelUsdz.asset?`ios-src="/_blob/${it.modelUsdz.asset}"`:""} alt="3D model of ${esc(it.name)}" camera-controls touch-action="pan-y" auto-rotate auto-rotate-delay="2500" rotation-per-second="18deg" interaction-prompt="none" shadow-intensity="1" shadow-softness="0.9" exposure="1.05" environment-image="neutral" tone-mapping="neutral" ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" max-camera-orbit="auto 100deg auto" min-camera-orbit="auto 0deg auto" loading="eager" reveal="auto"><button slot="ar-button" class="mvar">View in your room</button><div slot="progress-bar" class="mvprog"></div></model-viewer>`}
+function modelSection(it,ed){
+  const up=modelUp[it.id];const m=it.model;
+  if(!m&&!up&&!ed)return"";
+  if(up)return`<section class="sec model3d"><header><h5>3D model</h5></header><div class="mvempty busy"><span class="spin"></span><span><b>Uploading ${esc(up.name)}</b><span class="muted">${mb(up.size)} · large models can take a minute</span></span></div></section>`;
+  if(!m)return`<section class="sec model3d" data-mdrop="${it.id}"><header><h5>3D model</h5></header>
+    <label class="mvempty"><input type="file" accept=".glb,.usdz,model/gltf-binary,model/vnd.usdz+zip" data-mfile hidden><span class="cube" aria-hidden="true"></span><span><b>Add a 3D model</b><span class="muted">GLB exported from Rhino, SketchUp or Revit, with its materials. Drop it here or choose a file. Up to 100 MB.</span></span></label></section>`;
+  loadMV().catch(()=>{});
+  return`<section class="sec model3d" data-mdrop="${it.id}"><header><h5>3D model</h5><span class="mono muted">${esc(m.name||"model.glb")} · ${mb(m.bytes||0)}</span></header>
+    <div class="mvbox">${mvTag(it,"mvinline")}<button class="mvfull" data-a="mvfull" aria-label="Full screen">⤢</button><span class="mvhint">Drag to turn · pinch or scroll to zoom</span></div>
+    ${ed?`<div class="row2 mvtools"><label class="linkbtn">Replace model<input type="file" accept=".glb,model/gltf-binary" data-mfile hidden></label>
+      <label class="linkbtn">${it.modelUsdz?"Replace":"Add"} USDZ for iPhone &amp; iPad<input type="file" accept=".usdz,model/vnd.usdz+zip" data-mfile hidden></label>
+      ${it.modelUsdz?`<span class="mono muted">${esc(it.modelUsdz.name||"model.usdz")}</span>`:""}
+      <button class="linkbtn danger" data-a="mvremove">Remove model</button></div>`:""}
+  </section>`;
+}
+async function attachModel(id,file){
+  const it=items.find(i=>i.id===id);if(!it||!assets)return;
+  const ext=((file.name||"").match(/\.([a-z0-9]+)$/i)||[])[1]?.toLowerCase();
+  if(ext==="gltf"){toast("Export as glTF Binary (.glb) so the textures travel inside one file.");return}
+  const type=ext==="usdz"||file.type==="model/vnd.usdz+zip"?"model/vnd.usdz+zip":ext==="glb"||file.type==="model/gltf-binary"?"model/gltf-binary":null;
+  if(!type){toast("Use a GLB file (or USDZ for iPhone and iPad).");return}
+  if(file.size>MODEL_MAX){toast(`That model is ${mb(file.size)}. Keep it under 100 MB: turn on Draco compression or use smaller textures.`);return}
+  if(type==="model/gltf-binary"){const h=new Uint8Array(await file.slice(0,4).arrayBuffer());if(String.fromCharCode(...h)!=="glTF"){toast("That isn't a GLB file. Export as glTF Binary (.glb).");return}}
+  if(type==="model/vnd.usdz+zip"&&!hasModel(it)){toast("Add the GLB first. The USDZ is an extra for Apple AR.");return}
+  modelUp[id]={name:file.name||"model",size:file.size};force=true;render();force=false;
+  try{
+    const r=await assets.upload(file,{type});
+    const rec={asset:r.id,name:file.name||"",bytes:file.size,added:new Date().toISOString()};
+    setItem(id,type==="model/gltf-binary"?{model:rec}:{modelUsdz:rec});
+    toast(type==="model/gltf-binary"?"3D model added":"USDZ added for iPhone and iPad");
+  }catch(err){toast(err&&err.code==="too_large"?"That model is over 100 MB.":err&&err.message&&err.code==="unsupported_type"?err.message:"Upload failed. Try again.")}
+  finally{delete modelUp[id];force=true;render();force=false}
+}
+function openModelFull(it){
+  closeModelFull();loadMV().catch(()=>toast("The 3D viewer couldn't load. Check your connection."));
+  const d=document.createElement("div");d.id="mvfull";d.setAttribute("role","dialog");d.setAttribute("aria-modal","true");d.setAttribute("aria-label","3D model of "+it.name);
+  d.innerHTML=`<div class="mvftop"><span><span class="eyebrow">${esc(it.code||"")}</span><b>${esc(it.name)}</b></span><button class="close" data-a="mvclose" aria-label="Close">×</button></div>${mvTag(it,"mvbig")}<span class="mvhint">Drag to turn · pinch or scroll to zoom · double-tap to reset</span>`;
+  document.body.appendChild(d);document.body.style.overflow="hidden";
+  const v=d.querySelector("model-viewer");v.addEventListener("dblclick",()=>{try{v.cameraOrbit="auto auto auto";v.fieldOfView="auto";v.jumpCameraToGoal()}catch(_){}});
+}
+function closeModelFull(){const d=document.getElementById("mvfull");if(d){d.remove();if(!ui.open)document.body.style.overflow=""}}
+document.addEventListener("click",e=>{
+  const t=e.target.closest&&e.target.closest('[data-a="mvfull"],[data-a="mvclose"],[data-a="mvremove"],[data-a="mvopen"]');if(!t)return;
+  e.preventDefault();e.stopPropagation();const a=t.dataset.a;const it=items.find(i=>i.id===ui.open);
+  if(a==="mvclose")closeModelFull();
+  else if((a==="mvfull"||a==="mvopen")&&it&&hasModel(it))openModelFull(it);
+  else if(a==="mvremove"&&it){setItem(it.id,{model:null,modelUsdz:null});toast("3D model removed")}
+},true);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.getElementById("mvfull")){e.preventDefault();e.stopPropagation();closeModelFull()}},true);
+document.addEventListener("change",e=>{const t=e.target;if(t.hasAttribute&&t.hasAttribute("data-mfile")&&t.files.length&&ui.open){attachModel(ui.open,t.files[0]);t.value=""}});
 
 /* ---------- attachments ---------- */
 const CLIP_SVG=`<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 01-7.8-7.8l8.6-8.6a3.7 3.7 0 015.2 5.2l-8.6 8.6a1.8 1.8 0 01-2.6-2.6l7.9-7.9"/></svg>`;
@@ -1496,7 +1584,7 @@ function render(){try{document.title=(project.name&&project.name!=="Untitled pro
     </div>
     <div class="side">
       ${langToggle()}
-      ${HOSTED&&ME?`<div class="whoami"><span>${esc(ME.name||"Signed in")}</span><span class="mono">${ROLE_LABEL[ME.role]||""}</span><a class="linkbtn" href="/logout">Sign out</a></div>`:""}
+      ${HOSTED&&ME?`<div class="whoami"><span>${esc(ME.name||"Signed in")}</span><span class="mono">${ROLE_LABEL[ME.role]||""}</span>${ME.role==="admin"?`<a class="linkbtn" href="/admin">Admin</a>`:""}<a class="linkbtn" href="/logout">Sign out</a></div>`:""}
       ${canWrite&&!preview?`<div class="row2"><button class="btn ghost" data-a="openimp" data-v="${project.sheetUrl?"link":"file"}">${project.sheetUrl?"Update from sheet":"Import"}</button><button class="btn" data-a="new">Add product</button></div><button class="linkbtn" data-a="proj">Edit project</button>`:""}
       ${project.sheetUrl?`<a class="linkbtn" href="${esc(project.sheetUrl)}" target="_blank" rel="noopener">Linked Google Sheet ↗</a>`:""}
     </div>
@@ -1567,7 +1655,7 @@ function lookbook(){
   const size=ui.cardSize||"m";const pattern=size==="m"?["feature","feature","","","tall","","",""]:[""];
   return head+`<div class="look size-${size}">${list.map((it,i)=>{const p=pattern[i%pattern.length];const u=urgency(it);return`
     <button class="card ${p}" data-open="${it.id}">
-      <div class="plate ${fitOf(it)==="contain"?"fitwhole":""}"><img alt="" src="${imgFor(it,size==="l"||p==="feature"?760:size==="s"?360:520)}" loading="lazy"><span class="tag mono">${esc(it.code||"")}</span>${clip(it,"onplate")}${u?`<span class="late mono">${u.label}</span>`:""}</div>
+      <div class="plate ${fitOf(it)==="contain"?"fitwhole":""}"><img alt="" src="${imgFor(it,size==="l"||p==="feature"?760:size==="s"?360:520)}" loading="lazy"><span class="tag mono">${esc(it.code||"")}</span>${hasModel(it)?`<span class="b3d mono" title="3D model">3D</span>`:""}${clip(it,"onplate")}${u?`<span class="late mono">${u.label}</span>`:""}</div>
       <div class="cap"><h3>${esc(it.name)}</h3><span class="q">${esc(qtyStr(it))}</span>
       <div class="sub"><span><i class="dot s-${esc(it.status)}"></i>${esc(it.status)}</span><span>${esc(it.category||"")}</span>${it.supplier?`<span>${esc(it.supplier)}</span>`:""}${reviewChip(it)}${(()=>{const n=commentsFor(it.id).length;return n?`<span class="ccount">${n} comment${n===1?"":"s"}</span>`:""})()}</div></div>
     </button>`}).join("")}${addTile}</div>`;
@@ -1648,9 +1736,10 @@ function renderLayer(passive){
   const decs=decisions.filter(d=>d.itemId===it.id).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
   const same=prevKey==="view:"+it.id;L.dataset.key="view:"+it.id;
   const scrollTop=same?(L.querySelector(".sheet .body")?.scrollTop||0):0;
+  const keepMV=same?L.querySelector("model-viewer.mvinline"):null;
   L.innerHTML=`<div class="scrim" data-a="close"></div>
   <section class="sheet" role="dialog" aria-modal="true" aria-label="${esc(it.name)}">
-    <div class="hero ${it.photo&&it.photoFit==="contain"?"fitwhole":""}"><img alt="${esc(it.name)}" src="${imgFor(it,900)}">
+    <div class="hero ${it.photo&&it.photoFit==="contain"?"fitwhole":""}"><img alt="${esc(it.name)}" src="${imgFor(it,900)}">${hasModel(it)?`<button class="hero3d" data-a="mvopen">View in 3D</button>`:""}
       ${ed&&assets?`<div class="herotools"><label class="btn sm">${it.photo?"Replace image":"Add photo"}<input type="file" accept="image/*" data-up="photo" hidden></label><span class="drophint">or drop / paste an image</span>${it.photo?`<button class="btn sm" data-a="togglefit">${it.photoFit==="contain"?"Fill the frame":"Show whole image"}</button><button class="btn sm" data-a="unphoto">Use material plate</button>`:""}</div>`:""}
     </div>
     <div class="body">
@@ -1669,6 +1758,7 @@ function renderLayer(passive){
         <div><span class="eyebrow">${isClient()?"Unit price":"Unit cost"}</span><b>${it.unitCost?"$"+Number(it.unitCost).toLocaleString("en-CA"):"—"}</b></div>
       </div>
 
+      ${HOSTED?modelSection(it,ed&&!!assets):""}
       ${inFurniture(it)?furSection(it,ed):finSection(it,ed)}
       ${!inFurniture(it)&&!inFinish(it)&&ed?`<p class="muted listhint">Add to the <button class="linkbtn" data-a="listfin">finish schedule</button> or the <button class="linkbtn" data-a="listfur">furniture schedule</button>.</p>`:""}
       <section class="sec"><header><h5>Specification</h5><span class="mono muted">${(it.specs||[]).length}</span></header>
@@ -1698,6 +1788,7 @@ function renderLayer(passive){
       ${it.notes?`<section class="sec"><header><h5>Notes</h5></header><p class="notes">${esc(it.notes)}</p></section>`:""}
     </div>
   </section>`;
+  if(keepMV){const nm=L.querySelector("model-viewer.mvinline");if(nm&&nm.getAttribute("src")===keepMV.getAttribute("src")&&nm.getAttribute("ios-src")===keepMV.getAttribute("ios-src"))nm.replaceWith(keepMV)}
   const b=L.querySelector(".sheet .body");if(b)b.scrollTop=scrollTop;
 }
 let draftSw=null;
@@ -2454,7 +2545,7 @@ document.addEventListener("dragstart",e=>{if(e.target.closest&&e.target.closest(
 
 /* ---------- English / 中文 ---------- */
 const ZH={
-"Admin":"管理员","Sourcing agent":"采购代理","Client":"客户","Sign out":"退出登录","Signed in":"已登录","Client review":"客户审核","✓ Client approved":"✓ 客户已批准","Changes requested":"需修改","✓ Approved":"✓ 已批准","Let the studio know if this piece works for you.":"请告诉工作室此项目是否合适。","Waiting for the client's review.":"等待客户审核。","Add a note (optional)":"添加备注（可选）","Approve":"批准","Request changes":"要求修改","Clear my review":"撤销我的审核","Comments":"评论","No comments yet.":"暂无评论。","Ask a question or leave a note for the studio":"向工作室提问或留言","Write a comment":"写评论","Post":"发布","Remove comment":"删除评论","Approved. The studio can see it.":"已批准，工作室可以看到。","Sent to the studio.":"已发送给工作室。","Review cleared":"审核已撤销","Your role can't do that.":"您的角色无法执行此操作。","Clients can view, approve and comment.":"客户可以查看、批准和评论。","Only admins can delete projects.":"只有管理员可以删除项目。","← Projects":"← 项目",
+"3D model":"3D 模型","Add a 3D model":"添加 3D 模型","GLB exported from Rhino, SketchUp or Revit, with its materials. Drop it here or choose a file. Up to 100 MB.":"从 Rhino、SketchUp 或 Revit 导出的含材质 GLB 文件。拖放到此处或选择文件，最大 100 MB。","Drag to turn · pinch or scroll to zoom":"拖动旋转 · 双指或滚轮缩放","Drag to turn · pinch or scroll to zoom · double-tap to reset":"拖动旋转 · 双指或滚轮缩放 · 双击复位","View in your room":"在您的房间中查看","View in 3D":"3D 查看","Replace model":"替换模型","Remove model":"移除模型","3D model added":"已添加 3D 模型","3D model removed":"已移除 3D 模型","USDZ added for iPhone and iPad":"已为 iPhone 和 iPad 添加 USDZ","Add USDZ for iPhone & iPad":"为 iPhone 和 iPad 添加 USDZ","Replace USDZ for iPhone & iPad":"替换 iPhone 和 iPad 的 USDZ","Full screen":"全屏","Upload failed. Try again.":"上传失败，请重试。","Open a product, then drop the model on its 3D model section.":"请先打开产品，再将模型拖到其 3D 模型区域。","Export as glTF Binary (.glb) so the textures travel inside one file.":"请导出为 glTF 二进制（.glb），使贴图包含在同一文件中。","Use a GLB file (or USDZ for iPhone and iPad).":"请使用 GLB 文件（iPhone 和 iPad 可用 USDZ）。","Add the GLB first. The USDZ is an extra for Apple AR.":"请先添加 GLB。USDZ 仅用于苹果 AR。","That isn't a GLB file. Export as glTF Binary (.glb).":"这不是 GLB 文件。请导出为 glTF 二进制（.glb）。","That model is over 100 MB.":"模型超过 100 MB。","The 3D viewer couldn't load. Check your connection.":"3D 查看器无法加载，请检查网络。","Admin":"管理员","Sourcing agent":"采购代理","Client":"客户","Sign out":"退出登录","Signed in":"已登录","Client review":"客户审核","✓ Client approved":"✓ 客户已批准","Changes requested":"需修改","✓ Approved":"✓ 已批准","Let the studio know if this piece works for you.":"请告诉工作室此项目是否合适。","Waiting for the client's review.":"等待客户审核。","Add a note (optional)":"添加备注（可选）","Approve":"批准","Request changes":"要求修改","Clear my review":"撤销我的审核","Comments":"评论","No comments yet.":"暂无评论。","Ask a question or leave a note for the studio":"向工作室提问或留言","Write a comment":"写评论","Post":"发布","Remove comment":"删除评论","Approved. The studio can see it.":"已批准，工作室可以看到。","Sent to the studio.":"已发送给工作室。","Review cleared":"审核已撤销","Your role can't do that.":"您的角色无法执行此操作。","Clients can view, approve and comment.":"客户可以查看、批准和评论。","Only admins can delete projects.":"只有管理员可以删除项目。","← Projects":"← 项目",
 "Sourcebook":"选材手册","Design to construction":"从设计到施工","Untitled":"未命名","project":"项目","Untitled project":"未命名项目",
 "Import":"导入","Add product":"添加产品","Edit project":"编辑项目","Update from sheet":"从表格更新","Linked Google Sheet ↗":"已关联 Google 表格 ↗",
 "Concept":"概念","Specified":"已定规格","Approved":"已批准","Ordered":"已下单","Delivered":"已到场",
@@ -2518,6 +2609,7 @@ const ZH={
 "Primary ensuite":"主卧卫生间","Location ":"位置","Linked to":"已关联","your Google Sheet ↗":"您的 Google 表格 ↗","download it as Excel":"下载为 Excel","download it as Excel ↗":"下载为 Excel ↗","Upload the download":"上传下载的文件","Paste rows":"粘贴行","Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.":"此服务器尚未设置 Claude。请在 Render 中添加 Anthropic API 密钥（ANTHROPIC_API_KEY）。","Showing example pieces because the server couldn't be reached. Check your connection and reload.":"无法连接服务器，正在显示示例项目。请检查网络后重新加载。","Uses the Anthropic API key set on the server.":"使用服务器上设置的 Anthropic API 密钥。","Claude isn't available right now. Reload the page and try again.":"Claude 暂时不可用，请重新加载页面后重试。","Images couldn't be sent to Claude. Reload the page and try again.":"无法将图片发送给 Claude，请重新加载页面后重试。","or drop / paste an image":"或拖放 / 粘贴图片","Drop an image on the picture, or use a material plate below":"将图片拖放到画面上，或使用下方的材料样板","Use a JPG, PNG, WebP or GIF image.":"请使用 JPG、PNG、WebP 或 GIF 图片。","Save the image to your device first, then drop the file here.":"请先将图片保存到设备，再将文件拖放到这里。","Size":"尺寸","Small":"小","Medium":"中","Large":"大","Fill":"填满","Whole":"完整","Card size":"卡片尺寸","Show whole image":"显示完整图片","Fill the frame":"填满画框","Projects":"项目","All projects":"全部项目","← All projects":"← 全部项目","Sourcebook · Studio":"选材手册 · 工作室","New project":"新建项目","Active projects":"进行中项目","Pieces in sourcing":"采购中项目","Orders overdue":"逾期未下单","Due in 3 weeks":"三周内需下单","Quoted value":"报价总额","Active":"进行中","Archived":"已归档","Open now":"当前打开","No pictures yet":"暂无图片","pieces":"个项目","drawings":"张图纸","quoted (CAD)":"报价（加元）","Open":"打开","Archive":"归档","Restore":"恢复","Delete project…":"删除项目…","Start a book for a new job: its lookbook, schedules and quotation.":"为新工作建立手册：效果册、清单与报价单。","Create project":"创建项目","Project created":"已创建项目","Project deleted":"已删除项目","Loading projects…":"正在加载项目…","Updating…":"正在更新…","No archived projects.":"没有已归档的项目。","Project options":"项目选项","across all projects":"所有项目合计","Couldn't create the project. Try again.":"无法创建项目，请重试。","Some of the project couldn't be removed. Try again.":"部分项目内容无法删除，请重试。","Projects appear here once the book is open on claude.ai.":"在 claude.ai 中打开手册后，项目会显示在这里。","Quotation":"报价单","Total (CAD)":"合计（加元）","Total (CNY)":"合计（人民币）","Items priced":"已报价项目","Exchange rate":"汇率","Set for this project":"本项目设定","Unit price (CAD)":"单价（加元）","Unit price (CNY)":"单价（人民币）","Price TBD":"价格待定","Qty TBD":"数量待定","Subtotal":"小计","Sourcing fee":"采购服务费","Freight & logistics":"运费与物流","Tax":"税费","Total":"合计","Enter a unit price in either currency; the other is converted at the project rate.":"可以任一币种输入单价，另一币种按项目汇率自动换算。","No materials or products yet.":"暂无材料或产品。","1 CAD =":"1 加元 =","Other":"其他","Unit price CAD":"单价 加元","Unit price CNY":"单价 人民币","Language":"语言","View all":"查看全部"
 };
 const ZH_PAT=[
+ [/^Uploading (.+)$/,m=>`正在上传 ${m[1]}`],[/^(.+) · large models can take a minute$/,m=>`${m[1]} · 大型模型可能需要一分钟`],[/^That model is (.+)\. Keep it under 100 MB.*$/,m=>`模型大小为 ${m[1]}，请控制在 100 MB 以内：开启 Draco 压缩或使用较小的贴图。`],
  [/^by (.+) · (.+)$/,m=>`${m[1]} · ${m[2]}`],[/^(\d+) comments?$/,m=>`${m[1]} 条评论`],
  [/^(\d+) pieces? · (\d+) decisions?$/,m=>`${m[1]} 个项目 · ${m[2]} 项决策`],
  [/^(\d+) pieces?$/,m=>`${m[1]} 个项目`],[/^Image added to (.+)$/,m=>`已为 ${m[1]} 添加图片`],[/^(\d+) active · (\d+) archived$/,m=>`${m[1]} 个进行中 · ${m[2]} 个已归档`],[/^(\d+) overdue$/,m=>`${m[1]} 项逾期`],[/^(\d+) due soon$/,m=>`${m[1]} 项即将到期`],[/^Delete (.+), its pieces, drawings and images\?.*$/,m=>`删除 ${m[1]} 及其所有项目、图纸和图片？此操作无法撤销。`],[/^(.+) subtotal$/,m=>`${trPart(m[1])||m[1]} 小计`],[/^Market rate on (.+)$/,m=>`${m[1]} 市场汇率`],[/^Enter a unit price in either currency; the other is converted at the project rate\. (\d+) items? still need a quantity\.$/,m=>`可以任一币种输入单价，另一币种按项目汇率自动换算。仍有 ${m[1]} 个项目缺少数量。`],[/^(\d+) pieces? with images, specifications, quantities and attachments$/,m=>`${m[1]} 个项目，含图片、规格、数量和附件`],[/^(\d+) images?$/,m=>`${m[1]} 张图片`],[/^(\d+) sheets?$/,m=>`${m[1]} 张图纸`],[/^(\d+) finish(es)?$/,m=>`${m[1]} 项饰面`],[/^(\d+) of (\d+)$/,m=>`${m[1]} / ${m[2]}`],

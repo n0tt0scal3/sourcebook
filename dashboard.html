@@ -151,13 +151,12 @@ const loc=()=>lang==="zh"?"zh-CN":"en-CA";
 const money=(n,c)=>(c==="CNY"?"¥":"$")+Math.round(n||0).toLocaleString(loc());
 function ago(iso){if(!iso)return"";const s=(Date.now()-Date.parse(iso))/1000;if(s<90)return t("just now");const rt=new Intl.RelativeTimeFormat(loc(),{numeric:"auto"});if(s<3600)return rt.format(-Math.round(s/60),"minute");if(s<86400)return rt.format(-Math.round(s/3600),"hour");if(s<86400*30)return rt.format(-Math.round(s/86400),"day");return new Date(iso).toLocaleDateString(loc(),{day:"numeric",month:"short",year:"numeric"})}
 let projects=[],state={filter:"active",q:"",menu:null,confirm:null,sheet:false,err:""},failed=false;
-let me={id:"owner",name:"",role:"admin"},people=[];
+let me={id:"owner",name:"",role:"admin"};
 const ROLE={admin:"Admin",agent:"Sourcing agent",client:"Client"};
 const isAdmin=()=>me.role==="admin",isClient=()=>me.role==="client";
 try{const f=localStorage.getItem("sb_dash_filter");if(f)state.filter=f}catch(_){}
 
 async function loadMe(){try{const r=await fetch("/api/me");if(r.ok)me=await r.json()}catch(_){}}
-async function loadPeople(){try{const r=await fetch("/api/users");if(r.ok)people=(await r.json()).users}catch(_){}}
 async function load(){
   try{const r=await fetch("/api/projects");if(!r.ok)throw 0;projects=(await r.json()).projects;failed=false}catch(_){failed=true}
   render();
@@ -172,7 +171,7 @@ function render(){
   <header class="mast"><div><div class="eyebrow">${t("Sourcebook · Studio")}</div><h1>${lang==="zh"?"项目":"<em>Projects</em>"}</h1></div>
     <div class="side"><div class="langtog" role="group" aria-label="${t("Language")}"><button type="button" data-lang="en" aria-pressed="${lang==="en"}">EN</button><button type="button" data-lang="zh" aria-pressed="${lang==="zh"}">中文</button></div>
     ${isClient()?"":`<button class="btn" data-a="new">${t("New project")}</button>`}
-    <div class="who"><span>${esc(me.name||"")}</span><span class="mono">${t(ROLE[me.role]||"")}</span>${isAdmin()?`<button class="linkbtn" data-a="people">${t("People")}</button>`:""}${me.id!=="owner"?`<button class="linkbtn" data-a="pw">${t("Change password")}</button>`:""}<a class="linkbtn" href="/logout">${t("Sign out")}</a></div></div></header>
+    <div class="who"><span>${esc(me.name||"")}</span><span class="mono">${t(ROLE[me.role]||"")}</span>${isAdmin()?`<a class="linkbtn" href="/admin">${t("Admin")}</a>`:""}${me.id!=="owner"?`<button class="linkbtn" data-a="pw">${t("Change password")}</button>`:""}<a class="linkbtn" href="/logout">${t("Sign out")}</a></div></div></header>
   ${failed?`<p class="err" style="padding-top:14px">${t("Couldn't reach the server. Check your connection and reload.")}</p>`:""}
   <section class="sum">
     <div><span class="eyebrow">${t("Active projects")}</span><b>${active.length}</b></div>
@@ -211,7 +210,7 @@ function card(p){
 }
 function renderLayer(){
   const L=document.getElementById("layer");
-  if(state.sheet==="people"||state.sheet==="person"||state.sheet==="pw"){L.innerHTML=otherSheet();return}
+  if(state.sheet==="pw"){L.innerHTML=otherSheet();return}
   if(!state.sheet){L.innerHTML="";return}
   if(L.innerHTML)return;
   L.innerHTML=`<div class="scrim" data-a="close"></div><section class="sheet" role="dialog" aria-modal="true" aria-label="${t("New project")}">
@@ -228,21 +227,7 @@ function renderLayer(){
 function otherSheet(){
   const top=`<div class="scrim" data-a="close"></div><section class="sheet" role="dialog" aria-modal="true"><div class="top"><span class="eyebrow">${t("Sourcebook · Studio")}</span><button class="close" data-a="close" aria-label="${t("Close")}">×</button></div>`;
   if(state.sheet==="pw")return top+`<h2>${t("Change password")}</h2><form id="pwf"><label>${t("Current password")}<input class="f" type="password" name="current" autocomplete="current-password" required></label><label>${t("New password")}<input class="f" type="password" name="next" autocomplete="new-password" minlength="8" required></label><p class="err">${esc(state.err||"")}</p><div><button class="btn">${t("Save")}</button></div></form></section>`;
-  if(state.sheet==="people")return top+`<h2>${t("People")}</h2><p class="hint">${t("Admins manage people and can delete projects. Sourcing agents do everything else. Clients only see the projects you assign, and can approve pieces and comment.")}</p>
-    <div class="plist">${people.map(u=>`<button class="prow" data-person="${esc(u.id)}"><span><b>${esc(u.name)}</b><span>${esc(u.email)}</span></span><span class="mono">${t(ROLE[u.role])}${u.role==="client"?` · ${u.projects.length?u.projects.map(id=>esc((projects.find(p=>p.id===id)||{}).name||id)).join(", "):"—"}`:""}</span></button>`).join("")||`<p class="hint">${t("No people yet. Add your team and clients here; you can always sign in with the studio password.")}</p>`}</div>
-    <div style="margin-top:18px"><button class="btn" data-person="">${t("Add person")}</button></div></section>`;
-  const u=people.find(x=>x.id===state.person)||{role:"client",projects:[]};const isNew=!u.id;
-  const role=state.draftRole||u.role;
-  return top+`<h2>${isNew?t("Add person"):t("Edit person")}</h2><form id="personf">
-    <label>${t("Name")}<input class="f" name="name" value="${esc(u.name||"")}" required autocomplete="off"></label>
-    <label>${t("Email")}<input class="f" name="email" type="email" value="${esc(u.email||"")}" required autocomplete="off" autocapitalize="off"></label>
-    <div><span class="lbl">${t("Role")}</span><div class="chips" style="margin-top:6px">${["admin","agent","client"].map(r=>`<label class="chip rchip"><input type="radio" name="role" value="${r}" ${role===r?"checked":""} data-role> ${t(ROLE[r])}</label>`).join("")}</div></div>
-    <div ${role==="client"?"":"hidden"} id="projpick"><span class="lbl">${t("Projects they can see")}</span><div class="checks">${projects.map(p=>`<label class="ck"><input type="checkbox" name="projects" value="${esc(p.id)}" ${(u.projects||[]).includes(p.id)?"checked":""}> ${esc(p.name)}${p.client?` <span class="hint">· ${esc(p.client)}</span>`:""}</label>`).join("")}</div></div>
-    <label>${isNew?t("Password"):t("New password")}<input class="f" name="password" type="text" autocomplete="new-password" ${isNew?"required":""} minlength="8" placeholder="${isNew?"":t("Leave blank to keep the current password")}"></label>
-    <p class="err">${esc(state.err||"")}</p>
-    <div class="row2"><button class="btn">${t("Save")}</button><button type="button" class="btn ghost" data-a="people">${t("Cancel")}</button>${!isNew&&u.id!==me.id?(state.confirm==="u:"+u.id?`<button type="button" class="btn danger" data-deluser="${esc(u.id)}">${t("Remove")}</button>`:`<button type="button" class="linkbtn" data-a="confuser" style="margin-left:auto">${t("Remove")}</button>`):""}</div>
-    ${state.confirm==="u:"+u.id?`<p class="hint">${t("Remove this person? They'll be signed out.")}</p>`:""}
-  </form></section>`;
+  return"";
 }
 async function post(url,body){const r=await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.message||t("Couldn't save."));return j}
 function slug(s){const b=String(s).toLowerCase().normalize("NFKD").replace(/[^\w]+/g,"-").replace(/^-+|-+$/g,"").slice(0,32)||"project";return b+"-"+Math.random().toString(36).slice(2,6)}
@@ -257,7 +242,7 @@ async function createProject(f){
   }catch(_){document.getElementById("np-err").textContent=t("Couldn't reach the server. Check your connection and reload.")}
 }
 document.addEventListener("click",async e=>{
-  const el=e.target.closest("[data-a],[data-f],[data-lang],[data-menu],[data-open],[data-arch],[data-conf],[data-del],[data-person],[data-deluser]");
+  const el=e.target.closest("[data-a],[data-f],[data-lang],[data-menu],[data-open],[data-arch],[data-conf],[data-del]");
   if(!el){if(state.menu&&!e.target.closest(".menu")){state.menu=null;state.confirm=null;render()}return}
   if(el.dataset.lang){lang=el.dataset.lang;try{localStorage.setItem("sb_lang",lang)}catch(_){}render();return}
   if(el.dataset.f){state.filter=el.dataset.f;try{localStorage.setItem("sb_dash_filter",state.filter)}catch(_){}render();return}
@@ -266,26 +251,17 @@ document.addEventListener("click",async e=>{
   if(el.dataset.conf){state.confirm=el.dataset.conf;render();return}
   if(el.dataset.arch){const p=projects.find(x=>x.id===el.dataset.arch);state.menu=null;p.archived=!p.archived;render();try{await post("/api/db/update",{path:`projects/${p.id}`,data:{archived:p.archived}})}catch(_){load()}return}
   if(el.dataset.del){const id=el.dataset.del;projects=projects.filter(x=>x.id!==id);state.menu=null;state.confirm=null;render();try{await post("/api/projects/delete",{id})}catch(_){load()}return}
-  if(el.dataset.person!==undefined){state.person=el.dataset.person||null;state.draftRole=null;state.err="";state.confirm=null;state.sheet="person";renderLayer();return}
-  if(el.dataset.deluser){try{await post("/api/users/delete",{id:el.dataset.deluser});await loadPeople();state.sheet="people";state.confirm=null;renderLayer()}catch(err){state.err=err.message;renderLayer()}return}
   const a=el.dataset.a;
   if(a==="new"){state.sheet=true;renderLayer()}
-  else if(a==="people"){state.sheet="people";state.err="";state.confirm=null;await loadPeople();renderLayer()}
   else if(a==="pw"){state.sheet="pw";state.err="";renderLayer()}
-  else if(a==="confuser"){state.confirm="u:"+state.person;renderLayer()}
   else if(a==="close"){state.sheet=false;renderLayer()}
   else if(a==="noconf"){state.confirm=null;render()}
 });
 document.addEventListener("submit",async e=>{
   if(e.target.id==="newp"){e.preventDefault();createProject(e.target);return}
-  if(e.target.id==="personf"){e.preventDefault();const f=new FormData(e.target);
-    const body={id:state.person||undefined,name:f.get("name"),email:f.get("email"),role:f.get("role"),projects:f.getAll("projects"),password:f.get("password")||undefined};
-    try{await post("/api/users/save",body);await loadPeople();state.sheet="people";state.err="";renderLayer()}catch(err){state.err=err.message;const keep=Object.fromEntries(f);renderLayer();const g=document.getElementById("personf");if(g){g.name.value=keep.name||"";g.email.value=keep.email||"";g.password.value=keep.password||""}}
-    return}
   if(e.target.id==="pwf"){e.preventDefault();const f=new FormData(e.target);
     try{await post("/api/me/password",{current:f.get("current"),next:f.get("next")});state.sheet=false;renderLayer();alertMsg(t("Password changed."))}catch(err){state.err=err.message;renderLayer()}}
 });
-document.addEventListener("change",e=>{if(e.target.matches&&e.target.matches("[data-role]")){state.draftRole=e.target.value;const pp=document.getElementById("projpick");if(pp)pp.hidden=e.target.value!=="client"}});
 function alertMsg(m){const d=document.createElement("div");d.className="toast";d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
 document.addEventListener("input",e=>{if(e.target.id==="q"){state.q=e.target.value;const pos=e.target.selectionStart;render();const q=document.getElementById("q");q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(state.sheet){state.sheet=false;renderLayer()}else if(state.menu){state.menu=null;state.confirm=null;render()}}});

@@ -65,11 +65,21 @@ In the service's **Settings → Custom Domains**, add something like `sourcebook
 
 - **New project:** use **New project** on the dashboard. Each project gets its own address, e.g. `/p/harbour-loft-73nm`, which you can bookmark.
 - **Archive or delete:** use the ⋯ on a project card. Archived projects move to the Archived filter. Delete asks for confirmation and can't be undone.
-- **People:** admins open **People** on the dashboard to add someone with a name, email, role and starting password. They sign in with their email; each person can change their own password from the dashboard.
-  - **Admin:** everything, including managing people, deleting projects and downloading backups.
-  - **Sourcing agent:** everything else: create, edit, import, upload, read drawings, archive.
-  - **Client:** sees only the projects you tick for them; can view, approve a piece or request changes, and comment. Internal notes and the order schedule are hidden.
+- **Admin portal** (`/admin`, admins only; linked from the dashboard and each project):
+  - **People:** add someone with a name, email, role and a generated password to share with them; edit their role; reset their password; sign them out on every device; disable or remove their account. Each person can change their own password from the dashboard.
+  - **Project access:** a grid of projects and people. Tick who can open each project. Sourcing agents can be set to see every project (including new ones) or only the ones you tick.
+  - **Roles:** Admin: everything, including people, deleting projects and backups. Sourcing agent: create, edit, import, upload, read drawings, archive. Client: only their projects; can view, approve or request changes, and comment. Internal notes and the order schedule are hidden from clients.
 - **Studio password:** leaving email blank and entering `APP_PASSWORD` always signs in as the owner (an admin). It's your way back in, so keep it private.
+
+## 3D models
+
+Each product can hold a 3D model that anyone can turn and zoom, with a "View in your room" button on phones and iPads.
+
+- **Format:** GLB (glTF binary), which keeps geometry, materials and textures in one file. Up to 100 MB.
+- **Rhino:** File → Export → `.glb`. Turn on "Map Rhino Z to glTF Y" and Draco compression.
+- **SketchUp:** File → Export → 3D Model → GLTF Binary File (*.glb).
+- **Revit:** needs an exporter add-in (for example Leia, DiRoots or SimLab glTF Exporter). Export only the element you need.
+- **Optional USDZ:** for the best AR on iPhone and iPad, add a USDZ as well (SketchUp exports it directly).
 
 ## Backups
 

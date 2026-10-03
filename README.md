@@ -71,6 +71,17 @@ In the service's **Settings → Custom Domains**, add something like `sourcebook
   - **Roles:** Admin: everything, including people, deleting projects and backups. Sourcing agent: create, edit, import, upload, read drawings, archive. Client: only their projects; can view, approve or request changes, and comment. Internal notes and the order schedule are hidden from clients.
 - **Studio password:** leaving email blank and entering `APP_PASSWORD` always signs in as the owner (an admin). It's your way back in, so keep it private.
 
+## Finding products online
+
+Drop an image on **Add products or materials** (or open any piece and use **Find it online**). Claude searches the web for the product and shows up to four likely matches with their source. Pick one and Claude reads that product page and brings back its details (manufacturer, model, dimensions, finishes, price, lead time, spec sheet), which you tick to apply. You can also use the product photo from the site.
+
+- Searches run on the server, so they finish even if you close the page. Cards show "Searching" and then "Matches ready".
+- When you start a project from an image, tick **Find each piece online** to look up every detected piece.
+- Each search uses Claude's web search on your Anthropic account: roughly 10–20¢ per piece. Web search must be allowed for the account (it is by default; see Settings → Capabilities in the Anthropic Console).
+- Prices are only filled in when listed in CAD or CNY; other currencies are noted as a spec line. Always confirm prices and lead times with the supplier.
+
+You can also drop PDFs and images straight onto a piece's **Drawings & references** section to attach them; Claude reads the first one.
+
 ## 3D models
 
 Each product can hold a 3D model that anyone can turn and zoom, with a "View in your room" button on phones and iPads.

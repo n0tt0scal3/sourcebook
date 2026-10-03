@@ -258,6 +258,27 @@ textarea.f{resize:vertical;min-height:70px;border:1px solid var(--rule);padding:
 .sheet .hero .drophint{align-self:center;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--ink2);background:var(--paper);padding:4px 8px;opacity:.85}
 /* projects */
 .tabproj{font-weight:500}
+.addcard.quick{display:flex;flex-direction:column;gap:10px;border:0;background:none;padding:0;text-align:left}
+.addcard.quick .plate{cursor:pointer}
+.addcard.quick .handadd{align-self:flex-start;font-size:12.5px}
+.mstart{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:8px}.mhint{flex:1;min-width:200px;font-size:14px}
+.mlead{margin:10px 0 8px}
+.mcands{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:12px}
+.mcand{display:flex;flex-direction:column;border:1px solid var(--rule);background:var(--paper)}
+.mcand.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.mimg{position:relative;aspect-ratio:4/3;background:#fff;overflow:hidden}.mimg img{width:100%;height:100%;object-fit:contain;display:block}
+.mimg .pill{position:absolute;left:8px;top:8px}
+.mimg.noimg{aspect-ratio:auto;height:38px;background:none}
+.mbody{display:flex;flex-direction:column;gap:3px;padding:10px 12px 12px}.mbody b{font-weight:500;line-height:1.3}
+.mprice{font-family:var(--mono);font-size:13px}.mwhy{font-size:12.5px;margin:2px 0 6px}
+.mbody .row2{justify-content:space-between;margin-top:auto;padding-top:6px}
+.mreview{margin-top:14px}.msrc{font-size:12px;margin:10px 0 0}
+.mphoto .v{display:flex;gap:10px;align-items:center}.mphoto img{width:64px;height:64px;object-fit:contain;background:#fff;border:1px solid var(--rule)}
+.mapplied{margin:6px 0 0}
+.mbadge{position:absolute;left:10px;bottom:10px;display:inline-flex;gap:6px;align-items:center;background:var(--paper);color:var(--ink2);font-size:10.5px;letter-spacing:.06em;padding:3px 8px;border:1px solid var(--rule)}
+.mbadge.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.mlook{display:flex;gap:10px;align-items:flex-start;margin:16px 0 4px;font-size:14px}.mlook>span{display:flex;flex-direction:column}.mlook .muted{font-size:12.5px}
+.refsec.imgdrop{outline:2px dashed var(--accent);outline-offset:6px}
 .model3d header .mono{font-size:11px;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mvbox{position:relative;aspect-ratio:4/3;background:radial-gradient(120% 90% at 50% 35%,#FBFAF8 0%,#ECEAE6 62%,#DEDBD5 100%);border:1px solid var(--rule);margin-top:10px;overflow:hidden}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .mvbox,:root:not([data-theme="light"]) #mvfull{background:radial-gradient(120% 90% at 50% 35%,#34322F 0%,#1F1E1C 65%,#151413 100%)}}
@@ -1271,7 +1292,7 @@ function subscribeProject(){
   unsubs.push(db.collection("drawings").onSnapshot(s=>{drawings=s.docs.map(d=>({id:d.id,...d.data()}));render()},()=>{}));
   unsubs.push(db.collection("images").onSnapshot(s=>{gallery=s.docs.map(d=>({id:d.id,...d.data()}));render()},()=>{}));
   unsubs.push(db.doc("project/main").onSnapshot(s=>{if(s.exists){project={name:"Untitled project",client:"",location:"",phase:"",...s.data()};render()}},()=>{}));
-  unsubs.push(db.collection("items").onSnapshot(s=>{items=s.docs.map(d=>({id:d.id,...d.data()}));loaded=true;render()},()=>{}));
+  unsubs.push(db.collection("items").onSnapshot(s=>{items=s.docs.map(d=>({id:d.id,...d.data()}));loaded=true;render();if(typeof finishPendingSetups==="function")finishPendingSetups()},()=>{}));
   unsubs.push(db.collection("decisions").onSnapshot(s=>{decisions=s.docs.map(d=>({id:d.id,...d.data()}));render()},()=>{}));
   comments=[];if(HOSTED)unsubs.push(db.collection("comments").onSnapshot(s=>{comments=s.docs.map(d=>({id:d.id,...d.data()}));render()},()=>{}));
 }
@@ -1415,6 +1436,7 @@ function dropZone(el){
     if(ui.img||ui.detOpen||ui.importOpen||ui.editProject||ui.newProj)return null;
     if(ui.open==="new"||ui.mode==="edit"){const z=el.closest(".sheet .hero, .sheet .photofield");return z?{el:sheet.querySelector(".hero")||z,kind:"form"}:null}
     const md=el.closest(".sheet [data-mdrop]");if(md&&ui.open)return{el:md,kind:"piece",id:ui.open};
+    const rs=el.closest(".sheet .refsec");if(rs&&ui.open&&assets)return{el:rs,kind:"refs",id:ui.open};
     const h=el.closest(".sheet .hero");return h&&ui.open?{el:h,kind:"piece",id:ui.open}:null;
   }
   const c=el.closest(".card[data-open], .fincard[data-open]");if(c)return{el:c.querySelector(".plate, .finimg")||c,kind:"piece",id:c.dataset.open};
@@ -1435,13 +1457,14 @@ document.addEventListener("drop",e=>{
   if(e.target.closest&&e.target.closest("#drawsec,#gal-drop,#start-drop,.pick.add,#imp-drop"))return;
   e.preventDefault();hl(null);
   const z=dropZone(e.target);if(!z)return;
+  if(z.kind==="refs"){addRefFiles(z.id,e.dataTransfer.files);return}
   const mf=[...e.dataTransfer.files].find(isModelFile);
   if(mf){if(z.kind==="piece"&&HOSTED&&assets)attachModel(z.id,mf);else toast("Open a product, then drop the model on its 3D model section.");return}
   const f=[...e.dataTransfer.files].find(x=>/^image\//.test(x.type));
   if(!f){toast(e.dataTransfer.files.length?"Use a JPG, PNG, WebP or GIF image.":"Save the image to your device first, then drop the file here.");return}
   if(z.kind==="piece")setPiecePhoto(z.id,f);
   else if(z.kind==="form")formPhoto(f);
-  else if(z.kind==="new"){ui.open="new";ui.mode="edit";renderLayer();setTimeout(()=>formPhoto(f),30)}
+  else if(z.kind==="new")quickAdd(f);
 });
 document.addEventListener("dragend",()=>hl(null));
 document.addEventListener("paste",e=>{
@@ -1512,6 +1535,159 @@ document.addEventListener("click",e=>{
 },true);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.getElementById("mvfull")){e.preventDefault();e.stopPropagation();closeModelFull()}},true);
 document.addEventListener("change",e=>{const t=e.target;if(t.hasAttribute&&t.hasAttribute("data-mfile")&&t.files.length&&ui.open){attachModel(ui.open,t.files[0]);t.value=""}});
+
+/* ---------- find products online (hosted) ---------- */
+const PROJ=()=>window.SOURCEBOOK_PROJECT;
+const canMatch=()=>HOSTED&&canWrite&&!preview&&!!assets;
+async function imagePayload(src){
+  const blob=src instanceof Blob?src:await (await fetch(src)).blob();
+  const url=URL.createObjectURL(blob);
+  try{const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error("img"));i.src=url});
+    const k=Math.min(1,1568/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);
+    const g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);
+    return{media_type:"image/jpeg",data:c.toDataURL("image/jpeg",.88).split(",")[1]}}finally{URL.revokeObjectURL(url)}
+}
+async function matchPost(path,body){const r=await fetch(path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({project:PROJ(),lang,...body})});const j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.message||"Couldn't reach the server."),{code:j.code});return j}
+async function startMatch(id,o={}){
+  const it=items.find(i=>i.id===id);if(!it)return;
+  let image=null;try{const src=o.file||(it.photo?blobSrc(it.photo):it.sourceImage?blobSrc(it.sourceImage):null);if(src)image=await imagePayload(src)}catch(_){}
+  if(!image&&!it.name){toast("Add a photo first.");return}
+  it.match={status:"searching",started:new Date().toISOString(),hint:o.hint||"",candidates:[]};ui.mrev=null;if(!o.quiet){force=true;render();force=false}
+  try{await matchPost("/api/match/start",{item:id,image,hint:o.hint||""})}
+  catch(e){it.match={status:"error",message:e.message};force=true;render();force=false}
+}
+async function pullDetails(id,i){
+  const it=items.find(x=>x.id===id);if(!it||!it.match)return;
+  it.match={...it.match,status:"pulling",chosen:i,message:null};ui.mrev=null;force=true;render();force=false;
+  try{await matchPost("/api/match/details",{item:id,index:i})}catch(e){it.match={...it.match,status:"found",message:e.message};force=true;render();force=false}
+}
+const host=u=>{try{return new URL(u).hostname.replace(/^www\./,"")}catch(_){return""}};
+const money2=(n,c)=>n==null?"":(c==="CNY"?"¥":c==="EUR"?"€":c==="GBP"?"£":"$")+Number(n).toLocaleString("en-CA",{maximumFractionDigits:2})+(c&&c!=="CNY"&&c!=="EUR"&&c!=="GBP"?" "+c:"");
+function matchReview(it){
+  const m=it.match,d=m&&m.details;if(!d)return null;
+  if(ui.mrev&&ui.mrev.id===it.id&&ui.mrev.at===d.at)return ui.mrev;
+  const c=(m.candidates||[])[m.chosen]||{};const f=d.fields||{};const props=[];
+  const keys=[["name","Name"],["description","Description"],["supplier","Manufacturer / supplier"],["product","Product / collection"],["modelCode","Model / item code"],["materialCategory","Material category"],["finishName","Colour / finish name"],["dims","Dimensions"],["frameFinish","Frame / base finish"],["upholstery","Upholstery"],["leadWeeks","Lead time (weeks)"]];
+  keys.forEach(([k,l])=>{let v=f[k];if(v==null||v==="")return;if(k==="leadWeeks"){v=Number(v);if(!isFinite(v))return}else v=String(v).trim();const old=it.pendingSetup&&k==="name"?"":it[k];
+    if(old!=null&&String(old).trim().toLowerCase()===String(v).toLowerCase())return;props.push({k,l,v,old:old??"",on:old==null||old===""||!!it.pendingSetup})});
+  const pr=d.price||{};const specs=(d.specs||[]).map(x=>({...x}));
+  if(pr.amount!=null&&isFinite(pr.amount)){
+    if(pr.currency==="CAD")props.push({k:"unitCost",l:"Unit cost (CAD)"+(pr.note?" · "+pr.note:""),v:Number(pr.amount),old:it.unitCost??"",on:it.unitCost==null||it.unitCost===""});
+    else if(pr.currency==="CNY")props.push({k:"unitCostCNY",l:"Unit cost (CNY)"+(pr.note?" · "+pr.note:""),v:Number(pr.amount),old:it.unitCostCNY??"",on:it.unitCostCNY==null||it.unitCostCNY===""});
+    else specs.unshift({label:"Listed price",value:money2(pr.amount,pr.currency)+(pr.note?" ("+pr.note+")":"")+" · "+(c.source||host(c.url))});
+  }
+  const have=new Set((it.specs||[]).map(x=>String(x.label).toLowerCase()));
+  const refs=[];const urls=new Set((it.refs||[]).map(r=>r.url).filter(Boolean));
+  if(c.url&&!urls.has(c.url))refs.push({kind:"Link",title:`${c.brand?c.brand+" ":""}${c.name} · product page`,url:c.url,on:true});
+  if(d.specSheetUrl&&!urls.has(d.specSheetUrl))refs.push({kind:"Spec sheet",title:`${c.name} spec sheet`,url:d.specSheetUrl,on:true});
+  ui.mrev={id:it.id,at:d.at,props,specs:specs.map(x=>({label:x.label,value:x.value,on:!have.has(String(x.label).toLowerCase())})),refs,photo:d.imageUrl?{url:d.imageUrl,on:!it.photo}:null};
+  return ui.mrev;
+}
+function matchSection(it){
+  if(!canMatch())return"";
+  const m=it.match;const st=m&&m.status;
+  const head=`<header><h5>Find it online</h5>${st&&st!=="searching"&&st!=="pulling"?`<button class="linkbtn" data-a="mreset">${st==="applied"?"Search again":"Start over"}</button>`:""}</header>`;
+  const hintField=`<input class="f mhint" id="m-hint" placeholder="Optional hint: brand, retailer or what to look for" value="${esc(ui.mhint&&ui.mhint.id===it.id?ui.mhint.v:(m&&m.hint)||"")}">`;
+  if(!st)return`<section class="sec match">${head}<p class="muted">Claude searches the web for this product, shows you likely matches, and pulls the details of the one you pick. About 10–20¢ of Claude usage per search.</p>
+    <div class="mstart">${hintField}<button class="btn sm" data-a="mfind" ${it.photo||it.sourceImage||it.name?"":"disabled"}>Find this product online</button></div></section>`;
+  if(st==="searching")return`<section class="sec match">${head}<div class="scanbox"><div class="scanhead"><span class="scanpulse"></span><b>Searching the web for matches…</b></div><p class="muted">This usually takes 30 to 90 seconds. You can close this and keep working; the matches will be waiting here.</p></div></section>`;
+  if(st==="error")return`<section class="sec match">${head}<div class="scanbox err"><b>The search didn't finish</b><p>${esc(m.message||"Try again.")}</p><div class="mstart">${hintField}<button class="btn ghost sm" data-a="mfind">Try again</button></div></div></section>`;
+  if(st==="none")return`<section class="sec match">${head}<div class="scanbox"><b>No confident match found</b>${m.identified?`<p class="muted">${esc(m.identified)}</p>`:""}<p class="muted">Add a hint, such as the brand or where you saw it, and search again.</p><div class="mstart">${hintField}<button class="btn ghost sm" data-a="mfind">Search again</button></div></div></section>`;
+  if(st==="applied"){const a=m.applied||{};return`<section class="sec match">${head}<p class="mapplied"><span class="rv ok">✓ Matched</span> ${esc([a.brand,a.name].filter(Boolean).join(" "))}${a.url?` · <a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.source||host(a.url))}</a>`:""}</p></section>`}
+  const cands=m.candidates||[];
+  const cardsHTML=cands.map((c,i)=>{const busy=st==="pulling"&&m.chosen===i;return`<div class="mcand ${m.chosen===i&&(st==="ready"||busy)?"on":""}">
+      ${c.image?`<div class="mimg"><img alt="" src="${esc(c.image)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('noimg');this.remove()"><span class="pill ${c.confidence==="high"?"ok":c.confidence==="low"?"crit":"warn"}">${esc(c.confidence)} match</span></div>`:`<div class="mimg noimg"><span class="pill ${c.confidence==="high"?"ok":c.confidence==="low"?"crit":"warn"}">${esc(c.confidence)} match</span></div>`}
+      <div class="mbody"><span class="eyebrow">${esc(c.brand||"")}</span><b>${esc(c.name)}</b>${c.model?`<span class="mono muted">${esc(c.model)}</span>`:""}${c.designer?`<span class="muted">Design: ${esc(c.designer)}</span>`:""}
+        ${c.price!=null?`<span class="mprice">${esc(money2(c.price,c.currency))}</span>`:""}
+        ${c.why?`<p class="muted mwhy">${esc(c.why)}</p>`:""}
+        <div class="row2"><a class="linkbtn" href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.source||host(c.url))} ↗</a>
+        ${busy?`<span class="mono muted"><span class="scanpulse"></span> Pulling details…</span>`:st==="pulling"?"":`<button class="btn sm ${m.chosen===i&&st==="ready"?"ghost":""}" data-muse="${i}">${m.chosen===i&&st==="ready"?"Pull again":"Use this"}</button>`}</div></div></div>`}).join("");
+  let review="";
+  if(st==="ready"){const rv=matchReview(it);if(rv){const c=cands[m.chosen]||{};const n=rv.props.filter(x=>x.on).length+rv.specs.filter(x=>x.on).length+rv.refs.filter(x=>x.on).length+(rv.photo&&rv.photo.on?1:0);
+    review=`<div class="scanbox mreview"><div class="scanhead"><b>Details from ${esc(c.source||host(c.url))}</b></div>${m.details.summary?`<p class="muted">${esc(m.details.summary)}</p>`:""}
+      <div class="scanlist">
+        ${rv.photo?`<label class="scanrow mphoto"><input type="checkbox" data-mrp ${rv.photo.on?"checked":""}><span class="k">Product photo</span><span class="v"><img alt="" src="${esc(rv.photo.url)}" referrerpolicy="no-referrer" onerror="this.closest('label').remove()">${it.photo?"Replaces the current image":"Uses the photo from the product page"}</span></label>`:""}
+        ${rv.props.map((p,i)=>`<label class="scanrow"><input type="checkbox" data-mrf="${i}" ${p.on?"checked":""}><span class="k">${esc(p.l)}</span><span class="v">${p.old!==""?`<s>${esc(p.old)}</s> `:""}${esc(p.v)}</span></label>`).join("")}
+        ${rv.specs.map((p,i)=>`<label class="scanrow"><input type="checkbox" data-mrs="${i}" ${p.on?"checked":""}><span class="k">Spec · ${esc(p.label)}</span><span class="v">${esc(p.value)}</span></label>`).join("")}
+        ${rv.refs.map((p,i)=>`<label class="scanrow"><input type="checkbox" data-mrr="${i}" ${p.on?"checked":""}><span class="k">${esc(p.kind)}</span><span class="v">${esc(p.title)}</span></label>`).join("")}
+      </div>
+      <p class="muted msrc">Check prices and lead times with the supplier before ordering; web listings change.</p>
+      <div class="row2" style="margin-top:12px"><button class="btn sm" data-a="mapply" ${n?"":"disabled"}>Apply ${n} change${n===1?"":"s"}</button><button class="linkbtn" data-a="mreset">Dismiss</button></div></div>`}}
+  return`<section class="sec match">${head}${m.identified?`<p class="muted">${esc(m.identified)}</p>`:""}${m.message?`<div class="notice crit">${esc(m.message)}</div>`:""}
+    <p class="eyebrow mlead">${cands.length} possible match${cands.length===1?"":"es"} · pick one to pull its details</p><div class="mcands">${cardsHTML}</div>${review}</section>`;
+}
+async function applyMatch(it){
+  const rv=ui.mrev;const m=it.match;if(!rv||!m)return;const c=(m.candidates||[])[m.chosen]||{};
+  const patch={};rv.props.filter(p=>p.on).forEach(p=>patch[p.k]=p.v);
+  if(patch.unitCostCNY!=null)patch.priceBase="CNY";else if(patch.unitCost!=null)patch.priceBase="CAD";
+  const add=rv.specs.filter(p=>p.on);if(add.length){const specs=(it.specs||[]).map(x=>({...x}));add.forEach(a=>{const e=specs.find(x=>String(x.label).toLowerCase()===a.label.toLowerCase());if(e)e.value=a.value;else specs.push({label:a.label,value:a.value})});patch.specs=specs}
+  const refs=rv.refs.filter(r=>r.on);if(refs.length)patch.refs=[...(it.refs||[]),...refs.map(r=>({kind:r.kind,no:"",title:r.title,url:r.url,asset:null,mime:null}))];
+  if(it.pendingSetup)Object.assign(patch,setupPatch(it,{name:patch.name||it.name,description:patch.description||it.description}));
+  patch.match={status:"applied",applied:{brand:c.brand||"",name:c.name||"",url:c.url||"",source:c.source||"",at:new Date().toISOString()}};
+  const prev={};Object.keys(patch).forEach(k=>prev[k]=it[k]??null);
+  const wantPhoto=rv.photo&&rv.photo.on?rv.photo.url:null;ui.mrev=null;
+  setItem(it.id,patch);force=true;render();force=false;
+  toastUndo(`Details applied from ${c.source||"the web"}`,()=>{setItem(it.id,prev);force=true;render();force=false});
+  if(wantPhoto){try{const r=await matchPost("/api/match/photo",{item:it.id,url:wantPhoto});setItem(it.id,{photo:r.id,photoFit:"contain"})}catch(e){toast("The product photo couldn't be downloaded. Your image was kept.")}}
+}
+// A piece created from a dropped image gets its name, category and code once Claude has looked at it.
+function setupPatch(it,o){
+  const p=(it.match&&it.match.piece)||{};const name=o.name&&o.name!=="New piece"?o.name:p.name||"New piece";
+  const fur=p.isFurniture||p.category==="Furniture";const category=fur?"Furniture":p.category||it.category||"Finishes";
+  const used=items.filter(i=>i.id!==it.id).map(i=>i.code);
+  const code=fur?nextStdCode(furPrefix({name,description:o.description||p.description}),used):nextStdCode(stdPrefix({name,description:o.description||p.description,category,materialCategory:it.materialCategory}),used);
+  return{name,description:o.description||p.description||"",category,code,pendingSetup:false,...(fur?{furnitureSchedule:true,furnType:furPrefix({name})}:{})};
+}
+const setupBusy=new Set();
+function finishPendingSetups(){
+  if(!canMatch())return;
+  items.forEach(it=>{if(!it.pendingSetup||setupBusy.has(it.id))return;const st=it.match&&it.match.status;if(!st||st==="searching")return;
+    if(!(it.match.piece&&it.match.piece.name)&&st!=="error"&&st!=="none")return;
+    setupBusy.add(it.id);setTimeout(()=>{const cur=items.find(i=>i.id===it.id);if(cur&&cur.pendingSetup)setItem(cur.id,setupPatch(cur,{name:cur.name,description:cur.description}));setupBusy.delete(it.id)},0)});
+}
+async function quickAdd(file){
+  if(!canMatch()){ui.open="new";ui.mode="edit";renderLayer();setTimeout(()=>formPhoto(file),30);return}
+  if(!IMG_OK.test(file.type)){toast("Use a JPG, PNG, WebP or GIF image.");return}
+  toast("Adding the piece…");
+  let photo;try{photo=(await assets.upload(file)).id}catch(err){toast(uploadMsg(err));return}
+  const doc={code:"",name:"New piece",description:"",category:"Finishes",zone:"",supplier:"",qty:null,unit:"ea",leadWeeks:null,needBy:null,unitCost:null,status:"Concept",material:"plaster",color:"#C9C3B8",notes:"",specs:[],refs:[],photo,pendingSetup:true,created:new Date().toISOString(),source:"Added from image"};
+  const ref=db.collection("items").doc();await ref.set(doc);if(!items.some(i=>i.id===ref.id))items.push({id:ref.id,...doc});
+  ui.open=ref.id;ui.mode=null;force=true;render();force=false;
+  startMatch(ref.id,{file});
+}
+document.addEventListener("input",e=>{if(e.target.id==="m-hint"&&ui.open)ui.mhint={id:ui.open,v:e.target.value}});
+document.addEventListener("change",e=>{
+  const t=e.target;if(t.hasAttribute&&t.hasAttribute("data-quickadd")&&t.files.length){quickAdd(t.files[0]);t.value="";return}
+  const rv=ui.mrev;if(!rv)return;
+  if(t.dataset.mrf!=null)rv.props[+t.dataset.mrf].on=t.checked;else if(t.dataset.mrs!=null)rv.specs[+t.dataset.mrs].on=t.checked;else if(t.dataset.mrr!=null)rv.refs[+t.dataset.mrr].on=t.checked;else if(t.hasAttribute("data-mrp")&&rv.photo)rv.photo.on=t.checked;else return;
+  force=true;render();force=false;
+});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="m-hint"){e.preventDefault();document.querySelector('[data-a="mfind"]')?.click()}});
+document.addEventListener("click",e=>{
+  const t=e.target.closest&&e.target.closest('[data-a="mfind"],[data-a="mreset"],[data-a="mapply"],[data-muse]');if(!t)return;
+  e.preventDefault();e.stopPropagation();const it=items.find(i=>i.id===ui.open);if(!it)return;
+  if(t.dataset.muse!=null){pullDetails(it.id,+t.dataset.muse);return}
+  const a=t.dataset.a;
+  if(a==="mfind"){const h=(document.getElementById("m-hint")?.value||"").trim();ui.mhint=null;startMatch(it.id,{hint:h})}
+  else if(a==="mreset"){ui.mrev=null;setItem(it.id,{match:null});force=true;render();force=false}
+  else if(a==="mapply")applyMatch(it);
+},true);
+
+/* ---------- drop files onto a piece's drawings & references ---------- */
+async function addRefFiles(id,files){
+  const it=items.find(i=>i.id===id);if(!it||!assets)return;
+  const ok=[...files].filter(f=>/^(application\/pdf|image\/(jpeg|png|webp|gif))$/.test(f.type));
+  const skipped=files.length-ok.length;
+  if(!ok.length){toast("Drop PDFs or images. Link other files (like .dwg) with the form instead.");return}
+  toast(`Attaching ${ok.length} file${ok.length===1?"":"s"}…`);
+  const added=[];
+  for(const f of ok){try{const r=await assets.upload(f);added.push({file:f,ref:{kind:/pdf/.test(f.type)?"Drawing":"Spec sheet",no:"",title:f.name.replace(/\.[a-z0-9]+$/i,""),url:null,asset:r.id,mime:f.type}})}catch(err){toast(uploadMsg(err))}}
+  if(!added.length)return;
+  const cur=items.find(i=>i.id===id);const base=(cur.refs||[]).length;
+  setItem(id,{refs:[...(cur.refs||[]),...added.map(a=>a.ref)]});
+  toast(`${added.length} file${added.length===1?"":"s"} attached${skipped?` · ${skipped} skipped (only PDFs and images)`:""}`);
+  if(canDetect())scanRef(id,base,added[0].file);
+}
 
 /* ---------- attachments ---------- */
 const CLIP_SVG=`<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 01-7.8-7.8l8.6-8.6a3.7 3.7 0 015.2 5.2l-8.6 8.6a1.8 1.8 0 01-2.6-2.6l7.9-7.9"/></svg>`;
@@ -1649,13 +1825,13 @@ function lookbook(){
   const head=`<header class="spaceshead mathead"><span class="eyebrow">Materials &amp; products · ${list.length}${list.length!==items.length?" of "+items.length:""}</span><span class="viewctl"><span class="seg" role="group" aria-label="Card size"><span class="ctlabel">Size</span>${[["s","Small"],["m","Medium"],["l","Large"]].map(([k,l])=>`<button class="chip" data-csize="${k}" aria-pressed="${(ui.cardSize||"m")===k}">${l}</button>`).join("")}</span>
     <span class="seg" role="group" aria-label="Image"><span class="ctlabel">Image</span><button class="chip" data-cfit="cover" aria-pressed="${(ui.imgFit||"cover")==="cover"}">Fill</button><button class="chip" data-cfit="contain" aria-pressed="${ui.imgFit==="contain"}">Whole</button></span>
     ${ed?`<button class="linkbtn" data-a="new">Add products or materials</button>`:""}</span></header>`;
-  const addTile=ed?`<button class="card addcard" data-a="new"><div class="plate"><span><b>Add products or materials</b><span>A finish, fixture, fitting or piece of furniture, with its image, specification and quantity</span></span></div></button>`:"";
+  const addTile=ed?(canMatch()?`<div class="card addcard quick"><label class="plate"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" data-quickadd hidden><span><b>Add products or materials</b><span>Drop an image or tap to choose one. Claude finds the product online and fills in its details.</span></span></label><button class="linkbtn handadd" data-a="new">or fill in by hand</button></div>`:`<button class="card addcard" data-a="new"><div class="plate"><span><b>Add products or materials</b><span>A finish, fixture, fitting or piece of furniture, with its image, specification and quantity. Or drop an image here.</span></span></div></button>`):"";
   if(!list.length)return head+`<div class="look">${items.length?`<div class="empty">Nothing here at this stage.</div>`:""}${addTile}</div>`;
   /* editorial rhythm: 6/6, 4/4/4, 6/6 ... */
   const size=ui.cardSize||"m";const pattern=size==="m"?["feature","feature","","","tall","","",""]:[""];
   return head+`<div class="look size-${size}">${list.map((it,i)=>{const p=pattern[i%pattern.length];const u=urgency(it);return`
     <button class="card ${p}" data-open="${it.id}">
-      <div class="plate ${fitOf(it)==="contain"?"fitwhole":""}"><img alt="" src="${imgFor(it,size==="l"||p==="feature"?760:size==="s"?360:520)}" loading="lazy"><span class="tag mono">${esc(it.code||"")}</span>${hasModel(it)?`<span class="b3d mono" title="3D model">3D</span>`:""}${clip(it,"onplate")}${u?`<span class="late mono">${u.label}</span>`:""}</div>
+      <div class="plate ${fitOf(it)==="contain"?"fitwhole":""}"><img alt="" src="${imgFor(it,size==="l"||p==="feature"?760:size==="s"?360:520)}" loading="lazy"><span class="tag mono">${esc(it.code||"")}</span>${hasModel(it)?`<span class="b3d mono" title="3D model">3D</span>`:""}${canMatch()&&it.match&&["searching","pulling"].includes(it.match.status)?`<span class="mbadge mono"><span class="scanpulse"></span>Searching</span>`:canMatch()&&it.match&&["found","ready"].includes(it.match.status)?`<span class="mbadge mono on">Matches ready</span>`:""}${clip(it,"onplate")}${u?`<span class="late mono">${u.label}</span>`:""}</div>
       <div class="cap"><h3>${esc(it.name)}</h3><span class="q">${esc(qtyStr(it))}</span>
       <div class="sub"><span><i class="dot s-${esc(it.status)}"></i>${esc(it.status)}</span><span>${esc(it.category||"")}</span>${it.supplier?`<span>${esc(it.supplier)}</span>`:""}${reviewChip(it)}${(()=>{const n=commentsFor(it.id).length;return n?`<span class="ccount">${n} comment${n===1?"":"s"}</span>`:""})()}</div></div>
     </button>`}).join("")}${addTile}</div>`;
@@ -1758,6 +1934,7 @@ function renderLayer(passive){
         <div><span class="eyebrow">${isClient()?"Unit price":"Unit cost"}</span><b>${it.unitCost?"$"+Number(it.unitCost).toLocaleString("en-CA"):"—"}</b></div>
       </div>
 
+      ${matchSection(it)}
       ${HOSTED?modelSection(it,ed&&!!assets):""}
       ${inFurniture(it)?furSection(it,ed):finSection(it,ed)}
       ${!inFurniture(it)&&!inFinish(it)&&ed?`<p class="muted listhint">Add to the <button class="linkbtn" data-a="listfin">finish schedule</button> or the <button class="linkbtn" data-a="listfur">furniture schedule</button>.</p>`:""}
@@ -1766,7 +1943,7 @@ function renderLayer(passive){
         ${ed?`<form class="mini" data-form="spec"><input class="f" id="sl" name="label" placeholder="Attribute" required><input class="f" id="sv" name="value" placeholder="Value" required><button class="btn sm">Add</button></form>`:""}
       </section>
 
-      <section class="sec"><header><h5>Drawings &amp; references</h5><span class="mono muted">${(it.refs||[]).length}</span></header>
+      <section class="sec refsec"><header><h5>Drawings &amp; references</h5><span class="mono muted">${(it.refs||[]).length}${ed&&assets?" · drop PDFs or images here":""}</span></header>
         ${scanPanel(it)}
         <div class="refs">${(it.refs||[]).map((r,i)=>{const href=r.asset?"/_blob/"+r.asset:r.url;return`<div class="ref"><span class="kind">${esc(r.kind)}</span><span class="mono no">${esc(r.no||"")}</span>${r.asset?`<a class="t" href="${esc(href)}" data-viewref="${it.id}:${i}">${esc(r.title||r.no||"Open")}</a>`:href?`<a class="t" href="${esc(href)}" target="_blank" rel="noopener">${esc(r.title||r.no||"Open")} ↗</a>`:`<span class="t">${esc(r.title)}</span>`}${ed&&r.asset?`<button class="readbtn" data-readref="${i}" title="Read this attachment and fill in details" ${ui.scan&&ui.scan.status==="run"?"disabled":""}>Read</button>`:"<span></span>"}${ed?`<button class="x" data-delref="${i}" aria-label="Remove">×</button>`:"<span></span>"}</div>`}).join("")||`<p class="muted">No drawings or spec sheets linked yet.</p>`}</div>
         ${ed?`<form class="mini r" data-form="ref">
@@ -2356,6 +2533,7 @@ function detectSheet(){
         <div class="revfoot"><span class="pill ${r.confidence==="high"?"ok":r.confidence==="low"?"crit":"warn"}">${esc(r.confidence||"medium")} confidence</span>${r.crop?`<label class="mono muted"><input type="checkbox" data-usecrop="${i}" ${r.useCrop?"checked":""}> Use crop as image</label>`:""}</div>
       </div></div>`).join("")}</div>
     ${det.msg?`<div class="notice crit">${esc(det.msg)}</div>`:""}
+    ${canMatch()?`<label class="mlook"><input type="checkbox" data-detlook ${det.lookup!==false?"checked":""}> <span><b>Find each piece online</b><span class="muted">Claude searches the web for every piece you add and lines up matches for you to confirm. About 10–20¢ of Claude usage per piece.</span></span></label>`:""}
     <div class="row2 addbar"><button class="btn" data-a="adddet" ${n&&!det.adding?"":"disabled"}>${det.adding?"Adding…":`Add ${n} piece${n===1?"":"s"} to the book`}</button><button class="btn ghost" data-a="redet">Detect again</button></div>`;
   }
   return`<div class="scrim" data-a="closedet"></div>
@@ -2442,7 +2620,7 @@ async function addDetected(){
   det.adding=true;renderLayer();
   const nextNum={};const used=new Set(items.map(i=>String(i.code||"").toUpperCase()));
   const taken=items.map(i=>i.code);const nextCode=r=>{const c=nextStdCode(r.category==="Furniture"?furPrefix({name:r.name,description:r.description}):stdPrefix({materialCategory:r.materialCategory,name:r.name,description:r.description,category:r.category,material:r.material,finishName:r.finishName}),taken);taken.push(c);return c};
-  let added=0;
+  let added=0;const lookups=[];
   try{
     for(const r of keep){
       let photo=null;
@@ -2452,9 +2630,11 @@ async function addDetected(){
         qty:r.qty,unit:r.unit,leadWeeks:null,needBy:null,unitCost:null,status:"Concept",material:r.material,color:r.color,notes:"",
         specs:r.specs,refs:[],photo,sourceImage:src?.asset||null,box:r.box&&r.image!=null?r.box:null,detected:true,created:new Date().toISOString(),source:"Detected from image"};
       const ref=db.collection("items").doc();await ref.set(doc);if(!items.some(i=>i.id===ref.id))items.push({id:ref.id,...doc});added++;
+      if(canMatch()&&det.lookup!==false)lookups.push({id:ref.id,crop:r.crop&&r.useCrop?r.crop:null});
     }
     ui.detOpen=false;det=null;document.body.style.overflow="";ui.view="mat";force=true;render();force=false;
-    toast(`${added} piece${added===1?"":"s"} added. Set quantities, lead times and site dates to schedule them.`);
+    toast(lookups.length?`${added} piece${added===1?"":"s"} added. Claude is looking each one up online; matches appear on the cards.`:`${added} piece${added===1?"":"s"} added. Set quantities, lead times and site dates to schedule them.`);
+    (async()=>{for(const l of lookups){try{await startMatch(l.id,{file:l.crop?await (await fetch(l.crop)).blob():undefined,quiet:true})}catch(_){}}force=true;render();force=false})();
   }catch(e){det.adding=false;det.msg=`Stopped after adding ${added}. ${e&&e.code==="quota_exceeded"?"Storage is full.":"Try again to add the rest."}`;det.results=det.results.filter((r,i)=>!(r.keep&&keep.indexOf(r)<added));renderLayer()}
 }
 
@@ -2463,6 +2643,7 @@ async function startFromImages(files){
   if(canDetect()){const max=imgLimits.images.maxCount||4;openDetect(added.slice(0,max))}
   else toast("Images added to the project");
 }
+document.addEventListener("change",e=>{if(e.target.hasAttribute&&e.target.hasAttribute("data-detlook")&&det)det.lookup=e.target.checked});
 document.addEventListener("input",e=>{const t=e.target;if(t.id==="det-zone"&&det){det.zone=t.value}else if(t.dataset&&t.dataset.rf==="name"&&det){det.results[+t.dataset.i].name=t.value}});
 ["dragover","dragleave","drop"].forEach(ev=>document.addEventListener(ev,e=>{
   const z=e.target.closest&&e.target.closest("#gal-drop,#start-drop,.pick.add");if(!z)return;e.preventDefault();
@@ -2545,7 +2726,7 @@ document.addEventListener("dragstart",e=>{if(e.target.closest&&e.target.closest(
 
 /* ---------- English / 中文 ---------- */
 const ZH={
-"3D model":"3D 模型","Add a 3D model":"添加 3D 模型","GLB exported from Rhino, SketchUp or Revit, with its materials. Drop it here or choose a file. Up to 100 MB.":"从 Rhino、SketchUp 或 Revit 导出的含材质 GLB 文件。拖放到此处或选择文件，最大 100 MB。","Drag to turn · pinch or scroll to zoom":"拖动旋转 · 双指或滚轮缩放","Drag to turn · pinch or scroll to zoom · double-tap to reset":"拖动旋转 · 双指或滚轮缩放 · 双击复位","View in your room":"在您的房间中查看","View in 3D":"3D 查看","Replace model":"替换模型","Remove model":"移除模型","3D model added":"已添加 3D 模型","3D model removed":"已移除 3D 模型","USDZ added for iPhone and iPad":"已为 iPhone 和 iPad 添加 USDZ","Add USDZ for iPhone & iPad":"为 iPhone 和 iPad 添加 USDZ","Replace USDZ for iPhone & iPad":"替换 iPhone 和 iPad 的 USDZ","Full screen":"全屏","Upload failed. Try again.":"上传失败，请重试。","Open a product, then drop the model on its 3D model section.":"请先打开产品，再将模型拖到其 3D 模型区域。","Export as glTF Binary (.glb) so the textures travel inside one file.":"请导出为 glTF 二进制（.glb），使贴图包含在同一文件中。","Use a GLB file (or USDZ for iPhone and iPad).":"请使用 GLB 文件（iPhone 和 iPad 可用 USDZ）。","Add the GLB first. The USDZ is an extra for Apple AR.":"请先添加 GLB。USDZ 仅用于苹果 AR。","That isn't a GLB file. Export as glTF Binary (.glb).":"这不是 GLB 文件。请导出为 glTF 二进制（.glb）。","That model is over 100 MB.":"模型超过 100 MB。","The 3D viewer couldn't load. Check your connection.":"3D 查看器无法加载，请检查网络。","Admin":"管理员","Sourcing agent":"采购代理","Client":"客户","Sign out":"退出登录","Signed in":"已登录","Client review":"客户审核","✓ Client approved":"✓ 客户已批准","Changes requested":"需修改","✓ Approved":"✓ 已批准","Let the studio know if this piece works for you.":"请告诉工作室此项目是否合适。","Waiting for the client's review.":"等待客户审核。","Add a note (optional)":"添加备注（可选）","Approve":"批准","Request changes":"要求修改","Clear my review":"撤销我的审核","Comments":"评论","No comments yet.":"暂无评论。","Ask a question or leave a note for the studio":"向工作室提问或留言","Write a comment":"写评论","Post":"发布","Remove comment":"删除评论","Approved. The studio can see it.":"已批准，工作室可以看到。","Sent to the studio.":"已发送给工作室。","Review cleared":"审核已撤销","Your role can't do that.":"您的角色无法执行此操作。","Clients can view, approve and comment.":"客户可以查看、批准和评论。","Only admins can delete projects.":"只有管理员可以删除项目。","← Projects":"← 项目",
+"Find it online":"在线查找","Search again":"重新搜索","Start over":"重新开始","Optional hint: brand, retailer or what to look for":"可选提示：品牌、零售商或查找重点","Claude searches the web for this product, shows you likely matches, and pulls the details of the one you pick. About 10–20¢ of Claude usage per search.":"Claude 会在网上搜索此产品，列出可能的匹配项，并获取您所选产品的详细信息。每次搜索约消耗 0.1–0.2 美元的 Claude 用量。","Find this product online":"在线查找此产品","Searching the web for matches…":"正在网上搜索匹配产品…","This usually takes 30 to 90 seconds. You can close this and keep working; the matches will be waiting here.":"通常需要 30 到 90 秒。您可以关闭此页继续工作，结果会保留在这里。","The search didn't finish":"搜索未完成","Try again":"重试","No confident match found":"未找到可靠的匹配","Add a hint, such as the brand or where you saw it, and search again.":"添加提示（例如品牌或出处）后重新搜索。","✓ Matched":"✓ 已匹配","Use this":"使用此项","Pull again":"重新获取","Pulling details…":"正在获取详情…","Product photo":"产品照片","Replaces the current image":"替换当前图片","Uses the photo from the product page":"使用产品页面的照片","Check prices and lead times with the supplier before ordering; web listings change.":"下单前请向供应商核实价格和交货期；网上信息可能变动。","Dismiss":"关闭","Add products or materials":"添加产品或材料","Drop an image or tap to choose one. Claude finds the product online and fills in its details.":"拖入图片或点击选择。Claude 会在网上查找该产品并填写详情。","or fill in by hand":"或手动填写","Matches ready":"匹配结果已就绪","Searching":"搜索中","Find each piece online":"在线查找每一项","Claude searches the web for every piece you add and lines up matches for you to confirm. About 10–20¢ of Claude usage per piece.":"Claude 会为您添加的每一项在网上搜索，并列出匹配结果供您确认。每项约消耗 0.1–0.2 美元的 Claude 用量。","Adding the piece…":"正在添加…","Add a photo first.":"请先添加照片。","Spec sheet":"规格书","Link":"链接","Listed price":"标价","Unit cost (CAD)":"单价（加元）","Unit cost (CNY)":"单价（人民币）","New piece":"新项目","Drop PDFs or images. Link other files (like .dwg) with the form instead.":"请拖入 PDF 或图片。其他文件（如 .dwg）请通过表单添加链接。","The product photo couldn't be downloaded. Your image was kept.":"无法下载产品照片，已保留您的图片。","A finish, fixture, fitting or piece of furniture, with its image, specification and quantity. Or drop an image here.":"饰面、灯具、配件或家具，以及其图片、规格和数量。也可将图片拖到这里。","3D model":"3D 模型","Add a 3D model":"添加 3D 模型","GLB exported from Rhino, SketchUp or Revit, with its materials. Drop it here or choose a file. Up to 100 MB.":"从 Rhino、SketchUp 或 Revit 导出的含材质 GLB 文件。拖放到此处或选择文件，最大 100 MB。","Drag to turn · pinch or scroll to zoom":"拖动旋转 · 双指或滚轮缩放","Drag to turn · pinch or scroll to zoom · double-tap to reset":"拖动旋转 · 双指或滚轮缩放 · 双击复位","View in your room":"在您的房间中查看","View in 3D":"3D 查看","Replace model":"替换模型","Remove model":"移除模型","3D model added":"已添加 3D 模型","3D model removed":"已移除 3D 模型","USDZ added for iPhone and iPad":"已为 iPhone 和 iPad 添加 USDZ","Add USDZ for iPhone & iPad":"为 iPhone 和 iPad 添加 USDZ","Replace USDZ for iPhone & iPad":"替换 iPhone 和 iPad 的 USDZ","Full screen":"全屏","Upload failed. Try again.":"上传失败，请重试。","Open a product, then drop the model on its 3D model section.":"请先打开产品，再将模型拖到其 3D 模型区域。","Export as glTF Binary (.glb) so the textures travel inside one file.":"请导出为 glTF 二进制（.glb），使贴图包含在同一文件中。","Use a GLB file (or USDZ for iPhone and iPad).":"请使用 GLB 文件（iPhone 和 iPad 可用 USDZ）。","Add the GLB first. The USDZ is an extra for Apple AR.":"请先添加 GLB。USDZ 仅用于苹果 AR。","That isn't a GLB file. Export as glTF Binary (.glb).":"这不是 GLB 文件。请导出为 glTF 二进制（.glb）。","That model is over 100 MB.":"模型超过 100 MB。","The 3D viewer couldn't load. Check your connection.":"3D 查看器无法加载，请检查网络。","Admin":"管理员","Sourcing agent":"采购代理","Client":"客户","Sign out":"退出登录","Signed in":"已登录","Client review":"客户审核","✓ Client approved":"✓ 客户已批准","Changes requested":"需修改","✓ Approved":"✓ 已批准","Let the studio know if this piece works for you.":"请告诉工作室此项目是否合适。","Waiting for the client's review.":"等待客户审核。","Add a note (optional)":"添加备注（可选）","Approve":"批准","Request changes":"要求修改","Clear my review":"撤销我的审核","Comments":"评论","No comments yet.":"暂无评论。","Ask a question or leave a note for the studio":"向工作室提问或留言","Write a comment":"写评论","Post":"发布","Remove comment":"删除评论","Approved. The studio can see it.":"已批准，工作室可以看到。","Sent to the studio.":"已发送给工作室。","Review cleared":"审核已撤销","Your role can't do that.":"您的角色无法执行此操作。","Clients can view, approve and comment.":"客户可以查看、批准和评论。","Only admins can delete projects.":"只有管理员可以删除项目。","← Projects":"← 项目",
 "Sourcebook":"选材手册","Design to construction":"从设计到施工","Untitled":"未命名","project":"项目","Untitled project":"未命名项目",
 "Import":"导入","Add product":"添加产品","Edit project":"编辑项目","Update from sheet":"从表格更新","Linked Google Sheet ↗":"已关联 Google 表格 ↗",
 "Concept":"概念","Specified":"已定规格","Approved":"已批准","Ordered":"已下单","Delivered":"已到场",
@@ -2609,6 +2790,7 @@ const ZH={
 "Primary ensuite":"主卧卫生间","Location ":"位置","Linked to":"已关联","your Google Sheet ↗":"您的 Google 表格 ↗","download it as Excel":"下载为 Excel","download it as Excel ↗":"下载为 Excel ↗","Upload the download":"上传下载的文件","Paste rows":"粘贴行","Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.":"此服务器尚未设置 Claude。请在 Render 中添加 Anthropic API 密钥（ANTHROPIC_API_KEY）。","Showing example pieces because the server couldn't be reached. Check your connection and reload.":"无法连接服务器，正在显示示例项目。请检查网络后重新加载。","Uses the Anthropic API key set on the server.":"使用服务器上设置的 Anthropic API 密钥。","Claude isn't available right now. Reload the page and try again.":"Claude 暂时不可用，请重新加载页面后重试。","Images couldn't be sent to Claude. Reload the page and try again.":"无法将图片发送给 Claude，请重新加载页面后重试。","or drop / paste an image":"或拖放 / 粘贴图片","Drop an image on the picture, or use a material plate below":"将图片拖放到画面上，或使用下方的材料样板","Use a JPG, PNG, WebP or GIF image.":"请使用 JPG、PNG、WebP 或 GIF 图片。","Save the image to your device first, then drop the file here.":"请先将图片保存到设备，再将文件拖放到这里。","Size":"尺寸","Small":"小","Medium":"中","Large":"大","Fill":"填满","Whole":"完整","Card size":"卡片尺寸","Show whole image":"显示完整图片","Fill the frame":"填满画框","Projects":"项目","All projects":"全部项目","← All projects":"← 全部项目","Sourcebook · Studio":"选材手册 · 工作室","New project":"新建项目","Active projects":"进行中项目","Pieces in sourcing":"采购中项目","Orders overdue":"逾期未下单","Due in 3 weeks":"三周内需下单","Quoted value":"报价总额","Active":"进行中","Archived":"已归档","Open now":"当前打开","No pictures yet":"暂无图片","pieces":"个项目","drawings":"张图纸","quoted (CAD)":"报价（加元）","Open":"打开","Archive":"归档","Restore":"恢复","Delete project…":"删除项目…","Start a book for a new job: its lookbook, schedules and quotation.":"为新工作建立手册：效果册、清单与报价单。","Create project":"创建项目","Project created":"已创建项目","Project deleted":"已删除项目","Loading projects…":"正在加载项目…","Updating…":"正在更新…","No archived projects.":"没有已归档的项目。","Project options":"项目选项","across all projects":"所有项目合计","Couldn't create the project. Try again.":"无法创建项目，请重试。","Some of the project couldn't be removed. Try again.":"部分项目内容无法删除，请重试。","Projects appear here once the book is open on claude.ai.":"在 claude.ai 中打开手册后，项目会显示在这里。","Quotation":"报价单","Total (CAD)":"合计（加元）","Total (CNY)":"合计（人民币）","Items priced":"已报价项目","Exchange rate":"汇率","Set for this project":"本项目设定","Unit price (CAD)":"单价（加元）","Unit price (CNY)":"单价（人民币）","Price TBD":"价格待定","Qty TBD":"数量待定","Subtotal":"小计","Sourcing fee":"采购服务费","Freight & logistics":"运费与物流","Tax":"税费","Total":"合计","Enter a unit price in either currency; the other is converted at the project rate.":"可以任一币种输入单价，另一币种按项目汇率自动换算。","No materials or products yet.":"暂无材料或产品。","1 CAD =":"1 加元 =","Other":"其他","Unit price CAD":"单价 加元","Unit price CNY":"单价 人民币","Language":"语言","View all":"查看全部"
 };
 const ZH_PAT=[
+ [/^(\d+) possible match(?:es)? · pick one to pull its details$/,m=>`${m[1]} 个可能的匹配 · 选择一项以获取详情`],[/^Details from (.+)$/,m=>`来自 ${m[1]} 的详情`],[/^Details applied from (.+)$/,m=>`已应用来自 ${m[1]} 的详情`],[/^Attaching (\d+) files?…$/,m=>`正在附加 ${m[1]} 个文件…`],[/^(\d+) files? attached(.*)$/,m=>`已附加 ${m[1]} 个文件`],[/^(\d+) pieces? added\. Claude is looking each one up online; matches appear on the cards\.$/,m=>`已添加 ${m[1]} 项。Claude 正在逐一在线查找，匹配结果会显示在卡片上。`],[/^(.+) match$/,m=>({high:"高",medium:"中",low:"低"}[m[1]]?`匹配度${({high:"高",medium:"中",low:"低"})[m[1]]}`:m[0])],[/^Design: (.+)$/,m=>`设计：${m[1]}`],
  [/^Uploading (.+)$/,m=>`正在上传 ${m[1]}`],[/^(.+) · large models can take a minute$/,m=>`${m[1]} · 大型模型可能需要一分钟`],[/^That model is (.+)\. Keep it under 100 MB.*$/,m=>`模型大小为 ${m[1]}，请控制在 100 MB 以内：开启 Draco 压缩或使用较小的贴图。`],
  [/^by (.+) · (.+)$/,m=>`${m[1]} · ${m[2]}`],[/^(\d+) comments?$/,m=>`${m[1]} 条评论`],
  [/^(\d+) pieces? · (\d+) decisions?$/,m=>`${m[1]} 个项目 · ${m[2]} 项决策`],

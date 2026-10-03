@@ -6,6 +6,8 @@ const fs = require("fs");
 const fsp = fs.promises;
 const path = require("path");
 const crypto = require("crypto");
+const dns = require("dns").promises;
+const net = require("net");
 
 const PORT = Number(process.env.PORT) || 3000;
 const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, "data"));
@@ -46,6 +48,14 @@ function sniffType(file) {
     if (b.slice(0, 4).toString() === "RIFF" && b.slice(8, 12).toString() === "WEBP") return "image/webp";
   } catch (_) {}
   return "application/octet-stream";
+}
+
+function sniffBuf(b) {
+  if (b[0] === 0xff && b[1] === 0xd8) return "image/jpeg";
+  if (b.slice(0, 4).toString("hex") === "89504e47") return "image/png";
+  if (b.slice(0, 4).toString() === "GIF8") return "image/gif";
+  if (b.slice(0, 4).toString() === "RIFF" && b.slice(8, 12).toString() === "WEBP") return "image/webp";
+  return null;
 }
 
 /* ---------------- document store ---------------- */
@@ -219,7 +229,7 @@ const projectOf = p => { const m = /^projects\/([^/]+)/.exec(p || ""); return m 
 function canSeeProject(u, id) { return allAccess(u) || (u.projects || []).includes(id); }
 function canRead(u, p) { if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
 // Internal fields a client never receives.
-const CLIENT_HIDDEN = ["notes"];
+const CLIENT_HIDDEN = ["notes", "match", "pendingSetup"];
 function forUser(u, p, data) {
   if (u.role !== "client" || !data || !/^projects\/[^/]+\/items\/[^/]+$/.test(p)) return data;
   const o = { ...data }; CLIENT_HIDDEN.forEach(k => delete o[k]); return o;
@@ -267,6 +277,149 @@ async function askClaude({ input, images = [], modelTier = "default" }) {
   const text = (j.content || []).filter(c => c.type === "text").map(c => c.text).join("");
   if (!text.trim()) throw Object.assign(new Error("empty"), { status: 502, code: "empty_completion" });
   return { text, truncated: j.stop_reason === "max_tokens", modelTierApplied: modelTier };
+}
+
+/* ---------------- find products online ---------------- */
+// Claude searches the web for the product in a photo (web search tool), then reads the
+// chosen product page (web fetch tool). Jobs run on the server and write into the item,
+// so they finish even if the page that started them is closed.
+const API_URL = process.env.ANTHROPIC_API_URL || "https://api.anthropic.com/v1/messages";
+async function claudeTurns({ messages, tools, max_tokens = 6000, model }) {
+  if (!ANTHROPIC_API_KEY) throw Object.assign(new Error("Claude isn't set up on this server. Add ANTHROPIC_API_KEY in Render."), { code: "sampling_disabled" });
+  const convo = messages.slice();
+  for (let i = 0; i < 6; i++) {
+    const r = await fetch(API_URL, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({ model: model || MODELS.default, max_tokens, messages: convo, tools }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const msg = j?.error?.message || `Claude API error ${r.status}`;
+      const code = /usage limits|spend limit|credit balance/i.test(msg) || j?.error?.error_code === "enforced_spend_limit_reached" ? "limit" : /web search|web_search|web fetch/i.test(msg) ? "web_disabled" : r.status === 429 ? "rate_limited" : "upstream_error";
+      throw Object.assign(new Error(msg), { code });
+    }
+    if (j.stop_reason === "pause_turn") { convo.push({ role: "assistant", content: j.content }); continue; }
+    const text = (j.content || []).filter(c => c.type === "text").map(c => c.text).join("");
+    const searched = (j.content || []).filter(c => c.type === "web_search_tool_result" && Array.isArray(c.content)).flatMap(c => c.content.map(x => x.url)).filter(Boolean);
+    return { text, searched, stop: j.stop_reason };
+  }
+  throw Object.assign(new Error("Claude took too long."), { code: "upstream_error" });
+}
+function parseJSON(text) {
+  const tries = [text.trim()];
+  const m = text.match(/```(?:json)?\s*([\s\S]*?)```/); if (m) tries.push(m[1].trim());
+  const a = text.indexOf("{"), b = text.lastIndexOf("}"); if (a >= 0 && b > a) tries.push(text.slice(a, b + 1));
+  for (const t of tries) { try { return JSON.parse(t); } catch (_) {} }
+  return null;
+}
+// Fetch a public web page or image, refusing private addresses.
+function privateIP(ip) {
+  if (net.isIPv4(ip)) { const [a, b] = ip.split(".").map(Number); return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224; }
+  const x = ip.toLowerCase(); return x === "::1" || x === "::" || x.startsWith("fc") || x.startsWith("fd") || x.startsWith("fe80") || x.startsWith("::ffff:") && privateIP(x.slice(7));
+}
+async function safeFetch(url, { maxBytes = 2e6, timeout = 12000, accept = "*/*" } = {}) {
+  let u = new URL(url);
+  for (let hop = 0; hop < 5; hop++) {
+    if (!/^https?:$/.test(u.protocol) || u.username || u.password) throw new Error("bad url");
+    const addrs = net.isIP(u.hostname) ? [{ address: u.hostname }] : await dns.lookup(u.hostname, { all: true });
+    if (!addrs.length || addrs.some(a => privateIP(a.address))) throw new Error("blocked host");
+    const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), timeout);
+    let r;
+    try { r = await fetch(u, { redirect: "manual", signal: ctl.signal, headers: { accept, "user-agent": "Mozilla/5.0 (compatible; Sourcebook/1.0; product lookup)", "accept-language": "en-CA,en;q=0.9" } }); }
+    finally { clearTimeout(tm); }
+    if (r.status >= 300 && r.status < 400 && r.headers.get("location")) { u = new URL(r.headers.get("location"), u); continue; }
+    if (!r.ok) throw new Error("status " + r.status);
+    const chunks = []; let size = 0;
+    for await (const c of r.body) { size += c.length; if (size > maxBytes) throw new Error("too large"); chunks.push(c); }
+    return { url: u.href, type: String(r.headers.get("content-type") || "").split(";")[0].trim().toLowerCase(), body: Buffer.concat(chunks) };
+  }
+  throw new Error("too many redirects");
+}
+async function pageImage(url) {
+  try {
+    const { body, type, url: final } = await safeFetch(url, { maxBytes: 1.5e6, timeout: 9000, accept: "text/html" });
+    if (!/html/.test(type)) return null;
+    const html = body.toString("utf8");
+    const pick = re => { const m = html.match(re); return m ? m[1] : null; };
+    const raw = pick(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i) || pick(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)
+      || pick(/<meta[^>]+name=["']twitter:image(?::src)?["'][^>]+content=["']([^"']+)["']/i) || pick(/<link[^>]+rel=["']image_src["'][^>]+href=["']([^"']+)["']/i);
+    if (!raw) return null;
+    const abs = new URL(raw.replace(/&amp;/g, "&"), final).href;
+    return /^https?:/.test(abs) ? abs : null;
+  } catch (_) { return null; }
+}
+function patchItem(dp, patch) {
+  const cur = store[dp]; if (!cur) return null;
+  const next = stripUndefined({ ...cur.data, ...patch });
+  store[dp] = { data: next, version: (cur.version || 0) + 1, updatedAt: new Date().toISOString() };
+  persist(); broadcast({ path: dp, exists: true, data: next });
+  return next;
+}
+const jobQueue = []; let jobsRunning = 0;
+function enqueue(fn) { jobQueue.push(fn); pump(); }
+function pump() { while (jobsRunning < 2 && jobQueue.length) { const fn = jobQueue.shift(); jobsRunning++; Promise.resolve().then(fn).catch(e => console.error("job", e.message)).finally(() => { jobsRunning--; pump(); }); } }
+const LOC = { type: "approximate", city: "Toronto", region: "Ontario", country: "CA", timezone: "America/Toronto" };
+const CATS = ["Stone", "Finishes", "Millwork", "Lighting", "Hardware", "Plumbing", "Textiles", "Furniture", "Tile", "Glazing"];
+const matchError = e => e.code === "limit" ? "The Claude spending limit or credit for this account has been reached. Check Billing in the Anthropic Console."
+  : e.code === "web_disabled" ? "Web search is turned off for this Anthropic account. Turn it on in the Anthropic Console under Settings → Capabilities (or ask whoever manages the account)."
+  : e.code === "sampling_disabled" ? e.message : e.code === "rate_limited" ? "Claude is busy right now. Try again in a minute." : "The search didn't finish. Try again.";
+async function runIdentify(dp, image, hint, lang) {
+  const it = store[dp]?.data; if (!it) return;
+  const known = [["Name", it.pendingSetup ? "" : it.name], ["Description", it.description], ["Category", it.category], ["Manufacturer", it.supplier], ["Product", it.product], ["Model", it.modelCode], ["Dimensions", it.dims], ["Finish", it.finishName]].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("; ");
+  const prompt = `You are a sourcing agent for an interior design studio in Toronto. ${image ? "The photo shows a product (furniture, lighting, a fixture, a finish or a material)" : "Find this product"}${it.pendingSetup ? "" : ` filed as "${it.name}"`}.${known ? "\nWhat we already know: " + known + "." : ""}${hint ? "\nHint from the studio: " + hint : ""}
+1. Identify the specific commercial product: designer, manufacturer, collection and model if you can. If the photo shows a room, focus on ${it.pendingSetup ? "the most prominent product" : `the ${it.name}`}.
+2. Use web search to find the actual product: the manufacturer's page first, then reputable retailers or distributors (Canadian ones where possible, to see CAD prices). Search with distinctive features, likely brand and product names. Run several searches if needed.
+3. Return up to 4 candidates ranked by how well they match the photo. Only include products you found a real page for, using the URL from the search results. Do not invent URLs, prices or model numbers.
+Reply with only a JSON object:
+{"identified": one sentence describing what is in the photo,
+ "piece": {"name": short trade name a supplier would recognise, "category": one of ${JSON.stringify(CATS)}, "description": one sentence, "isFurniture": boolean},
+ "candidates": [{"brand": string, "name": product name, "model": model or SKU|null, "designer": string|null, "url": page URL, "source": site name, "price": number|null, "currency": "CAD"|"USD"|"EUR"|"GBP"|"CNY"|null, "confidence": "high"|"medium"|"low", "why": one short line on why it matches or how it differs}]}
+Use an empty candidates list if nothing credible turns up.${lang === "zh" ? "\nWrite identified, description and why in Simplified Chinese; keep brand, product and model names as published." : ""}`;
+  const content = [];
+  if (image) content.push({ type: "image", source: { type: "base64", media_type: image.media_type, data: image.data } });
+  content.push({ type: "text", text: prompt });
+  try {
+    const { text } = await claudeTurns({ messages: [{ role: "user", content }], tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 6, user_location: LOC }], max_tokens: 4000 });
+    const out = parseJSON(text) || {};
+    let cands = (Array.isArray(out.candidates) ? out.candidates : []).filter(c => c && c.url && /^https?:\/\//.test(c.url) && c.name).slice(0, 4)
+      .map(c => ({ brand: String(c.brand || "").slice(0, 120), name: String(c.name).slice(0, 200), model: c.model ? String(c.model).slice(0, 120) : null, designer: c.designer ? String(c.designer).slice(0, 120) : null,
+        url: String(c.url), source: String(c.source || (() => { try { return new URL(c.url).hostname.replace(/^www\./, ""); } catch (_) { return ""; } })()).slice(0, 80),
+        price: Number.isFinite(Number(c.price)) && c.price !== null && c.price !== "" ? Number(c.price) : null, currency: c.currency || null,
+        confidence: ["high", "medium", "low"].includes(c.confidence) ? c.confidence : "low", why: String(c.why || "").slice(0, 300) }));
+    const imgs = await Promise.all(cands.map(c => pageImage(c.url)));
+    cands = cands.map((c, i) => ({ ...c, image: imgs[i] }));
+    const piece = out.piece && typeof out.piece === "object" ? { name: String(out.piece.name || "").slice(0, 200), category: CATS.includes(out.piece.category) ? out.piece.category : null, description: String(out.piece.description || "").slice(0, 400), isFurniture: !!out.piece.isFurniture } : null;
+    patchItem(dp, { match: { ...(store[dp]?.data?.match || {}), status: cands.length ? "found" : "none", identified: String(out.identified || "").slice(0, 400), piece, candidates: cands, finished: new Date().toISOString() } });
+  } catch (e) {
+    console.error("identify", e.message);
+    patchItem(dp, { match: { ...(store[dp]?.data?.match || {}), status: "error", message: matchError(e), finished: new Date().toISOString() } });
+  }
+}
+async function runDetails(dp, index, lang) {
+  const it = store[dp]?.data; const m = it?.match; const c = m?.candidates?.[index]; if (!c) return;
+  const prompt = `You are a sourcing agent for an interior design studio in Toronto. We've chosen this product:
+${c.brand} ${c.name}${c.model ? " (" + c.model + ")" : ""}: ${c.url}
+Read that page with web fetch. If it doesn't give dimensions, materials or a spec sheet, you may search once or twice for the manufacturer's spec sheet or product page.
+Extract only what the sources state. Leave anything not stated as null. Do not guess.
+Reply with only a JSON object:
+{"fields": {"name": product name as a schedule line, "description": one or two sentences, "supplier": manufacturer or brand, "product": collection or product name, "modelCode": model / SKU|null, "materialCategory": e.g. "Upholstered seating", "Porcelain tile", "Pendant light"|null, "finishName": finish or colour name|null, "dims": dimensions with units, e.g. "W 2400 × D 1000 × H 700 mm"|null, "frameFinish": frame or base finish|null, "upholstery": fabric or leather|null, "leadWeeks": number|null},
+ "price": {"amount": number|null, "currency": "CAD"|"USD"|"EUR"|"GBP"|"CNY"|null, "note": e.g. "from", "per m²", "list price"|null},
+ "specs": [{"label": string, "value": string}] (up to 10 more lines: materials, weight, certifications, options, care, warranty, origin),
+ "specSheetUrl": URL of a PDF spec sheet or technical page if found|null,
+ "imageUrl": main product image URL if the page states it|null,
+ "summary": one sentence}${lang === "zh" ? "\nWrite description, summary and spec values in Simplified Chinese where they are prose; keep names, codes and units as published." : ""}`;
+  try {
+    const { text } = await claudeTurns({ messages: [{ role: "user", content: prompt }], tools: [{ type: "web_fetch_20250910", name: "web_fetch", max_uses: 3, max_content_tokens: 30000 }, { type: "web_search_20250305", name: "web_search", max_uses: 2, user_location: LOC }], max_tokens: 4000 });
+    const out = parseJSON(text);
+    if (!out || !out.fields) throw Object.assign(new Error("no details"), { code: "empty" });
+    const details = { fields: out.fields, price: out.price || null, specs: Array.isArray(out.specs) ? out.specs.filter(x => x && x.label && x.value).slice(0, 10).map(x => ({ label: String(x.label).slice(0, 80), value: String(x.value).slice(0, 300) })) : [],
+      specSheetUrl: /^https?:\/\//.test(out.specSheetUrl || "") ? out.specSheetUrl : null, imageUrl: (/^https?:\/\//.test(out.imageUrl || "") ? out.imageUrl : null) || c.image || null, summary: String(out.summary || "").slice(0, 400), at: new Date().toISOString() };
+    patchItem(dp, { match: { ...(store[dp]?.data?.match || {}), status: "ready", chosen: index, details } });
+  } catch (e) {
+    console.error("details", e.message);
+    patchItem(dp, { match: { ...(store[dp]?.data?.match || {}), status: "found", chosen: index, message: e.code === "empty" ? "Couldn't read that product page. Try another match or open the page to check it." : matchError(e) } });
+  }
 }
 
 /* ---------------- server ---------------- */
@@ -475,6 +628,46 @@ const server = http.createServer(async (req, res) => {
       if (op === "delete") {
         if (cur) { delete store[dp]; persist(); broadcast({ path: dp, exists: false }); }
         return send(res, 200, { ok: true });
+      }
+      return send(res, 404, { code: "not_found" });
+    }
+
+    // find products online
+    if (p.startsWith("/api/match/") && req.method === "POST") {
+      if (isClient) return deny();
+      const b = await readJSON(req, 12 * 1024 * 1024);
+      const dp = `projects/${b.project}/items/${b.item}`;
+      if (!validPath(dp, true) || !canRead(me, dp)) return deny();
+      const it = store[dp]?.data; if (!it) return send(res, 404, { code: "not_found", message: "That piece no longer exists." });
+      if (p === "/api/match/start") {
+        if (!ANTHROPIC_API_KEY) return send(res, 503, { code: "sampling_disabled", message: "Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render." });
+        const img = b.image && /^image\/(jpeg|png|webp|gif)$/.test(b.image.media_type) && typeof b.image.data === "string" && b.image.data.length < 7e6 ? b.image : null;
+        if (!img && !it.name) return send(res, 400, { code: "invalid_argument", message: "Add a photo or a name first." });
+        if (it.match?.status === "searching" || it.match?.status === "pulling") return send(res, 200, { ok: true, already: true });
+        const hint = String(b.hint || "").trim().slice(0, 300);
+        patchItem(dp, { match: { status: "searching", started: new Date().toISOString(), by: me.name || "", hint, candidates: [] } });
+        enqueue(() => runIdentify(dp, img, hint, b.lang));
+        return send(res, 200, { ok: true });
+      }
+      if (p === "/api/match/details") {
+        const i = Number(b.index); const c = it.match?.candidates?.[i];
+        if (!c) return send(res, 400, { code: "invalid_argument", message: "Pick a match first." });
+        if (!ANTHROPIC_API_KEY) return send(res, 503, { code: "sampling_disabled", message: "Claude isn't set up on this server yet." });
+        patchItem(dp, { match: { ...it.match, status: "pulling", chosen: i, message: null } });
+        enqueue(() => runDetails(dp, i, b.lang));
+        return send(res, 200, { ok: true });
+      }
+      if (p === "/api/match/photo") {
+        // Save the product photo from the web into the project's files.
+        try {
+          const { body, type } = await safeFetch(String(b.url || ""), { maxBytes: 15e6, timeout: 15000, accept: "image/*" });
+          const ct = /^image\/(jpeg|png|webp|gif)$/.test(type) ? type : sniffBuf(body);
+          if (!ct) return send(res, 415, { code: "unsupported_type", message: "That image couldn't be used." });
+          const id = crypto.randomBytes(16).toString("hex");
+          await fsp.writeFile(path.join(BLOB_DIR, id), body);
+          await fsp.writeFile(path.join(BLOB_DIR, id + ".json"), JSON.stringify({ contentType: ct, sizeBytes: body.length, createdAt: new Date().toISOString(), source: String(b.url).slice(0, 500) }));
+          return send(res, 200, { id });
+        } catch (e) { return send(res, 502, { code: "upstream_error", message: "Couldn't download that photo from the site." }); }
       }
       return send(res, 404, { code: "not_found" });
     }

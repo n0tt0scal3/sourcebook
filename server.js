@@ -18,7 +18,9 @@ const DB_FILE = path.join(DATA_DIR, "db.json");
 const exists = f => { try { return fs.existsSync(f); } catch (_) { return false; } };
 const PUBLIC_DIR = exists(path.join(__dirname, "public", "dashboard.html")) ? path.join(__dirname, "public") : __dirname;
 const FLAT_PUBLIC = PUBLIC_DIR === __dirname;
-const PUBLIC_FILES = new Set(["index.html", "dashboard.html", "admin.html", "claude-shim.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"]);
+const PUBLIC_FILES = new Set(["index.html", "dashboard.html", "admin.html", "claude-shim.js", "library.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"]);
+// Sourcing library: lib/data.json (index) and lib/sprites/ (thumbnail sheets), next to the app files.
+const LIB_DIR = exists(path.join(PUBLIC_DIR, "lib", "data.json")) ? path.join(PUBLIC_DIR, "lib") : path.join(__dirname, "lib");
 const SEED_DIR = exists(path.join(__dirname, "seed", "db.json")) ? path.join(__dirname, "seed") : exists(path.join(__dirname, "db.json")) ? __dirname : path.join(__dirname, "seed");
 // Tolerate stray spaces or quote marks pasted into the Render setting.
 const APP_PASSWORD = String(process.env.APP_PASSWORD || "").trim().replace(/^(["'])(.*)\1$/, "$2").trim();
@@ -227,7 +229,9 @@ function currentUser(req) {
 }
 const projectOf = p => { const m = /^projects\/([^/]+)/.exec(p || ""); return m ? m[1] : null; };
 function canSeeProject(u, id) { return allAccess(u) || (u.projects || []).includes(id); }
-function canRead(u, p) { if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
+// The sourcing library (library/<catalogue>) is studio-wide: everyone except clients can see and curate it.
+const isLibPath = p => /^library(\/|$)/.test(p || "");
+function canRead(u, p) { if (isLibPath(p)) return u.role !== "client"; if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
 // Internal fields a client never receives.
 const CLIENT_HIDDEN = ["notes", "match", "pendingSetup"];
 function forUser(u, p, data) {
@@ -638,6 +642,28 @@ const server = http.createServer(async (req, res) => {
         return send(res, 200, { ok: true });
       }
       return send(res, 404, { code: "not_found" });
+    }
+
+    // sourcing library: catalogue index, thumbnail sheets and studio-wide curation
+    const lm = p.match(/^\/lib\/(data\.json|sprites\/s\d{3}\.jpg)$/);
+    if (lm && req.method === "GET") {
+      if (isClient) return deny();
+      try { return send(res, 200, await fsp.readFile(path.join(LIB_DIR, lm[1])), { "Content-Type": lm[1].endsWith(".json") ? "application/json" : "image/jpeg", "Cache-Control": "private, max-age=86400" }); } catch (_) { return send(res, 404, "Not found"); }
+    }
+    if (p === "/api/library/set" && req.method === "POST") {
+      // { sup, keys: [page*100 + image number], off: true|false } adds or removes keys from library/<sup>.off
+      if (isClient) return deny();
+      const b = await readJSON(req);
+      const dp = "library/" + b.sup;
+      if (typeof b.sup !== "string" || !validPath(dp, true) || !Array.isArray(b.keys) || b.keys.length > 5000) return send(res, 400, { code: "invalid_argument" });
+      const keys = b.keys.map(Number).filter(k => Number.isInteger(k) && k >= 0 && k < 1e7);
+      const cur = store[dp];
+      const set = new Set((cur?.data?.off || []).map(Number));
+      keys.forEach(k => (b.off ? set.add(k) : set.delete(k)));
+      const next = { ...(cur?.data || {}), off: [...set].sort((x, y) => x - y), updated: new Date().toISOString(), by: me.name || "" };
+      store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
+      persist(); broadcast({ path: dp, exists: true, data: next });
+      return send(res, 200, { ok: true, off: next.off.length });
     }
 
     // find products online

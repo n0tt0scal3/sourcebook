@@ -11,6 +11,7 @@
 <link rel="icon" href="/icon-192.png">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,-apple-system,sans-serif;background:#fafaf9}img{max-width:100%}[hidden]{display:none!important}</style>
 <script src="/claude-shim.js"></script>
+<script src="/library.js"></script>
 </head>
 <body>
 <title>Sourcebook</title>
@@ -1870,7 +1871,7 @@ function setItem(id,patch){
 }
 
 /* ---------- render ---------- */
-function typing(root){const a=document.activeElement;return !!(root&&a&&root.contains(a)&&(a.closest("form")&&(a.value||"").length||a.classList.contains("qin")||a.dataset.qp))}
+function typing(root){const a=document.activeElement;return !!(root&&a&&root.contains(a)&&(a.closest("form")&&(a.value||"").length||a.classList.contains("qin")||a.id==="sbl-q"||a.dataset.qp))}
 let force=false;
 function render(){try{document.title=(project.name&&project.name!=="Untitled project"?project.name+" · ":"")+"Sourcebook"}catch(_){}
   const app=$("#app");
@@ -1900,13 +1901,13 @@ function render(){try{document.title=(project.name&&project.name!=="Untitled pro
     <div class="tabs" role="tablist">
       ${tabsHTML()}
     </div>
-    ${ui.view!=="dec"&&ui.view!=="look"?`<div class="tools">${cats.map(c=>`<button class="chip" data-cat="${esc(c)}" aria-pressed="${ui.cat===c}">${esc(c)}</button>`).join("")}</div>`:""}
+    ${ui.view!=="dec"&&ui.view!=="look"&&ui.view!=="lib"?`<div class="tools">${cats.map(c=>`<button class="chip" data-cat="${esc(c)}" aria-pressed="${ui.cat===c}">${esc(c)}</button>`).join("")}</div>`:""}
   </div>
-  <main id="main">${!items.length&&loaded&&canWrite&&!preview?startPanel():ui.view==="look"?spacesStrip()+drawingsSection()+lookJump():ui.view==="mat"?lookbook():ui.view==="sched"?schedule():ui.view==="finish"?finishSchedule():ui.view==="furn"?furnitureSchedule():ui.view==="quote"?quotation():decisionLog()}</main>`;
+  <main id="main">${ui.view==="lib"&&!isClient()&&window.SBLibrary?SBLibrary.view():!items.length&&loaded&&canWrite&&!preview?startPanel():ui.view==="look"?spacesStrip()+drawingsSection()+lookJump():ui.view==="mat"?lookbook():ui.view==="sched"?schedule():ui.view==="finish"?finishSchedule():ui.view==="furn"?furnitureSchedule():ui.view==="quote"?quotation():decisionLog()}</main>`;
   renderLayer(true);
 }
 const HOSTED=typeof window.SOURCEBOOK_PROJECT==="string";
-function tabsHTML(){return(HOSTED?`<a class="tab tabproj tabhome" href="/">← Projects</a>`:"")+[...(HOSTED?[]:[["proj","Projects"]]),["look","Lookbook"],["mat","Materials & products"],...(isClient()?[]:[["sched","Order schedule"]]),["finish","Finish schedule"],["furn","Furniture schedule"],["quote","Quotation"],["dec","Decisions"]].map(([k,l])=>`<button class="tab ${k==="proj"?"tabproj":""}" role="tab" data-view="${k}" aria-selected="${ui.view===k}">${l}</button>`).join("")}
+function tabsHTML(){return(HOSTED?`<a class="tab tabproj tabhome" href="/">← Projects</a>`:"")+[...(HOSTED?[]:[["proj","Projects"]]),...(isClient()||!window.SBLibrary?[]:[["lib","Sourcing library"]]),["look","Lookbook"],["mat","Materials & products"],...(isClient()?[]:[["sched","Order schedule"]]),["finish","Finish schedule"],["furn","Furniture schedule"],["quote","Quotation"],["dec","Decisions"]].map(([k,l])=>`<button class="tab ${k==="proj"?"tabproj":""}" role="tab" data-view="${k}" aria-selected="${ui.view===k}">${l}</button>`).join("")}
 function fitOf(it){return it.photo?(it.photoFit||ui.imgFit||"cover"):"cover"}
 function filtered(){return items.filter(i=>(ui.cat==="All"||i.category===ui.cat)&&(!ui.stage||i.status===ui.stage))}
 function lookJump(){
@@ -2026,6 +2027,7 @@ function renderLayer(passive){
   const L=$("#layer");
   if(passive&&!force&&(ui.mode==="edit"||ui.editProject||ui.importOpen||ui.detOpen||ui.newProj||typing(L)))return;
   const prevKey=L.dataset.key;L.dataset.key="";
+  if(window.SBLibrary&&SBLibrary.isOpen()&&!ui.open){L.innerHTML=SBLibrary.sheet();return}
   if(ui.detOpen&&det){const st=L.querySelector(".sheet .body")?.scrollTop||0;L.innerHTML=detectSheet();document.body.style.overflow="hidden";const b=L.querySelector(".sheet .body");if(b)b.scrollTop=st;return}
   if(ui.img){const h=imageSheet();if(h){L.innerHTML=h;document.body.style.overflow="hidden";return}}
   if(ui.importOpen&&imp){const st=L.querySelector(".sheet .body")?.scrollTop||0;L.innerHTML=importSheet();const b=L.querySelector(".sheet .body");if(b)b.scrollTop=st;return}
@@ -2854,7 +2856,7 @@ document.addEventListener("dragstart",e=>{if(e.target.closest&&e.target.closest(
 /* ---------- English / 中文 ---------- */
 const ZH={
 "Download package":"下载资料包","Product sheet PDF with its drawings, spec sheets, photo and 3D model, in one ZIP":"产品资料 PDF 及其图纸、规格书、照片和 3D 模型，打包为一个 ZIP","Preparing the package…":"正在准备资料包…","The package couldn't be made. Try again.":"无法生成资料包，请重试。","Photo":"照片","Links":"链接","Sourcebook":"选材手册","Changes requested":"需修改","Client review":"客户审核","Specification":"规格","Save PDF":"保存 PDF","Download this product sheet as a PDF, ready to print or send":"将此产品资料下载为 PDF，可直接打印或发送","Preparing the PDF…":"正在生成 PDF…","PDF downloaded":"PDF 已下载","The PDF couldn't be made. Try again.":"无法生成 PDF，请重试。","Product sheet":"产品资料","Extended":"小计","Unit price":"单价","Required on site":"现场需用日期","Order by":"下单截止","Drawings & references":"图纸与参考资料","(attached in Sourcebook)":"（附于选材手册中）","Approved":"已批准","Code":"编号","Category":"类别","Status":"状态","Notes":"备注","Find it online":"在线查找","Search again":"重新搜索","Start over":"重新开始","Optional hint: brand, retailer or what to look for":"可选提示：品牌、零售商或查找重点","Claude searches the web for this product, shows you likely matches, and pulls the details of the one you pick. About 10–20¢ of Claude usage per search.":"Claude 会在网上搜索此产品，列出可能的匹配项，并获取您所选产品的详细信息。每次搜索约消耗 0.1–0.2 美元的 Claude 用量。","Find this product online":"在线查找此产品","Searching the web for matches…":"正在网上搜索匹配产品…","This usually takes 30 to 90 seconds. You can close this and keep working; the matches will be waiting here.":"通常需要 30 到 90 秒。您可以关闭此页继续工作，结果会保留在这里。","The search didn't finish":"搜索未完成","Try again":"重试","No confident match found":"未找到可靠的匹配","Add a hint, such as the brand or where you saw it, and search again.":"添加提示（例如品牌或出处）后重新搜索。","✓ Matched":"✓ 已匹配","Use this":"使用此项","Pull again":"重新获取","Pulling details…":"正在获取详情…","Product photo":"产品照片","Replaces the current image":"替换当前图片","Uses the photo from the product page":"使用产品页面的照片","Check prices and lead times with the supplier before ordering; web listings change.":"下单前请向供应商核实价格和交货期；网上信息可能变动。","Dismiss":"关闭","Add products or materials":"添加产品或材料","Drop an image or tap to choose one. Claude finds the product online and fills in its details.":"拖入图片或点击选择。Claude 会在网上查找该产品并填写详情。","or fill in by hand":"或手动填写","Matches ready":"匹配结果已就绪","Searching":"搜索中","Find each piece online":"在线查找每一项","Claude searches the web for every piece you add and lines up matches for you to confirm. About 10–20¢ of Claude usage per piece.":"Claude 会为您添加的每一项在网上搜索，并列出匹配结果供您确认。每项约消耗 0.1–0.2 美元的 Claude 用量。","Adding the piece…":"正在添加…","Add a photo first.":"请先添加照片。","Spec sheet":"规格书","Link":"链接","Listed price":"标价","Unit cost (CAD)":"单价（加元）","Unit cost (CNY)":"单价（人民币）","New piece":"新项目","Drop PDFs or images. Link other files (like .dwg) with the form instead.":"请拖入 PDF 或图片。其他文件（如 .dwg）请通过表单添加链接。","The product photo couldn't be downloaded. Your image was kept.":"无法下载产品照片，已保留您的图片。","A finish, fixture, fitting or piece of furniture, with its image, specification and quantity. Or drop an image here.":"饰面、灯具、配件或家具，以及其图片、规格和数量。也可将图片拖到这里。","3D model":"3D 模型","Add a 3D model":"添加 3D 模型","GLB exported from Rhino, SketchUp or Revit, with its materials. Drop it here or choose a file. Up to 100 MB.":"从 Rhino、SketchUp 或 Revit 导出的含材质 GLB 文件。拖放到此处或选择文件，最大 100 MB。","Drag to turn · pinch or scroll to zoom":"拖动旋转 · 双指或滚轮缩放","Drag to turn · pinch or scroll to zoom · double-tap to reset":"拖动旋转 · 双指或滚轮缩放 · 双击复位","View in your room":"在您的房间中查看","View in 3D":"3D 查看","Replace model":"替换模型","Remove model":"移除模型","3D model added":"已添加 3D 模型","3D model removed":"已移除 3D 模型","USDZ added for iPhone and iPad":"已为 iPhone 和 iPad 添加 USDZ","Add USDZ for iPhone & iPad":"为 iPhone 和 iPad 添加 USDZ","Replace USDZ for iPhone & iPad":"替换 iPhone 和 iPad 的 USDZ","Full screen":"全屏","Upload failed. Try again.":"上传失败，请重试。","Open a product, then drop the model on its 3D model section.":"请先打开产品，再将模型拖到其 3D 模型区域。","Export as glTF Binary (.glb) so the textures travel inside one file.":"请导出为 glTF 二进制（.glb），使贴图包含在同一文件中。","Use a GLB file (or USDZ for iPhone and iPad).":"请使用 GLB 文件（iPhone 和 iPad 可用 USDZ）。","Add the GLB first. The USDZ is an extra for Apple AR.":"请先添加 GLB。USDZ 仅用于苹果 AR。","That isn't a GLB file. Export as glTF Binary (.glb).":"这不是 GLB 文件。请导出为 glTF 二进制（.glb）。","That model is over 100 MB.":"模型超过 100 MB。","The 3D viewer couldn't load. Check your connection.":"3D 查看器无法加载，请检查网络。","Admin":"管理员","Sourcing agent":"采购代理","Client":"客户","Sign out":"退出登录","Signed in":"已登录","Client review":"客户审核","✓ Client approved":"✓ 客户已批准","Changes requested":"需修改","✓ Approved":"✓ 已批准","Let the studio know if this piece works for you.":"请告诉工作室此项目是否合适。","Waiting for the client's review.":"等待客户审核。","Add a note (optional)":"添加备注（可选）","Approve":"批准","Request changes":"要求修改","Clear my review":"撤销我的审核","Comments":"评论","No comments yet.":"暂无评论。","Ask a question or leave a note for the studio":"向工作室提问或留言","Write a comment":"写评论","Post":"发布","Remove comment":"删除评论","Approved. The studio can see it.":"已批准，工作室可以看到。","Sent to the studio.":"已发送给工作室。","Review cleared":"审核已撤销","Your role can't do that.":"您的角色无法执行此操作。","Clients can view, approve and comment.":"客户可以查看、批准和评论。","Only admins can delete projects.":"只有管理员可以删除项目。","← Projects":"← 项目",
-"Sourcebook":"选材手册","Design to construction":"从设计到施工","Untitled":"未命名","project":"项目","Untitled project":"未命名项目",
+"Sourcebook":"选材手册","Sourcing library":"采购图库","Design to construction":"从设计到施工","Untitled":"未命名","project":"项目","Untitled project":"未命名项目",
 "Import":"导入","Add product":"添加产品","Edit project":"编辑项目","Update from sheet":"从表格更新","Linked Google Sheet ↗":"已关联 Google 表格 ↗",
 "Concept":"概念","Specified":"已定规格","Approved":"已批准","Ordered":"已下单","Delivered":"已到场",
 "Design intent":"设计意图","Spec + drawings":"规格 + 图纸","Client sign-off":"客户确认","PO placed":"已下采购单","On site":"已到现场",
@@ -2997,9 +2999,30 @@ async function boot(){
   c.use("sample").then(async sm=>{if(!sm)return;sample=sm;imgLimits=await sm.limits().catch(()=>null);force=true;render();force=false}).catch(()=>{});
   if(HOSTED)cur="main";subscribeProject();if(!HOSTED)watchRegistry();else if(ui.view==="proj")ui.view="look";
   c.use("downloads").then(d=>{downloads=d;if(ui.view==="sched")render()}).catch(()=>{});
-  if(HOSTED){const u=await c.use("user").catch(()=>null);ME=u&&u.me?await u.me().catch(()=>null):null;if(isClient()){canWrite=false;if(ui.view==="sched")ui.view="look"}render()}
+  if(HOSTED){const u=await c.use("user").catch(()=>null);ME=u&&u.me?await u.me().catch(()=>null):null;if(isClient()){canWrite=false;if(ui.view==="sched"||ui.view==="lib")ui.view="look"}render()}
   c.use("user").then(u=>{if(u&&u.can){Promise.resolve(u.can("data.write")).then(v=>{if(v===false){canWrite=false;render()}}).catch(()=>{})}}).catch(()=>{});
 }
+/* ---------- sourcing library (shared module in library.js) ---------- */
+function libInProj(){const m=new Map();items.forEach(it=>{if(it.libSource&&it.libSource.file)m.set(it.libSource.file,it.id)});return m}
+// Add a library image as a piece: its photo, product code, the source PDF as a spec sheet, and where it came from.
+async function libAdd(o,S){
+  if(!db)throw new Error("offline");
+  let photo=null;if(assets){try{photo=(await assets.upload(await S.photo(),{type:"image/jpeg"})).id}catch(_){}}
+  const category=S.category;
+  const data={name:o.codes[0]?`${o.codes[0]} · ${S.supplier}`:`${S.supplier} ${S.product} · p${o.page}`.trim(),description:S.product?`${S.supplier} ${S.product}`:"",category,supplier:S.supplier,product:S.product,modelCode:o.codes[0]||"",zone:""};
+  const t0=o.text,zh=/沙发/.test(t0)?"SF":/(休闲椅|躺椅)/.test(t0)?"LC":/凳/.test(t0)?"STL":/椅/.test(t0)?"CH":/(茶几|餐台|餐桌|桌|几)/.test(t0)?"TB":/(柜|架)/.test(t0)?"CR":/床/.test(t0)?"BD":null;
+  const code=nextStdCode(category==="Furniture"?(zh||furPrefixText(t0)||furPrefixText(S.product)||"F"):stdPrefix(data),items.map(i=>i.code));
+  if(category==="Furniture")data.furnType=codeParts(code)?.[0]||"F";
+  const ref=db.collection("items").doc();
+  const doc={specs:[],photo,photoFit:"contain",...data,code,qty:null,unit:"ea",leadWeeks:null,needBy:null,unitCost:null,status:"Concept",material:"wood",color:"#C9C3B8",
+    notes:`From the sourcing library: ${o.file}`,refs:[{kind:"Spec sheet",no:"p."+o.page,title:S.pdf,url:`https://drive.google.com/file/d/${S.drive}/view`,asset:null}],
+    libSource:{file:o.file,sup:o.sup,page:o.page,pdf:S.pdf,drive:S.drive},created:new Date().toISOString(),source:"Sourcing library"};
+  await ref.set(doc);if(!items.some(i=>i.id===ref.id))items.push({id:ref.id,...doc});
+  force=true;render();force=false;
+  toastUndo(`Added to ${project.name} as ${code}`,()=>{items=items.filter(i=>i.id!==ref.id);force=true;render();force=false;write(ref.id,()=>db.doc("items/"+ref.id).delete())});
+}
+if(window.SBLibrary)SBLibrary.configure({ctx:"project",canEdit:()=>false,canAdd:()=>canWrite&&!preview&&!!db&&!isClient(),projectName:()=>project.name,inProject:libInProj,add:libAdd,
+  openPiece:id=>{ui.img=null;ui.open=id;ui.mode="view";renderLayer()},layer:()=>renderLayer(),toast,toastUndo});
 function useSample(){if(db)return;preview=true;project=SAMPLE.project;items=SAMPLE.items.map(i=>({specs:[],refs:[],...i}));decisions=[];render()}
 boot();
 })();

@@ -10,6 +10,7 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="icon" href="/icon-192.png">
 <title>Sourcebook · Projects</title>
+<script src="/library.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500&family=Noto+Sans+SC:wght@400;500&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" media="print" onload="this.media=\'all\'">
@@ -128,6 +129,10 @@ label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--mute
 .checks{display:flex;flex-direction:column;gap:8px;margin-top:8px;max-height:260px;overflow:auto}
 .ck{flex-direction:row;align-items:center;gap:8px;font-size:14px;color:var(--ink)}
 .row2{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tabs{display:flex;gap:22px;padding-block:14px 0;border-bottom:1px solid var(--rule)}
+.tab{background:none;border:0;padding:4px 0 12px;font-size:14px;color:var(--muted);border-bottom:1px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--ink);border-color:var(--ink)}
+.toast.undo{display:flex;gap:16px;align-items:center}.toast.undo button{background:none;border:0;color:inherit;text-decoration:underline;text-underline-offset:3px;padding:0;font-weight:600}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--ground);padding:10px 18px;font-size:13px;z-index:40}
 
 @media (max-width:760px){.sum{grid-template-columns:1fr 1fr}.sum div:nth-child(odd){padding-left:0;border-left:0}.sum div:nth-child(n+3){border-top:1px solid var(--rule2)}}
@@ -143,7 +148,7 @@ label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--mute
 "use strict";
 let lang="en";try{lang=localStorage.getItem("sb_lang")==="zh"?"zh":"en"}catch(_){}
 const T={
- zh:{"Sourcebook · Studio":"选材手册 · 工作室","Projects":"项目","New project":"新建项目","Active projects":"进行中项目","Pieces in sourcing":"采购中项目","Orders overdue":"逾期未下单","Due in 3 weeks":"三周内需下单","Quoted value":"报价总额","Active":"进行中","Archived":"已归档","All":"全部","Search projects":"搜索项目","pieces":"个项目","drawings":"张图纸","quoted (CAD)":"报价（加元）","Updated":"更新于","Open":"打开","Archive":"归档","Restore":"恢复","Delete project…":"删除项目…","Delete this project, its pieces, drawings and images? This can't be undone.":"删除此项目及其所有项目、图纸和图片？此操作无法撤销。","Delete":"删除","Cancel":"取消","overdue":"项逾期","due soon":"项即将到期","archived":"已归档","No pictures yet":"暂无图片","Start a book for a new job: its lookbook, schedules and quotation.":"为新工作建立手册：效果册、清单与报价单。","Project name":"项目名称","Client":"客户","Location":"地点","Phase":"阶段","Create project":"创建项目","Give the project a name.":"请填写项目名称。","No projects match.":"没有匹配的项目。","No archived projects.":"没有已归档的项目。","just now":"刚刚","Concept":"概念","Specified":"已定规格","Approved":"已批准","Ordered":"已下单","Delivered":"已到场","across all projects":"所有项目合计","Couldn't reach the server. Check your connection and reload.":"无法连接服务器，请检查网络后重新加载。","Project options":"项目选项","Close":"关闭","Language":"语言","Sign out":"退出登录","People":"成员","Admin":"管理员","Sourcing agent":"采购代理","Client":"客户","Add person":"添加成员","Name":"姓名","Email":"邮箱","Role":"角色","Password":"密码","New password":"新密码","Leave blank to keep the current password":"留空则保留当前密码","Projects they can see":"可查看的项目","Save":"保存","Remove":"移除","Remove this person? They'll be signed out.":"移除此成员？其将被退出登录。","Edit":"编辑","No people yet. Add your team and clients here; you can always sign in with the studio password.":"尚无成员。在此添加团队和客户；您始终可以使用工作室密码登录。","Admins manage people and can delete projects. Sourcing agents do everything else. Clients only see the projects you assign, and can approve pieces and comment.":"管理员管理成员并可删除项目。采购代理可执行其他所有操作。客户只能查看指定项目，并可批准和评论。","Change password":"修改密码","Current password":"当前密码","Password changed.":"密码已修改。","all projects":"全部项目","Signed in with the studio password":"使用工作室密码登录","Edit person":"编辑成员","Couldn't save.":"无法保存。"}};
+ zh:{"Sourcebook · Studio":"选材手册 · 工作室","Projects":"项目","New project":"新建项目","Active projects":"进行中项目","Pieces in sourcing":"采购中项目","Orders overdue":"逾期未下单","Due in 3 weeks":"三周内需下单","Quoted value":"报价总额","Active":"进行中","Archived":"已归档","All":"全部","Search projects":"搜索项目","pieces":"个项目","drawings":"张图纸","quoted (CAD)":"报价（加元）","Updated":"更新于","Open":"打开","Archive":"归档","Restore":"恢复","Delete project…":"删除项目…","Delete this project, its pieces, drawings and images? This can't be undone.":"删除此项目及其所有项目、图纸和图片？此操作无法撤销。","Delete":"删除","Cancel":"取消","overdue":"项逾期","due soon":"项即将到期","archived":"已归档","No pictures yet":"暂无图片","Start a book for a new job: its lookbook, schedules and quotation.":"为新工作建立手册：效果册、清单与报价单。","Project name":"项目名称","Client":"客户","Location":"地点","Phase":"阶段","Create project":"创建项目","Give the project a name.":"请填写项目名称。","No projects match.":"没有匹配的项目。","No archived projects.":"没有已归档的项目。","just now":"刚刚","Concept":"概念","Specified":"已定规格","Approved":"已批准","Ordered":"已下单","Delivered":"已到场","across all projects":"所有项目合计","Couldn't reach the server. Check your connection and reload.":"无法连接服务器，请检查网络后重新加载。","Project options":"项目选项","Close":"关闭","Language":"语言","Sign out":"退出登录","People":"成员","Admin":"管理员","Sourcing agent":"采购代理","Client":"客户","Add person":"添加成员","Name":"姓名","Email":"邮箱","Role":"角色","Password":"密码","New password":"新密码","Leave blank to keep the current password":"留空则保留当前密码","Projects they can see":"可查看的项目","Save":"保存","Remove":"移除","Remove this person? They'll be signed out.":"移除此成员？其将被退出登录。","Edit":"编辑","No people yet. Add your team and clients here; you can always sign in with the studio password.":"尚无成员。在此添加团队和客户；您始终可以使用工作室密码登录。","Admins manage people and can delete projects. Sourcing agents do everything else. Clients only see the projects you assign, and can approve pieces and comment.":"管理员管理成员并可删除项目。采购代理可执行其他所有操作。客户只能查看指定项目，并可批准和评论。","Change password":"修改密码","Current password":"当前密码","Password changed.":"密码已修改。","all projects":"全部项目","Signed in with the studio password":"使用工作室密码登录","Edit person":"编辑成员","Couldn't save.":"无法保存。","Sourcing library":"采购图库","Undo":"撤销"}};
 const t=s=>lang==="zh"?(T.zh[s]??s):s;
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const STAGES=["Concept","Specified","Approved","Ordered","Delivered"];
@@ -154,24 +159,30 @@ let projects=[],state={filter:"active",q:"",menu:null,confirm:null,sheet:false,e
 let me={id:"owner",name:"",role:"admin"};
 const ROLE={admin:"Admin",agent:"Sourcing agent",client:"Client"};
 const isAdmin=()=>me.role==="admin",isClient=()=>me.role==="client";
-try{const f=localStorage.getItem("sb_dash_filter");if(f)state.filter=f}catch(_){}
+state.view="projects";
+try{const f=localStorage.getItem("sb_dash_filter");if(f)state.filter=f;if(localStorage.getItem("sb_dash_view")==="library")state.view="library"}catch(_){}
+const libOn=()=>!isClient()&&!!window.SBLibrary;
 
 async function loadMe(){try{const r=await fetch("/api/me");if(r.ok)me=await r.json()}catch(_){}}
 async function load(){
   try{const r=await fetch("/api/projects");if(!r.ok)throw 0;projects=(await r.json()).projects;failed=false}catch(_){failed=true}
+  if(state.view==="library"&&libOn())return; // the library repaints itself; don't reset its search or scroll
   render();
 }
 function render(){
   document.documentElement.lang=lang==="zh"?"zh-CN":"en";
+  const lib=state.view==="library"&&libOn();
   const active=projects.filter(p=>!p.archived);
   const sum=k=>active.reduce((s,p)=>s+k(p),0);
   const cad=sum(p=>p.quote.cad),cny=sum(p=>p.quote.cny);
   const list=projects.filter(p=>state.filter==="all"||(state.filter==="archived"?p.archived:!p.archived)).filter(p=>!state.q||[p.name,p.client,p.location,p.phase].join(" ").toLowerCase().includes(state.q.toLowerCase()));
   document.getElementById("app").innerHTML=`
-  <header class="mast"><div><div class="eyebrow">${t("Sourcebook · Studio")}</div><h1>${lang==="zh"?"项目":"<em>Projects</em>"}</h1></div>
+  <header class="mast"><div><div class="eyebrow">${t("Sourcebook · Studio")}</div><h1>${lib?(lang==="zh"?"采购图库":"Sourcing <em>library</em>"):lang==="zh"?"项目":"<em>Projects</em>"}</h1></div>
     <div class="side"><div class="langtog" role="group" aria-label="${t("Language")}"><button type="button" data-lang="en" aria-pressed="${lang==="en"}">EN</button><button type="button" data-lang="zh" aria-pressed="${lang==="zh"}">中文</button></div>
     ${isClient()?"":`<button class="btn" data-a="new">${t("New project")}</button>`}
     <div class="who"><span>${esc(me.name||"")}</span><span class="mono">${t(ROLE[me.role]||"")}</span>${isAdmin()?`<a class="linkbtn" href="/admin">${t("Admin")}</a>`:""}${me.id!=="owner"?`<button class="linkbtn" data-a="pw">${t("Change password")}</button>`:""}<a class="linkbtn" href="/logout">${t("Sign out")}</a></div></div></header>
+  ${libOn()?`<nav class="tabs" role="tablist"><button class="tab" role="tab" data-dview="projects" aria-selected="${!lib}">${t("Projects")}</button><button class="tab" role="tab" data-dview="library" aria-selected="${lib}">${t("Sourcing library")}</button></nav>`:""}
+  ${lib?`<main>${SBLibrary.view()}</main>`:`
   ${failed?`<p class="err" style="padding-top:14px">${t("Couldn't reach the server. Check your connection and reload.")}</p>`:""}
   <section class="sum">
     <div><span class="eyebrow">${t("Active projects")}</span><b>${active.length}</b></div>
@@ -186,7 +197,7 @@ function render(){
     ${list.map(card).join("")}
     ${state.filter!=="archived"&&!isClient()?`<button class="newcard" data-a="new"><b>${t("New project")}</b><span>${t("Start a book for a new job: its lookbook, schedules and quotation.")}</span></button>`:""}
     ${!list.length&&(state.q||state.filter==="archived")?`<div class="empty-all">${state.filter==="archived"&&!state.q?t("No archived projects."):t("No projects match.")}</div>`:""}
-  </div>`;
+  </div>`}`;
   renderLayer();
 }
 function card(p){
@@ -210,6 +221,8 @@ function card(p){
 }
 function renderLayer(){
   const L=document.getElementById("layer");
+  if(window.SBLibrary&&SBLibrary.isOpen()){L.innerHTML=SBLibrary.sheet();return}
+  if(L.querySelector(".sbl-sheet"))L.innerHTML="";
   if(state.sheet==="pw"){L.innerHTML=otherSheet();return}
   if(!state.sheet){L.innerHTML="";return}
   if(L.innerHTML)return;
@@ -242,8 +255,9 @@ async function createProject(f){
   }catch(_){document.getElementById("np-err").textContent=t("Couldn't reach the server. Check your connection and reload.")}
 }
 document.addEventListener("click",async e=>{
-  const el=e.target.closest("[data-a],[data-f],[data-lang],[data-menu],[data-open],[data-arch],[data-conf],[data-del]");
+  const el=e.target.closest("[data-a],[data-f],[data-lang],[data-menu],[data-open],[data-arch],[data-conf],[data-del],[data-dview]");
   if(!el){if(state.menu&&!e.target.closest(".menu")){state.menu=null;state.confirm=null;render()}return}
+  if(el.dataset.dview){state.view=el.dataset.dview;try{localStorage.setItem("sb_dash_view",state.view)}catch(_){}if(state.view==="projects")load();else render();return}
   if(el.dataset.lang){lang=el.dataset.lang;try{localStorage.setItem("sb_lang",lang)}catch(_){}render();return}
   if(el.dataset.f){state.filter=el.dataset.f;try{localStorage.setItem("sb_dash_filter",state.filter)}catch(_){}render();return}
   if(el.dataset.menu){e.preventDefault();state.menu=state.menu===el.dataset.menu?null:el.dataset.menu;state.confirm=null;render();return}
@@ -263,10 +277,12 @@ document.addEventListener("submit",async e=>{
     try{await post("/api/me/password",{current:f.get("current"),next:f.get("next")});state.sheet=false;renderLayer();alertMsg(t("Password changed."))}catch(err){state.err=err.message;renderLayer()}}
 });
 function alertMsg(m){const d=document.createElement("div");d.className="toast";d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
+function toastUndo(msg,undo){document.querySelectorAll(".toast").forEach(x=>x.remove());const d=document.createElement("div");d.className="toast undo";const sp=document.createElement("span");sp.textContent=msg;const b=document.createElement("button");b.textContent=t("Undo");b.onclick=()=>{undo();d.remove()};d.append(sp,b);document.body.appendChild(d);setTimeout(()=>d.remove(),6000)}
 document.addEventListener("input",e=>{if(e.target.id==="q"){state.q=e.target.value;const pos=e.target.selectionStart;render();const q=document.getElementById("q");q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(state.sheet){state.sheet=false;renderLayer()}else if(state.menu){state.menu=null;state.confirm=null;render()}}});
 let tmr=null;try{const es=new EventSource("/api/events");es.onmessage=()=>{clearTimeout(tmr);tmr=setTimeout(load,600)}}catch(_){}
-loadMe().then(load);
+if(window.SBLibrary)SBLibrary.configure({ctx:"studio",canEdit:()=>!isClient(),layer:renderLayer,toast:alertMsg,toastUndo});
+loadMe().then(()=>{if(state.view==="library"&&libOn())render();load()});
 })();
 </script>
 </body>

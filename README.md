@@ -82,6 +82,14 @@ Drop an image on **Add products or materials** (or open any piece and use **Find
 
 You can also drop PDFs and images straight onto a piece's **Drawings & references** section to attach them; Claude reads the first one.
 
+## Sourcing library
+
+Images scanned from the supplier catalogues in `G:\My Drive\LMNL\90 CHINA PRODUCTS\` (Furniture so far: 7 catalogues, 3,218 images). Each image is named `CATEGORY_Supplier_pPAGE_NN.jpg` and keeps its source PDF and page.
+
+- **Curate** on the dashboard's **Sourcing library** tab: untick images you don't want offered to projects (one at a time, a whole page, or everything shown). Curation is studio-wide and saved on the server as `library/<catalogue>` = `{ off: [removed keys] }`, where key = page × 100 + image number.
+- **Use** it in a project's **Sourcing library** tab, which shows only kept images. **Add to project** creates a piece with the photo, product code, the source PDF as a spec sheet and a `libSource` field.
+- Files: `library.js` (the tab, shared by dashboard and projects), `lib/data.json` (index) and `lib/sprites/` (thumbnail sheets). Clients don't see the library.
+
 ## Product sheets and packages
 
 Every product has two buttons at the top of its sheet:

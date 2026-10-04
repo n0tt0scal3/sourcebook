@@ -82,6 +82,15 @@ Drop an image on **Add products or materials** (or open any piece and use **Find
 
 You can also drop PDFs and images straight onto a piece's **Drawings & references** section to attach them; Claude reads the first one.
 
+## Product sheets and packages
+
+Every product has two buttons at the top of its sheet:
+
+- **Save PDF** downloads a one-page (or longer) product sheet: photo, code, manufacturer, model, dimensions, finishes, prices in CAD and CNY, specification, references, client review and notes. It follows the language you're viewing in.
+- **Download package** downloads a ZIP with that product sheet PDF plus the attached drawings and spec sheets, the photo, any 3D model, and a list of web links.
+
+Both are made in the browser, so they work without any outside service (including in China).
+
 ## 3D models
 
 Each product can hold a 3D model that anyone can turn and zoom, with a "View in your room" button on phones and iPads.

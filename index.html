@@ -1689,6 +1689,133 @@ async function addRefFiles(id,files){
   if(canDetect())scanRef(id,base,added[0].file);
 }
 
+/* ---------- product package: product sheet PDF + attachments in one ZIP ---------- */
+const tr=x=>lang==="zh"?(trText(String(x))??String(x)):String(x);
+function pieceRows(it){
+  const cad=unitCAD(it),cny=unitCNY(it),q=Number(it.qty),ob=orderBy(it);
+  const money=(n,c)=>n==null||!isFinite(n)?"":(c==="CNY"?"¥":"$")+Number(n).toLocaleString("en-CA",{minimumFractionDigits:2,maximumFractionDigits:2})+(c==="CNY"?"":" CAD");
+  return[["Code",it.code],["Category",it.category],["Location / room",it.zone],["Quantity",it.qty!=null&&it.qty!==""?qtyStr(it):""],
+    ["Manufacturer / supplier",it.supplier],["Product / collection",it.product],["Model / item code",it.modelCode],["Material category",it.materialCategory],
+    ["Colour / finish name",it.finishName],["Application",it.application],["Dimensions",it.dims],["Frame / base finish",it.frameFinish],["Upholstery",it.upholstery],
+    ["Lead time",it.leadWeeks?it.leadWeeks+" weeks":""],["Required on site",it.needBy?fmtD(parseD(it.needBy),true):""],["Order by",ob?fmtD(ob,true):""],
+    ["Unit price",[money(cad,"CAD"),money(cny,"CNY")].filter(Boolean).join(" · ")],["Extended",cad!=null&&isFinite(q)&&q?[money(cad*q,"CAD"),money(cny*q,"CNY")].join(" · "):""],["Status",it.status]]
+    .filter(([,v])=>v!=null&&String(v).trim()!=="");
+}
+const loadImg=src=>new Promise(r=>{const im=new Image();im.onload=()=>r(im);im.onerror=()=>r(null);im.src=src;setTimeout(()=>r(null),12000)});
+// Draw the product sheet onto A4 canvases (200 dpi), so Chinese text and photos come out exactly as on screen.
+async function sheetPages(it){
+  try{await document.fonts.ready}catch(_){}
+  const W=1654,H=2339,M=110,CW=W-2*M,FOOT=H-M+10;
+  const SANS='"Hanken Grotesk","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif',SERIF='"Bodoni Moda","Noto Serif SC","Songti SC",Georgia,serif',MONO='"IBM Plex Mono",Menlo,Consolas,monospace';
+  const pages=[];let c,g,y;
+  const newPage=()=>{c=document.createElement("canvas");c.width=W;c.height=H;g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,W,H);g.textBaseline="top";pages.push(c);
+    font(MONO,22);g.fillStyle="#8A8580";const left=(tr("Sourcebook")+" · "+(project.name||"")+(project.client?" · "+project.client:"")).toUpperCase();g.fillText(left,M,M);
+    const right=(tr("Product sheet")+" · "+fmtD(new Date(),true)).toUpperCase();g.fillText(right,W-M-g.measureText(right).width,M);
+    g.fillStyle="#1A1918";g.fillRect(M,M+38,CW,2);y=M+70};
+  const font=(f,px,st)=>{g.font=`${st||""} ${px}px ${f}`.trim()};
+  const tokens=t=>String(t).match(/[⺀-鿿豈-﫿＀-￯　-〿]|[^\s⺀-鿿豈-﫿＀-￯　-〿]+|\s+/g)||[];
+  const wrap=(t,w)=>{const lines=[];String(t).split("\n").forEach(par=>{let line="";for(const tk of tokens(par)){const test=line+tk;if(g.measureText(test).width>w&&line.trim()){lines.push(line.trimEnd());line=tk.trimStart()}else line=test;
+      while(g.measureText(line).width>w&&line.length>1){let k=line.length;while(k>1&&g.measureText(line.slice(0,k)).width>w)k--;lines.push(line.slice(0,k));line=line.slice(k)}}lines.push(line.trimEnd())});return lines};
+  const need=h=>{if(y+h>FOOT-40)newPage()};
+  const para=(t,f,px,color,w,lh,x)=>{font(f,px);g.fillStyle=color;wrap(t,w).forEach(l=>{need(px*lh);g.fillText(l,x??M,y);y+=px*lh})};
+  const rowsTable=(rows,x,w,labW)=>{rows.forEach(([k,v])=>{font(SANS,22);const kl=wrap(tr(k),labW-16);font(SANS,25);const vl=wrap(v,w-labW);const h=Math.max(kl.length*30,vl.length*33)+18;need(h);
+      font(SANS,22);g.fillStyle="#8A8580";kl.forEach((l,i)=>g.fillText(l,x,y+9+i*30));font(SANS,25);g.fillStyle="#1A1918";vl.forEach((l,i)=>g.fillText(l,x+labW,y+7+i*33));
+      y+=h;g.fillStyle="#E3E1DD";g.fillRect(x,y-1,w,1.5)})};
+  const heading=t=>{need(110);y+=26;font(SERIF,36,"italic");g.fillStyle="#1A1918";g.fillText(tr(t),M,y);y+=50;g.fillRect(M,y,CW,2);y+=8};
+  newPage();
+  font(MONO,24);g.fillStyle="#4A4744";g.fillText([it.code,tr(it.category||""),it.zone].filter(Boolean).join(" · ").toUpperCase(),M,y);y+=46;
+  para(it.name,SERIF,76,"#1A1918",CW,1.08);y+=10;
+  if(it.description){para(it.description,SANS,28,"#4A4744",CW*.85,1.45);}
+  y+=24;
+  // photo (left) and key facts (right)
+  const top=y,imgW=Math.round(CW*.52),imgH=900,colX=M+imgW+56,colW=CW-imgW-56;
+  g.fillStyle="#F7F6F4";g.fillRect(M,top,imgW,imgH);g.strokeStyle="#E3E1DD";g.lineWidth=2;g.strokeRect(M,top,imgW,imgH);
+  const im=await loadImg(imgFor(it,1200));
+  if(im){const k=Math.min((imgW-24)/im.naturalWidth,(imgH-24)/im.naturalHeight);const dw=im.naturalWidth*k,dh=im.naturalHeight*k;try{g.drawImage(im,M+(imgW-dw)/2,top+(imgH-dh)/2,dw,dh)}catch(_){}}
+  y=top;rowsTable(pieceRows(it),colX,colW,Math.round(colW*.4));
+  y=Math.max(y,top+imgH)+10;
+  if((it.specs||[]).length){heading("Specification");rowsTable(it.specs.map(x=>[x.label,x.value]),M,CW,Math.round(CW*.3))}
+  const refs=(it.refs||[]).filter(r=>r.url||r.asset);
+  if(refs.length){heading("Drawings & references");refs.forEach(r=>{const head=[tr(r.kind||""),r.no].filter(Boolean).join(" ")+"  "+(r.title||"");para(head,SANS,25,"#1A1918",CW,1.4);
+    para(r.url||tr("(attached in Sourcebook)"),MONO,19,"#8A8580",CW,1.4);y+=8})}
+  const rv=it.clientReview;
+  if(rv){heading("Client review");para(`${tr(rv.state==="approved"?"Approved":"Changes requested")} · ${rv.name||""} · ${fmtD(new Date(rv.at),true)}${rv.note?` · “${rv.note}”`:""}`,SANS,25,"#1A1918",CW,1.45)}
+  if(it.notes){heading("Notes");para(it.notes,SANS,25,"#1A1918",CW,1.45)}
+  pages.forEach((pc,i)=>{const pg=pc.getContext("2d");pg.textBaseline="top";pg.fillStyle="#D6D3CE";pg.fillRect(M,FOOT,CW,1.5);pg.font=`20px ${MONO}`;pg.fillStyle="#8A8580";
+    pg.fillText(location.origin+location.pathname,M,FOOT+14);const pn=`${it.code||""}  ${i+1}/${pages.length}`;pg.fillText(pn,W-M-pg.measureText(pn).width,FOOT+14)});
+  return pages;
+}
+// Minimal PDF writer: one full-page JPEG per page.
+async function pagesToPDF(pages){
+  const enc=new TextEncoder();const parts=[];let len=0;const offs=[];
+  const push=b=>{const u=typeof b==="string"?enc.encode(b):b;parts.push(u);len+=u.length};
+  const jpgs=[];for(const pc of pages){const bl=await new Promise(r=>pc.toBlob(r,"image/jpeg",.86));jpgs.push(new Uint8Array(await bl.arrayBuffer()))}
+  const n=pages.length;const PW=595.28,PH=841.89;
+  push("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+  const obj=(id,body)=>{offs[id]=len;push(`${id} 0 obj\n`);if(Array.isArray(body))body.forEach(push);else push(body);push("\nendobj\n")};
+  obj(1,"<< /Type /Catalog /Pages 2 0 R >>");
+  obj(2,`<< /Type /Pages /Count ${n} /Kids [${pages.map((_,i)=>`${3+i*3} 0 R`).join(" ")}] >>`);
+  pages.forEach((pc,i)=>{const pid=3+i*3,cid=pid+1,iid=pid+2;const cs=`q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;
+    obj(pid,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im0 ${iid} 0 R >> >> /Contents ${cid} 0 R >>`);
+    obj(cid,`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`);
+    obj(iid,[`<< /Type /XObject /Subtype /Image /Width ${pc.width} /Height ${pc.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpgs[i].length} >>\nstream\n`,jpgs[i],"\nendstream"])});
+  const total=3+n*3;const xref=len;
+  push(`xref\n0 ${total}\n0000000000 65535 f \n`+Array.from({length:total-1},(_,i)=>String(offs[i+1]).padStart(10,"0")+" 00000 n \n").join(""));
+  push(`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+  return new Blob(parts,{type:"application/pdf"});
+}
+// Minimal ZIP writer (stored, UTF-8 names).
+const CRC_T=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(u){let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRC_T[(c^u[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0}
+async function makeZip(files){
+  const enc=new TextEncoder();const out=[];const cen=[];let off=0;const d=new Date();
+  const time=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1),date=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate();
+  for(const f of files){
+    const data=new Uint8Array(await f.blob.arrayBuffer());const name=enc.encode(f.name);const crc=crc32(data);
+    const h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);h.setUint16(10,time,true);h.setUint16(12,date,true);
+    h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,name.length,true);h.setUint16(28,0,true);
+    out.push(h.buffer,name,data);
+    const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(10,0,true);c.setUint16(12,time,true);c.setUint16(14,date,true);
+    c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,name.length,true);c.setUint32(42,off,true);
+    cen.push(c.buffer,name);off+=30+name.length+data.length;
+  }
+  const cenLen=cen.reduce((a,b)=>a+(b.byteLength??b.length),0);
+  const e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cenLen,true);e.setUint32(16,off,true);
+  return new Blob([...out,...cen,e.buffer],{type:"application/zip"});
+}
+const safeName=x=>String(x||"").replace(/[\\/:*?"<>|\u0000-\u001f]+/g," ").replace(/\s+/g," ").trim().slice(0,90)||"file";
+const EXT={"application/pdf":"pdf","image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/gif":"gif","model/gltf-binary":"glb","model/vnd.usdz+zip":"usdz"};
+let pkgBusy=false;
+async function downloadPackage(it){
+  if(pkgBusy)return;pkgBusy=true;toast("Preparing the package…");
+  try{
+    const base=safeName([it.code,it.name].filter(Boolean).join(" "));const files=[];const used=new Set();
+    const add=(name,blob)=>{let n=name,i=2;while(used.has(n.toLowerCase())){n=name.replace(/(\.[a-z0-9]+)?$/i,m=>` (${i})${m}`);i++}used.add(n.toLowerCase());files.push({name:n,blob})};
+    add(`${base} - ${tr("Product sheet")}.pdf`,await pagesToPDF(await sheetPages(it)));
+    const fetchBlob=async id=>{const r=await fetch("/_blob/"+id);if(!r.ok)throw new Error("fetch");return r.blob()};
+    if(it.photo){try{const b=await fetchBlob(it.photo);add(`${base} - ${tr("Photo")}.${EXT[b.type]||"jpg"}`,b)}catch(_){}}
+    let missing=0;
+    for(const r of (it.refs||[]).filter(r=>r.asset)){try{const b=await fetchBlob(r.asset);const ext=EXT[b.type]||EXT[r.mime]||"bin";
+      add(`${tr("Drawings & references")}/${safeName([r.kind,r.no,r.title].filter(Boolean).join(" "))}.${ext}`,b)}catch(_){missing++}}
+    if(it.model&&it.model.asset){try{add(`3D/${safeName(it.model.name||base+".glb").replace(/\.glb$/i,"")}.glb`,await fetchBlob(it.model.asset))}catch(_){missing++}}
+    if(it.modelUsdz&&it.modelUsdz.asset){try{add(`3D/${safeName(it.modelUsdz.name||base+".usdz").replace(/\.usdz$/i,"")}.usdz`,await fetchBlob(it.modelUsdz.asset))}catch(_){missing++}}
+    const links=(it.refs||[]).filter(r=>r.url);
+    if(links.length)add(`${tr("Links")}.txt`,new Blob([links.map(r=>`${[r.kind,r.no,r.title].filter(Boolean).join(" · ")}\r\n${r.url}\r\n`).join("\r\n")],{type:"text/plain"}));
+    const zip=await makeZip(files);
+    const fn=`${safeName(project.name||"Sourcebook")} - ${base}.zip`;
+    if(downloads)await downloads.save({filename:fn,data:zip});else{const a=document.createElement("a");a.href=URL.createObjectURL(zip);a.download=fn;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+    toast(missing?`Package downloaded · ${missing} file${missing===1?"":"s"} couldn't be included`:`Package downloaded · ${files.length} file${files.length===1?"":"s"}`);
+  }catch(e){console.error(e);toast("The package couldn't be made. Try again.")}
+  finally{pkgBusy=false}
+}
+async function savePiecePDF(it){
+  if(pkgBusy)return;pkgBusy=true;toast("Preparing the PDF…");
+  try{const pdf=await pagesToPDF(await sheetPages(it));const fn=`${safeName([project.name,it.code,it.name].filter(Boolean).join(" - "))}.pdf`;
+    if(downloads)await downloads.save({filename:fn,data:pdf});else{const a=document.createElement("a");a.href=URL.createObjectURL(pdf);a.download=fn;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+    toast("PDF downloaded")}catch(e){console.error(e);toast("The PDF couldn't be made. Try again.")}finally{pkgBusy=false}
+}
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest('[data-a="pkg"],[data-a="savepdf"]');if(!t)return;e.preventDefault();e.stopPropagation();const it=items.find(i=>i.id===ui.open);if(!it)return;if(t.dataset.a==="pkg")downloadPackage(it);else savePiecePDF(it)},true);
+
 /* ---------- attachments ---------- */
 const CLIP_SVG=`<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 01-7.8-7.8l8.6-8.6a3.7 3.7 0 015.2 5.2l-8.6 8.6a1.8 1.8 0 01-2.6-2.6l7.9-7.9"/></svg>`;
 function attachments(it){return (it.refs||[]).filter(r=>r.asset||r.url)}
@@ -1920,7 +2047,7 @@ function renderLayer(passive){
     </div>
     <div class="body">
       <div class="top"><span class="eyebrow">${[it.code,it.category].filter(Boolean).map(esc).join(" · ")}${it.zone?" · "+esc(it.zone):""}</span>
-        <div class="row2">${ed?`<button class="btn ghost sm" data-a="edit">Edit</button>`:""}<button class="close" data-a="close" aria-label="Close">×</button></div></div>
+        <div class="row2">${HOSTED?`<button class="btn ghost sm" data-a="savepdf" title="Download this product sheet as a PDF, ready to print or send">Save PDF</button><button class="btn ghost sm" data-a="pkg" title="Product sheet PDF with its drawings, spec sheets, photo and 3D model, in one ZIP">Download package</button>`:""}${ed?`<button class="btn ghost sm" data-a="edit">Edit</button>`:""}<button class="close" data-a="close" aria-label="Close">×</button></div></div>
       <h2>${esc(it.name)}</h2>
       ${it.description?`<p class="lede">${esc(it.description)}</p>`:""}
       <div class="steps">${STAGES.map((s,i)=>`<button class="step ${i<si?"done":""} ${i===si?"cur":""}" data-status="${s}" ${ed?"":"disabled"}>${s}</button>`).join("")}</div>
@@ -2726,7 +2853,7 @@ document.addEventListener("dragstart",e=>{if(e.target.closest&&e.target.closest(
 
 /* ---------- English / 中文 ---------- */
 const ZH={
-"Find it online":"在线查找","Search again":"重新搜索","Start over":"重新开始","Optional hint: brand, retailer or what to look for":"可选提示：品牌、零售商或查找重点","Claude searches the web for this product, shows you likely matches, and pulls the details of the one you pick. About 10–20¢ of Claude usage per search.":"Claude 会在网上搜索此产品，列出可能的匹配项，并获取您所选产品的详细信息。每次搜索约消耗 0.1–0.2 美元的 Claude 用量。","Find this product online":"在线查找此产品","Searching the web for matches…":"正在网上搜索匹配产品…","This usually takes 30 to 90 seconds. You can close this and keep working; the matches will be waiting here.":"通常需要 30 到 90 秒。您可以关闭此页继续工作，结果会保留在这里。","The search didn't finish":"搜索未完成","Try again":"重试","No confident match found":"未找到可靠的匹配","Add a hint, such as the brand or where you saw it, and search again.":"添加提示（例如品牌或出处）后重新搜索。","✓ Matched":"✓ 已匹配","Use this":"使用此项","Pull again":"重新获取","Pulling details…":"正在获取详情…","Product photo":"产品照片","Replaces the current image":"替换当前图片","Uses the photo from the product page":"使用产品页面的照片","Check prices and lead times with the supplier before ordering; web listings change.":"下单前请向供应商核实价格和交货期；网上信息可能变动。","Dismiss":"关闭","Add products or materials":"添加产品或材料","Drop an image or tap to choose one. Claude finds the product online and fills in its details.":"拖入图片或点击选择。Claude 会在网上查找该产品并填写详情。","or fill in by hand":"或手动填写","Matches ready":"匹配结果已就绪","Searching":"搜索中","Find each piece online":"在线查找每一项","Claude searches the web for every piece you add and lines up matches for you to confirm. About 10–20¢ of Claude usage per piece.":"Claude 会为您添加的每一项在网上搜索，并列出匹配结果供您确认。每项约消耗 0.1–0.2 美元的 Claude 用量。","Adding the piece…":"正在添加…","Add a photo first.":"请先添加照片。","Spec sheet":"规格书","Link":"链接","Listed price":"标价","Unit cost (CAD)":"单价（加元）","Unit cost (CNY)":"单价（人民币）","New piece":"新项目","Drop PDFs or images. Link other files (like .dwg) with the form instead.":"请拖入 PDF 或图片。其他文件（如 .dwg）请通过表单添加链接。","The product photo couldn't be downloaded. Your image was kept.":"无法下载产品照片，已保留您的图片。","A finish, fixture, fitting or piece of furniture, with its image, specification and quantity. Or drop an image here.":"饰面、灯具、配件或家具，以及其图片、规格和数量。也可将图片拖到这里。","3D model":"3D 模型","Add a 3D model":"添加 3D 模型","GLB exported from Rhino, SketchUp or Revit, with its materials. Drop it here or choose a file. Up to 100 MB.":"从 Rhino、SketchUp 或 Revit 导出的含材质 GLB 文件。拖放到此处或选择文件，最大 100 MB。","Drag to turn · pinch or scroll to zoom":"拖动旋转 · 双指或滚轮缩放","Drag to turn · pinch or scroll to zoom · double-tap to reset":"拖动旋转 · 双指或滚轮缩放 · 双击复位","View in your room":"在您的房间中查看","View in 3D":"3D 查看","Replace model":"替换模型","Remove model":"移除模型","3D model added":"已添加 3D 模型","3D model removed":"已移除 3D 模型","USDZ added for iPhone and iPad":"已为 iPhone 和 iPad 添加 USDZ","Add USDZ for iPhone & iPad":"为 iPhone 和 iPad 添加 USDZ","Replace USDZ for iPhone & iPad":"替换 iPhone 和 iPad 的 USDZ","Full screen":"全屏","Upload failed. Try again.":"上传失败，请重试。","Open a product, then drop the model on its 3D model section.":"请先打开产品，再将模型拖到其 3D 模型区域。","Export as glTF Binary (.glb) so the textures travel inside one file.":"请导出为 glTF 二进制（.glb），使贴图包含在同一文件中。","Use a GLB file (or USDZ for iPhone and iPad).":"请使用 GLB 文件（iPhone 和 iPad 可用 USDZ）。","Add the GLB first. The USDZ is an extra for Apple AR.":"请先添加 GLB。USDZ 仅用于苹果 AR。","That isn't a GLB file. Export as glTF Binary (.glb).":"这不是 GLB 文件。请导出为 glTF 二进制（.glb）。","That model is over 100 MB.":"模型超过 100 MB。","The 3D viewer couldn't load. Check your connection.":"3D 查看器无法加载，请检查网络。","Admin":"管理员","Sourcing agent":"采购代理","Client":"客户","Sign out":"退出登录","Signed in":"已登录","Client review":"客户审核","✓ Client approved":"✓ 客户已批准","Changes requested":"需修改","✓ Approved":"✓ 已批准","Let the studio know if this piece works for you.":"请告诉工作室此项目是否合适。","Waiting for the client's review.":"等待客户审核。","Add a note (optional)":"添加备注（可选）","Approve":"批准","Request changes":"要求修改","Clear my review":"撤销我的审核","Comments":"评论","No comments yet.":"暂无评论。","Ask a question or leave a note for the studio":"向工作室提问或留言","Write a comment":"写评论","Post":"发布","Remove comment":"删除评论","Approved. The studio can see it.":"已批准，工作室可以看到。","Sent to the studio.":"已发送给工作室。","Review cleared":"审核已撤销","Your role can't do that.":"您的角色无法执行此操作。","Clients can view, approve and comment.":"客户可以查看、批准和评论。","Only admins can delete projects.":"只有管理员可以删除项目。","← Projects":"← 项目",
+"Download package":"下载资料包","Product sheet PDF with its drawings, spec sheets, photo and 3D model, in one ZIP":"产品资料 PDF 及其图纸、规格书、照片和 3D 模型，打包为一个 ZIP","Preparing the package…":"正在准备资料包…","The package couldn't be made. Try again.":"无法生成资料包，请重试。","Photo":"照片","Links":"链接","Sourcebook":"选材手册","Changes requested":"需修改","Client review":"客户审核","Specification":"规格","Save PDF":"保存 PDF","Download this product sheet as a PDF, ready to print or send":"将此产品资料下载为 PDF，可直接打印或发送","Preparing the PDF…":"正在生成 PDF…","PDF downloaded":"PDF 已下载","The PDF couldn't be made. Try again.":"无法生成 PDF，请重试。","Product sheet":"产品资料","Extended":"小计","Unit price":"单价","Required on site":"现场需用日期","Order by":"下单截止","Drawings & references":"图纸与参考资料","(attached in Sourcebook)":"（附于选材手册中）","Approved":"已批准","Code":"编号","Category":"类别","Status":"状态","Notes":"备注","Find it online":"在线查找","Search again":"重新搜索","Start over":"重新开始","Optional hint: brand, retailer or what to look for":"可选提示：品牌、零售商或查找重点","Claude searches the web for this product, shows you likely matches, and pulls the details of the one you pick. About 10–20¢ of Claude usage per search.":"Claude 会在网上搜索此产品，列出可能的匹配项，并获取您所选产品的详细信息。每次搜索约消耗 0.1–0.2 美元的 Claude 用量。","Find this product online":"在线查找此产品","Searching the web for matches…":"正在网上搜索匹配产品…","This usually takes 30 to 90 seconds. You can close this and keep working; the matches will be waiting here.":"通常需要 30 到 90 秒。您可以关闭此页继续工作，结果会保留在这里。","The search didn't finish":"搜索未完成","Try again":"重试","No confident match found":"未找到可靠的匹配","Add a hint, such as the brand or where you saw it, and search again.":"添加提示（例如品牌或出处）后重新搜索。","✓ Matched":"✓ 已匹配","Use this":"使用此项","Pull again":"重新获取","Pulling details…":"正在获取详情…","Product photo":"产品照片","Replaces the current image":"替换当前图片","Uses the photo from the product page":"使用产品页面的照片","Check prices and lead times with the supplier before ordering; web listings change.":"下单前请向供应商核实价格和交货期；网上信息可能变动。","Dismiss":"关闭","Add products or materials":"添加产品或材料","Drop an image or tap to choose one. Claude finds the product online and fills in its details.":"拖入图片或点击选择。Claude 会在网上查找该产品并填写详情。","or fill in by hand":"或手动填写","Matches ready":"匹配结果已就绪","Searching":"搜索中","Find each piece online":"在线查找每一项","Claude searches the web for every piece you add and lines up matches for you to confirm. About 10–20¢ of Claude usage per piece.":"Claude 会为您添加的每一项在网上搜索，并列出匹配结果供您确认。每项约消耗 0.1–0.2 美元的 Claude 用量。","Adding the piece…":"正在添加…","Add a photo first.":"请先添加照片。","Spec sheet":"规格书","Link":"链接","Listed price":"标价","Unit cost (CAD)":"单价（加元）","Unit cost (CNY)":"单价（人民币）","New piece":"新项目","Drop PDFs or images. Link other files (like .dwg) with the form instead.":"请拖入 PDF 或图片。其他文件（如 .dwg）请通过表单添加链接。","The product photo couldn't be downloaded. Your image was kept.":"无法下载产品照片，已保留您的图片。","A finish, fixture, fitting or piece of furniture, with its image, specification and quantity. Or drop an image here.":"饰面、灯具、配件或家具，以及其图片、规格和数量。也可将图片拖到这里。","3D model":"3D 模型","Add a 3D model":"添加 3D 模型","GLB exported from Rhino, SketchUp or Revit, with its materials. Drop it here or choose a file. Up to 100 MB.":"从 Rhino、SketchUp 或 Revit 导出的含材质 GLB 文件。拖放到此处或选择文件，最大 100 MB。","Drag to turn · pinch or scroll to zoom":"拖动旋转 · 双指或滚轮缩放","Drag to turn · pinch or scroll to zoom · double-tap to reset":"拖动旋转 · 双指或滚轮缩放 · 双击复位","View in your room":"在您的房间中查看","View in 3D":"3D 查看","Replace model":"替换模型","Remove model":"移除模型","3D model added":"已添加 3D 模型","3D model removed":"已移除 3D 模型","USDZ added for iPhone and iPad":"已为 iPhone 和 iPad 添加 USDZ","Add USDZ for iPhone & iPad":"为 iPhone 和 iPad 添加 USDZ","Replace USDZ for iPhone & iPad":"替换 iPhone 和 iPad 的 USDZ","Full screen":"全屏","Upload failed. Try again.":"上传失败，请重试。","Open a product, then drop the model on its 3D model section.":"请先打开产品，再将模型拖到其 3D 模型区域。","Export as glTF Binary (.glb) so the textures travel inside one file.":"请导出为 glTF 二进制（.glb），使贴图包含在同一文件中。","Use a GLB file (or USDZ for iPhone and iPad).":"请使用 GLB 文件（iPhone 和 iPad 可用 USDZ）。","Add the GLB first. The USDZ is an extra for Apple AR.":"请先添加 GLB。USDZ 仅用于苹果 AR。","That isn't a GLB file. Export as glTF Binary (.glb).":"这不是 GLB 文件。请导出为 glTF 二进制（.glb）。","That model is over 100 MB.":"模型超过 100 MB。","The 3D viewer couldn't load. Check your connection.":"3D 查看器无法加载，请检查网络。","Admin":"管理员","Sourcing agent":"采购代理","Client":"客户","Sign out":"退出登录","Signed in":"已登录","Client review":"客户审核","✓ Client approved":"✓ 客户已批准","Changes requested":"需修改","✓ Approved":"✓ 已批准","Let the studio know if this piece works for you.":"请告诉工作室此项目是否合适。","Waiting for the client's review.":"等待客户审核。","Add a note (optional)":"添加备注（可选）","Approve":"批准","Request changes":"要求修改","Clear my review":"撤销我的审核","Comments":"评论","No comments yet.":"暂无评论。","Ask a question or leave a note for the studio":"向工作室提问或留言","Write a comment":"写评论","Post":"发布","Remove comment":"删除评论","Approved. The studio can see it.":"已批准，工作室可以看到。","Sent to the studio.":"已发送给工作室。","Review cleared":"审核已撤销","Your role can't do that.":"您的角色无法执行此操作。","Clients can view, approve and comment.":"客户可以查看、批准和评论。","Only admins can delete projects.":"只有管理员可以删除项目。","← Projects":"← 项目",
 "Sourcebook":"选材手册","Design to construction":"从设计到施工","Untitled":"未命名","project":"项目","Untitled project":"未命名项目",
 "Import":"导入","Add product":"添加产品","Edit project":"编辑项目","Update from sheet":"从表格更新","Linked Google Sheet ↗":"已关联 Google 表格 ↗",
 "Concept":"概念","Specified":"已定规格","Approved":"已批准","Ordered":"已下单","Delivered":"已到场",
@@ -2790,6 +2917,8 @@ const ZH={
 "Primary ensuite":"主卧卫生间","Location ":"位置","Linked to":"已关联","your Google Sheet ↗":"您的 Google 表格 ↗","download it as Excel":"下载为 Excel","download it as Excel ↗":"下载为 Excel ↗","Upload the download":"上传下载的文件","Paste rows":"粘贴行","Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.":"此服务器尚未设置 Claude。请在 Render 中添加 Anthropic API 密钥（ANTHROPIC_API_KEY）。","Showing example pieces because the server couldn't be reached. Check your connection and reload.":"无法连接服务器，正在显示示例项目。请检查网络后重新加载。","Uses the Anthropic API key set on the server.":"使用服务器上设置的 Anthropic API 密钥。","Claude isn't available right now. Reload the page and try again.":"Claude 暂时不可用，请重新加载页面后重试。","Images couldn't be sent to Claude. Reload the page and try again.":"无法将图片发送给 Claude，请重新加载页面后重试。","or drop / paste an image":"或拖放 / 粘贴图片","Drop an image on the picture, or use a material plate below":"将图片拖放到画面上，或使用下方的材料样板","Use a JPG, PNG, WebP or GIF image.":"请使用 JPG、PNG、WebP 或 GIF 图片。","Save the image to your device first, then drop the file here.":"请先将图片保存到设备，再将文件拖放到这里。","Size":"尺寸","Small":"小","Medium":"中","Large":"大","Fill":"填满","Whole":"完整","Card size":"卡片尺寸","Show whole image":"显示完整图片","Fill the frame":"填满画框","Projects":"项目","All projects":"全部项目","← All projects":"← 全部项目","Sourcebook · Studio":"选材手册 · 工作室","New project":"新建项目","Active projects":"进行中项目","Pieces in sourcing":"采购中项目","Orders overdue":"逾期未下单","Due in 3 weeks":"三周内需下单","Quoted value":"报价总额","Active":"进行中","Archived":"已归档","Open now":"当前打开","No pictures yet":"暂无图片","pieces":"个项目","drawings":"张图纸","quoted (CAD)":"报价（加元）","Open":"打开","Archive":"归档","Restore":"恢复","Delete project…":"删除项目…","Start a book for a new job: its lookbook, schedules and quotation.":"为新工作建立手册：效果册、清单与报价单。","Create project":"创建项目","Project created":"已创建项目","Project deleted":"已删除项目","Loading projects…":"正在加载项目…","Updating…":"正在更新…","No archived projects.":"没有已归档的项目。","Project options":"项目选项","across all projects":"所有项目合计","Couldn't create the project. Try again.":"无法创建项目，请重试。","Some of the project couldn't be removed. Try again.":"部分项目内容无法删除，请重试。","Projects appear here once the book is open on claude.ai.":"在 claude.ai 中打开手册后，项目会显示在这里。","Quotation":"报价单","Total (CAD)":"合计（加元）","Total (CNY)":"合计（人民币）","Items priced":"已报价项目","Exchange rate":"汇率","Set for this project":"本项目设定","Unit price (CAD)":"单价（加元）","Unit price (CNY)":"单价（人民币）","Price TBD":"价格待定","Qty TBD":"数量待定","Subtotal":"小计","Sourcing fee":"采购服务费","Freight & logistics":"运费与物流","Tax":"税费","Total":"合计","Enter a unit price in either currency; the other is converted at the project rate.":"可以任一币种输入单价，另一币种按项目汇率自动换算。","No materials or products yet.":"暂无材料或产品。","1 CAD =":"1 加元 =","Other":"其他","Unit price CAD":"单价 加元","Unit price CNY":"单价 人民币","Language":"语言","View all":"查看全部"
 };
 const ZH_PAT=[
+ [/^Package downloaded · (\d+) files?$/,m=>`资料包已下载 · ${m[1]} 个文件`],[/^Package downloaded · (\d+) files? couldn't be included$/,m=>`资料包已下载 · ${m[1]} 个文件无法包含`],
+ [/^Product sheet · (.+)$/,m=>`产品资料 · ${m[1]}`],
  [/^(\d+) possible match(?:es)? · pick one to pull its details$/,m=>`${m[1]} 个可能的匹配 · 选择一项以获取详情`],[/^Details from (.+)$/,m=>`来自 ${m[1]} 的详情`],[/^Details applied from (.+)$/,m=>`已应用来自 ${m[1]} 的详情`],[/^Attaching (\d+) files?…$/,m=>`正在附加 ${m[1]} 个文件…`],[/^(\d+) files? attached(.*)$/,m=>`已附加 ${m[1]} 个文件`],[/^(\d+) pieces? added\. Claude is looking each one up online; matches appear on the cards\.$/,m=>`已添加 ${m[1]} 项。Claude 正在逐一在线查找，匹配结果会显示在卡片上。`],[/^(.+) match$/,m=>({high:"高",medium:"中",low:"低"}[m[1]]?`匹配度${({high:"高",medium:"中",low:"低"})[m[1]]}`:m[0])],[/^Design: (.+)$/,m=>`设计：${m[1]}`],
  [/^Uploading (.+)$/,m=>`正在上传 ${m[1]}`],[/^(.+) · large models can take a minute$/,m=>`${m[1]} · 大型模型可能需要一分钟`],[/^That model is (.+)\. Keep it under 100 MB.*$/,m=>`模型大小为 ${m[1]}，请控制在 100 MB 以内：开启 Draco 压缩或使用较小的贴图。`],
  [/^by (.+) · (.+)$/,m=>`${m[1]} · ${m[2]}`],[/^(\d+) comments?$/,m=>`${m[1]} 条评论`],

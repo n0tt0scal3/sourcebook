@@ -90,6 +90,10 @@ Images scanned from the supplier catalogues in `G:\My Drive\LMNL\90 CHINA PRODUC
 - **Use** it in a project's **Sourcing library** tab, which shows only kept images. **Add to project** creates a piece with the photo, product code, the source PDF as a spec sheet and a `libSource` field.
 - Files: `library.js` (the tab, shared by dashboard and projects), `lib/data.json` (index) and `lib/sprites/` (thumbnail sheets). Clients don't see the library.
 
+## Editing the project book
+
+`index.html` is generated. Edit `tools/sourcebook.html`, then run `python3 tools/build_render.py`, which writes `index.html` (adding the head, the server shim and `library.js`) and makes Google Fonts non-blocking. Add a Chinese translation for every new string (`ZH` or `ZH_PAT` in `tools/sourcebook.html`, `T` in `dashboard.html`). The `tools/` folder isn't served.
+
 ## Product sheets and packages
 
 Every product has two buttons at the top of its sheet:

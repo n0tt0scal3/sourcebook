@@ -18,10 +18,11 @@
     "Catalogue folder": "图册文件夹", "Image file": "图片文件", "Copy source note": "复制来源说明", "In the library": "图库状态", "Keep in library": "保留在图库中", "Remove from library": "从图库中移除",
     "Open the piece in this project": "打开本项目中的该项", "Adding…": "正在添加…", "Close": "关闭", "Source note copied": "来源说明已复制", "Couldn't save. Check your connection and try again.": "无法保存，请检查网络后重试。",
     "Removing hides the image from every project's library. It stays in the catalogue folder and can be kept again at any time.": "移除后，所有项目的图库中都不再显示此图片。图片仍保留在图册文件夹中，可随时重新保留。",
-    "Couldn't add it. Try again.": "无法添加，请重试。", "Show": "显示",
+    "Couldn't add it. Try again.": "无法添加，请重试。", "Removed. Tick to keep.": "已移除，勾选以保留。", "Kept. Untick to remove.": "已保留，取消勾选以移除。", "Selected. Press Ctrl+C to copy.": "已选中，按 Ctrl+C 复制。", "Show": "显示",
   };
   const lang = () => { try { return localStorage.getItem("sb_lang") === "zh" ? "zh" : "en"; } catch (_) { return "en"; } };
   const t = s => (lang() === "zh" ? ZH[s] ?? s : s);
+  const zh = () => lang() === "zh";
   const nf = n => n.toLocaleString(lang() === "zh" ? "zh-CN" : "en-CA");
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const $ = s => document.querySelector(s);
@@ -153,7 +154,7 @@
     watch();
     const ed = host.canEdit(), show = showMode(), tot = LIB.items.length, k = kept();
     const cats = [...new Set(Object.values(LIB.sups).map(s => s.cat))].map(c => c[0] + c.slice(1).toLowerCase());
-    return `<div id="sblib"><section class="sbl-head"><div><span class="eyebrow">90 China Products · ${esc(cats.join(", "))} · ${Object.keys(LIB.sups).length} catalogues</span>
+    return `<div id="sblib"><section class="sbl-head"><div><span class="eyebrow">${zh() ? `90 中国产品 · ${esc(cats.map(c => ({ Furniture: "家具", Lighting: "灯具", Doors: "门", Millwork: "木作", Stone: "石材", Signage: "标识" })[c] || c).join("、"))} · ${Object.keys(LIB.sups).length} 本图册` : `90 China Products · ${esc(cats.join(", "))} · ${Object.keys(LIB.sups).length} catalogues`}</span>
       ${host.ctx === "project" ? `<h2>${t("Sourcing library")}</h2>` : ""}
       <p>${host.ctx === "studio" ? t("Every image scanned from the supplier catalogues, each kept with its catalogue and page. Untick the ones you don't want offered to projects.") : t("The images kept in the studio library. Open one to see where it comes from, or add it to this project as a piece with its source attached.")}</p></div>
       <div class="sbl-stat"><div><span class="eyebrow">${t("Kept")}</span><b id="sbl-kept">${nf(k)}</b></div><div><span class="eyebrow">${t("Scanned")}</span><b>${nf(tot)}</b></div>${host.ctx === "project" ? `<div><span class="eyebrow">${t("In this project")}</span><b>${host.inProject().size}</b></div>` : ""}</div></section>
@@ -175,18 +176,18 @@
   }
   function gridHTML() {
     const l = list(), ed = host.canEdit(), inP = host.ctx === "project" ? host.inProject() : new Map();
-    setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = `${nf(l.length)} image${l.length === 1 ? "" : "s"}`; }, 0);
+    setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = zh() ? `${nf(l.length)} 张图片` : `${nf(l.length)} image${l.length === 1 ? "" : "s"}`; }, 0);
     if (!l.length) return `<div class="sbl-grid"><p class="sbl-empty">${ui.q ? t("Nothing matches that search.") : showMode() === "removed" ? t("Nothing has been removed here.") : t("No images kept here yet.")}</p></div>`;
     let page = null, html = ""; const bySup = !!ui.sup;
     for (const o of l.slice(0, ui.n)) {
       if (bySup && o.page !== page) { page = o.page; html += `<div class="sbl-page"><b>${t("Page")} ${o.page}</b>${ed ? `<span><button class="linkbtn" data-sblpage="${o.page}" data-v="keep">${t("Keep page")}</button><button class="linkbtn" data-sblpage="${o.page}" data-v="drop">${t("Remove page")}</button></span>` : ""}</div>`; }
       const x = isOff(o);
       html += `<div class="sbl-tile ${x ? "off" : ""}"><button class="sbl-open" data-sblopen="${o.i}" aria-label="${esc(o.file)}"><span class="sbl-sw" ${sprite(o)}></span></button>
-        ${ed ? `<label class="sbl-chk" title="${x ? "Removed. Tick to keep." : "Kept. Untick to remove."}"><input type="checkbox" data-sblkeep="${o.i}" ${x ? "" : "checked"} aria-label="Keep ${esc(o.file)}"></label>` : ""}
+        ${ed ? `<label class="sbl-chk" title="${x ? t("Removed. Tick to keep.") : t("Kept. Untick to remove.")}"><input type="checkbox" data-sblkeep="${o.i}" ${x ? "" : "checked"} aria-label="${zh() ? "保留 " : "Keep "}${esc(o.file)}"></label>` : ""}
         ${inP.has(o.file) ? `<span class="sbl-inproj">${t("In project")}</span>` : ""}
         <span class="sbl-cap"><b>${esc(o.codes[0] || label(o.sup)[0])}</b><span>${bySup ? "" : esc(label(o.sup)[0]) + " · "}p${o.page}</span></span></div>`;
     }
-    return `<div class="sbl-grid">${html}</div>${l.length > ui.n ? `<div class="sbl-more"><button class="btn ghost" data-sblmore>Show ${Math.min(120, l.length - ui.n)} more of ${nf(l.length - ui.n)}</button></div>` : ""}`;
+    return `<div class="sbl-grid">${html}</div>${l.length > ui.n ? `<div class="sbl-more"><button class="btn ghost" data-sblmore>${zh() ? `再显示 ${Math.min(120, l.length - ui.n)} 张（还有 ${nf(l.length - ui.n)} 张）` : `Show ${Math.min(120, l.length - ui.n)} more of ${nf(l.length - ui.n)}`}</button></div>` : ""}`;
   }
   function repaint() {
     if (!LIB) return;
@@ -210,7 +211,7 @@
     const by = {}; l.forEach(o => (by[o.sup] = by[o.sup] || []).push(o));
     const prev = {}; Object.entries(by).forEach(([s, arr]) => { prev[s] = { on: arr.filter(o => isOff(o)).map(o => o.key), offK: arr.filter(o => !isOff(o)).map(o => o.key) }; });
     Object.entries(by).forEach(([s, arr]) => setOff(s, arr.map(o => o.key), x)); repaint();
-    host.toastUndo(`${l.length} image${l.length === 1 ? "" : "s"} ${x ? "removed" : "kept"}`, () => {
+    host.toastUndo(zh() ? `已${x ? "移除" : "保留"} ${l.length} 张图片` : `${l.length} image${l.length === 1 ? "" : "s"} ${x ? "removed" : "kept"}`, () => {
       Object.entries(prev).forEach(([s, p]) => { if (p.on.length) setOff(s, p.on, true); if (p.offK.length) setOff(s, p.offK, false); }); repaint();
     });
   }
@@ -237,7 +238,7 @@
           <div class="sbl-kv"><div class="k">PDF</div><div><a href="https://drive.google.com/file/d/${esc(S.drive)}/view" target="_blank" rel="noopener">${esc(S.pdf)} ↗</a></div>
             <div class="k">${t("Catalogue folder")}</div><div class="m">${esc(LIB_ROOT + S.cat)}</div>
             <div class="k">${t("Image file")}</div><div class="m">${esc(LIB_ROOT + "_IMAGE LIBRARY\\" + S.cat + "\\" + o.sup + "\\")}</div></div>
-          <div class="sbl-note"><code id="sbl-note">${esc(sourceNote(o)).replace(/\n/g, "<br>")}</code><div class="sbl-row" style="margin-top:0"><button class="btn sm" data-sbl="copy">${t("Copy source note")}</button><span class="mono" style="font-size:11.5px;color:var(--muted)">The PDF opens at page 1; this image is on page ${o.page}.</span></div></div>
+          <div class="sbl-note"><code id="sbl-note">${esc(sourceNote(o)).replace(/\n/g, "<br>")}</code><div class="sbl-row" style="margin-top:0"><button class="btn sm" data-sbl="copy">${t("Copy source note")}</button><span class="mono" style="font-size:11.5px;color:var(--muted)">${zh() ? `PDF 从第 1 页打开；此图片在第 ${o.page} 页。` : `The PDF opens at page 1; this image is on page ${o.page}.`}</span></div></div>
         </section>
         <section class="sbl-sec"><header><h5>${t("In the library")}</h5><span class="mono" style="color:var(--muted)">${x ? t("Removed") : t("Kept")}</span></header>
           <div class="sbl-row">
@@ -246,7 +247,7 @@
           </div>
           ${ed ? `<p class="sbl-hint">${t("Removing hides the image from every project's library. It stays in the catalogue folder and can be kept again at any time.")}</p>` : ""}
         </section>
-        ${o.text ? `<p class="sbl-excerpt">Text on the page: ${esc(o.text.slice(0, 220))}${o.text.length > 220 ? "…" : ""}</p>` : ""}
+        ${o.text ? `<p class="sbl-excerpt">${zh() ? "页面文字：" : "Text on the page: "}${esc(o.text.slice(0, 220))}${o.text.length > 220 ? "…" : ""}</p>` : ""}
       </div></section>`;
   }
   function close() { if (ui.open == null) return; ui.open = null; ui.adding = false; document.body.style.overflow = ""; host.layer(); }
@@ -284,7 +285,7 @@
     else if (a === "copy") {
       const o = LIB.items[ui.open]; if (!o) return;
       try { await navigator.clipboard.writeText(sourceNote(o)); host.toast(t("Source note copied")); }
-      catch (_) { const r = document.createRange(); r.selectNodeContents($("#sbl-note")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); host.toast("Selected. Press Ctrl+C to copy."); }
+      catch (_) { const r = document.createRange(); r.selectNodeContents($("#sbl-note")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); host.toast(t("Selected. Press Ctrl+C to copy.")); }
     }
   });
   document.addEventListener("change", e => {

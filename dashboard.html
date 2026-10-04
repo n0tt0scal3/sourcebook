@@ -161,7 +161,7 @@ const ROLE={admin:"Admin",agent:"Sourcing agent",client:"Client"};
 const isAdmin=()=>me.role==="admin",isClient=()=>me.role==="client";
 state.view="projects";
 try{const f=localStorage.getItem("sb_dash_filter");if(f)state.filter=f;if(localStorage.getItem("sb_dash_view")==="library")state.view="library"}catch(_){}
-const libOn=()=>!isClient()&&!!window.SBLibrary;
+const libOn=()=>!!window.SBLibrary;
 
 async function loadMe(){try{const r=await fetch("/api/me");if(r.ok)me=await r.json()}catch(_){}}
 async function load(){
@@ -281,7 +281,7 @@ function toastUndo(msg,undo){document.querySelectorAll(".toast").forEach(x=>x.re
 document.addEventListener("input",e=>{if(e.target.id==="q"){state.q=e.target.value;const pos=e.target.selectionStart;render();const q=document.getElementById("q");q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(state.sheet){state.sheet=false;renderLayer()}else if(state.menu){state.menu=null;state.confirm=null;render()}}});
 let tmr=null;try{const es=new EventSource("/api/events");es.onmessage=()=>{clearTimeout(tmr);tmr=setTimeout(load,600)}}catch(_){}
-if(window.SBLibrary)SBLibrary.configure({ctx:"studio",canEdit:()=>!isClient(),layer:renderLayer,toast:alertMsg,toastUndo});
+if(window.SBLibrary)SBLibrary.configure({ctx:"studio",internal:()=>!isClient(),canEdit:isAdmin,canAdd:()=>true,projects:()=>projects.filter(p=>!p.archived).map(p=>({id:p.id,name:p.name})),layer:renderLayer,toast:alertMsg,toastUndo});
 loadMe().then(()=>{if(state.view==="library"&&libOn())render();load()});
 })();
 </script>

@@ -66,10 +66,10 @@ In the service's **Settings → Custom Domains**, add something like `sourcebook
 - **New project:** use **New project** on the dashboard. Each project gets its own address, e.g. `/p/harbour-loft-73nm`, which you can bookmark.
 - **Archive or delete:** use the ⋯ on a project card. Archived projects move to the Archived filter. Delete asks for confirmation and can't be undone.
 - **Admin portal** (`/admin`, admins only; linked from the dashboard and each project):
-  - **People:** add someone with a name, email, role and a generated password to share with them; edit their role; reset their password; sign them out on every device; disable or remove their account. Each person can change their own password from the dashboard.
+  - **People:** add someone with a name, an email and/or a WeChat ID (either can be used to sign in; tap the WeChat ID on their card to copy it), role and a generated password to share with them; edit their role; reset their password; sign them out on every device; disable or remove their account. Each person can change their own password from the dashboard.
   - **Project access:** a grid of projects and people. Tick who can open each project. Sourcing agents can be set to see every project (including new ones) or only the ones you tick.
   - **Roles:** Admin: everything, including people, deleting projects and backups. Sourcing agent: create, edit, import, upload, read drawings, archive. Client: only their projects; can view, approve or request changes, and comment. Internal notes and the order schedule are hidden from clients.
-- **Studio password:** leaving email blank and entering `APP_PASSWORD` always signs in as the owner (an admin). It's your way back in, so keep it private.
+- **Studio password:** leaving the email / WeChat box blank and entering `APP_PASSWORD` always signs in as the owner (an admin). It's your way back in, so keep it private.
 
 ## Finding products online
 

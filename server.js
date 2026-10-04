@@ -202,7 +202,7 @@ const OWNER = { id: "owner", name: "Studio owner", email: "", role: "admin", pro
 const sign = v => crypto.createHmac("sha256", people.secret).update(v).digest("hex");
 function tokenFor(u) { const ver = u.id === "owner" ? OWNER_VER : String(u.ver || 0); const v = `${u.id}.${ver}`; return `${v}.${sign(v)}`; }
 const allAccess = u => u.role === "admin" || (u.role === "agent" && u.allProjects !== false);
-const publicUser = u => ({ id: u.id, name: u.name, email: u.email, role: u.role, projects: u.projects || [], allProjects: allAccess(u) });
+const publicUser = u => ({ id: u.id, name: u.name, email: u.email, wechat: u.wechat || "", role: u.role, projects: u.projects || [], allProjects: allAccess(u) });
 const adminView = u => ({ ...publicUser(u), disabled: !!u.disabled, created: u.created, lastSeen: u.lastSeen || null, lastLogin: u.lastLogin || null });
 let peopleTimer = null;
 function touch(u) { // remember when someone was last active (written at most every few minutes)
@@ -237,7 +237,7 @@ function forUser(u, p, data) {
 function loginPage(error) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><link rel="apple-touch-icon" href="/icon-192.png"><link rel="manifest" href="/manifest.webmanifest"><title>Sign in · Sourcebook</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz@1,6..96&family=Hanken+Grotesk:wght@400;500&family=IBM+Plex+Mono&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz@1,6..96&family=Hanken+Grotesk:wght@400;500&family=IBM+Plex+Mono&display=swap" media="print" onload="this.media=\'all\'">
 <style>:root{--g:#EEEDEA;--p:#F7F6F4;--i:#1A1918;--m:#8A8580;--r:#D6D3CE;--c:#A3322B}@media(prefers-color-scheme:dark){:root{--g:#141413;--p:#1C1B1A;--i:#ECEAE6;--m:#86817B;--r:#34322F;--c:#E07A72}}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--g);color:var(--i);font:15px/1.5 "Hanken Grotesk",system-ui,sans-serif;padding:24px}
 main{width:min(380px,100%)}.e{font:11px "IBM Plex Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--m)}
@@ -245,10 +245,10 @@ h1{font:italic 400 56px/1 "Bodoni Moda",Georgia,serif;margin:8px 0 28px}label{di
 input{width:100%;font:inherit;font-size:17px;color:var(--i);background:transparent;border:0;border-bottom:1px solid var(--r);padding:10px 2px;margin-top:4px}input:focus{outline:none;border-color:var(--i)}
 .note{font-size:12px;color:var(--m);margin-top:18px}button{margin-top:22px;width:100%;padding:12px;font:inherit;background:var(--i);color:var(--g);border:1px solid var(--i);cursor:pointer}.err{color:var(--c);font-size:13px;margin-top:12px}</style></head>
 <body><main><div class="e">Sourcebook · Studio</div><h1>Sign in</h1>
-<form method="post" action="/login"><label for="em">Email</label><input id="em" name="email" type="email" autocomplete="username" autocapitalize="off" autofocus>
+<form method="post" action="/login"><label for="em">Email or WeChat ID</label><input id="em" name="email" type="text" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" autofocus>
 <label for="pw" style="margin-top:18px">Password</label><input id="pw" name="password" type="password" autocomplete="current-password" required>
-${error ? '<p class="err">That email and password don\'t match. Studio owner: leave email blank and use the studio password.</p>' : ""}<button>Open Sourcebook</button>
-<p class="note">Studio owner: leave email blank and use the studio password.</p></form></main></body></html>`;
+${error ? '<p class="err">That sign-in and password don\'t match. Studio owner: leave the first box blank and use the studio password.</p>' : ""}<button>Open Sourcebook</button>
+<p class="note">Studio owner: leave the first box blank and use the studio password.</p></form></main></body></html>`;
 }
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".webmanifest": "application/manifest+json", ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon" };
 
@@ -437,7 +437,7 @@ const server = http.createServer(async (req, res) => {
       const email = String(body.get("email") || "").trim().toLowerCase(), pw = body.get("password") || "";
       let who = null;
       if (!email) { if (APP_PASSWORD && samePass(pw)) who = OWNER; }
-      else { const u = people.users.find(x => x.email === email && !x.disabled); if (u && checkPass(u, pw)) who = u; else if (!u) hashPass(pw, "x"); }
+      else { const wx = email.replace(/^@/, ""); const u = people.users.find(x => !x.disabled && ((x.email && x.email === email) || (x.wechat && x.wechat.toLowerCase() === wx))); if (u && checkPass(u, pw)) who = u; else if (!u) hashPass(pw, "x"); }
       if (who) {
         if (who.id !== "owner") { who.lastLogin = who.lastSeen = new Date().toISOString(); savePeople(); }
         res.writeHead(303, { Location: "/", "Set-Cookie": `sb_session=${tokenFor(who)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000${req.headers["x-forwarded-proto"] === "https" ? "; Secure" : ""}` });
@@ -488,8 +488,15 @@ const server = http.createServer(async (req, res) => {
         const b = await readJSON(req);
         const name = String(b.name || "").trim().slice(0, 120), email = String(b.email || "").trim().toLowerCase().slice(0, 200);
         const role = ROLES.includes(b.role) ? b.role : null;
-        if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !role) return send(res, 400, { code: "invalid_argument", message: "Add a name, a valid email and a role." });
-        if (people.users.some(u => u.email === email && u.id !== b.id)) return send(res, 400, { code: "invalid_argument", message: "Someone already uses that email." });
+        const wechat = b.wechat !== undefined ? String(b.wechat || "").trim().replace(/^@/, "").slice(0, 60) : undefined;
+        const existing = b.id ? people.users.find(x => x.id === b.id) : null;
+        const wxFinal = wechat !== undefined ? wechat : existing?.wechat || "";
+        if (!name || !role) return send(res, 400, { code: "invalid_argument", message: "Add a name and a role." });
+        if (!email && !wxFinal) return send(res, 400, { code: "invalid_argument", message: "Add an email or a WeChat ID. They sign in with either." });
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return send(res, 400, { code: "invalid_argument", message: "That email doesn't look right." });
+        if (wxFinal && !/^[A-Za-z0-9_\-.]{2,60}$/.test(wxFinal)) return send(res, 400, { code: "invalid_argument", message: "A WeChat ID uses letters, numbers, - and _ only." });
+        if (email && people.users.some(u => u.email === email && u.id !== b.id)) return send(res, 400, { code: "invalid_argument", message: "Someone already uses that email." });
+        if (wxFinal && people.users.some(u => u.wechat && u.wechat.toLowerCase() === wxFinal.toLowerCase() && u.id !== b.id)) return send(res, 400, { code: "invalid_argument", message: "Someone already uses that WeChat ID." });
         let u = b.id ? find(b.id) : null;
         if (b.id && !u) return send(res, 404, { code: "not_found" });
         if (!u && String(b.password || "").length < 8) return send(res, 400, { code: "invalid_argument", message: "Set a password of at least 8 characters." });
@@ -498,6 +505,7 @@ const server = http.createServer(async (req, res) => {
         if (!u) { u = { id: crypto.randomBytes(8).toString("hex"), created: new Date().toISOString(), ver: 0 }; people.users.push(u); }
         const signOut = (u.role && u.role !== role) || (b.disabled === true && !u.disabled);
         Object.assign(u, { name, email, role });
+        if (wechat !== undefined) u.wechat = wechat;
         if (b.projects !== undefined) u.projects = cleanProjects(b.projects);
         u.allProjects = role === "agent" ? b.allProjects !== false : role === "admin";
         if (role === "admin") u.projects = [];

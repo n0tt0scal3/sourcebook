@@ -12,7 +12,7 @@
 <title>Sourcebook Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500&family=Noto+Sans+SC:wght@400;500&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500&family=Noto+Sans+SC:wght@400;500&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" media="print" onload="this.media=\'all\'">
 <style>
 :root{
   color-scheme:light;
@@ -89,6 +89,9 @@ a.back{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transfor
 .access .all{color:var(--ok)}
 .access .none{color:var(--warn)}
 .seen{font-size:12.5px;color:var(--muted)}
+.wx{align-self:flex-start;display:inline-flex;gap:6px;align-items:baseline;background:none;border:0;padding:2px 0 0;font-size:13px;color:var(--ink2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wx:hover{color:var(--ink)}
+.wxk{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:#07C160;padding:1px 5px;border-radius:2px}
 .tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border:1px solid currentColor;margin-left:6px;vertical-align:1px}
 .tag.off{color:var(--crit)}
 .tag.you{color:var(--accent)}
@@ -163,7 +166,7 @@ label.fl{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--m
 (function(){
 "use strict";
 let lang="en";try{lang=localStorage.getItem("sb_lang")==="zh"?"zh":"en"}catch(_){}
-const ZH={"Sourcebook · Admin":"选材手册 · 管理","Admin":"管理","← Projects":"← 项目","Sign out":"退出登录","People":"成员","Project access":"项目权限","Add person":"添加成员","Search people":"搜索成员","All":"全部","Admins":"管理员","Sourcing agents":"采购代理","Clients":"客户","Admin":"管理员","Sourcing agent":"采购代理","Client":"客户","Name":"姓名","Role":"角色","Access":"权限","Last active":"最近活动","All projects":"全部项目","No projects yet":"尚无项目","Never signed in":"从未登录","Disabled":"已停用","You":"您","Edit":"编辑","Reset password":"重置密码","Studio owner":"工作室所有者","Signs in with the studio password (APP_PASSWORD in Render). Always an admin, so you can't be locked out.":"使用工作室密码登录（Render 中的 APP_PASSWORD）。始终为管理员，不会被锁定。","People":"成员","Active people":"活跃成员","Clients with access":"有权限的客户","Projects":"项目","No people yet. Add your team and clients.":"尚无成员。请添加团队成员和客户。","No one matches.":"没有匹配的成员。","Edit person":"编辑成员","Email":"邮箱","Password":"密码","Generate":"生成","Admins manage people and can delete projects and download backups.":"管理员管理成员，可删除项目和下载备份。","Sourcing agents create and edit projects. Choose all projects or only some.":"采购代理可创建和编辑项目，可选择全部或部分项目。","Clients only see the projects you choose. They can view, approve pieces and comment.":"客户只能查看您选择的项目，可查看、批准和评论。","Can see every project, including new ones":"可查看所有项目（包括新项目）","Projects they can see":"可查看的项目","Save":"保存","Cancel":"取消","Close":"关闭","Share this password with them. It won't be shown again.":"请将此密码告知对方，之后将不再显示。","Copy":"复制","Copied":"已复制","Done":"完成","Set a new password":"设置新密码","They'll be signed out on every device and need the new password.":"对方将在所有设备上退出，需要使用新密码登录。","Set password":"设置密码","Account":"账户","Sign out everywhere":"在所有设备上退出","Disable account":"停用账户","Enable account":"启用账户","Disabled people can't sign in. Their comments and reviews stay.":"停用后无法登录，其评论和审核会保留。","Remove person":"移除成员","Remove this person? Their comments and reviews stay, but they can't sign in again.":"移除此成员？其评论和审核会保留，但无法再登录。","Remove":"移除","Signed out on every device.":"已在所有设备上退出。","Saved":"已保存","Password updated. Share it with them.":"密码已更新，请告知对方。","Couldn't save.":"无法保存。","Tick who can open each project. Admins and agents set to all projects see everything.":"勾选可打开各项目的成员。管理员和设为全部项目的代理可查看所有内容。","always":"始终","all":"全部","Archived":"已归档","Language":"语言","Access updated":"权限已更新","No clients or limited agents yet. Add them under People.":"尚无客户或受限代理。请在成员中添加。","See all projects":"查看全部项目","just now":"刚刚","Concept":"概念"};
+const ZH={"Sourcebook · Admin":"选材手册 · 管理","Admin":"管理","← Projects":"← 项目","Sign out":"退出登录","People":"成员","Project access":"项目权限","Add person":"添加成员","Search people":"搜索成员","WeChat":"微信","WeChat ID":"微信号","Copy WeChat ID":"复制微信号","WeChat ID copied":"已复制微信号","Add an email, a WeChat ID or both. They sign in with either one.":"填写邮箱、微信号或两者。可用任一方式登录。","Optional":"可选","All":"全部","Admins":"管理员","Sourcing agents":"采购代理","Clients":"客户","Admin":"管理员","Sourcing agent":"采购代理","Client":"客户","Name":"姓名","Role":"角色","Access":"权限","Last active":"最近活动","All projects":"全部项目","No projects yet":"尚无项目","Never signed in":"从未登录","Disabled":"已停用","You":"您","Edit":"编辑","Reset password":"重置密码","Studio owner":"工作室所有者","Signs in with the studio password (APP_PASSWORD in Render). Always an admin, so you can't be locked out.":"使用工作室密码登录（Render 中的 APP_PASSWORD）。始终为管理员，不会被锁定。","People":"成员","Active people":"活跃成员","Clients with access":"有权限的客户","Projects":"项目","No people yet. Add your team and clients.":"尚无成员。请添加团队成员和客户。","No one matches.":"没有匹配的成员。","Edit person":"编辑成员","Email":"邮箱","Password":"密码","Generate":"生成","Admins manage people and can delete projects and download backups.":"管理员管理成员，可删除项目和下载备份。","Sourcing agents create and edit projects. Choose all projects or only some.":"采购代理可创建和编辑项目，可选择全部或部分项目。","Clients only see the projects you choose. They can view, approve pieces and comment.":"客户只能查看您选择的项目，可查看、批准和评论。","Can see every project, including new ones":"可查看所有项目（包括新项目）","Projects they can see":"可查看的项目","Save":"保存","Cancel":"取消","Close":"关闭","Share this password with them. It won't be shown again.":"请将此密码告知对方，之后将不再显示。","Copy":"复制","Copied":"已复制","Done":"完成","Set a new password":"设置新密码","They'll be signed out on every device and need the new password.":"对方将在所有设备上退出，需要使用新密码登录。","Set password":"设置密码","Account":"账户","Sign out everywhere":"在所有设备上退出","Disable account":"停用账户","Enable account":"启用账户","Disabled people can't sign in. Their comments and reviews stay.":"停用后无法登录，其评论和审核会保留。","Remove person":"移除成员","Remove this person? Their comments and reviews stay, but they can't sign in again.":"移除此成员？其评论和审核会保留，但无法再登录。","Remove":"移除","Signed out on every device.":"已在所有设备上退出。","Saved":"已保存","Password updated. Share it with them.":"密码已更新，请告知对方。","Couldn't save.":"无法保存。","Tick who can open each project. Admins and agents set to all projects see everything.":"勾选可打开各项目的成员。管理员和设为全部项目的代理可查看所有内容。","always":"始终","all":"全部","Archived":"已归档","Language":"语言","Access updated":"权限已更新","No clients or limited agents yet. Add them under People.":"尚无客户或受限代理。请在成员中添加。","See all projects":"查看全部项目","just now":"刚刚","Concept":"概念"};
 const t=s=>lang==="zh"?(ZH[s]??s):s;
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const loc=()=>lang==="zh"?"zh-CN":"en-CA";
@@ -193,7 +196,7 @@ function accessText(u){
 }
 function render(){
   document.documentElement.lang=lang==="zh"?"zh-CN":"en";
-  const list=users.filter(u=>state.role==="all"||u.role===state.role).filter(u=>!state.q||[u.name,u.email].join(" ").toLowerCase().includes(state.q.toLowerCase()))
+  const list=users.filter(u=>state.role==="all"||u.role===state.role).filter(u=>!state.q||[u.name,u.email,u.wechat].join(" ").toLowerCase().includes(state.q.toLowerCase()))
     .sort((a,b)=>(ORDER[a.role]-ORDER[b.role])||a.name.localeCompare(b.name));
   const active=users.filter(u=>!u.disabled);
   const clientsWith=users.filter(u=>u.role==="client"&&!u.disabled&&(u.projects||[]).some(id=>projects.some(p=>p.id===id))).length;
@@ -218,7 +221,7 @@ function peopleView(list){
     <div class="owner"><span class="av admin">★</span><span><b style="color:var(--ink)">${t("Studio owner")}</b>${me.id==="owner"?`<span class="tag you">${t("You")}</span>`:""}<br>${t("Signs in with the studio password (APP_PASSWORD in Render). Always an admin, so you can't be locked out.")}</span></div>
     ${list.length?`<div class="prow head"><span>${t("Name")}</span><span>${t("Role")}</span><span>${t("Access")}</span><span>${t("Last active")}</span><span></span></div>`:""}
     ${list.map(u=>`<div class="prow ${u.disabled?"off":""}">
-      <div class="pname"><span class="av ${u.role}">${esc(initials(u.name))}</span><span><b>${esc(u.name)}${u.id===me.id?`<span class="tag you">${t("You")}</span>`:""}${u.disabled?`<span class="tag off">${t("Disabled")}</span>`:""}</b><span class="em">${esc(u.email)}</span></span></div>
+      <div class="pname"><span class="av ${u.role}">${esc(initials(u.name))}</span><span><b>${esc(u.name)}${u.id===me.id?`<span class="tag you">${t("You")}</span>`:""}${u.disabled?`<span class="tag off">${t("Disabled")}</span>`:""}</b>${u.email?`<span class="em">${esc(u.email)}</span>`:""}${u.wechat?`<button class="wx" data-copy="${esc(u.wechat)}" title="${t("Copy WeChat ID")}"><span class="wxk">${t("WeChat")}</span> ${esc(u.wechat)}</button>`:""}</span></div>
       <span class="role">${t(ROLE[u.role])}</span>
       <span class="access">${accessText(u)}</span>
       <span class="seen">${u.lastSeen?esc(ago(u.lastSeen)):t("Never signed in")}</span>
@@ -248,7 +251,7 @@ function renderLayer(){
   const top=`<div class="scrim" data-a="close"></div><section class="sheet" role="dialog" aria-modal="true"><div class="top"><span class="eyebrow">${t("Sourcebook · Admin")}</span><button class="close" data-a="close" aria-label="${t("Close")}">×</button></div>`;
   if(state.shown){L.innerHTML=top+`<h2>${esc(state.shown.title)}</h2><div class="note">${t("Share this password with them. It won't be shown again.")}<span class="pwshow" id="pwshow">${esc(state.shown.pw)}</span><span class="mono">${esc(state.shown.email)}</span></div><div class="row2" style="margin-top:18px"><button class="btn" data-a="copy">${t("Copy")}</button><button class="btn ghost" data-a="close">${t("Done")}</button></div></section>`;return}
   const u=users.find(x=>x.id===state.id);
-  if(state.sheet==="pw"&&u){L.innerHTML=top+`<h2>${t("Reset password")}</h2><p class="muted" style="margin-top:-8px">${esc(u.name)} · ${esc(u.email)}</p>
+  if(state.sheet==="pw"&&u){L.innerHTML=top+`<h2>${t("Reset password")}</h2><p class="muted" style="margin-top:-8px">${esc(u.name)} · ${esc(u.email||(u.wechat?"WeChat "+u.wechat:""))}</p>
     <form id="pwf"><label class="fl">${t("Set a new password")}<div class="pwrow"><input class="f" id="np" name="password" autocomplete="new-password" minlength="8" required value="${esc(state.draft||genPassword())}"><button type="button" class="btn ghost sm" data-a="gen">${t("Generate")}</button></div></label>
     <p class="rhelp">${t("They'll be signed out on every device and need the new password.")}</p><p class="err">${esc(state.err)}</p>
     <div class="row2"><button class="btn">${t("Set password")}</button><button type="button" class="btn ghost" data-a="close">${t("Cancel")}</button></div></form></section>`;return}
@@ -259,7 +262,9 @@ function renderLayer(){
   L.innerHTML=top+`<h2>${isNew?t("Add person"):t("Edit person")}</h2>
   <form id="uf">
     <label class="fl">${t("Name")}<input class="f" name="name" value="${esc(d.name??(u?u.name:""))}" required autocomplete="off"></label>
-    <label class="fl">${t("Email")}<input class="f" name="email" type="email" value="${esc(d.email??(u?u.email:""))}" required autocomplete="off" autocapitalize="off"></label>
+    <label class="fl">${t("Email")}<input class="f" name="email" type="email" value="${esc(d.email??(u?u.email:""))}" autocomplete="off" autocapitalize="off"></label>
+    <label class="fl">${t("WeChat ID")}<input class="f" name="wechat" value="${esc(d.wechat??(u?u.wechat||"":""))}" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+    <p class="rhelp" style="margin-top:-10px">${t("Add an email, a WeChat ID or both. They sign in with either one.")}</p>
     <div><span class="lbl">${t("Role")}</span><div class="rchips">${["admin","agent","client"].map(r=>`<label class="rchip"><input type="radio" name="role" value="${r}" ${d.role===r?"checked":""} ${u&&u.id===me.id&&r!=="admin"?"disabled":""}> ${t(ROLE[r])}</label>`).join("")}</div><p class="rhelp">${t(roleHelp)}</p></div>
     ${d.role==="agent"?`<label class="toggle"><input type="checkbox" name="allProjects" ${d.allProjects?"checked":""}> ${t("Can see every project, including new ones")}</label>`:""}
     ${showPick?`<div><span class="lbl">${t("Projects they can see")}</span><div class="checks">${projects.slice().sort((a,b)=>(a.archived-b.archived)||a.name.localeCompare(b.name)).map(p=>`<label class="ck"><input type="checkbox" name="projects" value="${esc(p.id)}" ${d.projects.includes(p.id)?"checked":""}> ${esc(p.name)}${p.client||p.archived?` <span>· ${esc([p.client,p.archived?t("Archived"):""].filter(Boolean).join(" · "))}</span>`:""}</label>`).join("")}</div></div>`:""}
@@ -274,10 +279,11 @@ function renderLayer(){
   </form></section>`;
 }
 function readForm(){const f=document.getElementById("uf");if(!f)return;const fd=new FormData(f);const d=state.form;
-  d.name=fd.get("name");d.email=fd.get("email");d.role=fd.get("role")||d.role;if(f.allProjects)d.allProjects=f.allProjects.checked;
+  d.name=fd.get("name");d.email=fd.get("email");d.wechat=fd.get("wechat")??d.wechat;d.role=fd.get("role")||d.role;if(f.allProjects)d.allProjects=f.allProjects.checked;
   if(f.querySelector('[name="projects"]'))d.projects=fd.getAll("projects");if(fd.has("password"))d.password=fd.get("password")}
 
 document.addEventListener("click",async e=>{
+  const cp=e.target.closest("[data-copy]");if(cp){try{await navigator.clipboard.writeText(cp.dataset.copy);toast(t("WeChat ID copied"))}catch(_){toast(cp.dataset.copy)}return}
   const el=e.target.closest("[data-a],[data-tab],[data-role],[data-lang],[data-edit],[data-pw],[data-cell],[data-all]");if(!el)return;
   if(el.dataset.lang){lang=el.dataset.lang;try{localStorage.setItem("sb_lang",lang)}catch(_){}render();return}
   if(el.dataset.tab){state.tab=el.dataset.tab;try{localStorage.setItem("sb_admin_tab",state.tab)}catch(_){}render();return}
@@ -306,14 +312,14 @@ document.addEventListener("change",e=>{
 document.addEventListener("submit",async e=>{
   e.preventDefault();
   if(e.target.id==="uf"){readForm();const d=state.form;const u=users.find(x=>x.id===state.id);
-    const body={id:u?u.id:undefined,name:d.name,email:d.email,role:d.role,allProjects:d.role==="agent"?!!d.allProjects:undefined,projects:d.projects,password:u?undefined:d.password};
+    const body={id:u?u.id:undefined,name:d.name,email:d.email,wechat:d.wechat??"",role:d.role,allProjects:d.role==="agent"?!!d.allProjects:undefined,projects:d.projects,password:u?undefined:d.password};
     try{const r=await api("/api/users/save",body);
       if(u)Object.assign(u,r.user);else users.push(r.user);
-      if(!u){state.shown={title:r.user.name,pw:d.password,email:r.user.email};state.form=null;render()}else{Object.assign(state,{sheet:null,form:null});render();toast(t("Saved"))}
+      if(!u){state.shown={title:r.user.name,pw:d.password,email:r.user.email||(r.user.wechat?"WeChat "+r.user.wechat:"")};state.form=null;render()}else{Object.assign(state,{sheet:null,form:null});render();toast(t("Saved"))}
     }catch(err){state.err=err.message;renderLayer()}
   }
   if(e.target.id==="pwf"){const pw=new FormData(e.target).get("password");const u=users.find(x=>x.id===state.id);
-    try{await api("/api/users/password",{id:u.id,password:pw});state.shown={title:t("Password updated. Share it with them."),pw,email:u.email};renderLayer()}catch(err){state.draft=pw;state.err=err.message;renderLayer()}}
+    try{await api("/api/users/password",{id:u.id,password:pw});state.shown={title:t("Password updated. Share it with them."),pw,email:u.email||(u.wechat?"WeChat "+u.wechat:"")};renderLayer()}catch(err){state.draft=pw;state.err=err.message;renderLayer()}}
 });
 document.addEventListener("input",e=>{if(e.target.id==="q"){state.q=e.target.value;const pos=e.target.selectionStart;render();const q=document.getElementById("q");q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&state.sheet){Object.assign(state,{sheet:null,shown:null,form:null});renderLayer()}});

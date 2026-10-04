@@ -156,6 +156,23 @@ label.fl{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--m
   .sum{grid-template-columns:1fr 1fr}.sum div:nth-child(odd){padding-left:0;border-left:0}.sum div:nth-child(n+3){border-top:1px solid var(--rule2)}
 }
 @media (max-width:560px){.mast{grid-template-columns:1fr}.side{flex-direction:row-reverse;justify-content:space-between;align-items:center}}
+/* phone and tablet */
+.langtog button,.btn{white-space:nowrap}
+.mx th:first-child,.mx td:first-child{position:sticky;left:0;z-index:1;background:var(--paper)}
+@media (hover:none) and (pointer:coarse){
+  input,select,textarea,.search,.f{font-size:16px}
+  .chip{padding:8px 14px}
+  .btn{min-height:40px}
+}
+@media (max-width:560px){
+  .tabs{overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:none;white-space:nowrap}
+  .side{flex-direction:row;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+  .side .who{order:1;flex:1;justify-content:flex-start}
+  .side .langtog{order:2}
+  .side>.btn{order:3;flex-basis:100%}
+}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>

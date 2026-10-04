@@ -1,23 +1,7 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#EEEDEA">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Sourcebook">
-<link rel="manifest" href="/manifest.webmanifest">
-<link rel="apple-touch-icon" href="/icon-192.png">
-<link rel="icon" href="/icon-192.png">
-<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,-apple-system,sans-serif;background:#fafaf9}img{max-width:100%}[hidden]{display:none!important}</style>
-<script src="/claude-shim.js"></script>
-<script src="/library.js"></script>
-</head>
-<body>
 <title>Sourcebook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500&family=Noto+Sans+SC:wght@400;500&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" media="print" onload="this.media=\'all\'">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500&family=Noto+Sans+SC:wght@400;500&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root{
   --ground:#EEEDEA; --paper:#F7F6F4; --ink:#1A1918; --ink2:#4A4744; --muted:#8A8580;
@@ -1000,7 +984,7 @@ Reply with only a JSON object:
 async function scanRef(itemId,refIndex,file){
   const it=items.find(i=>i.id===itemId);const r=it&&(it.refs||[])[refIndex];if(!r)return;
   if(!canDetect()){ui.scan={itemId,refIndex,status:"error",label:[r.no,r.title].filter(Boolean).join(" · ")||"attachment",
-    msg:!sample?"Claude isn't available right now. Reload the page and try again.":"Images couldn't be sent to Claude. Reload the page and try again."};renderLayer();return}
+    msg:!sample?"Claude isn't available to this page right now. Reload the book, and allow it to use Claude when asked.":"This view can't send images to Claude. Open the book in a web browser on claude.ai to read attachments."};renderLayer();return}
   ui.scan={itemId,refIndex,status:"run",msg:"",label:[r.no,r.title].filter(Boolean).join(" · ")||"attachment"};renderLayer();
   const ctl=new AbortController();ui.scan.ctl=ctl;
   try{
@@ -1020,7 +1004,7 @@ async function scanRef(itemId,refIndex,file){
     renderLayer();
   }catch(e){
     const c=e&&e.code;if(c==="cancelled"){ui.scan=null;renderLayer();return}
-    ui.scan={itemId,refIndex,status:"error",label:ui.scan?.label,msg:e&&e.message==="type"?"Only PDFs and images can be read. Link files like .dwg as references instead.":e&&e.message==="pdfload"?"The PDF reader didn't load. Check your connection and try again.":c==="not_granted"||c==="sampling_disabled"?"Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.":c==="rate_limited"?"You've hit your Claude usage limit for now. Try again later.":c==="image_rejected"?"This file couldn't be read as an image.":c==="invalid_json"?"The answer came back in the wrong shape. Try again.":"Reading didn't finish. Try again."};
+    ui.scan={itemId,refIndex,status:"error",label:ui.scan?.label,msg:e&&e.message==="type"?"Only PDFs and images can be read. Link files like .dwg as references instead.":e&&e.message==="pdfload"?"The PDF reader didn't load. Check your connection and try again.":c==="not_granted"||c==="sampling_disabled"?"Claude isn't allowed on this page for your account, so attachments can't be read.":c==="rate_limited"?"You've hit your Claude usage limit for now. Try again later.":c==="image_rejected"?"This file couldn't be read as an image.":c==="invalid_json"?"The answer came back in the wrong shape. Try again.":"Reading didn't finish. Try again."};
     renderLayer();
   }
 }
@@ -1873,7 +1857,7 @@ function setItem(id,patch){
 /* ---------- render ---------- */
 function typing(root){const a=document.activeElement;return !!(root&&a&&root.contains(a)&&(a.closest("form")&&(a.value||"").length||a.classList.contains("qin")||a.id==="sbl-q"||a.dataset.qp))}
 let force=false;
-function render(){try{document.title=(project.name&&project.name!=="Untitled project"?project.name+" · ":"")+"Sourcebook"}catch(_){}
+function render(){
   const app=$("#app");
   if(drag&&drag.active){drag.pending=true;return}
   if(!force&&typing($("#main"))){renderLayer(true);return}
@@ -1893,7 +1877,7 @@ function render(){try{document.title=(project.name&&project.name!=="Untitled pro
       ${project.sheetUrl?`<a class="linkbtn" href="${esc(project.sheetUrl)}" target="_blank" rel="noopener">Linked Google Sheet ↗</a>`:""}
     </div>
   </header>
-  ${preview?`<div class="notice">Showing example pieces because the server couldn't be reached. Check your connection and reload.</div>`:""}
+  ${preview?`<div class="notice">Preview with example pieces. Open this page from claude.ai to see and edit the live project.</div>`:""}
   <nav class="stages" aria-label="Filter by stage">
     ${STAGES.map(s=>`<button class="stage" data-stage="${s}" aria-pressed="${ui.stage===s}"><span class="eyebrow">${s}</span><b>${counts[s]}</b><span>${STAGE_NOTE[s]}</span></button>`).join("")}
   </nav>
@@ -2640,7 +2624,7 @@ function detectSheet(){
     </div>
     <label class="zonefield">Room or space for these pieces<input class="f" id="det-zone" value="${esc(det.zone||"")}" placeholder="e.g. Primary ensuite (optional)"></label>
     ${det.msg?`<div class="notice crit">${esc(det.msg)}</div>`:""}
-    <div class="row2" style="margin-top:20px"><button class="btn" data-a="rundet" ${det.picks.length?"":"disabled"}>Detect materials${det.picks.length?` in ${det.picks.length} image${det.picks.length>1?"s":""}`:""}</button><span class="mono muted">Uses the Anthropic API key set on the server.</span></div>`;
+    <div class="row2" style="margin-top:20px"><button class="btn" data-a="rundet" ${det.picks.length?"":"disabled"}>Detect materials${det.picks.length?` in ${det.picks.length} image${det.picks.length>1?"s":""}`:""}</button><span class="mono muted">Uses your Claude usage. You'll be asked to allow it the first time.</span></div>`;
   }else if(det.status==="run"){
     body=`<div class="scanning">${det.picks.map(p=>`<div class="scanimg"><img alt="" src="${blobSrc(p.g.asset)}"><i></i></div>`).join("")}</div>
     <p class="mono" id="det-prog">${det.found?`Found ${det.found} so far…`:"Looking at the images…"}</p>
@@ -2724,7 +2708,7 @@ async function runDetect(){
     const c=e&&e.code;
     if(c==="cancelled"){det.status="pick";renderLayer();return}
     det.status="error";
-    det.msg=c==="not_granted"||c==="sampling_disabled"?"Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.":c==="rate_limited"?"You've hit your Claude usage limit for now. Try again later.":c==="image_rejected"?"One of the images couldn't be read. Try a JPG or PNG under 20 MB.":c==="invalid_json"?"The answer came back in the wrong shape. Try again.":c==="refused"?"Claude declined to analyse these images. Try different views.":e&&e.message==="fetch"?"One of the project images couldn't be loaded. Re-add it and try again.":"Detection didn't finish. Check your connection and try again.";
+    det.msg=c==="not_granted"||c==="sampling_disabled"?"Claude isn't allowed on this page for your account, so materials can't be detected.":c==="rate_limited"?"You've hit your Claude usage limit for now. Try again later.":c==="image_rejected"?"One of the images couldn't be read. Try a JPG or PNG under 20 MB.":c==="invalid_json"?"The answer came back in the wrong shape. Try again.":c==="refused"?"Claude declined to analyse these images. Try different views.":e&&e.message==="fetch"?"One of the project images couldn't be loaded. Re-add it and try again.":"Detection didn't finish. Check your connection and try again.";
     if(c==="not_granted"||c==="sampling_disabled"){sample=null}
     renderLayer();
   }
@@ -2862,7 +2846,7 @@ const ZH={
 "Design intent":"设计意图","Spec + drawings":"规格 + 图纸","Client sign-off":"客户确认","PO placed":"已下采购单","On site":"已到现场",
 "Lookbook":"效果册","Order schedule":"订货计划","Finish schedule":"饰面表","Furniture schedule":"家具表","Decisions":"决策",
 "All":"全部","Finishes":"饰面","Stone":"石材","Millwork":"木作","Lighting":"灯具","Hardware":"五金","Plumbing":"洁具","Textiles":"织物","Furniture":"家具","Tile":"瓷砖","Glazing":"玻璃",
-"Filter by stage":"按阶段筛选","Showing example pieces because the server couldn't be reached. Check your connection and reload.":"示例预览。请在 claude.ai 中打开此页面，查看并编辑实际项目。",
+"Filter by stage":"按阶段筛选","Preview with example pieces. Open this page from claude.ai to see and edit the live project.":"示例预览。请在 claude.ai 中打开此页面，查看并编辑实际项目。",
 "Spaces":"空间","Add images":"添加图片","Detect materials":"识别材料","Add a view":"添加视图","Photos, renders or references of the room, space or object":"房间、空间或物件的照片、效果图或参考图","Project images":"项目图片",
 "Drawings":"图纸","Add drawings":"添加图纸","Drop a PDF set. Each page becomes its own sheet.":"拖入 PDF 图纸集，每一页都会成为单独的图纸。","Drop a PDF set. Each page becomes its own sheet; matching sheet numbers are replaced.":"拖入 PDF 图纸集，每一页成为单独的图纸；图号相同的会被替换。","Updated":"已更新","Project drawings":"项目图纸","Untitled sheet":"未命名图纸",
 "Materials & products":"材料与产品","Add products or materials":"添加产品或材料","A finish, fixture, fitting or piece of furniture, with its image, specification and quantity":"饰面、灯具洁具、配件或家具，以及其图片、规格和数量",
@@ -2903,7 +2887,7 @@ const ZH={
 "Match columns":"匹配列","Headings on row":"表头所在行","Column in sheet":"表格中的列","Example":"示例","Goes to":"对应字段","Ignore":"忽略","Specification line":"规格行","Drawing reference":"图纸编号","Preview":"预览","Specs":"规格","Add them to the book":"加入手册",
 "Columns marked “Specification line” are kept on each piece under their heading, e.g. Finish, Dimensions, Colour.":"标为“规格行”的列会以其表头名称保存在每个项目中，例如饰面、尺寸、颜色。",
 "Update pieces with matching codes, add the rest":"更新编号相同的项目，其余新增","Add all as new pieces":"全部作为新项目添加","Nothing already in the book changes.":"手册中现有内容不会改变。","Replace every piece in the book":"替换手册中的所有项目","Importing…":"正在导入…",
-"Build the schedule from an image":"从图片生成清单","Review what was found":"查看识别结果","Room or space for these pieces":"这些项目所在的房间或空间","e.g. Primary ensuite (optional)":"例如：主卧卫生间（可选）","Uses the Anthropic API key set on the server.":"会使用您的 Claude 用量，首次使用时会请求授权。",
+"Build the schedule from an image":"从图片生成清单","Review what was found":"查看识别结果","Room or space for these pieces":"这些项目所在的房间或空间","e.g. Primary ensuite (optional)":"例如：主卧卫生间（可选）","Uses your Claude usage. You'll be asked to allow it the first time.":"会使用您的 Claude 用量，首次使用时会请求授权。",
 "Looking at the images…":"正在查看图片…","This usually takes 20 to 60 seconds.":"通常需要 20 到 60 秒。","Stop":"停止","Select all":"全选","Select none":"全不选","Use crop as image":"使用裁剪图作为图片","Detect again":"重新识别","Adding…":"正在添加…","or drop them here":"或拖放到这里",
 "Find the materials in this view":"找出此视图中的材料","Claude reads the image and drafts pieces for the schedule. You review them before anything is added.":"Claude 会读取图片并起草清单项目，添加前由您审核。","Pieces from this view":"来自此视图的项目","None yet.":"暂无。","Remove image":"移除图片","Remove from project":"从项目中移除","Name this view, e.g. Primary ensuite, looking north":"为此视图命名，例如：主卧卫生间，朝北","Notes about this view":"关于此视图的备注","Untitled view":"未命名视图",
 "Claude is reading the title block, notes and callouts. This usually takes 20 to 60 seconds.":"Claude 正在读取图签、说明和标注，通常需要 20 到 60 秒。","Dismiss":"关闭","Try again":"重试","Reference":"参考",
@@ -2914,9 +2898,9 @@ const ZH={
 "That file is over 20 MB. Compress it and try again.":"文件超过 20 MB，请压缩后重试。","Use a PDF, JPG, PNG or WebP file.":"请使用 PDF、JPG、PNG 或 WebP 文件。","Upload failed. Try again.":"上传失败，请重试。","Drop a PDF drawing set.":"请拖入 PDF 图纸集。",
 "The PDF reader didn't load. Check your connection and try again.":"PDF 阅读器未能加载，请检查网络后重试。","The PDF reader didn't load. Use “New tab” to open the file.":"PDF 阅读器未能加载，请用“新标签页”打开文件。","This file can't be shown here. Use “New tab” to open it.":"此文件无法在此显示，请用“新标签页”打开。","This file type can't be previewed here. Use “New tab” to open it.":"此文件类型无法预览，请用“新标签页”打开。",
 "No materials were identified. Try a clearer or closer view.":"未识别到材料，请尝试更清晰或更近的视图。","The answer came back in the wrong shape. Try again.":"返回结果格式不正确，请重试。","You've hit your Claude usage limit for now. Try again later.":"您暂时已达到 Claude 使用上限，请稍后再试。","Only PDFs and images can be read. Link files like .dwg as references instead.":"只能读取 PDF 和图片。.dwg 等文件请作为参考链接添加。",
-"Claude isn't available right now. Reload the page and try again.":"此页面暂时无法使用 Claude。请重新加载手册，并在提示时允许使用 Claude。","Images couldn't be sent to Claude. Reload the page and try again.":"当前视图无法向 Claude 发送图片。请在浏览器中通过 claude.ai 打开手册以读取附件。",
+"Claude isn't available to this page right now. Reload the book, and allow it to use Claude when asked.":"此页面暂时无法使用 Claude。请重新加载手册，并在提示时允许使用 Claude。","This view can't send images to Claude. Open the book in a web browser on claude.ai to read attachments.":"当前视图无法向 Claude 发送图片。请在浏览器中通过 claude.ai 打开手册以读取附件。",
 "Nothing pasted yet. Copy the rows in Google Sheets first.":"尚未粘贴内容，请先在 Google 表格中复制行。","There are no rows under a header row. Make sure the copy or file includes the headings and at least one item.":"表头下没有数据行。请确认复制内容或文件包含表头及至少一个项目。",
-"Primary ensuite":"主卧卫生间","Location ":"位置","Linked to":"已关联","your Google Sheet ↗":"您的 Google 表格 ↗","download it as Excel":"下载为 Excel","download it as Excel ↗":"下载为 Excel ↗","Upload the download":"上传下载的文件","Paste rows":"粘贴行","Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.":"此服务器尚未设置 Claude。请在 Render 中添加 Anthropic API 密钥（ANTHROPIC_API_KEY）。","Showing example pieces because the server couldn't be reached. Check your connection and reload.":"无法连接服务器，正在显示示例项目。请检查网络后重新加载。","Uses the Anthropic API key set on the server.":"使用服务器上设置的 Anthropic API 密钥。","Claude isn't available right now. Reload the page and try again.":"Claude 暂时不可用，请重新加载页面后重试。","Images couldn't be sent to Claude. Reload the page and try again.":"无法将图片发送给 Claude，请重新加载页面后重试。","or drop / paste an image":"或拖放 / 粘贴图片","Drop an image on the picture, or use a material plate below":"将图片拖放到画面上，或使用下方的材料样板","Use a JPG, PNG, WebP or GIF image.":"请使用 JPG、PNG、WebP 或 GIF 图片。","Save the image to your device first, then drop the file here.":"请先将图片保存到设备，再将文件拖放到这里。","Size":"尺寸","Small":"小","Medium":"中","Large":"大","Fill":"填满","Whole":"完整","Card size":"卡片尺寸","Show whole image":"显示完整图片","Fill the frame":"填满画框","Projects":"项目","All projects":"全部项目","← All projects":"← 全部项目","Sourcebook · Studio":"选材手册 · 工作室","New project":"新建项目","Active projects":"进行中项目","Pieces in sourcing":"采购中项目","Orders overdue":"逾期未下单","Due in 3 weeks":"三周内需下单","Quoted value":"报价总额","Active":"进行中","Archived":"已归档","Open now":"当前打开","No pictures yet":"暂无图片","pieces":"个项目","drawings":"张图纸","quoted (CAD)":"报价（加元）","Open":"打开","Archive":"归档","Restore":"恢复","Delete project…":"删除项目…","Start a book for a new job: its lookbook, schedules and quotation.":"为新工作建立手册：效果册、清单与报价单。","Create project":"创建项目","Project created":"已创建项目","Project deleted":"已删除项目","Loading projects…":"正在加载项目…","Updating…":"正在更新…","No archived projects.":"没有已归档的项目。","Project options":"项目选项","across all projects":"所有项目合计","Couldn't create the project. Try again.":"无法创建项目，请重试。","Some of the project couldn't be removed. Try again.":"部分项目内容无法删除，请重试。","Projects appear here once the book is open on claude.ai.":"在 claude.ai 中打开手册后，项目会显示在这里。","Quotation":"报价单","Total (CAD)":"合计（加元）","Total (CNY)":"合计（人民币）","Items priced":"已报价项目","Exchange rate":"汇率","Set for this project":"本项目设定","Unit price (CAD)":"单价（加元）","Unit price (CNY)":"单价（人民币）","Price TBD":"价格待定","Qty TBD":"数量待定","Subtotal":"小计","Sourcing fee":"采购服务费","Freight & logistics":"运费与物流","Tax":"税费","Total":"合计","Enter a unit price in either currency; the other is converted at the project rate.":"可以任一币种输入单价，另一币种按项目汇率自动换算。","No materials or products yet.":"暂无材料或产品。","1 CAD =":"1 加元 =","Other":"其他","Unit price CAD":"单价 加元","Unit price CNY":"单价 人民币","Language":"语言","View all":"查看全部"
+"Primary ensuite":"主卧卫生间","Location ":"位置","Linked to":"已关联","your Google Sheet ↗":"您的 Google 表格 ↗","download it as Excel":"下载为 Excel","download it as Excel ↗":"下载为 Excel ↗","Upload the download":"上传下载的文件","Paste rows":"粘贴行","or drop / paste an image":"或拖放 / 粘贴图片","Drop an image on the picture, or use a material plate below":"将图片拖放到画面上，或使用下方的材料样板","Use a JPG, PNG, WebP or GIF image.":"请使用 JPG、PNG、WebP 或 GIF 图片。","Save the image to your device first, then drop the file here.":"请先将图片保存到设备，再将文件拖放到这里。","Size":"尺寸","Small":"小","Medium":"中","Large":"大","Fill":"填满","Whole":"完整","Card size":"卡片尺寸","Show whole image":"显示完整图片","Fill the frame":"填满画框","Projects":"项目","All projects":"全部项目","← All projects":"← 全部项目","Sourcebook · Studio":"选材手册 · 工作室","New project":"新建项目","Active projects":"进行中项目","Pieces in sourcing":"采购中项目","Orders overdue":"逾期未下单","Due in 3 weeks":"三周内需下单","Quoted value":"报价总额","Active":"进行中","Archived":"已归档","Open now":"当前打开","No pictures yet":"暂无图片","pieces":"个项目","drawings":"张图纸","quoted (CAD)":"报价（加元）","Open":"打开","Archive":"归档","Restore":"恢复","Delete project…":"删除项目…","Start a book for a new job: its lookbook, schedules and quotation.":"为新工作建立手册：效果册、清单与报价单。","Create project":"创建项目","Project created":"已创建项目","Project deleted":"已删除项目","Loading projects…":"正在加载项目…","Updating…":"正在更新…","No archived projects.":"没有已归档的项目。","Project options":"项目选项","across all projects":"所有项目合计","Couldn't create the project. Try again.":"无法创建项目，请重试。","Some of the project couldn't be removed. Try again.":"部分项目内容无法删除，请重试。","Projects appear here once the book is open on claude.ai.":"在 claude.ai 中打开手册后，项目会显示在这里。","Quotation":"报价单","Total (CAD)":"合计（加元）","Total (CNY)":"合计（人民币）","Items priced":"已报价项目","Exchange rate":"汇率","Set for this project":"本项目设定","Unit price (CAD)":"单价（加元）","Unit price (CNY)":"单价（人民币）","Price TBD":"价格待定","Qty TBD":"数量待定","Subtotal":"小计","Sourcing fee":"采购服务费","Freight & logistics":"运费与物流","Tax":"税费","Total":"合计","Enter a unit price in either currency; the other is converted at the project rate.":"可以任一币种输入单价，另一币种按项目汇率自动换算。","No materials or products yet.":"暂无材料或产品。","1 CAD =":"1 加元 =","Other":"其他","Unit price CAD":"单价 加元","Unit price CNY":"单价 人民币","Language":"语言","View all":"查看全部"
 };
 const ZH_PAT=[
  [/^Added to (.+) as (.+)$/,m=>`已添加到 ${m[1]}，编号 ${m[2]}`],
@@ -3028,6 +3012,3 @@ function useSample(){if(db)return;preview=true;project=SAMPLE.project;items=SAMP
 boot();
 })();
 </script>
-
-</body>
-</html>

@@ -652,7 +652,100 @@ select option,select optgroup{background-color:var(--paper);color:var(--ink)}
   .ref .t{grid-column:2/3}
   .mini.r{grid-template-columns:1fr 1fr}
 }
+/* phone and tablet */
+.cl{display:none;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:400;margin-bottom:2px}
+.langtog button{white-space:nowrap}
+@media (max-width:1100px){
+  .bar{flex-wrap:nowrap;flex-direction:column;align-items:stretch;gap:10px}
+  .tabs{gap:20px;overflow-x:auto;white-space:nowrap;max-width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);padding-right:28px}
+  .tabs::-webkit-scrollbar,.bar .tools::-webkit-scrollbar{display:none}
+  .tab{flex:none;white-space:nowrap}
+  .bar .tools{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .bar .tools .chip{flex:none;white-space:nowrap}
+  .ordtab,.qtab{min-width:0}
+  .ordtab th,.qtab th{letter-spacing:.06em}
+  .qtab .qin{width:84px}
+  .qtab td.n:nth-child(5) .qin{width:52px}
+  .qtab .sw{width:32px;height:32px}
+  .qtab td:nth-child(2){white-space:nowrap}
+}
+@media (hover:none) and (pointer:coarse){
+  input,select,textarea,.f,.qin{font-size:16px}
+  .tab{padding-block:10px}
+  .chip{padding:8px 14px}
+  .btn{min-height:40px}
+  .linkbtn{padding-block:6px}
+  .close{width:44px;height:44px}
+}
+@media (max-width:560px){
+  .mast .eyebrow{padding-right:118px}
+  .mast .eyebrow:has(.backlink){font-size:0}
+  .mast .side .row2{width:100%}
+  .mast .side .row2 .btn{flex:1}
+  .stage span:last-child{display:none}
+  .stage{min-width:0}
+  .stage + .stage{padding-left:8px}
+  .stage .eyebrow{letter-spacing:0}
+  .sum b{font-size:28px}
+  .schedhead h2,.dechead h2{font-size:28px}
+  .sheet .top{flex-wrap:wrap;align-items:flex-start}
+  .sheet .top .eyebrow{order:2;flex-basis:100%}
+  .sheet .top .row2{order:1;width:100%;flex-wrap:wrap;justify-content:flex-end}
+  .sheet .hero .herotools{left:10px;right:10px;bottom:10px;gap:6px}
+  .sheet .hero .herotools .btn{padding:6px 10px;font-size:12.5px}
+  /* order schedule as cards */
+  .ordtab{min-width:0;display:block}
+  .ordtab thead{display:none}
+  .ordtab tbody{display:block}
+  .ordtab tr{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,1fr);gap:8px 14px;padding:14px 0;border-bottom:1px solid var(--rule2)}
+  .ordtab td{display:block;padding:0;border:0;min-width:0}
+  .ordtab td.n{text-align:left}
+  .ordtab tr.month{display:block;padding:0;border:0}
+  .ordtab tr.month td{padding:26px 0 8px;border-bottom:1px solid var(--rule)}
+  .ordtab tr.row:hover td{background:none}
+  .ordtab .cl{display:block}
+  .ordtab td:nth-child(1){grid-column:1;grid-row:1/span 5}
+  .ordtab .sw{width:44px;height:44px}
+  .ordtab td:nth-child(3){grid-column:2/-1;grid-row:1}
+  .ordtab td:nth-child(2){grid-column:2;grid-row:2}
+  .ordtab td:nth-child(9){grid-column:3;grid-row:2}
+  .ordtab td:nth-child(4){grid-column:2;grid-row:3}
+  .ordtab td:nth-child(5){grid-column:3;grid-row:3}
+  .ordtab td:nth-child(6){grid-column:2;grid-row:4}
+  .ordtab td:nth-child(7){grid-column:3;grid-row:4}
+  .ordtab td:nth-child(8){grid-column:2;grid-row:5}
+}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* quotation as cards on phones */
+@media (max-width:560px){
+  table.qtab{min-width:0;display:block}
+  .qtab thead{display:none}
+  .qtab tbody,.qtab tfoot{display:block}
+  .qtab tr{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,1fr);gap:8px 14px;padding:14px 0;border-bottom:1px solid var(--rule2)}
+  .qtab td{display:block;padding:0;border:0;min-width:0}
+  .qtab td.n{text-align:left}
+  .qtab tr.month{display:block;padding:0;border:0}
+  .qtab tr.month td{padding:26px 0 8px;border-bottom:1px solid var(--rule)}
+  .qtab .cl{display:block}
+  .qtab tr.qrow td:nth-child(1){grid-column:1;grid-row:1/span 5}
+  .qtab .sw{width:44px;height:44px}
+  .qtab tr.qrow td:nth-child(2){grid-column:2/-1;grid-row:1}
+  .qtab tr.qrow td:nth-child(3){grid-column:2/-1;grid-row:2}
+  .qtab tr.qrow td:nth-child(5){grid-column:2;grid-row:3}
+  .qtab tr.qrow td:nth-child(4){grid-column:3;grid-row:3}
+  .qtab tr.qrow td:nth-child(6){grid-column:2;grid-row:4}
+  .qtab tr.qrow td:nth-child(8){grid-column:3;grid-row:4}
+  .qtab tr.qrow td:nth-child(7){grid-column:2;grid-row:5}
+  .qtab tr.qrow td:nth-child(9){grid-column:3;grid-row:5}
+  table.qtab .qin,table.qtab td.n:nth-child(5) .qin{width:100%;text-align:left}
+  .qtab tr.qsub,.qtab tfoot tr{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 14px;padding:10px 0}
+  .qtab tr.qsub td:first-child,.qtab tfoot td:first-child{grid-column:1/-1;text-align:left;padding:0}
+  .qtab tr.qsub td:empty,.qtab tfoot td:empty{display:none}
+  .qtab tr.qsub td.n,.qtab tfoot td.n{text-align:left}
+  .qtab tfoot tr:first-child{border-top:1px solid var(--ink)}
+  .qtab tfoot tr:first-child td{border-top:0}
+  .qtab tfoot td{border-bottom:0;padding-block:0}
+}
 </style>
 
 <div class="wrap" id="app"></div>
@@ -1204,6 +1297,9 @@ document.addEventListener("change",e=>{const t=e.target;if((t.id==="dw-add"||t.h
   if(ev==="drop"&&e.dataTransfer.files.length)addDrawings(e.dataTransfer.files);
 }));
 
+/* keep the selected tab in view when the tab row scrolls (phones and tablets) */
+new MutationObserver(()=>{const t=document.querySelector(".tabs .tab[aria-selected=\"true\"]");const r=t&&t.parentElement;if(!r||r.scrollWidth<=r.clientWidth)return;const x=t.offsetLeft-r.offsetLeft;if(x<r.scrollLeft||x+t.offsetWidth>r.scrollLeft+r.clientWidth-28)r.scrollLeft=Math.max(0,x-40)}).observe(document.getElementById("app")||document.body,{childList:true});
+
 /* ---------- quotation ---------- */
 const FX_DEFAULT=4.73,FX_DATE="2026-09-29";
 function fx(){const r=Number(project.fxRate);return r>0?r:FX_DEFAULT}
@@ -1232,12 +1328,12 @@ function quotation(){
       <td><span class="sw" style="background-image:url(${imgFor(it,80)})" data-open="${it.id}"></span></td>
       <td class="mono strong"><button class="linkbtn mono" data-open="${it.id}">${esc(it.code||"—")}</button></td>
       <td><div class="qname">${esc(it.name)}</div><div class="muted qsup">${esc([it.supplier,it.modelCode].filter(Boolean).join(" · "))}</div></td>
-      <td class="mono">${esc(it.unit||"ea")}</td>
-      <td class="n">${inp("qq-"+it.id,q,"qty")}</td>
-      <td class="n">${inp("qc-"+it.id,uc,"CAD",it.priceBase!=="CNY")}</td>
-      <td class="n mono strong">${tot==null?`<span class="tbd">${uc==null?"Price TBD":"Qty TBD"}</span>`:fmtC(tot,"CAD")}</td>
-      <td class="n">${inp("qn-"+it.id,un,"CNY",it.priceBase==="CNY")}</td>
-      <td class="n mono strong">${tot==null?"—":fmtC(tot*r,"CNY")}</td></tr>`;
+      <td class="mono"><span class="cl">Unit</span>${esc(it.unit||"ea")}</td>
+      <td class="n"><span class="cl">Qty</span>${inp("qq-"+it.id,q,"qty")}</td>
+      <td class="n"><span class="cl">Unit price (CAD)</span>${inp("qc-"+it.id,uc,"CAD",it.priceBase!=="CNY")}</td>
+      <td class="n mono strong"><span class="cl">Total (CAD)</span>${tot==null?`<span class="tbd">${uc==null?"Price TBD":"Qty TBD"}</span>`:fmtC(tot,"CAD")}</td>
+      <td class="n"><span class="cl">Unit price (CNY)</span>${inp("qn-"+it.id,un,"CNY",it.priceBase==="CNY")}</td>
+      <td class="n mono strong"><span class="cl">Total (CNY)</span>${tot==null?"—":fmtC(tot*r,"CNY")}</td></tr>`;
   });flush();
   const adj=(id,label,val,suffix)=>`<label class="qadj">${label}${ed?`<input class="f mono" type="number" step="any" min="0" id="${id}" data-qp="${id}" value="${val||""}" placeholder="0">`:`<span class="mono">${val||0}</span>`}<span class="mono muted">${suffix}</span></label>`;
   return`<div class="schedhead"><div><div class="eyebrow">${esc(project.name)} · ${fmtD(new Date(),true)}</div><h2>Quotation</h2></div>
@@ -1976,14 +2072,14 @@ function schedule(){
     const head=m!==month?(month=m,`<tr class="month"><td colspan="9">${esc(m)}</td></tr>`):"";
     return head+`<tr class="row" data-open="${it.id}">
       <td><span class="sw" style="background-image:url(${imgFor(it,80)})"></span></td>
-      <td class="mono">${fmtD(ob)}</td>
+      <td class="mono"><span class="cl">Order by</span>${fmtD(ob)}</td>
       <td><div style="font-weight:600">${esc(it.name)}</div><div class="mono muted codeclip">${esc(it.code||"")} · ${esc(it.zone||it.category||"")}${clip(it)}</div></td>
-      <td class="n mono">${esc(Number(it.qty).toLocaleString("en-CA"))}</td>
-      <td class="mono">${esc(it.unit||"")}</td>
-      <td>${esc(it.supplier||"—")}</td>
-      <td class="n mono">${it.leadWeeks?esc(it.leadWeeks)+" wk":"—"}</td>
-      <td class="mono">${fmtD(parseD(it.needBy))}</td>
-      <td>${u?`<span class="pill ${u.cls}">${u.label}</span>`:`<span><i class="dot s-${esc(it.status)}"></i>${esc(it.status)}</span>`}</td>
+      <td class="n mono"><span class="cl">Qty</span>${esc(Number(it.qty).toLocaleString("en-CA"))}</td>
+      <td class="mono"><span class="cl">Unit</span>${esc(it.unit||"")}</td>
+      <td><span class="cl">Supplier</span>${esc(it.supplier||"—")}</td>
+      <td class="n mono"><span class="cl">Lead</span>${it.leadWeeks?esc(it.leadWeeks)+" wk":"—"}</td>
+      <td class="mono"><span class="cl">On site</span>${fmtD(parseD(it.needBy))}</td>
+      <td><span class="cl">Status</span>${u?`<span class="pill ${u.cls}">${u.label}</span>`:`<span><i class="dot s-${esc(it.status)}"></i>${esc(it.status)}</span>`}</td>
     </tr>`}).join("");
   return`
   <div class="sum">
@@ -1994,7 +2090,7 @@ function schedule(){
   </div>
   <div class="schedhead"><div><div class="eyebrow">Order-by date = required on site − lead time</div><h2>Ordering schedule</h2></div>
     ${downloads?`<button class="btn ghost sm" data-a="csv">Export CSV</button>`:""}</div>
-  <div class="tablewrap"><table>
+  <div class="tablewrap"><table class="ordtab">
     <thead><tr><th></th><th>Order by</th><th>Piece</th><th class="n">Qty</th><th>Unit</th><th>Supplier</th><th class="n">Lead</th><th>On site</th><th>Status</th></tr></thead>
     <tbody>${rows||`<tr><td colspan="9" class="muted">No pieces yet.</td></tr>`}</tbody>
   </table></div>`;

@@ -23,6 +23,10 @@
     "Show": "显示", "Add to project": "添加到项目", "Project": "项目", "Choose a project": "选择项目", "No projects to add to yet.": "暂无可添加的项目。", "Add": "添加",
     "The studio hasn't approved any products yet.": "工作室尚未批准任何产品。",
     "Previous": "上一个", "Next": "下一个", "← → to move between products · Space to approve": "← → 切换产品 · 按空格键批准", "Space to approve": "按空格键批准", "← → to move between products": "← → 切换产品",
+    "Add a catalogue from a PDF": "从 PDF 添加图册", "PDF catalogue": "PDF 图册", "Supplier": "供应商", "Catalogue name (optional)": "图册名称（可选）", "Category": "类别",
+    "Google Drive link to the PDF (optional)": "PDF 的 Google 云端硬盘链接（可选）", "Scan and add": "扫描并添加", "Cancel": "取消", "Delete this catalogue": "删除此图册",
+    "Choose a PDF and enter the supplier.": "请选择 PDF 并填写供应商。", "Couldn't read that PDF.": "无法读取该 PDF。",
+    "The PDF is scanned in this browser, so keep this tab open until it finishes. Photos in the PDF become library images named like the others (category_supplier_page_number) and start unapproved. Up to 300 MB and 2,000 pages.": "PDF 在此浏览器中扫描，请保持此标签页打开直到完成。PDF 中的照片会按与其他图片相同的方式命名（类别_供应商_页码_编号）成为图库图片，默认未批准。最大 300 MB、2000 页。",
     "Full-size images": "高清大图", "Upload zips": "上传压缩包", "Uploading…": "正在上传…", "Click to see it full screen": "点击全屏查看",
     "Choose the catalogue zips from Google Drive (or the JPEGs inside them). Images are matched to the library by file name.": "选择 Google 云端硬盘中的图册压缩包（或其中的 JPEG 图片）。图片按文件名与图库匹配。",
   };
@@ -99,6 +103,12 @@
 .sbl-zoomview img{max-width:100%;max-height:100%;object-fit:contain}
 .sbl-full{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;grid-column:1/-1;font-size:13px;color:var(--ink2)}
 .sbl-full .mono{font-size:12px;color:var(--muted)}
+.sbl-addcat{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:14px 18px;align-items:end;padding:16px;background:var(--paper);border:1px solid var(--rule)}
+.sbl-addcat label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
+.sbl-addcat input:not([type=file]),.sbl-addcat select{font:inherit;font-size:15px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px;min-width:0}
+.sbl-addcat input[type=file]{font-size:13px;color:var(--ink);max-width:100%}
+.sbl-addcat p{grid-column:1/-1;margin:0;font-size:12.5px;color:var(--muted)}
+.sbl-addcat .sbl-row{grid-column:1/-1;margin:0}
 .sbl-body{overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 22px) clamp(18px,4vw,48px) calc(env(safe-area-inset-bottom,0px) + 60px)}
 .sbl-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .sbl-x{background:none;border:1px solid var(--rule);width:38px;height:38px;border-radius:50%;font-size:18px;line-height:1;color:var(--ink);cursor:pointer}
@@ -134,6 +144,11 @@
   // project(): this project's id (project ctx). projects(): [{id, name}] to add to (studio ctx).
   let host = { ctx: "studio", internal: () => true, canEdit: () => false, canAdd: () => false, project: () => null, projectName: () => "", projects: () => [], inProject: () => new Map(), prefix: null, added: null, openPiece: () => {}, layer: () => {}, toast: m => console.log(m), toastUndo: m => console.log(m) };
 
+  // A catalogue was added or deleted: fetch the index again and redraw.
+  function reloadIndex() {
+    if (!LIB) return; LIB = null; libP = null;
+    load().then(() => { if (ui.sup && !LIB.sups[ui.sup]) ui.sup = null; if (ui.open != null) { ui.open = null; document.body.style.overflow = ""; host.layer(); } rerender(); fetchFull().catch(() => {}); }).catch(() => {});
+  }
   function load() {
     if (LIB) return Promise.resolve(LIB);
     return libP || (libP = fetch("/lib/data.json").then(r => { if (!r.ok) throw new Error("lib"); return r.json(); }).then(d => {
@@ -163,14 +178,15 @@
     fetchOn().catch(() => {}); fetchFull().catch(() => {});
     try {
       const es = new EventSource("/api/events");
-      es.onmessage = e => { try { const m = JSON.parse(e.data); if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); } catch (_) {} };
+      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); } catch (_) {} };
       es.onopen = () => fetchOn().catch(() => {});
     } catch (_) {}
   }
 
   const isOn = o => !!(on[o.sup] && on[o.sup].has(o.key));
-  const sprite = o => { const g = LIB.grid; return `style="background-image:url(/lib/sprites/s${String(o.s).padStart(3, "0")}.jpg);background-size:${g * 100}% ${g * 100}%;background-position:${(o.k % g) / (g - 1) * 100}% ${Math.floor(o.k / g) / (g - 1) * 100}%"`; };
-  const label = sup => LIB_LABEL[sup] || [sup, ""];
+  const sprite = o => { if (o.s == null) return `style="background-image:url(/lib/thumb/${encodeURIComponent(o.file)});background-size:contain;background-position:center"`; const g = LIB.grid; return `style="background-image:url(/lib/sprites/s${String(o.s).padStart(3, "0")}.jpg);background-size:${g * 100}% ${g * 100}%;background-position:${(o.k % g) / (g - 1) * 100}% ${Math.floor(o.k / g) / (g - 1) * 100}%"`; };
+  const label = sup => LIB_LABEL[sup] || (LIB && LIB.sups[sup] && LIB.sups[sup].label) || [sup, ""];
+  const pdfURL = S => S.drive ? `https://drive.google.com/file/d/${S.drive}/view` : S.up ? `/lib/pdf/${encodeURIComponent(Object.keys(LIB.sups).find(k => LIB.sups[k] === S))}.pdf` : "#";
   const name = o => o.codes[0] || label(o.sup)[0] + " · p" + o.page;
   const approved = arr => (arr || LIB.items).filter(isOn).length;
   // Only an admin on the dashboard sees images that aren't approved.
@@ -198,11 +214,12 @@
       ${host.ctx === "project" ? `<h2>${t("Sourcing library")}</h2>` : ""}
       <p>${t(lede)}</p></div>
       <div class="sbl-stat"><div><span class="eyebrow">${t("Approved")}</span><b id="sbl-kept">${nf(a)}</b></div>${cur ? `<div><span class="eyebrow">${t("Scanned")}</span><b>${nf(tot)}</b></div>` : ""}${host.ctx === "project" ? `<div><span class="eyebrow">${t("In this project")}</span><b>${host.inProject().size}</b></div>` : ""}</div>
-      ${cur ? `<div class="sbl-full" id="sbl-full">${fullHTML()}</div>` : ""}</section>
+      ${cur ? `<div class="sbl-full" id="sbl-full">${fullHTML()}</div><div id="sbl-addwrap" style="grid-column:1/-1">${addCatHTML()}</div>` : ""}</section>
     <div class="sbl-cats" id="sbl-cats">${catsHTML()}</div>
     <div class="sbl-tools"><input class="sbl-q" type="search" id="sbl-q" value="${esc(ui.q)}" placeholder="${esc(t("Search a code, product or page, e.g. AA01, Ampleforth, p44"))}" autocomplete="off" aria-label="${esc(t("Sourcing library"))}">
       ${cur ? `<span class="sbl-seg" role="group" aria-label="${t("Show")}">${[["on", "Approved"], ["off", "Not approved"], ["all", "All"]].map(([v, l]) => `<button class="chip" data-sblshow="${v}" aria-pressed="${show === v}">${t(l)}</button>`).join("")}</span>` : ""}
       <span class="sbl-count" id="sbl-count"></span>
+      ${cur && ui.sup && LIB.sups[ui.sup] && LIB.sups[ui.sup].up ? `<button class="linkbtn" data-sbl="delcat" style="color:var(--crit)">${t("Delete this catalogue")}</button>` : ""}
       ${cur && ui.sup ? `<span class="sbl-bulk"><button class="linkbtn" data-sblbulk="on">${t("Approve all shown")}</button><button class="linkbtn" data-sblbulk="off">${t("Unapprove all shown")}</button></span>` : ""}</div>
     <div id="sbl-grid">${gridHTML()}</div></div>`;
   }
@@ -261,7 +278,7 @@
     });
   }
 
-  function sourceNote(o) { const S = LIB.sups[o.sup]; return `${o.file}\nSource: ${S.pdf}, page ${o.page} of ${S.pages} (${S.cat})\nPDF: https://drive.google.com/file/d/${S.drive}/view\nImage: ${LIB_ROOT}_IMAGE LIBRARY\\${S.cat}\\${o.sup}\\${o.file}`; }
+  function sourceNote(o) { const S = LIB.sups[o.sup]; return `${o.file}\nSource: ${S.pdf}, page ${o.page} of ${S.pages} (${S.cat})\nPDF: ${S.up && !S.drive ? location.origin : ""}${pdfURL(S)}` + (S.up ? "" : `\nImage: ${LIB_ROOT}_IMAGE LIBRARY\\${S.cat}\\${o.sup}\\${o.file}`); }
   function addControls(o) {
     if (!host.canAdd() || (!isOn(o) && !host.canEdit())) return "";
     if (host.ctx === "project") {
@@ -307,8 +324,8 @@
         </div>
         <div class="sbl-row" style="margin-top:22px;align-items:flex-end">${addControls(o)}</div>
         <section class="sbl-sec"><header><h5>${t("Source")}</h5></header>
-          <div class="sbl-kv"><div class="k">PDF</div><div><a href="https://drive.google.com/file/d/${esc(S.drive)}/view" target="_blank" rel="noopener">${esc(S.pdf)} ↗</a></div>
-            ${host.internal() ? `<div class="k">${t("Catalogue folder")}</div><div class="m">${esc(LIB_ROOT + S.cat)}</div>
+          <div class="sbl-kv"><div class="k">PDF</div><div><a href="${esc(pdfURL(S))}" target="_blank" rel="noopener">${esc(S.pdf)} ↗</a></div>
+            ${host.internal() && !S.up ? `<div class="k">${t("Catalogue folder")}</div><div class="m">${esc(LIB_ROOT + S.cat)}</div>
             <div class="k">${t("Image file")}</div><div class="m">${esc(LIB_ROOT + "_IMAGE LIBRARY\\" + S.cat + "\\" + o.sup + "\\")}</div>` : ""}</div>
           ${host.internal() ? `<div class="sbl-note"><code id="sbl-note">${esc(sourceNote(o)).replace(/\n/g, "<br>")}</code><div class="sbl-row" style="margin-top:0"><button class="btn sm" data-sbl="copy">${t("Copy source note")}</button><span class="mono" style="font-size:11.5px;color:var(--muted)">${zh() ? `PDF 从第 1 页打开；此图片在第 ${o.page} 页。` : `The PDF opens at page 1; this image is on page ${o.page}.`}</span></div></div>` : ""}
         </section>
@@ -354,6 +371,126 @@
       if (host.added) host.added(j, pname); else host.toast(zh() ? `已添加到 ${pname}，编号 ${j.code}` : `Added to ${pname} as ${j.code}`);
       rerender();
     } catch (e) { ui.adding = false; host.layer(); host.toast(e.code === "forbidden" || e.code === "invalid_argument" ? e.message : t("Couldn't add it. Try again.")); }
+  }
+
+  // Adding a catalogue from a PDF (admins). The browser reads the PDF with pdf.js, takes out the photos
+  // embedded on each page and uploads each one full size (up to 2400px) with a 280px thumbnail, named
+  // CATEGORY_Supplier-Catalogue_pPAGE_NN.jpg like the scanned catalogues. Nothing is approved.
+  const CATS = ["FURNITURE", "LIGHTING", "PLUMBING", "MILLWORK", "DOORS", "STONE", "WALL PANELLING", "WOOD PRODUCTS", "PARTITION SYSTEMS", "SIGNAGE"];
+  const CAT_ZH = { FURNITURE: "家具", LIGHTING: "灯具", PLUMBING: "卫浴", MILLWORK: "木作", DOORS: "门", STONE: "石材", "WALL PANELLING": "墙板", "WOOD PRODUCTS": "木制品", "PARTITION SYSTEMS": "隔断系统", SIGNAGE: "标识" };
+  let scan = null; // progress text while a PDF is being scanned
+  function addCatHTML() {
+    if (scan) return `<div class="sbl-addcat"><p style="color:var(--ink);font-size:14px">${esc(scan)}</p></div>`;
+    if (!ui.addcat) return `<button class="linkbtn" data-sbl="addcat">${t("Add a catalogue from a PDF")}</button>`;
+    return `<div class="sbl-addcat">
+      <label>${t("PDF catalogue")}<input type="file" id="sbl-pdf" accept="application/pdf,.pdf"></label>
+      <label>${t("Supplier")}<input id="sbl-supplier" autocomplete="off" placeholder="Billa"></label>
+      <label>${t("Catalogue name (optional)")}<input id="sbl-product" autocomplete="off" placeholder="Sofa 2026"></label>
+      <label>${t("Category")}<select id="sbl-cat">${CATS.map(c => `<option value="${c}">${zh() ? CAT_ZH[c] : c[0] + c.slice(1).toLowerCase()}</option>`).join("")}</select></label>
+      <label style="grid-column:1/-1">${t("Google Drive link to the PDF (optional)")}<input id="sbl-drive" autocomplete="off" placeholder="https://drive.google.com/file/d/…"></label>
+      <p>${t("The PDF is scanned in this browser, so keep this tab open until it finishes. Photos in the PDF become library images named like the others (category_supplier_page_number) and start unapproved. Up to 300 MB and 2,000 pages.")}</p>
+      <div class="sbl-row"><button class="btn" data-sbl="scan">${t("Scan and add")}</button><button class="btn ghost" data-sbl="addcancel">${t("Cancel")}</button></div></div>`;
+  }
+  function addLine() { const el = $("#sbl-addwrap"); if (el) el.innerHTML = addCatHTML(); }
+  let PDFJS = null;
+  async function pdfjs() {
+    if (!PDFJS) { PDFJS = await import("/pdfjs/pdf.min.mjs"); PDFJS.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs"; }
+    return PDFJS;
+  }
+  // An image object from pdf.js, drawn onto a white canvas (transparent parts become white).
+  function imgCanvas(img) {
+    const w = img.width, h = img.height; if (!w || !h) return null;
+    const cv = document.createElement("canvas"); cv.width = w; cv.height = h; const g = cv.getContext("2d");
+    g.fillStyle = "#fff"; g.fillRect(0, 0, w, h);
+    if (img.bitmap) { g.drawImage(img.bitmap, 0, 0); return cv; }
+    if (!img.data) return null;
+    const src = img.data, id = g.createImageData(w, h), d = id.data, n = w * h;
+    if (img.kind === 3 && src.length >= n * 4) d.set(src.subarray(0, n * 4));
+    else if (img.kind === 2 && src.length >= n * 3) for (let i = 0, j = 0; i < n; i++, j += 3) { d[i * 4] = src[j]; d[i * 4 + 1] = src[j + 1]; d[i * 4 + 2] = src[j + 2]; d[i * 4 + 3] = 255; }
+    else return null;
+    const tmp = document.createElement("canvas"); tmp.width = w; tmp.height = h; tmp.getContext("2d").putImageData(id, 0, 0); g.drawImage(tmp, 0, 0);
+    return cv;
+  }
+  // A small fingerprint, to skip a picture repeated across pages (logos, backgrounds) and near-blank fills.
+  function fingerprint(cv) {
+    const c = document.createElement("canvas"); c.width = 16; c.height = 16; const g = c.getContext("2d"); g.drawImage(cv, 0, 0, 16, 16);
+    const d = g.getImageData(0, 0, 16, 16).data; let s = "", sum = 0, sq = 0;
+    for (let i = 0; i < d.length; i += 4) { const v = (d[i] * 3 + d[i + 1] * 6 + d[i + 2]) / 10; sum += v; sq += v * v; s += String.fromCharCode(65 + (v >> 4)); }
+    const m = sum / 256; return { key: cv.width + "x" + cv.height + s, flat: Math.sqrt(sq / 256 - m * m) < 6 };
+  }
+  function toJPEG(cv, max, q, square) {
+    const sc = Math.min(1, max / Math.max(cv.width, cv.height)), w = Math.max(1, Math.round(cv.width * sc)), h = Math.max(1, Math.round(cv.height * sc));
+    const o = document.createElement("canvas"); o.width = square ? max : w; o.height = square ? max : h; const g = o.getContext("2d");
+    g.fillStyle = "#fff"; g.fillRect(0, 0, o.width, o.height); g.drawImage(cv, square ? (max - w) / 2 : 0, square ? (max - h) / 2 : 0, w, h);
+    return new Promise(r => o.toBlob(r, "image/jpeg", q));
+  }
+  const pageObj = (page, name) => new Promise(res => { const t0 = setTimeout(() => res(null), 8000); try { (name.startsWith("g_") ? page.commonObjs : page.objs).get(name, v => { clearTimeout(t0); res(v); }); } catch (_) { clearTimeout(t0); res(null); } });
+  async function api(url, opt) { const r = await fetch(url, opt); const j = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(new Error(j.message || "Upload failed"), { code: j.code }); return j; }
+  async function scanPDF() {
+    const file = $("#sbl-pdf") && $("#sbl-pdf").files[0], supplier = ($("#sbl-supplier") || {}).value || "", product = ($("#sbl-product") || {}).value || "", cat = ($("#sbl-cat") || {}).value;
+    const dm = String(($("#sbl-drive") || {}).value || "").match(/[-\w]{25,}/);
+    if (!file || !supplier.trim()) { host.toast(t("Choose a PDF and enter the supplier.")); return; }
+    if (file.size > 300 * 1024 * 1024) { host.toast(zh() ? "PDF 超过 300 MB。" : "That PDF is over 300 MB."); return; }
+    const setScan = m => { scan = m; addLine(); };
+    let sup = null;
+    try {
+      setScan(zh() ? "正在打开 PDF…" : "Opening the PDF…");
+      const pj = await pdfjs();
+      const doc = await pj.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
+      const start = await api("/api/library/catalogue", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ supplier, product, cat, pdf: file.name, pages: doc.numPages, drive: dm ? dm[0] : "" }) });
+      sup = start.sup;
+      setScan(zh() ? "正在上传 PDF…" : "Uploading the PDF…");
+      await api(`/api/library/catalogue/${sup}/pdf`, { method: "PUT", headers: { "content-type": "application/pdf" }, body: file });
+      const items = [], seen = new Map(), OPS = pj.OPS;
+      for (let n = 1; n <= doc.numPages; n++) {
+        setScan(zh() ? `正在扫描第 ${n} / ${doc.numPages} 页 · 已找到 ${items.length} 张图片` : `Scanning page ${n} of ${doc.numPages} · ${items.length} image${items.length === 1 ? "" : "s"} found`);
+        const page = await doc.getPage(n);
+        const ops = await page.getOperatorList();
+        const names = [];
+        ops.fnArray.forEach((fn, i) => { if (fn === OPS.paintImageXObject && !names.includes(ops.argsArray[i][0])) names.push(ops.argsArray[i][0]); });
+        let nn = 0;
+        for (const name of names) {
+          if (nn >= 99) break;
+          const img = await pageObj(page, name); if (!img) continue;
+          if (Math.min(img.width, img.height) < 160 || img.width * img.height < 60000) continue;
+          const cv = imgCanvas(img); if (!cv) continue;
+          const fp = fingerprint(cv); if (fp.flat) continue;
+          if (seen.has(fp.key)) { const x = seen.get(fp.key); if (x.page !== n) { x.pages++; x.page = n; } continue; }
+          nn++;
+          const f = `${start.prefix}_p${String(n).padStart(3, "0")}_${String(nn).padStart(2, "0")}.jpg`;
+          const [big, th] = await Promise.all([toJPEG(cv, 2400, .88), toJPEG(cv, 280, .85, true)]);
+          await api(`/api/library/catalogue/${sup}/img/${f}`, { method: "PUT", headers: { "content-type": "image/jpeg" }, body: big });
+          await api(`/api/library/catalogue/${sup}/img/${f}?thumb=1`, { method: "PUT", headers: { "content-type": "image/jpeg" }, body: th });
+          const it = [f, n, "", ""]; items.push(it); seen.set(fp.key, { it, pages: 1, page: n });
+        }
+        if (nn) {
+          const tc = await page.getTextContent().catch(() => null);
+          const text = tc ? tc.items.map(x => x.str).join(" ").replace(/\s+/g, " ").trim() : "";
+          const codes = [...new Set(text.match(/\b[A-Z]{1,4}-?\d{2,5}[A-Z]{0,2}\b/g) || [])].slice(0, 8).join(" ");
+          items.filter(x => x[1] === n).forEach(x => { x[2] = codes; x[3] = text.slice(0, 600); });
+        }
+        page.cleanup();
+      }
+      doc.destroy();
+      // A picture on three or more pages is a logo or page decoration, not a product.
+      const drop = new Set([...seen.values()].filter(x => x.pages >= 3).map(x => x.it));
+      const keep = items.filter(x => !drop.has(x));
+      setScan(zh() ? "正在完成…" : "Finishing…");
+      const done = await api(`/api/library/catalogue/${sup}/done`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ items: keep }) });
+      scan = null; ui.addcat = false; ui.sup = sup; ui.show = "all";
+      host.toast(zh() ? `已添加 ${nf(done.n)} 张图片，尚未批准` : `${nf(done.n)} images added. None are approved yet`);
+      reloadIndex();
+    } catch (e) {
+      scan = null; addLine();
+      host.toast(e.code ? e.message : e.name === "InvalidPDFException" || e.name === "PasswordException" ? t("Couldn't read that PDF.") : (zh() ? "扫描中断，请重试。" : "The scan stopped part way. Try again.") + (e.message ? " (" + e.message + ")" : ""));
+    }
+  }
+  async function deleteCat(sup) {
+    const S = LIB.sups[sup]; if (!S || !S.up) return;
+    const L = label(sup);
+    if (!confirm(zh() ? `删除图册「${L.join(" · ")}」？它的 ${S.n} 张图片和批准记录将被移除，已添加到项目中的项目会保留。` : `Delete ${L.filter(Boolean).join(" · ")}? Its ${S.n} images and approvals are removed. Pieces already added to projects stay.`)) return;
+    try { await api(`/api/library/catalogue/${sup}`, { method: "DELETE" }); ui.sup = null; reloadIndex(); }
+    catch (e) { host.toast(e.message || t("Couldn't save. Check your connection and try again.")); }
   }
 
   // Admins upload the full-size images: the catalogue zips from Drive, or the JPEGs inside them.
@@ -434,6 +571,10 @@
     if (el.dataset.sblpage) { const p = +el.dataset.sblpage; bulk(list().filter(o => o.page === p), el.dataset.v === "on"); return; }
     const a = el.dataset.sbl;
     if (a === "close") close();
+    else if (a === "addcat" && curating()) { ui.addcat = true; addLine(); }
+    else if (a === "addcancel") { ui.addcat = false; addLine(); }
+    else if (a === "scan" && curating() && !scan) scanPDF();
+    else if (a === "delcat" && curating() && ui.sup) deleteCat(ui.sup);
     else if (a === "prev" || a === "next") { e.stopPropagation(); step(a === "next" ? 1 : -1); }
     else if (a === "zoom") { ui.zoom = true; host.layer(); }
     else if (a === "unzoom" && !e.target.closest(".sbl-nav")) { ui.zoom = false; host.layer(); }

@@ -18,19 +18,45 @@ const DB_FILE = path.join(DATA_DIR, "db.json");
 const exists = f => { try { return fs.existsSync(f); } catch (_) { return false; } };
 const PUBLIC_DIR = exists(path.join(__dirname, "public", "dashboard.html")) ? path.join(__dirname, "public") : __dirname;
 const FLAT_PUBLIC = PUBLIC_DIR === __dirname;
-const PUBLIC_FILES = new Set(["index.html", "dashboard.html", "admin.html", "claude-shim.js", "library.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"]);
+const PUBLIC_FILES = new Set(["index.html", "dashboard.html", "admin.html", "claude-shim.js", "library.js", "pdfjs/pdf.min.mjs", "pdfjs/pdf.worker.min.mjs", "manifest.webmanifest", "icon-192.png", "icon-512.png"]);
 // Sourcing library: lib/data.json (index) and lib/sprites/ (thumbnail sheets), next to the app files.
 const LIB_DIR = exists(path.join(PUBLIC_DIR, "lib", "data.json")) ? path.join(PUBLIC_DIR, "lib") : path.join(__dirname, "lib");
 // Full-size library images, uploaded by an admin from the Drive zips, live on the data disk.
 const LIB_FULL_DIR = path.join(DATA_DIR, "lib-full");
+// Catalogues an admin adds from a PDF: lib-cats/<sup>.json (index) and <sup>.pdf (the source), with 280px thumbnails in lib-thumbs/.
+const LIB_CATS_DIR = path.join(DATA_DIR, "lib-cats");
+const LIB_THUMB_DIR = path.join(DATA_DIR, "lib-thumbs");
 // The library index, read once and kept in memory for building pieces on the server.
 const LIB_LABEL = { "BILLA-Sofa": ["Billa", "Sofas & lounge chairs"], "BILLA-CoffeeTV": ["Billa", "Coffee tables & TV units"], "BILLA-Dining": ["Billa", "Dining"], "BILLA-Outdoor": ["Billa", "Outdoor"], "HALO": ["HALO", "Collection 2026"], "Kaiwuli": ["Kaiwuli", "Catalogue 2026"], "TO-Tearsheet": ["TO Interactive", "Tearsheets 2025"] };
 const LIB_CAT = { FURNITURE: "Furniture", LIGHTING: "Lighting", PLUMBING: "Plumbing", MILLWORK: "Millwork", DOORS: "Millwork", STONE: "Stone", "WALL PANELLING": "Finishes", "WOOD PRODUCTS": "Finishes", "PARTITION SYSTEMS": "Glazing", SIGNAGE: "Hardware" };
+const libCatFile = c => String(c).replace(/ /g, "-");
 let libCache = null;
+// The scanned catalogues in lib/ plus the finished ones added from PDFs; uploaded catalogues carry label and up: 1.
 async function libIndex() {
   if (libCache) return libCache;
-  try { const d = JSON.parse(await fsp.readFile(path.join(LIB_DIR, "data.json"), "utf8")); libCache = { sups: d.sups, byFile: new Map(d.items.map(x => [x[0], x])) }; } catch (_) { return null; }
+  let d;
+  try { d = JSON.parse(await fsp.readFile(path.join(LIB_DIR, "data.json"), "utf8")); } catch (_) { d = { sups: {}, items: [], cell: 280, grid: 8 }; }
+  for (const f of (await fsp.readdir(LIB_CATS_DIR).catch(() => [])).filter(f => f.endsWith(".json")).sort()) {
+    try {
+      const c = JSON.parse(await fsp.readFile(path.join(LIB_CATS_DIR, f), "utf8"));
+      if (c.status !== "done" || d.sups[c.sup]) continue;
+      d.sups[c.sup] = { pdf: c.pdf, drive: c.drive || "", pages: c.pages, cat: c.cat, n: c.items.length, label: [c.supplier, c.product || ""], up: 1, created: c.created };
+      c.items.forEach(x => d.items.push([x[0], c.sup, x[1], x[2] || "", x[3] || "", null, null]));
+    } catch (_) {}
+  }
+  libCache = { sups: d.sups, byFile: new Map(d.items.map(x => [x[0], x])), json: JSON.stringify(d) };
   return libCache;
+}
+async function libCatRead(sup) { try { return JSON.parse(await fsp.readFile(path.join(LIB_CATS_DIR, sup + ".json"), "utf8")); } catch (_) { return null; } }
+// Streams a request body to a file, refusing it past the limit.
+function bodyToFile(req, file, limit) {
+  return new Promise((resolve, reject) => {
+    const out = fs.createWriteStream(file + ".tmp"); let size = 0;
+    req.on("data", c => { size += c.length; if (size > limit) { req.destroy(); out.destroy(); fs.unlink(file + ".tmp", () => {}); reject(Object.assign(new Error("too_large"), { status: 413 })); } });
+    req.pipe(out);
+    out.on("finish", () => fs.rename(file + ".tmp", file, e => (e ? reject(e) : resolve(size))));
+    out.on("error", reject); req.on("error", reject);
+  });
 }
 const SEED_DIR = exists(path.join(__dirname, "seed", "db.json")) ? path.join(__dirname, "seed") : exists(path.join(__dirname, "db.json")) ? __dirname : path.join(__dirname, "seed");
 // Tolerate stray spaces or quote marks pasted into the Render setting.
@@ -49,6 +75,8 @@ const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/g
 
 fs.mkdirSync(BLOB_DIR, { recursive: true });
 fs.mkdirSync(LIB_FULL_DIR, { recursive: true });
+fs.mkdirSync(LIB_CATS_DIR, { recursive: true });
+fs.mkdirSync(LIB_THUMB_DIR, { recursive: true });
 
 // Recognise a stored file's type from its first bytes (used when no metadata file exists).
 function sniffType(file) {
@@ -266,7 +294,7 @@ input{width:100%;font:inherit;font-size:17px;color:var(--i);background:transpare
 ${error ? '<p class="err">That sign-in and password don\'t match. Studio owner: leave the first box blank and use the studio password.</p>' : ""}<button>Open Sourcebook</button>
 <p class="note">Studio owner: leave the first box blank and use the studio password.</p></form></main></body></html>`;
 }
-const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".webmanifest": "application/manifest+json", ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon" };
+const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".webmanifest": "application/manifest+json", ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon" };
 
 /* ---------------- Claude ---------------- */
 async function askClaude({ input, images = [], modelTier = "default" }) {
@@ -658,7 +686,85 @@ const server = http.createServer(async (req, res) => {
     }
 
     // sourcing library: catalogue index, thumbnail sheets, approvals and adding a piece
-    const lm = p.match(/^\/lib\/(data\.json|sprites\/s\d{3}\.jpg)$/);
+    if (p === "/lib/data.json" && req.method === "GET") {
+      const lib = await libIndex();
+      return send(res, 200, lib.json, { "Content-Type": "application/json", "Cache-Control": "no-cache" });
+    }
+    const tm = p.match(/^\/lib\/(thumb\/[A-Za-z0-9_.-]+\.jpg|pdf\/[A-Za-z0-9-]+\.pdf)$/);
+    if (tm && req.method === "GET") {
+      // Thumbnails and source PDFs of catalogues added from a PDF (any signed-in user)
+      const fp = tm[1].startsWith("thumb/") ? path.join(LIB_THUMB_DIR, tm[1].slice(6)) : path.join(LIB_CATS_DIR, tm[1].slice(4));
+      try {
+        const st = await fsp.stat(fp);
+        const pdf = fp.endsWith(".pdf");
+        res.writeHead(200, { "Content-Type": pdf ? "application/pdf" : "image/jpeg", "Content-Length": st.size, "Cache-Control": "private, max-age=86400", ...(pdf ? { "Content-Disposition": "inline" } : {}) });
+        return fs.createReadStream(fp).pipe(res);
+      } catch (_) { return send(res, 404, "Not found"); }
+    }
+    const cm = p.match(/^\/api\/library\/catalogue(?:\/([A-Za-z0-9-]+)(?:\/(pdf|done|img\/[A-Za-z0-9_.-]+\.jpg))?)?$/);
+    if (cm) {
+      // Adding a catalogue from a PDF (admins). The browser scans the PDF; the server keeps the files.
+      //   POST   /api/library/catalogue {supplier, product, cat, pdf, pages, drive}  -> { sup, prefix }
+      //   PUT    /api/library/catalogue/<sup>/pdf                 the source PDF
+      //   PUT    /api/library/catalogue/<sup>/img/<file>?thumb=1  a full-size image or its thumbnail
+      //   POST   /api/library/catalogue/<sup>/done {items: [[file, page, codes, text]]}
+      //   DELETE /api/library/catalogue/<sup>                     removes an added catalogue and its approvals
+      if (!isAdmin) return deny("Only admins can add catalogues.");
+      const [, sup, sub] = cm;
+      if (!sup && req.method === "POST") {
+        const b = await readJSON(req);
+        const slug = v => String(v || "").normalize("NFKD").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+        const supplier = String(b.supplier || "").trim().slice(0, 80), product = String(b.product || "").trim().slice(0, 80);
+        const s1 = [slug(supplier), slug(product)].filter(Boolean).join("-");
+        if (!supplier || !s1) return send(res, 400, { code: "invalid_argument", message: "Enter the supplier's name in English letters or numbers." });
+        if (!LIB_CAT[b.cat]) return send(res, 400, { code: "invalid_argument", message: "Choose a category." });
+        const pages = Math.floor(Number(b.pages));
+        if (!(pages >= 1 && pages <= 2000)) return send(res, 400, { code: "invalid_argument", message: "That PDF has too many pages (2,000 at most)." });
+        const lib = await libIndex(), old = await libCatRead(s1);
+        if (lib.sups[s1] || (old && old.status === "done")) return send(res, 409, { code: "exists", message: `There's already a catalogue called ${s1}. Use a different catalogue name.` });
+        const c = { sup: s1, supplier, product, cat: b.cat, pdf: String(b.pdf || "").slice(0, 200), pages, drive: /^[A-Za-z0-9_-]{10,}$/.test(b.drive || "") ? b.drive : "", status: "scanning", created: new Date().toISOString(), by: me.name || "", items: [] };
+        await fsp.writeFile(path.join(LIB_CATS_DIR, s1 + ".json"), JSON.stringify(c));
+        return send(res, 200, { ok: true, sup: s1, prefix: `${libCatFile(b.cat)}_${s1}` });
+      }
+      const c = sup && await libCatRead(sup);
+      if (!c) return send(res, 404, { code: "not_found", message: "That catalogue isn't one that was added from a PDF." });
+      const prefix = `${libCatFile(c.cat)}_${c.sup}_p`;
+      if (!sub && req.method === "DELETE") {
+        for (const dir of [LIB_FULL_DIR, LIB_THUMB_DIR]) for (const f of await fsp.readdir(dir).catch(() => [])) if (f.startsWith(prefix)) await fsp.unlink(path.join(dir, f)).catch(() => {});
+        await fsp.unlink(path.join(LIB_CATS_DIR, sup + ".pdf")).catch(() => {});
+        await fsp.unlink(path.join(LIB_CATS_DIR, sup + ".json")).catch(() => {});
+        const dp = "library/" + sup; if (store[dp]) { delete store[dp]; persist(); }
+        libCache = null; broadcast({ path: dp, exists: false }); broadcast({ path: "library", index: true });
+        return send(res, 200, { ok: true });
+      }
+      if (c.status !== "scanning") return send(res, 409, { code: "exists", message: "That catalogue is already finished." });
+      if (sub === "pdf" && req.method === "PUT") { await bodyToFile(req, path.join(LIB_CATS_DIR, sup + ".pdf"), 400 * 1024 * 1024); return send(res, 200, { ok: true }); }
+      if (sub && sub.startsWith("img/") && req.method === "PUT") {
+        const f = sub.slice(4);
+        if (!f.startsWith(prefix) || !/_p\d{3,4}_\d{2}\.jpg$/.test(f)) return send(res, 400, { code: "invalid_argument", message: "That image name doesn't belong to this catalogue." });
+        const buf = await readBody(req, 12 * 1024 * 1024);
+        if (!buf.length || sniffBuf(buf) !== "image/jpeg") return send(res, 400, { code: "invalid_argument", message: "That isn't a JPEG." });
+        const fp = path.join(url.searchParams.get("thumb") ? LIB_THUMB_DIR : LIB_FULL_DIR, f);
+        await fsp.writeFile(fp + ".tmp", buf); await fsp.rename(fp + ".tmp", fp);
+        return send(res, 200, { ok: true });
+      }
+      if (sub === "done" && req.method === "POST") {
+        const b = await readJSON(req, 8 * 1024 * 1024);
+        const have = new Set(await fsp.readdir(LIB_FULL_DIR).catch(() => []));
+        const items = (Array.isArray(b.items) ? b.items : []).filter(x => Array.isArray(x) && typeof x[0] === "string" && x[0].startsWith(prefix) && have.has(x[0]))
+          .map(x => [x[0], Math.floor(Number(x[1])) || 1, String(x[2] || "").slice(0, 200), String(x[3] || "").slice(0, 600)]);
+        if (!items.length) return send(res, 400, { code: "invalid_argument", message: "No product images were found in that PDF." });
+        // Images uploaded but left out of the list (logos repeated on every page) are removed.
+        const keep = new Set(items.map(x => x[0]));
+        for (const dir of [LIB_FULL_DIR, LIB_THUMB_DIR]) for (const f of await fsp.readdir(dir).catch(() => [])) if (f.startsWith(prefix) && !keep.has(f)) await fsp.unlink(path.join(dir, f)).catch(() => {});
+        Object.assign(c, { items, status: "done", finished: new Date().toISOString() });
+        await fsp.writeFile(path.join(LIB_CATS_DIR, sup + ".json"), JSON.stringify(c));
+        libCache = null; broadcast({ path: "library", index: true });
+        return send(res, 200, { ok: true, n: items.length });
+      }
+      return send(res, 404, { code: "not_found" });
+    }
+    const lm = p.match(/^\/lib\/(sprites\/s\d{3}\.jpg)$/);
     if (lm && req.method === "GET") {
       try { return send(res, 200, await fsp.readFile(path.join(LIB_DIR, lm[1])), { "Content-Type": lm[1].endsWith(".json") ? "application/json" : "image/jpeg", "Cache-Control": "private, max-age=86400" }); } catch (_) { return send(res, 404, "Not found"); }
     }
@@ -716,7 +822,7 @@ const server = http.createServer(async (req, res) => {
       const items = Object.entries(store).filter(([k]) => k.startsWith(pre) && k.split("/").length === 4).map(([, v]) => v.data);
       const dup = Object.entries(store).find(([k, v]) => k.startsWith(pre) && v.data?.libSource?.file === file);
       if (dup) return send(res, 200, { ok: true, id: dup[0].split("/")[3], code: dup[1].data.code, existing: true });
-      const L = LIB_LABEL[sup] || [sup, ""];
+      const L = LIB_LABEL[sup] || S.label || [sup, ""];
       const category = LIB_CAT[S.cat] || "Finishes";
       const t0 = String(text || "");
       const zhPrefix = /沙发/.test(t0) ? "SF" : /(休闲椅|躺椅)/.test(t0) ? "LC" : /凳/.test(t0) ? "STL" : /椅/.test(t0) ? "CH" : /(茶几|餐台|餐桌|桌|几)/.test(t0) ? "TB" : /(柜|架)/.test(t0) ? "CR" : /床/.test(t0) ? "BD" : null;
@@ -734,7 +840,7 @@ const server = http.createServer(async (req, res) => {
         }
       }
       const codes = String(codesStr || "").split(" ").filter(Boolean);
-      const drive = S.drive ? `https://drive.google.com/file/d/${S.drive}/view` : null;
+      const drive = S.drive ? `https://drive.google.com/file/d/${S.drive}/view` : S.up ? `/lib/pdf/${sup}.pdf` : null;
       const doc = { specs: [], photo, photoFit: "contain", name: codes[0] ? `${codes[0]} · ${L[0]}` : `${L[0]} ${L[1]} · p${page}`.trim(), description: L[1] ? `${L[0]} ${L[1]}` : "",
         category, supplier: L[0], product: L[1] || "", modelCode: codes[0] || "", zone: "", ...(category === "Furniture" ? { furnType: prefix } : {}),
         code, qty: null, unit: "ea", leadWeeks: null, needBy: null, unitCost: null, status: "Concept", material: "wood", color: "#C9C3B8",

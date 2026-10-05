@@ -1908,7 +1908,7 @@ function render(){try{document.title=(project.name&&project.name!=="Untitled pro
   renderLayer(true);
 }
 const HOSTED=typeof window.SOURCEBOOK_PROJECT==="string";
-function tabsHTML(){return(HOSTED?`<a class="tab tabproj tabhome" href="/">← Projects</a>`:"")+[...(HOSTED?[]:[["proj","Projects"]]),...(!window.SBLibrary?[]:[["lib","Sourcing library"]]),["look","Lookbook"],["mat","Materials & products"],...(isClient()?[]:[["sched","Order schedule"]]),["finish","Finish schedule"],["furn","Furniture schedule"],["quote","Quotation"],["dec","Decisions"]].map(([k,l])=>`<button class="tab ${k==="proj"?"tabproj":""}" role="tab" data-view="${k}" aria-selected="${ui.view===k}">${l}</button>`).join("")}
+function tabsHTML(){return(HOSTED?`<a class="tab tabproj tabhome" href="/">← Projects</a>`:"")+[...(HOSTED?[]:[["proj","Projects"]]),["look","Lookbook"],...(!window.SBLibrary?[]:[["lib","Sourcing library"]]),["mat","Materials & products"],...(isClient()?[]:[["sched","Order schedule"]]),["finish","Finish schedule"],["furn","Furniture schedule"],["quote","Quotation"],["dec","Decisions"]].map(([k,l])=>`<button class="tab ${k==="proj"?"tabproj":""}" role="tab" data-view="${k}" aria-selected="${ui.view===k}">${l}</button>`).join("")}
 function fitOf(it){return it.photo?(it.photoFit||ui.imgFit||"cover"):"cover"}
 function filtered(){return items.filter(i=>(ui.cat==="All"||i.category===ui.cat)&&(!ui.stage||i.status===ui.stage))}
 function lookJump(){

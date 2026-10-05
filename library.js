@@ -40,32 +40,32 @@
 
   const CSS = `
 .sbl-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 28px;align-items:end;padding-top:34px;padding-bottom:16px;border-bottom:1px solid var(--ink)}
-.sbl-head h2{font-family:var(--display);font-weight:400;font-size:clamp(30px,3.6vw,42px);line-height:1.05;margin:6px 0 8px}
-.sbl-head p{margin:0;color:var(--ink2);max-width:62ch;font-size:14px}
+.sbl-head h2{font-family:var(--display);font-weight:400;font-size:clamp(30px + var(--fs-up,0px),3.6vw + var(--fs-up,0px),42px + var(--fs-up,0px));line-height:1.05;margin:6px 0 8px}
+.sbl-head p{margin:0;color:var(--ink2);max-width:62ch;font-size:calc(14px + var(--fs-up,0px))}
 .sbl-stat{display:flex;border-left:1px solid var(--rule2)}
 .sbl-stat div{padding:0 0 2px 16px;min-width:96px}
 .sbl-stat div + div{border-left:1px solid var(--rule2);margin-left:16px}
-.sbl-stat b{display:block;font-family:var(--display);font-weight:400;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}
+.sbl-stat b{display:block;font-family:var(--display);font-weight:400;font-size:calc(30px + var(--fs-up,0px));line-height:1.1;font-variant-numeric:tabular-nums}
 .sbl-cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:18px 16px;padding-top:22px}
 .sbl-cat{display:flex;flex-direction:column;gap:7px;background:none;border:0;padding:0;text-align:left;color:var(--ink);cursor:pointer;min-width:0}
 .sbl-cat .sbl-sw{width:100%;aspect-ratio:4/3;border:1px solid var(--rule)}
-.sbl-cat .sbl-all{display:flex;align-items:flex-end;width:100%;aspect-ratio:4/3;padding:14px;border:1px dashed var(--ink2);font-family:var(--display);font-size:22px;line-height:1.1}
+.sbl-cat .sbl-all{display:flex;align-items:flex-end;width:100%;aspect-ratio:4/3;padding:14px;border:1px dashed var(--ink2);font-family:var(--display);font-size:calc(22px + var(--fs-up,0px));line-height:1.1}
 .sbl-cat[aria-pressed="true"] .sbl-sw,.sbl-cat[aria-pressed="true"] .sbl-all{outline:2px solid var(--ink);outline-offset:3px}
-.sbl-name{font-family:var(--display);font-size:19px;line-height:1.15;overflow-wrap:anywhere}
-.sbl-sub{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--muted);font-variant-numeric:tabular-nums}
+.sbl-name{font-family:var(--display);font-size:calc(19px + var(--fs-up,0px));line-height:1.15;overflow-wrap:anywhere}
+.sbl-sub{font-family:var(--mono);font-size:calc(11px + var(--fs-up,0px));letter-spacing:.04em;color:var(--muted);font-variant-numeric:tabular-nums}
 .sbl-bar{display:block;height:3px;background:var(--rule2)}
 .sbl-crumb{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;padding-top:24px}
-.sbl-crumb h3{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(26px,3vw,36px);line-height:1.1}
+.sbl-crumb h3{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(26px + var(--fs-up,0px),3vw + var(--fs-up,0px),36px + var(--fs-up,0px));line-height:1.1}
 .sbl-chips{display:flex;flex-wrap:wrap;gap:6px;padding-top:14px}
 .sbl-bar i{display:block;height:100%;background:var(--ok)}
 .sbl-tools{position:sticky;top:calc(env(safe-area-inset-top,0px) + 58px);z-index:4;background:var(--ground);display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding-block:14px;margin-top:26px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
-.sbl-tools .sbl-q{flex:1 1 240px;max-width:420px;border:0;border-bottom:1px solid var(--rule);background:transparent;padding:8px 2px;font-size:15px;color:var(--ink);min-width:0}
+.sbl-tools .sbl-q{flex:1 1 240px;max-width:420px;border:0;border-bottom:1px solid var(--rule);background:transparent;padding:8px 2px;font-size:calc(15px + var(--fs-up,0px));color:var(--ink);min-width:0}
 .sbl-tools .sbl-q:focus{outline:none;border-color:var(--ink)}
 .sbl-seg{display:inline-flex;gap:4px}
-.sbl-count{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sbl-count{font-family:var(--mono);font-size:calc(12px + var(--fs-up,0px));color:var(--muted);font-variant-numeric:tabular-nums}
 .sbl-bulk{display:flex;gap:14px;margin-left:auto}
 .sbl-page{display:flex;justify-content:space-between;align-items:baseline;gap:12px;grid-column:1/-1;padding-top:14px;border-bottom:1px solid var(--rule2);padding-bottom:6px}
-.sbl-page b{font-family:var(--display);font-style:italic;font-weight:400;font-size:19px}
+.sbl-page b{font-family:var(--display);font-style:italic;font-weight:400;font-size:calc(19px + var(--fs-up,0px))}
 .sbl-page span{display:flex;gap:14px}
 .sbl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px 14px;padding-top:18px}
 .sbl-tile{position:relative;display:flex;flex-direction:column;gap:6px;min-width:0;transition:opacity .2s}
@@ -76,21 +76,21 @@
 .sbl-open:hover .sbl-sw{border-color:var(--ink)}
 .sbl-chk{position:absolute;top:6px;right:6px;width:30px;height:30px;display:grid;place-items:center;background:var(--paper);border:1px solid var(--rule);cursor:pointer}
 .sbl-chk input{width:17px;height:17px;margin:0;accent-color:var(--ok);cursor:pointer}
-.sbl-cap{display:flex;gap:6px;align-items:baseline;font-family:var(--mono);font-size:11px;color:var(--ink2);overflow:hidden;white-space:nowrap}
+.sbl-cap{display:flex;gap:6px;align-items:baseline;font-family:var(--mono);font-size:calc(11px + var(--fs-up,0px));color:var(--ink2);overflow:hidden;white-space:nowrap}
 .sbl-cap b{font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis}
 .sbl-cap span{flex:none;color:var(--muted)}
-.sbl-inproj{position:absolute;left:6px;top:6px;background:var(--accent);color:#fff;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px}
+.sbl-inproj{position:absolute;left:6px;top:6px;background:var(--accent);color:#fff;font-family:var(--mono);font-size:calc(10px + var(--fs-up,0px));letter-spacing:.06em;text-transform:uppercase;padding:3px 7px}
 .sbl-more{display:flex;justify-content:center;padding-top:26px}
-.sbl-empty{grid-column:1/-1;padding:40px 0;color:var(--muted);font-family:var(--display);font-size:22px;font-style:italic}
+.sbl-empty{grid-column:1/-1;padding:40px 0;color:var(--muted);font-family:var(--display);font-size:calc(22px + var(--fs-up,0px));font-style:italic}
 .sbl-scrim{position:fixed;inset:0;background:var(--scrim);z-index:20}
 .sbl-sheet{position:fixed;inset:0;z-index:21;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);background:var(--paper);color:var(--ink)}
 .sbl-hero{background:#fff;display:flex;align-items:center;justify-content:center;padding:clamp(16px,4vw,48px);min-height:0;position:relative}
-.sbl-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:48px;height:48px;border-radius:50%;border:1px solid var(--rule);background:rgba(255,255,255,.92);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;display:grid;place-items:center;box-shadow:0 1px 6px rgba(0,0,0,.08)}
+.sbl-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:48px;height:48px;border-radius:50%;border:1px solid var(--rule);background:rgba(255,255,255,.92);color:var(--ink);font-size:calc(22px + var(--fs-up,0px));line-height:1;cursor:pointer;display:grid;place-items:center;box-shadow:0 1px 6px rgba(0,0,0,.08)}
 .sbl-nav:hover:not(:disabled){border-color:var(--ink)}
 .sbl-nav:disabled{opacity:.3;cursor:default}
 .sbl-nav.prev{left:clamp(8px,1.5vw,20px)}
 .sbl-nav.next{right:clamp(8px,1.5vw,20px)}
-.sbl-pos{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:2;font-family:var(--mono);font-size:11.5px;color:var(--muted);background:rgba(255,255,255,.92);padding:3px 9px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sbl-pos{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:2;font-family:var(--mono);font-size:calc(11.5px + var(--fs-up,0px));color:var(--muted);background:rgba(255,255,255,.92);padding:3px 9px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .sbl-zoomview .sbl-nav{position:fixed}
 .sbl-topr{display:flex;gap:10px;align-items:center;flex:none}
 .sbl-appr{min-width:118px}
@@ -105,40 +105,40 @@
 .sbl-hero.loaded .sbl-big{opacity:1}
 .sbl-zoomview{position:fixed;inset:0;z-index:22;background:#fff;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
 .sbl-zoomview img{max-width:100%;max-height:100%;object-fit:contain}
-.sbl-full{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;grid-column:1/-1;font-size:13px;color:var(--ink2)}
-.sbl-full .mono{font-size:12px;color:var(--muted)}
+.sbl-full{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;grid-column:1/-1;font-size:calc(13px + var(--fs-up,0px));color:var(--ink2)}
+.sbl-full .mono{font-size:calc(12px + var(--fs-up,0px));color:var(--muted)}
 .sbl-addcat{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:14px 18px;align-items:end;padding:16px;background:var(--paper);border:1px solid var(--rule)}
-.sbl-addcat label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
-.sbl-addcat input:not([type=file]),.sbl-addcat select{font:inherit;font-size:15px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px;min-width:0}
-.sbl-addcat input[type=file]{font-size:13px;color:var(--ink);max-width:100%}
-.sbl-addcat p{grid-column:1/-1;margin:0;font-size:12.5px;color:var(--muted)}
+.sbl-addcat label{display:flex;flex-direction:column;gap:3px;font-size:calc(12px + var(--fs-up,0px));color:var(--muted);min-width:0}
+.sbl-addcat input:not([type=file]),.sbl-addcat select{font:inherit;font-size:calc(15px + var(--fs-up,0px));color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px;min-width:0}
+.sbl-addcat input[type=file]{font-size:calc(13px + var(--fs-up,0px));color:var(--ink);max-width:100%}
+.sbl-addcat p{grid-column:1/-1;margin:0;font-size:calc(12.5px + var(--fs-up,0px));color:var(--muted)}
 .sbl-addcat .sbl-row{grid-column:1/-1;margin:0}
 .sbl-body{overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 22px) clamp(18px,4vw,48px) calc(env(safe-area-inset-bottom,0px) + 60px)}
 .sbl-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.sbl-x{background:none;border:1px solid var(--rule);width:38px;height:38px;border-radius:50%;font-size:18px;line-height:1;color:var(--ink);cursor:pointer}
-.sbl-body h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,4.4vw,56px);line-height:1;margin:18px 0 8px;letter-spacing:-.01em;overflow-wrap:anywhere}
-.sbl-file{font-family:var(--mono);font-size:13px;color:var(--ink2);margin:0;overflow-wrap:anywhere}
+.sbl-x{background:none;border:1px solid var(--rule);width:38px;height:38px;border-radius:50%;font-size:calc(18px + var(--fs-up,0px));line-height:1;color:var(--ink);cursor:pointer}
+.sbl-body h2{font-family:var(--display);font-weight:400;font-size:clamp(34px + var(--fs-up,0px),4.4vw + var(--fs-up,0px),56px + var(--fs-up,0px));line-height:1;margin:18px 0 8px;letter-spacing:-.01em;overflow-wrap:anywhere}
+.sbl-file{font-family:var(--mono);font-size:calc(13px + var(--fs-up,0px));color:var(--ink2);margin:0;overflow-wrap:anywhere}
 .sbl-facts{display:grid;grid-template-columns:repeat(3,1fr);margin-top:24px;border-top:1px solid var(--ink)}
 .sbl-facts div{padding:12px 12px 14px 0;border-bottom:1px solid var(--rule2)}
 .sbl-facts div + div{padding-left:12px;border-left:1px solid var(--rule2)}
-.sbl-facts b{display:block;font-family:var(--display);font-weight:400;font-size:19px;line-height:1.15;margin-top:2px;overflow-wrap:anywhere}
+.sbl-facts b{display:block;font-family:var(--display);font-weight:400;font-size:calc(19px + var(--fs-up,0px));line-height:1.15;margin-top:2px;overflow-wrap:anywhere}
 .sbl-sec{margin-top:34px}
 .sbl-sec > header{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--ink);padding-bottom:8px;margin-bottom:4px}
-.sbl-sec h5{margin:0;font-family:var(--display);font-style:italic;font-weight:400;font-size:22px}
+.sbl-sec h5{margin:0;font-family:var(--display);font-style:italic;font-weight:400;font-size:calc(22px + var(--fs-up,0px))}
 .sbl-kv{display:grid;grid-template-columns:minmax(110px,34%) 1fr;gap:0 16px}
 .sbl-kv > *{padding:10px 0;border-bottom:1px solid var(--rule2);min-width:0}
-.sbl-kv .k{color:var(--muted);font-size:13px}
+.sbl-kv .k{color:var(--muted);font-size:calc(13px + var(--fs-up,0px))}
 .sbl-kv a{color:var(--ink);text-underline-offset:3px;overflow-wrap:anywhere}
-.sbl-kv .m{font-family:var(--mono);font-size:12px;overflow-wrap:anywhere}
+.sbl-kv .m{font-family:var(--mono);font-size:calc(12px + var(--fs-up,0px));overflow-wrap:anywhere}
 .sbl-note{margin-top:22px;padding:14px 16px;background:var(--accent-soft);display:flex;flex-direction:column;gap:8px}
-.sbl-note code{font-family:var(--mono);font-size:12px;overflow-wrap:anywhere;color:var(--ink)}
+.sbl-note code{font-family:var(--mono);font-size:calc(12px + var(--fs-up,0px));overflow-wrap:anywhere;color:var(--ink)}
 .sbl-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
-.sbl-hint{color:var(--muted);font-size:13px;margin:10px 0 0}
-.sbl-pick{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted);min-width:min(100%,260px)}
-.sbl-pick select{font:inherit;font-size:15px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px}
-.sbl-excerpt{margin:16px 0 0;color:var(--muted);font-size:13px;max-width:65ch}
+.sbl-hint{color:var(--muted);font-size:calc(13px + var(--fs-up,0px));margin:10px 0 0}
+.sbl-pick{display:flex;flex-direction:column;gap:2px;font-size:calc(12px + var(--fs-up,0px));color:var(--muted);min-width:min(100%,260px)}
+.sbl-pick select{font:inherit;font-size:calc(15px + var(--fs-up,0px));color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px}
+.sbl-excerpt{margin:16px 0 0;color:var(--muted);font-size:calc(13px + var(--fs-up,0px));max-width:65ch}
 @media (max-width:900px){.sbl-sheet,.sbl-sheet.big{grid-template-columns:1fr;grid-template-rows:38vh 1fr}.sbl-sheet.big{grid-template-rows:52vh 1fr}}
-@media (max-width:760px){.sbl-head{grid-template-columns:1fr}.sbl-stat{border-left:0}.sbl-stat div:first-child{padding-left:0}.sbl-tools{position:static}.sbl-cats{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px}.sbl-name{font-size:16px}.sbl-cat .sbl-all{font-size:18px}.sbl-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.sbl-facts{grid-template-columns:1fr 1fr}}
+@media (max-width:760px){.sbl-head{grid-template-columns:1fr}.sbl-stat{border-left:0}.sbl-stat div:first-child{padding-left:0}.sbl-tools{position:static}.sbl-cats{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px}.sbl-name{font-size:calc(16px + var(--fs-up,0px))}.sbl-cat .sbl-all{font-size:calc(18px + var(--fs-up,0px))}.sbl-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.sbl-facts{grid-template-columns:1fr 1fr}}
 `;
   const style = document.createElement("style"); style.textContent = CSS; document.head.appendChild(style);
 
@@ -356,14 +356,14 @@
         <div class="sbl-facts">
           <div><span class="eyebrow">${t("Catalogue")}</span><b>${esc(L[0])}</b></div>
           <div><span class="eyebrow">${t("Page")}</span><b>${o.page} / ${S.pages}</b></div>
-          <div><span class="eyebrow">${t("Codes on page")}</span><b style="font-family:var(--mono);font-size:15px">${esc(o.codes.slice(0, 4).join(" ") || "—")}</b></div>
+          <div><span class="eyebrow">${t("Codes on page")}</span><b style="font-family:var(--mono);font-size:calc(15px + var(--fs-up,0px))">${esc(o.codes.slice(0, 4).join(" ") || "—")}</b></div>
         </div>
         <div class="sbl-row" style="margin-top:22px;align-items:flex-end">${addControls(o)}</div>
         <section class="sbl-sec"><header><h5>${t("Source")}</h5></header>
           <div class="sbl-kv"><div class="k">PDF</div><div><a href="${esc(pdfURL(S))}" target="_blank" rel="noopener">${esc(S.pdf)} ↗</a></div>
             ${host.internal() && !S.up ? `<div class="k">${t("Catalogue folder")}</div><div class="m">${esc(LIB_ROOT + S.cat)}</div>
             <div class="k">${t("Image file")}</div><div class="m">${esc(LIB_ROOT + "_IMAGE LIBRARY\\" + S.cat + "\\" + o.sup + "\\")}</div>` : ""}</div>
-          ${host.internal() ? `<div class="sbl-note"><code id="sbl-note">${esc(sourceNote(o)).replace(/\n/g, "<br>")}</code><div class="sbl-row" style="margin-top:0"><button class="btn sm" data-sbl="copy">${t("Copy source note")}</button><span class="mono" style="font-size:11.5px;color:var(--muted)">${zh() ? `PDF 从第 1 页打开；此图片在第 ${o.page} 页。` : `The PDF opens at page 1; this image is on page ${o.page}.`}</span></div></div>` : ""}
+          ${host.internal() ? `<div class="sbl-note"><code id="sbl-note">${esc(sourceNote(o)).replace(/\n/g, "<br>")}</code><div class="sbl-row" style="margin-top:0"><button class="btn sm" data-sbl="copy">${t("Copy source note")}</button><span class="mono" style="font-size:calc(11.5px + var(--fs-up,0px));color:var(--muted)">${zh() ? `PDF 从第 1 页打开；此图片在第 ${o.page} 页。` : `The PDF opens at page 1; this image is on page ${o.page}.`}</span></div></div>` : ""}
         </section>
         ${cur ? `<section class="sbl-sec"><header><h5>${t("Product type")}</h5></header>
           <label class="sbl-pick" style="margin-top:10px"><select id="sbl-type">${TYPES.filter(x => x[0] !== "U" || typeOf(o) === "U").map(([c]) => `<option value="${c}" ${typeOf(o) === c ? "selected" : ""}>${esc(typeName(c))}</option>`).join("")}</select></label>
@@ -419,9 +419,9 @@
   const CAT_ZH = { FURNITURE: "家具", LIGHTING: "灯具", PLUMBING: "卫浴", MILLWORK: "木作", DOORS: "门", STONE: "石材", "WALL PANELLING": "墙板", "WOOD PRODUCTS": "木制品", "PARTITION SYSTEMS": "隔断系统", SIGNAGE: "标识" };
   let scan = null, scanErr = ""; // progress text while a PDF is being scanned; why the last one stopped
   function addCatHTML() {
-    if (scan) return `<div class="sbl-addcat"><p style="color:var(--ink);font-size:14px">${esc(scan)}</p></div>`;
+    if (scan) return `<div class="sbl-addcat"><p style="color:var(--ink);font-size:calc(14px + var(--fs-up,0px))">${esc(scan)}</p></div>`;
     if (!ui.addcat) return `<button class="linkbtn" data-sbl="addcat">${t("Add a catalogue from a PDF")}</button>`;
-    return `<div class="sbl-addcat">${scanErr ? `<p style="color:var(--crit);font-size:14px">${esc(scanErr)}</p>` : ""}
+    return `<div class="sbl-addcat">${scanErr ? `<p style="color:var(--crit);font-size:calc(14px + var(--fs-up,0px))">${esc(scanErr)}</p>` : ""}
       <label>${t("PDF catalogue")}<input type="file" id="sbl-pdf" accept="application/pdf,.pdf"></label>
       <label>${t("Supplier")}<input id="sbl-supplier" autocomplete="off" placeholder="Billa"></label>
       <label>${t("Catalogue name (optional)")}<input id="sbl-product" autocomplete="off" placeholder="Sofa 2026"></label>

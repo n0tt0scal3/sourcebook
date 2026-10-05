@@ -2067,7 +2067,6 @@ function renderLayer(passive){
       <h2>${esc(it.name)}</h2>
       ${it.description?`<p class="lede">${esc(it.description)}</p>`:""}
       <div class="steps">${STAGES.map((s,i)=>`<button class="step ${i<si?"done":""} ${i===si?"cur":""}" data-status="${s}" ${ed?"":"disabled"}>${s}</button>`).join("")}</div>
-      ${HOSTED&&ME?reviewSection(it):""}
       <div class="facts">
         <div><span class="eyebrow">Quantity</span><b>${esc(qtyStr(it))}</b></div>
         <div><span class="eyebrow">Supplier</span><b>${esc(it.supplier||"—")}</b></div>

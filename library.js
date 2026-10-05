@@ -23,7 +23,7 @@
     "Show": "显示", "Add to project": "添加到项目", "Project": "项目", "Choose a project": "选择项目", "No projects to add to yet.": "暂无可添加的项目。", "Add": "添加",
     "The studio hasn't approved any products yet.": "工作室尚未批准任何产品。",
     "Previous": "上一个", "Next": "下一个", "← → to move between products · Space to approve": "← → 切换产品 · 按空格键批准", "Space to approve": "按空格键批准", "← → to move between products": "← → 切换产品",
-    "Add a catalogue from a PDF": "从 PDF 添加图册", "PDF catalogue": "PDF 图册", "Supplier": "供应商", "Catalogue name (optional)": "图册名称（可选）", "Category": "类别",
+    "Add a catalogue from a PDF": "从 PDF 添加图册", "PDF catalogue": "PDF 图册", "Drop the PDF here, or click to choose it": "将 PDF 拖到这里，或点击选择", "That isn't a PDF.": "这不是 PDF 文件。", "Supplier": "供应商", "Catalogue name (optional)": "图册名称（可选）", "Category": "类别",
     "Google Drive link to the PDF (optional)": "PDF 的 Google 云端硬盘链接（可选）", "Scan and add": "扫描并添加", "Cancel": "取消", "Delete this catalogue": "删除此图册",
     "Choose a PDF and enter the supplier.": "请选择 PDF 并填写供应商。", "Couldn't read that PDF.": "无法读取该 PDF。",
     "The PDF is scanned in this browser, so keep this tab open until it finishes. Photos in the PDF become library images named like the others (category_supplier_page_number) and start unapproved. Up to 300 MB and 2,000 pages.": "PDF 在此浏览器中扫描，请保持此标签页打开直到完成。PDF 中的照片会按与其他图片相同的方式命名（类别_供应商_页码_编号）成为图库图片，默认未批准。最大 300 MB、2000 页。",
@@ -110,7 +110,11 @@
 .sbl-addcat{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:14px 18px;align-items:end;padding:16px;background:var(--paper);border:1px solid var(--rule)}
 .sbl-addcat label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
 .sbl-addcat input:not([type=file]),.sbl-addcat select{font:inherit;font-size:15px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px;min-width:0}
-.sbl-addcat input[type=file]{font-size:13px;color:var(--ink);max-width:100%}
+.sbl-addcat input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.sbl-addcat .sbl-drop{grid-column:1/-1;position:relative;align-items:center;justify-content:center;text-align:center;gap:6px;min-height:96px;padding:18px;border:1.5px dashed var(--rule);cursor:pointer;color:var(--muted)}
+.sbl-drop b{font-weight:500;color:var(--ink);font-size:14px;word-break:break-all}
+.sbl-addcat.over .sbl-drop,.sbl-drop:hover,.sbl-drop:focus-within{border-color:var(--ink);color:var(--ink);background:var(--ground)}
+button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
 .sbl-addcat p{grid-column:1/-1;margin:0;font-size:12.5px;color:var(--muted)}
 .sbl-addcat .sbl-row{grid-column:1/-1;margin:0}
 .sbl-body{overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 22px) clamp(18px,4vw,48px) calc(env(safe-area-inset-bottom,0px) + 60px)}
@@ -422,7 +426,7 @@
     if (scan) return `<div class="sbl-addcat"><p style="color:var(--ink);font-size:14px">${esc(scan)}</p></div>`;
     if (!ui.addcat) return `<button class="linkbtn" data-sbl="addcat">${t("Add a catalogue from a PDF")}</button>`;
     return `<div class="sbl-addcat">${scanErr ? `<p style="color:var(--crit);font-size:14px">${esc(scanErr)}</p>` : ""}
-      <label>${t("PDF catalogue")}<input type="file" id="sbl-pdf" accept="application/pdf,.pdf"></label>
+      <label class="sbl-drop">${t("PDF catalogue")}<span>${t("Drop the PDF here, or click to choose it")}</span><b id="sbl-pdfname"></b><input type="file" id="sbl-pdf" accept="application/pdf,.pdf"></label>
       <label>${t("Supplier")}<input id="sbl-supplier" autocomplete="off" placeholder="Billa"></label>
       <label>${t("Catalogue name (optional)")}<input id="sbl-product" autocomplete="off" placeholder="Sofa 2026"></label>
       <label>${t("Category")}<select id="sbl-cat">${CATS.map(c => `<option value="${c}">${zh() ? CAT_ZH[c] : c[0] + c.slice(1).toLowerCase()}</option>`).join("")}</select></label>
@@ -647,11 +651,24 @@
     const el = e.target;
     if (el.id === "sbl-target") { ui.target = el.value; host.layer(); return; }
     if (el.id === "sbl-type" && curating()) { const o = LIB && LIB.items[ui.open]; if (o) { setType([o], el.value); host.toast(zh() ? `已移至「${typeName(el.value)}」` : `Moved to ${typeName(el.value)}`); } return; }
+    if (el.id === "sbl-pdf") { pdfName(); return; }
     if (el.id === "sbl-up") { const f = [...el.files]; el.value = ""; upload(f); return; }
     if (!(el.dataset && el.dataset.sblkeep !== undefined) || !LIB || !curating()) return;
     const o = LIB.items[+el.dataset.sblkeep]; if (!o) return;
     setOn(o.sup, [o.key], el.checked); el.closest(".sbl-tile")?.classList.toggle("off", !el.checked);
     const c = $("#sbl-cats"); if (c) c.innerHTML = catsHTML(); const k = $("#sbl-kept"); if (k) k.textContent = nf(approved());
+  });
+  // Drag a PDF onto the add form (or the link that opens it) instead of choosing it.
+  const pdfName = () => { const f = $("#sbl-pdf") && $("#sbl-pdf").files[0], b = $("#sbl-pdfname"); if (b) b.textContent = f ? f.name : ""; };
+  const dropZone = e => !scan && curating() && e.dataTransfer && [...e.dataTransfer.types].includes("Files") && e.target.closest && e.target.closest(".sbl-addcat,[data-sbl=addcat]");
+  document.addEventListener("dragover", e => { const z = dropZone(e); if (!z) return; e.preventDefault(); e.dataTransfer.dropEffect = "copy"; z.classList.add("over"); });
+  document.addEventListener("dragleave", e => { const z = dropZone(e); if (z && !z.contains(e.relatedTarget)) z.classList.remove("over"); });
+  document.addEventListener("drop", e => {
+    const z = dropZone(e); if (!z) return; e.preventDefault(); z.classList.remove("over");
+    const f = [...e.dataTransfer.files].find(f => f.type === "application/pdf" || /\.pdf$/i.test(f.name));
+    if (!f) { host.toast(t("That isn't a PDF.")); return; }
+    if (!ui.addcat) { ui.addcat = true; addLine(); }
+    const inp = $("#sbl-pdf"); if (!inp) return; const dt = new DataTransfer(); dt.items.add(f); inp.files = dt.files; pdfName();
   });
   document.addEventListener("input", e => { if (e.target.id === "sbl-q" && LIB) { ui.q = e.target.value; ui.n = 120; clearTimeout(qT); qT = setTimeout(() => { const g = $("#sbl-grid"); if (g) g.innerHTML = gridHTML(); }, 140); } });
   document.addEventListener("keydown", e => {

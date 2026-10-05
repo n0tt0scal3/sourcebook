@@ -86,9 +86,10 @@ You can also drop PDFs and images straight onto a piece's **Drawings & reference
 
 Images scanned from the supplier catalogues in `G:\My Drive\LMNL\90 CHINA PRODUCTS\` (Furniture so far: 7 catalogues, 3,218 images). Each image is named `CATEGORY_Supplier_pPAGE_NN.jpg` and keeps its source PDF and page.
 
-- **Curate** on the dashboard's **Sourcing library** tab: untick images you don't want offered to projects (one at a time, a whole page, or everything shown). Curation is studio-wide and saved on the server as `library/<catalogue>` = `{ off: [removed keys] }`, where key = page × 100 + image number.
-- **Use** it in a project's **Sourcing library** tab, which shows only kept images. **Add to project** creates a piece with the photo, product code, the source PDF as a spec sheet and a `libSource` field.
-- Files: `library.js` (the tab, shared by dashboard and projects), `lib/data.json` (index) and `lib/sprites/` (thumbnail sheets). Clients don't see the library.
+- **Approve** on the dashboard's **Sourcing library** tab (admins only): tick images to approve them, one at a time, a whole page, or everything shown. Nothing is shown to anyone else until it's approved. Approvals are studio-wide and saved on the server as `library/<catalogue>` = `{ on: [approved keys] }`, where key = page × 100 + image number.
+- **Use** it from the dashboard tab or a project's **Sourcing library** tab. Everyone, clients included, sees approved images and can add one to a project they can open. The server builds the piece (photo, product code, the source PDF as a spec sheet and a `libSource` field) and refuses images that aren't approved. Clients don't see the internal Drive folder paths.
+- **Full-size images**: the thumbnails come from `lib/sprites/` (280 px). An admin can upload the catalogue zips from Drive (`_IMAGE LIBRARY\FURNITURE\…zip`) with **Upload zips** on the dashboard's Sourcing library tab. The browser unzips them, matches images by file name, scales anything over 2400 px down, and saves them on the data disk in `lib-full/`. Opening an image then shows the full-size version (click it for full screen), and pieces added from it get a 1600 px photo. Images without a full-size copy fall back to the thumbnail. They aren't part of `/api/export`; re-upload the zips if the disk is ever replaced.
+- Files: `library.js` (the tab, shared by dashboard and projects), `lib/data.json` (index) and `lib/sprites/` (thumbnail sheets).
 
 ## Editing the project book
 

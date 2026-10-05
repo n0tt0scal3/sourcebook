@@ -21,6 +21,17 @@ const FLAT_PUBLIC = PUBLIC_DIR === __dirname;
 const PUBLIC_FILES = new Set(["index.html", "dashboard.html", "admin.html", "claude-shim.js", "library.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"]);
 // Sourcing library: lib/data.json (index) and lib/sprites/ (thumbnail sheets), next to the app files.
 const LIB_DIR = exists(path.join(PUBLIC_DIR, "lib", "data.json")) ? path.join(PUBLIC_DIR, "lib") : path.join(__dirname, "lib");
+// Full-size library images, uploaded by an admin from the Drive zips, live on the data disk.
+const LIB_FULL_DIR = path.join(DATA_DIR, "lib-full");
+// The library index, read once and kept in memory for building pieces on the server.
+const LIB_LABEL = { "BILLA-Sofa": ["Billa", "Sofas & lounge chairs"], "BILLA-CoffeeTV": ["Billa", "Coffee tables & TV units"], "BILLA-Dining": ["Billa", "Dining"], "BILLA-Outdoor": ["Billa", "Outdoor"], "HALO": ["HALO", "Collection 2026"], "Kaiwuli": ["Kaiwuli", "Catalogue 2026"], "TO-Tearsheet": ["TO Interactive", "Tearsheets 2025"] };
+const LIB_CAT = { FURNITURE: "Furniture", LIGHTING: "Lighting", PLUMBING: "Plumbing", MILLWORK: "Millwork", DOORS: "Millwork", STONE: "Stone", "WALL PANELLING": "Finishes", "WOOD PRODUCTS": "Finishes", "PARTITION SYSTEMS": "Glazing", SIGNAGE: "Hardware" };
+let libCache = null;
+async function libIndex() {
+  if (libCache) return libCache;
+  try { const d = JSON.parse(await fsp.readFile(path.join(LIB_DIR, "data.json"), "utf8")); libCache = { sups: d.sups, byFile: new Map(d.items.map(x => [x[0], x])) }; } catch (_) { return null; }
+  return libCache;
+}
 const SEED_DIR = exists(path.join(__dirname, "seed", "db.json")) ? path.join(__dirname, "seed") : exists(path.join(__dirname, "db.json")) ? __dirname : path.join(__dirname, "seed");
 // Tolerate stray spaces or quote marks pasted into the Render setting.
 const APP_PASSWORD = String(process.env.APP_PASSWORD || "").trim().replace(/^(["'])(.*)\1$/, "$2").trim();
@@ -37,6 +48,7 @@ const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/g
   "video/mp4", "video/webm", "text/csv", "text/plain", "text/markdown", "application/json", "model/gltf-binary", "model/vnd.usdz+zip"]);
 
 fs.mkdirSync(BLOB_DIR, { recursive: true });
+fs.mkdirSync(LIB_FULL_DIR, { recursive: true });
 
 // Recognise a stored file's type from its first bytes (used when no metadata file exists).
 function sniffType(file) {
@@ -229,9 +241,9 @@ function currentUser(req) {
 }
 const projectOf = p => { const m = /^projects\/([^/]+)/.exec(p || ""); return m ? m[1] : null; };
 function canSeeProject(u, id) { return allAccess(u) || (u.projects || []).includes(id); }
-// The sourcing library (library/<catalogue>) is studio-wide: everyone except clients can see and curate it.
+// The sourcing library (library/<catalogue>) is studio-wide: everyone can see what's approved; only admins approve.
 const isLibPath = p => /^library(\/|$)/.test(p || "");
-function canRead(u, p) { if (isLibPath(p)) return u.role !== "client"; if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
+function canRead(u, p) { if (isLibPath(p)) return true; if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
 // Internal fields a client never receives.
 const CLIENT_HIDDEN = ["notes", "match", "pendingSetup"];
 function forUser(u, p, data) {
@@ -587,6 +599,7 @@ const server = http.createServer(async (req, res) => {
       const op = p.slice(8);
       const { path: dp, data } = await readJSON(req);
       if (!validPath(dp, true)) return send(res, 400, { code: "invalid_argument", message: "bad path" });
+      if (isLibPath(dp) && !isAdmin) return deny("Only admins can approve library images.");
       const cur = store[dp];
       const commit = (next) => {
         store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: new Date().toISOString() };
@@ -644,26 +657,94 @@ const server = http.createServer(async (req, res) => {
       return send(res, 404, { code: "not_found" });
     }
 
-    // sourcing library: catalogue index, thumbnail sheets and studio-wide curation
+    // sourcing library: catalogue index, thumbnail sheets, approvals and adding a piece
     const lm = p.match(/^\/lib\/(data\.json|sprites\/s\d{3}\.jpg)$/);
     if (lm && req.method === "GET") {
-      if (isClient) return deny();
       try { return send(res, 200, await fsp.readFile(path.join(LIB_DIR, lm[1])), { "Content-Type": lm[1].endsWith(".json") ? "application/json" : "image/jpeg", "Cache-Control": "private, max-age=86400" }); } catch (_) { return send(res, 404, "Not found"); }
     }
+    const fm = p.match(/^\/(?:lib|api\/library)\/full\/([A-Za-z0-9_.-]+\.jpg)$/);
+    if (fm) {
+      // GET /lib/full/<file>: the full-size image (any signed-in user). PUT /api/library/full/<file>: an admin uploads one.
+      const lib = await libIndex(); if (!lib || !lib.byFile.has(fm[1])) return send(res, 404, "Not found");
+      const fp = path.join(LIB_FULL_DIR, fm[1]);
+      if (req.method === "GET" && p.startsWith("/lib/")) {
+        try { return send(res, 200, await fsp.readFile(fp), { "Content-Type": "image/jpeg", "Cache-Control": "private, max-age=604800" }); } catch (_) { return send(res, 404, "Not found"); }
+      }
+      if (req.method === "PUT" && p.startsWith("/api/")) {
+        if (!isAdmin) return deny("Only admins can upload library images.");
+        const buf = await readBody(req, 12 * 1024 * 1024);
+        if (!buf.length || sniffBuf(buf) !== "image/jpeg") return send(res, 400, { code: "invalid_argument", message: "That isn't a JPEG." });
+        await fsp.writeFile(fp + ".tmp", buf); await fsp.rename(fp + ".tmp", fp);
+        return send(res, 200, { ok: true });
+      }
+    }
+    if (p === "/api/library/full" && req.method === "GET") {
+      // Which library images have a full-size copy: { files: [...] }
+      const lib = await libIndex();
+      const files = (await fsp.readdir(LIB_FULL_DIR).catch(() => [])).filter(f => lib && lib.byFile.has(f));
+      return send(res, 200, { files });
+    }
     if (p === "/api/library/set" && req.method === "POST") {
-      // { sup, keys: [page*100 + image number], off: true|false } adds or removes keys from library/<sup>.off
-      if (isClient) return deny();
+      // { sup, keys: [page*100 + image number], on: true|false } approves or unapproves images in library/<sup>.on
+      if (!isAdmin) return deny("Only admins can approve library images.");
       const b = await readJSON(req);
       const dp = "library/" + b.sup;
       if (typeof b.sup !== "string" || !validPath(dp, true) || !Array.isArray(b.keys) || b.keys.length > 5000) return send(res, 400, { code: "invalid_argument" });
       const keys = b.keys.map(Number).filter(k => Number.isInteger(k) && k >= 0 && k < 1e7);
       const cur = store[dp];
-      const set = new Set((cur?.data?.off || []).map(Number));
-      keys.forEach(k => (b.off ? set.add(k) : set.delete(k)));
-      const next = { ...(cur?.data || {}), off: [...set].sort((x, y) => x - y), updated: new Date().toISOString(), by: me.name || "" };
+      const set = new Set((cur?.data?.on || []).map(Number));
+      keys.forEach(k => (b.on ? set.add(k) : set.delete(k)));
+      const next = { on: [...set].sort((x, y) => x - y), updated: new Date().toISOString(), by: me.name || "" };
       store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
       persist(); broadcast({ path: dp, exists: true, data: next });
-      return send(res, 200, { ok: true, off: next.off.length });
+      return send(res, 200, { ok: true, on: next.on.length });
+    }
+    if (p === "/api/library/add" && req.method === "POST") {
+      // { project, file, photo?: base64 JPEG, prefix?: "SF" } adds an approved library image to a project as a piece.
+      // Built here from the catalogue index so clients (who can't otherwise create pieces) can add them too.
+      const b = await readJSON(req, 4 * 1024 * 1024);
+      const pid = String(b.project || "");
+      if (!validPath("projects/" + pid, true) || !store["projects/" + pid]) return send(res, 404, { code: "not_found", message: "That project no longer exists." });
+      if (!canSeeProject(me, pid)) return deny("You can't add to that project.");
+      const lib = await libIndex();
+      const it = lib && lib.byFile.get(String(b.file || ""));
+      if (!it) return send(res, 400, { code: "invalid_argument", message: "That image isn't in the library." });
+      const [file, sup, page, codesStr, text] = it; const S = lib.sups[sup] || {};
+      const m = file.match(/_p(\d+)_(\d+)\.jpg$/); const key = m ? Number(m[1]) * 100 + Number(m[2]) : -1;
+      if (!isAdmin && !(store["library/" + sup]?.data?.on || []).includes(key)) return deny("That image hasn't been approved yet.");
+      const pre = `projects/${pid}/items/`;
+      const items = Object.entries(store).filter(([k]) => k.startsWith(pre) && k.split("/").length === 4).map(([, v]) => v.data);
+      const dup = Object.entries(store).find(([k, v]) => k.startsWith(pre) && v.data?.libSource?.file === file);
+      if (dup) return send(res, 200, { ok: true, id: dup[0].split("/")[3], code: dup[1].data.code, existing: true });
+      const L = LIB_LABEL[sup] || [sup, ""];
+      const category = LIB_CAT[S.cat] || "Finishes";
+      const t0 = String(text || "");
+      const zhPrefix = /沙发/.test(t0) ? "SF" : /(休闲椅|躺椅)/.test(t0) ? "LC" : /凳/.test(t0) ? "STL" : /椅/.test(t0) ? "CH" : /(茶几|餐台|餐桌|桌|几)/.test(t0) ? "TB" : /(柜|架)/.test(t0) ? "CR" : /床/.test(t0) ? "BD" : null;
+      const prefix = zhPrefix || (/^[A-Z]{1,5}$/.test(b.prefix || "") ? b.prefix : category === "Furniture" ? "F" : "M");
+      const used = new Set(items.map(x => String(x.code || "").toUpperCase().match(/^([A-Z]+)-?(\d+)/)).filter(x => x && x[1] === prefix).map(x => Number(x[2])));
+      let n = 1; while (used.has(n)) n++;
+      const code = `${prefix}-${n}`;
+      let photo = null;
+      if (typeof b.photo === "string" && b.photo.length < 3e6) {
+        const buf = Buffer.from(b.photo, "base64");
+        if (buf.length && sniffBuf(buf) === "image/jpeg") {
+          photo = crypto.randomBytes(16).toString("hex");
+          await fsp.writeFile(path.join(BLOB_DIR, photo), buf);
+          await fsp.writeFile(path.join(BLOB_DIR, photo + ".json"), JSON.stringify({ contentType: "image/jpeg", sizeBytes: buf.length, createdAt: new Date().toISOString(), source: "library:" + file }));
+        }
+      }
+      const codes = String(codesStr || "").split(" ").filter(Boolean);
+      const drive = S.drive ? `https://drive.google.com/file/d/${S.drive}/view` : null;
+      const doc = { specs: [], photo, photoFit: "contain", name: codes[0] ? `${codes[0]} · ${L[0]}` : `${L[0]} ${L[1]} · p${page}`.trim(), description: L[1] ? `${L[0]} ${L[1]}` : "",
+        category, supplier: L[0], product: L[1] || "", modelCode: codes[0] || "", zone: "", ...(category === "Furniture" ? { furnType: prefix } : {}),
+        code, qty: null, unit: "ea", leadWeeks: null, needBy: null, unitCost: null, status: "Concept", material: "wood", color: "#C9C3B8",
+        notes: `From the sourcing library: ${file}`, refs: [{ kind: "Spec sheet", no: "p." + page, title: S.pdf || "", url: drive, asset: null }],
+        libSource: { file, sup, page, pdf: S.pdf || "", drive: S.drive || "" }, created: new Date().toISOString(), source: "Sourcing library", addedBy: { id: me.id, name: me.name || "", role: me.role } };
+      const id = crypto.randomBytes(10).toString("hex");
+      const dp = pre + id;
+      store[dp] = { data: doc, version: 1, updatedAt: doc.created };
+      persist(); broadcast({ path: dp, exists: true, data: doc });
+      return send(res, 200, { ok: true, id, code });
     }
 
     // find products online

@@ -21,6 +21,8 @@ const FLAT_PUBLIC = PUBLIC_DIR === __dirname;
 const PUBLIC_FILES = new Set(["index.html", "dashboard.html", "admin.html", "claude-shim.js", "library.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"]);
 // Sourcing library: lib/data.json (index) and lib/sprites/ (thumbnail sheets), next to the app files.
 const LIB_DIR = exists(path.join(PUBLIC_DIR, "lib", "data.json")) ? path.join(PUBLIC_DIR, "lib") : path.join(__dirname, "lib");
+// Full-size library images, uploaded by an admin from the Drive zips, live on the data disk.
+const LIB_FULL_DIR = path.join(DATA_DIR, "lib-full");
 // The library index, read once and kept in memory for building pieces on the server.
 const LIB_LABEL = { "BILLA-Sofa": ["Billa", "Sofas & lounge chairs"], "BILLA-CoffeeTV": ["Billa", "Coffee tables & TV units"], "BILLA-Dining": ["Billa", "Dining"], "BILLA-Outdoor": ["Billa", "Outdoor"], "HALO": ["HALO", "Collection 2026"], "Kaiwuli": ["Kaiwuli", "Catalogue 2026"], "TO-Tearsheet": ["TO Interactive", "Tearsheets 2025"] };
 const LIB_CAT = { FURNITURE: "Furniture", LIGHTING: "Lighting", PLUMBING: "Plumbing", MILLWORK: "Millwork", DOORS: "Millwork", STONE: "Stone", "WALL PANELLING": "Finishes", "WOOD PRODUCTS": "Finishes", "PARTITION SYSTEMS": "Glazing", SIGNAGE: "Hardware" };
@@ -46,6 +48,7 @@ const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/g
   "video/mp4", "video/webm", "text/csv", "text/plain", "text/markdown", "application/json", "model/gltf-binary", "model/vnd.usdz+zip"]);
 
 fs.mkdirSync(BLOB_DIR, { recursive: true });
+fs.mkdirSync(LIB_FULL_DIR, { recursive: true });
 
 // Recognise a stored file's type from its first bytes (used when no metadata file exists).
 function sniffType(file) {
@@ -658,6 +661,28 @@ const server = http.createServer(async (req, res) => {
     const lm = p.match(/^\/lib\/(data\.json|sprites\/s\d{3}\.jpg)$/);
     if (lm && req.method === "GET") {
       try { return send(res, 200, await fsp.readFile(path.join(LIB_DIR, lm[1])), { "Content-Type": lm[1].endsWith(".json") ? "application/json" : "image/jpeg", "Cache-Control": "private, max-age=86400" }); } catch (_) { return send(res, 404, "Not found"); }
+    }
+    const fm = p.match(/^\/(?:lib|api\/library)\/full\/([A-Za-z0-9_.-]+\.jpg)$/);
+    if (fm) {
+      // GET /lib/full/<file>: the full-size image (any signed-in user). PUT /api/library/full/<file>: an admin uploads one.
+      const lib = await libIndex(); if (!lib || !lib.byFile.has(fm[1])) return send(res, 404, "Not found");
+      const fp = path.join(LIB_FULL_DIR, fm[1]);
+      if (req.method === "GET" && p.startsWith("/lib/")) {
+        try { return send(res, 200, await fsp.readFile(fp), { "Content-Type": "image/jpeg", "Cache-Control": "private, max-age=604800" }); } catch (_) { return send(res, 404, "Not found"); }
+      }
+      if (req.method === "PUT" && p.startsWith("/api/")) {
+        if (!isAdmin) return deny("Only admins can upload library images.");
+        const buf = await readBody(req, 12 * 1024 * 1024);
+        if (!buf.length || sniffBuf(buf) !== "image/jpeg") return send(res, 400, { code: "invalid_argument", message: "That isn't a JPEG." });
+        await fsp.writeFile(fp + ".tmp", buf); await fsp.rename(fp + ".tmp", fp);
+        return send(res, 200, { ok: true });
+      }
+    }
+    if (p === "/api/library/full" && req.method === "GET") {
+      // Which library images have a full-size copy: { files: [...] }
+      const lib = await libIndex();
+      const files = (await fsp.readdir(LIB_FULL_DIR).catch(() => [])).filter(f => lib && lib.byFile.has(f));
+      return send(res, 200, { files });
     }
     if (p === "/api/library/set" && req.method === "POST") {
       // { sup, keys: [page*100 + image number], on: true|false } approves or unapproves images in library/<sup>.on

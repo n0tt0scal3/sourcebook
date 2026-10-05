@@ -22,6 +22,8 @@
     "Couldn't add it. Try again.": "无法添加，请重试。", "Approved. Untick to hide it.": "已批准，取消勾选以隐藏。", "Not approved. Tick to approve.": "未批准，勾选以批准。", "Selected. Press Ctrl+C to copy.": "已选中，按 Ctrl+C 复制。",
     "Show": "显示", "Add to project": "添加到项目", "Project": "项目", "Choose a project": "选择项目", "No projects to add to yet.": "暂无可添加的项目。", "Add": "添加",
     "The studio hasn't approved any products yet.": "工作室尚未批准任何产品。",
+    "Full-size images": "高清大图", "Upload zips": "上传压缩包", "Uploading…": "正在上传…", "Click to see it full screen": "点击全屏查看",
+    "Choose the catalogue zips from Google Drive (or the JPEGs inside them). Images are matched to the library by file name.": "选择 Google 云端硬盘中的图册压缩包（或其中的 JPEG 图片）。图片按文件名与图库匹配。",
   };
   const lang = () => { try { return localStorage.getItem("sb_lang") === "zh" ? "zh" : "en"; } catch (_) { return "en"; } };
   const t = s => (lang() === "zh" ? ZH[s] ?? s : s);
@@ -75,6 +77,17 @@
 .sbl-sheet{position:fixed;inset:0;z-index:21;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);background:var(--paper);color:var(--ink)}
 .sbl-hero{background:#fff;display:flex;align-items:center;justify-content:center;padding:clamp(16px,4vw,48px);min-height:0}
 .sbl-hero .sbl-sw{width:min(100%,560px);border:0}
+.sbl-sheet.big{grid-template-columns:minmax(0,1fr) minmax(min(380px,40vw),32vw)}
+.sbl-hero.big{padding:clamp(8px,2vw,24px);position:relative}
+.sbl-hero.big .sbl-sw{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+.sbl-hero.loaded .sbl-sw{visibility:hidden}
+.sbl-zoom{position:relative;display:block;width:100%;height:100%;padding:0;border:0;background:none;cursor:zoom-in}
+.sbl-big{display:block;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .25s}
+.sbl-hero.loaded .sbl-big{opacity:1}
+.sbl-zoomview{position:fixed;inset:0;z-index:22;background:#fff;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+.sbl-zoomview img{max-width:100%;max-height:100%;object-fit:contain}
+.sbl-full{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;grid-column:1/-1;font-size:13px;color:var(--ink2)}
+.sbl-full .mono{font-size:12px;color:var(--muted)}
 .sbl-body{overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 22px) clamp(18px,4vw,48px) calc(env(safe-area-inset-bottom,0px) + 60px)}
 .sbl-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .sbl-x{background:none;border:1px solid var(--rule);width:38px;height:38px;border-radius:50%;font-size:18px;line-height:1;color:var(--ink);cursor:pointer}
@@ -99,13 +112,13 @@
 .sbl-pick{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted);min-width:min(100%,260px)}
 .sbl-pick select{font:inherit;font-size:15px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px}
 .sbl-excerpt{margin:16px 0 0;color:var(--muted);font-size:13px;max-width:65ch}
-@media (max-width:900px){.sbl-sheet{grid-template-columns:1fr;grid-template-rows:38vh 1fr}}
+@media (max-width:900px){.sbl-sheet,.sbl-sheet.big{grid-template-columns:1fr;grid-template-rows:38vh 1fr}.sbl-sheet.big{grid-template-rows:52vh 1fr}}
 @media (max-width:760px){.sbl-head{grid-template-columns:1fr}.sbl-stat{border-left:0}.sbl-stat div:first-child{padding-left:0}.sbl-tools{position:static}.sbl-cats{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px}.sbl-name{font-size:16px}.sbl-cat .sbl-all{font-size:18px}.sbl-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.sbl-facts{grid-template-columns:1fr 1fr}}
 `;
   const style = document.createElement("style"); style.textContent = CSS; document.head.appendChild(style);
 
-  let LIB = null, libP = null, on = {}, watching = false, qT = null;
-  const ui = { sup: null, q: "", show: null, n: 120, open: null, adding: false, target: "" };
+  let LIB = null, libP = null, on = {}, watching = false, qT = null, full = new Set(), up = null;
+  const ui = { sup: null, q: "", show: null, n: 120, open: null, adding: false, target: "", zoom: false };
   // host.ctx: "studio" (dashboard) or "project". canEdit: may approve (admins, on the dashboard).
   // project(): this project's id (project ctx). projects(): [{id, name}] to add to (studio ctx).
   let host = { ctx: "studio", internal: () => true, canEdit: () => false, canAdd: () => false, project: () => null, projectName: () => "", projects: () => [], inProject: () => new Map(), prefix: null, added: null, openPiece: () => {}, layer: () => {}, toast: m => console.log(m), toastUndo: m => console.log(m) };
@@ -130,9 +143,13 @@
     j.docs.forEach(d => { next[d.id] = new Set((d.data.on || []).map(Number)); });
     on = next; repaint();
   }
+  async function fetchFull() {
+    const r = await fetch("/api/library/full"); if (!r.ok) return;
+    full = new Set((await r.json()).files || []); fullLine(); if (ui.open != null) host.layer();
+  }
   function watch() {
     if (watching) return; watching = true;
-    fetchOn().catch(() => {});
+    fetchOn().catch(() => {}); fetchFull().catch(() => {});
     try {
       const es = new EventSource("/api/events");
       es.onmessage = e => { try { const m = JSON.parse(e.data); if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); } catch (_) {} };
@@ -169,7 +186,8 @@
     return `<div id="sblib"><section class="sbl-head"><div><span class="eyebrow">${zh() ? `90 中国产品 · ${esc(cats.map(c => ({ Furniture: "家具", Lighting: "灯具", Doors: "门", Millwork: "木作", Stone: "石材", Signage: "标识" })[c] || c).join("、"))}` : `90 China Products · ${esc(cats.join(", "))}`}</span>
       ${host.ctx === "project" ? `<h2>${t("Sourcing library")}</h2>` : ""}
       <p>${t(lede)}</p></div>
-      <div class="sbl-stat"><div><span class="eyebrow">${t("Approved")}</span><b id="sbl-kept">${nf(a)}</b></div>${cur ? `<div><span class="eyebrow">${t("Scanned")}</span><b>${nf(tot)}</b></div>` : ""}${host.ctx === "project" ? `<div><span class="eyebrow">${t("In this project")}</span><b>${host.inProject().size}</b></div>` : ""}</div></section>
+      <div class="sbl-stat"><div><span class="eyebrow">${t("Approved")}</span><b id="sbl-kept">${nf(a)}</b></div>${cur ? `<div><span class="eyebrow">${t("Scanned")}</span><b>${nf(tot)}</b></div>` : ""}${host.ctx === "project" ? `<div><span class="eyebrow">${t("In this project")}</span><b>${host.inProject().size}</b></div>` : ""}</div>
+      ${cur ? `<div class="sbl-full" id="sbl-full">${fullHTML()}</div>` : ""}</section>
     <div class="sbl-cats" id="sbl-cats">${catsHTML()}</div>
     <div class="sbl-tools"><input class="sbl-q" type="search" id="sbl-q" value="${esc(ui.q)}" placeholder="${esc(t("Search a code, product or page, e.g. AA01, Ampleforth, p44"))}" autocomplete="off" aria-label="${esc(t("Sourcing library"))}">
       ${cur ? `<span class="sbl-seg" role="group" aria-label="${t("Show")}">${[["on", "Approved"], ["off", "Not approved"], ["all", "All"]].map(([v, l]) => `<button class="chip" data-sblshow="${v}" aria-pressed="${show === v}">${t(l)}</button>`).join("")}</span>` : ""}
@@ -251,8 +269,9 @@
     const S = LIB.sups[o.sup], L = label(o.sup), x = isOn(o), cur = curating();
     document.body.style.overflow = "hidden";
     return `<div class="sbl-scrim" data-sbl="close"></div>
-    <section class="sbl-sheet" role="dialog" aria-modal="true" aria-label="${esc(o.file)}">
-      <div class="sbl-hero"><span class="sbl-sw" ${sprite(o)}></span></div>
+    <section class="sbl-sheet${full.has(o.file) ? " big" : ""}" role="dialog" aria-modal="true" aria-label="${esc(o.file)}">
+      ${full.has(o.file) ? `<div class="sbl-hero big"><button class="sbl-zoom" data-sbl="zoom" title="${t("Click to see it full screen")}"><span class="sbl-sw" ${sprite(o)}></span><img class="sbl-big" src="/lib/full/${esc(o.file)}" alt="${esc(o.file)}"></button></div>`
+        : `<div class="sbl-hero"><span class="sbl-sw" ${sprite(o)}></span></div>`}
       <div class="sbl-body">
         <div class="sbl-top"><span class="eyebrow">${t("Sourcing library")} · ${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""}</span><button class="sbl-x" data-sbl="close" aria-label="${t("Close")}">×</button></div>
         <h2>${esc(name(o))}</h2>
@@ -274,9 +293,10 @@
           <p class="sbl-hint">${t("Approved images are shown to everyone, clients included. Unapproving hides it again; pieces already added to projects stay.")}</p>
         </section>` : ""}
         ${o.text ? `<p class="sbl-excerpt">${zh() ? "页面文字：" : "Text on the page: "}${esc(o.text.slice(0, 220))}${o.text.length > 220 ? "…" : ""}</p>` : ""}
-      </div></section>`;
+      </div></section>
+    ${ui.zoom && full.has(o.file) ? `<div class="sbl-zoomview" data-sbl="unzoom" role="dialog" aria-label="${esc(o.file)}"><img src="/lib/full/${esc(o.file)}" alt="${esc(o.file)}"></div>` : ""}`;
   }
-  function close() { if (ui.open == null) return; ui.open = null; ui.adding = false; document.body.style.overflow = ""; host.layer(); }
+  function close() { if (ui.open == null) return; ui.open = null; ui.adding = false; ui.zoom = false; document.body.style.overflow = ""; host.layer(); }
 
   // Cut one image out of its thumbnail sheet, for the piece's photo (JPEG, base64).
   async function crop(o) {
@@ -285,13 +305,23 @@
     cv.getContext("2d").drawImage(im, (o.k % g) * c, Math.floor(o.k / g) * c, c, c, 0, 0, c, c);
     return cv.toDataURL("image/jpeg", .9).split(",")[1];
   }
+  // The full-size image, scaled to at most 1600px, for the piece's photo.
+  async function bigPhoto(o) {
+    const b = await createImageBitmap(await (await fetch(`/lib/full/${encodeURIComponent(o.file)}`)).blob());
+    const sc = Math.min(1, 1600 / Math.max(b.width, b.height)); const cv = document.createElement("canvas");
+    cv.width = Math.round(b.width * sc); cv.height = Math.round(b.height * sc);
+    const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(b, 0, 0, cv.width, cv.height);
+    return cv.toDataURL("image/jpeg", .86).split(",")[1];
+  }
   // The server builds the piece from the catalogue index, so clients can add pieces too.
   async function add() {
     const o = LIB && LIB.items[ui.open]; if (!o || ui.adding) return;
     const project = host.ctx === "project" ? host.project() : ui.target; if (!project) return;
     ui.adding = true; host.layer();
     try {
-      let photo = null; try { photo = await crop(o); } catch (_) {}
+      let photo = null;
+      if (full.has(o.file)) try { photo = await bigPhoto(o); } catch (_) {}
+      if (!photo) try { photo = await crop(o); } catch (_) {}
       const prefix = host.prefix ? host.prefix(o, label(o.sup)[1]) : null;
       const r = await fetch("/api/library/add", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ project, file: o.file, photo, prefix }) });
       const j = await r.json().catch(() => ({}));
@@ -302,6 +332,73 @@
       rerender();
     } catch (e) { ui.adding = false; host.layer(); host.toast(e.code === "forbidden" || e.code === "invalid_argument" ? e.message : t("Couldn't add it. Try again.")); }
   }
+
+  // Admins upload the full-size images: the catalogue zips from Drive, or the JPEGs inside them.
+  function fullHTML() {
+    const n = LIB ? LIB.items.filter(o => full.has(o.file)).length : full.size, tot = LIB ? LIB.items.length : 0;
+    return `<span>${t("Full-size images")}: <b>${nf(n)}</b> / ${nf(tot)}</span>
+      ${up ? `<span class="mono">${esc(up)}</span>` : `<label class="linkbtn" style="cursor:pointer">${t("Upload zips")}<input type="file" id="sbl-up" accept=".zip,.jpg,.jpeg" multiple hidden></label>`}
+      ${up ? "" : `<span class="mono">${t("Choose the catalogue zips from Google Drive (or the JPEGs inside them). Images are matched to the library by file name.")}</span>`}`;
+  }
+  function fullLine() { const el = $("#sbl-full"); if (el) el.innerHTML = fullHTML(); }
+  // Lists a zip's files without loading it all: [{name, get() -> Blob}]. Stored and deflated entries only.
+  async function unzip(file) {
+    const tail = new DataView(await file.slice(Math.max(0, file.size - 66000)).arrayBuffer());
+    let e = -1; for (let i = tail.byteLength - 22; i >= 0; i--) if (tail.getUint32(i, true) === 0x06054b50) { e = i; break; }
+    if (e < 0) throw new Error("zip");
+    const cdSize = tail.getUint32(e + 12, true), cdOff = tail.getUint32(e + 16, true);
+    const cd = new DataView(await file.slice(cdOff, cdOff + cdSize).arrayBuffer()); const out = [];
+    for (let i = 0; i + 46 <= cd.byteLength && cd.getUint32(i, true) === 0x02014b50;) {
+      const method = cd.getUint16(i + 10, true), csize = cd.getUint32(i + 20, true), nl = cd.getUint16(i + 28, true), xl = cd.getUint16(i + 30, true), cl = cd.getUint16(i + 32, true), off = cd.getUint32(i + 42, true);
+      const name = new TextDecoder().decode(new Uint8Array(cd.buffer, i + 46, nl));
+      out.push({ name: name.split(/[\\/]/).pop(), get: async () => {
+        const h = new DataView(await file.slice(off, off + 30).arrayBuffer()); const start = off + 30 + h.getUint16(26, true) + h.getUint16(28, true);
+        const raw = file.slice(start, start + csize);
+        if (method === 0) return raw;
+        if (method !== 8) throw new Error("method");
+        return new Response(raw.stream().pipeThrough(new DecompressionStream("deflate-raw"))).blob();
+      } });
+      i += 46 + nl + xl + cl;
+    }
+    return out;
+  }
+  // Very large originals are scaled to 2400px on the long side; anything smaller is uploaded as it is.
+  async function shrink(blob) {
+    const b = await createImageBitmap(blob); const m = Math.max(b.width, b.height);
+    if (m <= 2400) { b.close && b.close(); return blob; }
+    const sc = 2400 / m, cv = document.createElement("canvas"); cv.width = Math.round(b.width * sc); cv.height = Math.round(b.height * sc);
+    cv.getContext("2d").drawImage(b, 0, 0, cv.width, cv.height);
+    return new Promise(r => cv.toBlob(r, "image/jpeg", .88));
+  }
+  async function upload(files) {
+    if (up || !LIB || !curating()) return;
+    const known = new Set(LIB.items.map(o => o.file)), jobs = [];
+    up = t("Uploading…"); fullLine();
+    try {
+      for (const f of files) {
+        if (/\.zip$/i.test(f.name)) (await unzip(f)).forEach(x => { if (known.has(x.name)) jobs.push(x); });
+        else if (known.has(f.name)) jobs.push({ name: f.name, get: async () => f });
+      }
+      let done = 0, bad = 0, i = 0;
+      const tick = () => { up = zh() ? `正在上传 ${nf(done)} / ${nf(jobs.length)}` : `Uploading ${nf(done)} of ${nf(jobs.length)}`; fullLine(); };
+      tick();
+      await Promise.all([0, 1, 2, 3].map(async () => {
+        while (i < jobs.length) {
+          const j = jobs[i++];
+          try {
+            const r = await fetch(`/api/library/full/${encodeURIComponent(j.name)}`, { method: "PUT", headers: { "content-type": "image/jpeg" }, body: await shrink(await j.get()) });
+            if (r.ok) full.add(j.name); else bad++;
+          } catch (_) { bad++; }
+          done++; if (done % 10 === 0 || done === jobs.length) tick();
+        }
+      }));
+      up = null; fullLine();
+      host.toast(zh() ? `已上传 ${nf(done - bad)} 张高清大图${bad ? `，${nf(bad)} 张失败` : ""}${jobs.length ? "" : "（没有与图库匹配的文件）"}`
+        : jobs.length ? `${nf(done - bad)} full-size image${done - bad === 1 ? "" : "s"} uploaded${bad ? `, ${nf(bad)} failed. Upload again to retry them` : ""}` : "None of those files match the library.");
+    } catch (_) { up = null; fullLine(); host.toast(zh() ? "无法读取该压缩包。" : "Couldn't read that zip."); }
+  }
+  document.addEventListener("load", e => { const el = e.target; if (el.classList && el.classList.contains("sbl-big")) el.closest(".sbl-hero")?.classList.add("loaded"); }, true);
+  document.addEventListener("error", e => { const el = e.target; if (el.classList && el.classList.contains("sbl-big")) { const h = el.closest(".sbl-hero"); if (h) { h.classList.remove("big"); el.remove(); } } }, true);
 
   document.addEventListener("click", async e => {
     const el = e.target.closest && e.target.closest("[data-sblsup],[data-sblshow],[data-sblmore],[data-sblopen],[data-sblbulk],[data-sblpage],[data-sbl]"); if (!el || !LIB) return;
@@ -314,6 +411,8 @@
     if (el.dataset.sblpage) { const p = +el.dataset.sblpage; bulk(list().filter(o => o.page === p), el.dataset.v === "on"); return; }
     const a = el.dataset.sbl;
     if (a === "close") close();
+    else if (a === "zoom") { ui.zoom = true; host.layer(); }
+    else if (a === "unzoom") { ui.zoom = false; host.layer(); }
     else if (a === "toggle" && curating()) { const o = LIB.items[ui.open]; if (o) { setOn(o.sup, [o.key], !isOn(o)); repaint(); host.layer(); } }
     else if (a === "add") add();
     else if (a === "piece") { const id = el.dataset.id; ui.open = null; host.openPiece(id); }
@@ -326,13 +425,14 @@
   document.addEventListener("change", e => {
     const el = e.target;
     if (el.id === "sbl-target") { ui.target = el.value; host.layer(); return; }
+    if (el.id === "sbl-up") { const f = [...el.files]; el.value = ""; upload(f); return; }
     if (!(el.dataset && el.dataset.sblkeep !== undefined) || !LIB || !curating()) return;
     const o = LIB.items[+el.dataset.sblkeep]; if (!o) return;
     setOn(o.sup, [o.key], el.checked); el.closest(".sbl-tile")?.classList.toggle("off", !el.checked);
     const c = $("#sbl-cats"); if (c) c.innerHTML = catsHTML(); const k = $("#sbl-kept"); if (k) k.textContent = nf(approved());
   });
   document.addEventListener("input", e => { if (e.target.id === "sbl-q" && LIB) { ui.q = e.target.value; ui.n = 120; clearTimeout(qT); qT = setTimeout(() => { const g = $("#sbl-grid"); if (g) g.innerHTML = gridHTML(); }, 140); } });
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && ui.open != null && !document.getElementById("viewer")) { e.stopPropagation(); close(); } }, true);
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && ui.open != null && !document.getElementById("viewer")) { e.stopPropagation(); if (ui.zoom) { ui.zoom = false; host.layer(); } else close(); } }, true);
 
   window.SBLibrary = Object.freeze({
     configure(h) { host = { ...host, ...h }; },

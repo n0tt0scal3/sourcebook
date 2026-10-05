@@ -27,6 +27,7 @@
     "Google Drive link to the PDF (optional)": "PDF 的 Google 云端硬盘链接（可选）", "Scan and add": "扫描并添加", "Cancel": "取消", "Delete this catalogue": "删除此图册",
     "Choose a PDF and enter the supplier.": "请选择 PDF 并填写供应商。", "Couldn't read that PDF.": "无法读取该 PDF。",
     "The PDF is scanned in this browser, so keep this tab open until it finishes. Photos in the PDF become library images named like the others (category_supplier_page_number) and start unapproved. Up to 300 MB and 2,000 pages.": "PDF 在此浏览器中扫描，请保持此标签页打开直到完成。PDF 中的照片会按与其他图片相同的方式命名（类别_供应商_页码_编号）成为图库图片，默认未批准。最大 300 MB、2000 页。",
+    "All product types": "全部产品类型", "Product type": "产品类型", "Not sorted yet": "尚未分类", "Choose a product type to see its images.": "选择一个产品类型以查看图片。",
     "Full-size images": "高清大图", "Upload zips": "上传压缩包", "Uploading…": "正在上传…", "Click to see it full screen": "点击全屏查看",
     "Choose the catalogue zips from Google Drive (or the JPEGs inside them). Images are matched to the library by file name.": "选择 Google 云端硬盘中的图册压缩包（或其中的 JPEG 图片）。图片按文件名与图库匹配。",
   };
@@ -53,6 +54,9 @@
 .sbl-name{font-family:var(--display);font-size:19px;line-height:1.15;overflow-wrap:anywhere}
 .sbl-sub{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--muted);font-variant-numeric:tabular-nums}
 .sbl-bar{display:block;height:3px;background:var(--rule2)}
+.sbl-crumb{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;padding-top:24px}
+.sbl-crumb h3{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(26px,3vw,36px);line-height:1.1}
+.sbl-chips{display:flex;flex-wrap:wrap;gap:6px;padding-top:14px}
 .sbl-bar i{display:block;height:100%;background:var(--ok)}
 .sbl-tools{position:sticky;top:calc(env(safe-area-inset-top,0px) + 58px);z-index:4;background:var(--ground);display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding-block:14px;margin-top:26px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
 .sbl-tools .sbl-q{flex:1 1 240px;max-width:420px;border:0;border-bottom:1px solid var(--rule);background:transparent;padding:8px 2px;font-size:15px;color:var(--ink);min-width:0}
@@ -138,23 +142,33 @@
 `;
   const style = document.createElement("style"); style.textContent = CSS; document.head.appendChild(style);
 
-  let LIB = null, libP = null, on = {}, watching = false, qT = null, full = new Set(), up = null;
-  const ui = { sup: null, q: "", show: null, n: 120, open: null, adding: false, target: "", zoom: false, seq: [] };
+  let LIB = null, libP = null, on = {}, tov = {}, watching = false, qT = null, full = new Set(), up = null;
+  // Product types, independent of the supplier catalogue. Images are sorted into them once (lib/data.json, item[7]);
+  // an admin's corrections are stored as librarytypes/<catalogue> = { t: { key: code } }.
+  const TYPES = [["S", "Sofas", "沙发"], ["L", "Lounge chairs", "休闲椅"], ["C", "Dining chairs", "餐椅"], ["T", "Stools & bar stools", "凳子与吧凳"], ["B", "Benches & ottomans", "长凳与脚凳"],
+    ["K", "Coffee & side tables", "茶几与边几"], ["D", "Dining tables", "餐桌"], ["E", "Desks & consoles", "书桌与玄关桌"], ["G", "Storage & TV units", "储物柜与电视柜"], ["R", "Beds & nightstands", "床与床头柜"],
+    ["H", "Lighting", "灯具"], ["P", "Plumbing", "卫浴"], ["M", "Millwork & doors", "木作与门"], ["N", "Stone", "石材"], ["W", "Wall panelling & wood", "墙板与木制品"], ["Q", "Partition systems", "隔断系统"], ["Y", "Signage", "标识"],
+    ["A", "Decor & accessories", "装饰与配饰"], ["O", "Other", "其他"], ["U", "Not sorted yet", "尚未分类"]];
+  const typeName = c => { const x = TYPES.find(y => y[0] === c) || TYPES[TYPES.length - 1]; return zh() ? x[2] : x[1]; };
+  const ui = { type: null, sup: null, q: "", show: null, n: 120, open: null, adding: false, target: "", zoom: false, seq: [] };
   // host.ctx: "studio" (dashboard) or "project". canEdit: may approve (admins, on the dashboard).
   // project(): this project's id (project ctx). projects(): [{id, name}] to add to (studio ctx).
   let host = { ctx: "studio", internal: () => true, canEdit: () => false, canAdd: () => false, project: () => null, projectName: () => "", projects: () => [], inProject: () => new Map(), prefix: null, added: null, openPiece: () => {}, layer: () => {}, toast: m => console.log(m), toastUndo: m => console.log(m) };
 
   // A catalogue was added or deleted: fetch the index again and redraw.
+  // A change that arrives while the index is still loading reloads it again once that load ends.
+  let reloadAgain = false;
   function reloadIndex() {
-    if (!LIB) return; LIB = null; libP = null;
-    load().then(() => { if (ui.sup && !LIB.sups[ui.sup]) ui.sup = null; if (ui.open != null) { ui.open = null; document.body.style.overflow = ""; host.layer(); } rerender(); fetchFull().catch(() => {}); }).catch(() => {});
+    if (!LIB) { if (libP) reloadAgain = true; return; }
+    LIB = null; libP = null;
+    load().then(() => { if (reloadAgain) { reloadAgain = false; return reloadIndex(); } if (ui.sup && !LIB.sups[ui.sup]) ui.sup = null; if (ui.open != null) { ui.open = null; document.body.style.overflow = ""; host.layer(); } rerender(); fetchFull().catch(() => {}); }).catch(() => {});
   }
   function load() {
     if (LIB) return Promise.resolve(LIB);
     return libP || (libP = fetch("/lib/data.json", { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error("lib"); return r.json(); }).then(d => {
       d.items = d.items.map((it, i) => {
         const m = String(it[0]).match(/_p(\d+)_(\d+)\.jpg$/);
-        const o = { i, file: it[0], sup: it[1], page: it[2], codes: it[3] ? String(it[3]).split(" ").filter(Boolean) : [], text: it[4] || "", s: it[5], k: it[6], key: m ? (+m[1]) * 100 + (+m[2]) : i };
+        const o = { i, file: it[0], sup: it[1], page: it[2], codes: it[3] ? String(it[3]).split(" ").filter(Boolean) : [], text: it[4] || "", s: it[5], k: it[6], t: it[7] || "", key: m ? (+m[1]) * 100 + (+m[2]) : i };
         const L = LIB_LABEL[o.sup] || [o.sup, ""];
         o.h = [o.file, o.sup, L[0], L[1], d.sups[o.sup] && d.sups[o.sup].pdf, "p" + o.page, it[3], o.text].join(" ").toLowerCase();
         return o;
@@ -169,21 +183,26 @@
     j.docs.forEach(d => { next[d.id] = new Set((d.data.on || []).map(Number)); });
     on = next; repaint();
   }
+  async function fetchTypes() {
+    const r = await fetch("/api/db/col?path=librarytypes"); if (!r.ok) return;
+    const j = await r.json(); const next = {}; j.docs.forEach(d => { next[d.id] = (d.data && d.data.t) || {}; }); tov = next; repaint();
+  }
   async function fetchFull() {
     const r = await fetch("/api/library/full"); if (!r.ok) return;
     full = new Set((await r.json()).files || []); fullLine(); if (ui.open != null) host.layer();
   }
   function watch() {
     if (watching) return; watching = true;
-    fetchOn().catch(() => {}); fetchFull().catch(() => {});
+    fetchOn().catch(() => {}); fetchFull().catch(() => {}); fetchTypes().catch(() => {});
     try {
       const es = new EventSource("/api/events");
-      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); } catch (_) {} };
-      es.onopen = () => fetchOn().catch(() => {});
+      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); } catch (_) {} };
+      es.onopen = () => { fetchOn().catch(() => {}); fetchTypes().catch(() => {}); };
     } catch (_) {}
   }
 
   const isOn = o => !!(on[o.sup] && on[o.sup].has(o.key));
+  const typeOf = o => (tov[o.sup] && tov[o.sup][o.key]) || o.t || "U";
   const sprite = o => { if (o.s == null) return `style="background-image:url(/lib/thumb/${encodeURIComponent(o.file)});background-size:contain;background-position:center"`; const g = LIB.grid; return `style="background-image:url(/lib/sprites/s${String(o.s).padStart(3, "0")}.jpg);background-size:${g * 100}% ${g * 100}%;background-position:${(o.k % g) / (g - 1) * 100}% ${Math.floor(o.k / g) / (g - 1) * 100}%"`; };
   const label = sup => LIB_LABEL[sup] || (LIB && LIB.sups[sup] && LIB.sups[sup].label) || [sup, ""];
   const pdfURL = S => S.drive ? `https://drive.google.com/file/d/${S.drive}/view` : S.up ? `/lib/pdf/${encodeURIComponent(Object.keys(LIB.sups).find(k => LIB.sups[k] === S))}.pdf` : "#";
@@ -195,7 +214,7 @@
   function list() {
     const q = ui.q.toLowerCase().trim().split(/\s+/).filter(Boolean); const show = showMode();
     const src = ui.sup && LIB.bySup[ui.sup] ? LIB.bySup[ui.sup] : LIB.items;
-    return src.filter(o => { const x = isOn(o); if (show === "on" && !x) return false; if (show === "off" && x) return false; return q.every(w => o.h.includes(w)); });
+    return src.filter(o => { if (ui.type && typeOf(o) !== ui.type) return false; const x = isOn(o); if (show === "on" && !x) return false; if (show === "off" && x) return false; return q.every(w => o.h.includes(w)); });
   }
   const sups = () => Object.keys(LIB.sups).filter(s => curating() || approved(LIB.bySup[s]));
 
@@ -215,25 +234,32 @@
       <p>${t(lede)}</p></div>
       <div class="sbl-stat"><div><span class="eyebrow">${t("Approved")}</span><b id="sbl-kept">${nf(a)}</b></div>${cur ? `<div><span class="eyebrow">${t("Scanned")}</span><b>${nf(tot)}</b></div>` : ""}${host.ctx === "project" ? `<div><span class="eyebrow">${t("In this project")}</span><b>${host.inProject().size}</b></div>` : ""}</div>
       ${cur ? `<div class="sbl-full" id="sbl-full">${fullHTML()}</div><div id="sbl-addwrap" style="grid-column:1/-1">${addCatHTML()}</div>` : ""}</section>
-    <div class="sbl-cats" id="sbl-cats">${catsHTML()}</div>
+    ${ui.type ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All product types")}</button><h3>${esc(typeName(ui.type))}</h3></div><div class="sbl-chips" id="sbl-cats">${catsHTML()}</div>`
+      : `<div class="sbl-cats" id="sbl-cats">${catsHTML()}</div>`}
     <div class="sbl-tools"><input class="sbl-q" type="search" id="sbl-q" value="${esc(ui.q)}" placeholder="${esc(t("Search a code, product or page, e.g. AA01, Ampleforth, p44"))}" autocomplete="off" aria-label="${esc(t("Sourcing library"))}">
       ${cur ? `<span class="sbl-seg" role="group" aria-label="${t("Show")}">${[["on", "Approved"], ["off", "Not approved"], ["all", "All"]].map(([v, l]) => `<button class="chip" data-sblshow="${v}" aria-pressed="${show === v}">${t(l)}</button>`).join("")}</span>` : ""}
       <span class="sbl-count" id="sbl-count"></span>
       ${cur && ui.sup && LIB.sups[ui.sup] && LIB.sups[ui.sup].up ? `<button class="linkbtn" data-sbl="delcat" style="color:var(--crit)">${t("Delete this catalogue")}</button>` : ""}
-      ${cur && ui.sup ? `<span class="sbl-bulk"><button class="linkbtn" data-sblbulk="on">${t("Approve all shown")}</button><button class="linkbtn" data-sblbulk="off">${t("Unapprove all shown")}</button></span>` : ""}</div>
+      ${cur && (ui.sup || ui.type) ? `<span class="sbl-bulk"><button class="linkbtn" data-sblbulk="on">${t("Approve all shown")}</button><button class="linkbtn" data-sblbulk="off">${t("Unapprove all shown")}</button></span>` : ""}</div>
     <div id="sbl-grid">${gridHTML()}</div></div>`;
   }
   function catsHTML() {
-    const cur = curating(), all = LIB.items.length, a = approved();
+    const cur = curating(), vis = o => cur || isOn(o);
+    if (ui.type) {
+      const mine = LIB.items.filter(o => typeOf(o) === ui.type && vis(o)); const n = {}; mine.forEach(o => (n[o.sup] = (n[o.sup] || 0) + 1));
+      return `<button class="chip" data-sblsup="" aria-pressed="${!ui.sup}">${t("All catalogues")} · ${nf(mine.length)}</button>` +
+        Object.keys(n).map(s => { const L = label(s); return `<button class="chip" data-sblsup="${esc(s)}" aria-pressed="${ui.sup === s}">${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""} · ${nf(n[s])}</button>`; }).join("");
+    }
     const sub = (n, of) => cur ? `${nf(n)} / ${nf(of)} ${t("Approved").toLowerCase()}` : zh() ? `${nf(n)} 张图片` : `${nf(n)} image${n === 1 ? "" : "s"}`;
-    return `<button class="sbl-cat" data-sblsup="" aria-pressed="${!ui.sup}"><span class="sbl-all">${t("All catalogues")}</span><span class="sbl-sub">${sub(a, all)}</span>${cur ? `<span class="sbl-bar"><i style="width:${all ? a / all * 100 : 0}%"></i></span>` : ""}</button>` +
-      sups().map(s => {
-        const arr = LIB.bySup[s] || []; const ok = arr.filter(isOn);
-        const pool = cur && !ok.length ? arr : ok; const cover = pool[Math.min(pool.length - 1, Math.floor(pool.length * .12))]; const L = label(s);
-        return `<button class="sbl-cat" data-sblsup="${esc(s)}" aria-pressed="${ui.sup === s}">${cover ? `<span class="sbl-sw" ${sprite(cover)}></span>` : ""}<span class="sbl-name">${esc(L[0])}${L[1] ? ` · ${esc(L[1])}` : ""}</span><span class="sbl-sub">${sub(ok.length, arr.length)}${cur ? ` · ${LIB.sups[s].pages} pp` : ""}</span>${cur ? `<span class="sbl-bar"><i style="width:${arr.length ? ok.length / arr.length * 100 : 0}%"></i></span>` : ""}</button>`;
-      }).join("");
+    const by = {}; LIB.items.forEach(o => (by[typeOf(o)] = by[typeOf(o)] || []).push(o));
+    return TYPES.filter(([c]) => by[c] && (cur || by[c].some(isOn))).map(([c]) => {
+      // Cover: an approved image if there is one, preferring product photos over tearsheet pages.
+      const arr = by[c], ok = arr.filter(isOn), pool0 = cur && !ok.length ? arr : ok, photos = pool0.filter(o => !/tearsheet/i.test(o.sup)), pool = photos.length ? photos : pool0, cover = pool[Math.min(pool.length - 1, Math.floor(pool.length * .12))];
+      return `<button class="sbl-cat" data-sbltype="${c}">${cover ? `<span class="sbl-sw" ${sprite(cover)}></span>` : ""}<span class="sbl-name">${esc(typeName(c))}</span><span class="sbl-sub">${sub(ok.length, arr.length)}</span>${cur ? `<span class="sbl-bar"><i style="width:${arr.length ? ok.length / arr.length * 100 : 0}%"></i></span>` : ""}</button>`;
+    }).join("");
   }
   function gridHTML() {
+    if (!ui.type && !ui.q.trim()) { setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = ""; }, 0); return `<p class="sbl-hint" style="padding-top:18px">${t("Choose a product type to see its images.")}</p>`; }
     const l = list(), cur = curating(), inP = host.ctx === "project" ? host.inProject() : new Map();
     setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = zh() ? `${nf(l.length)} 张图片` : `${nf(l.length)} image${l.length === 1 ? "" : "s"}`; }, 0);
     if (!l.length) return `<div class="sbl-grid"><p class="sbl-empty">${ui.q ? t("Nothing matches that search.") : showMode() === "off" ? t("Nothing is waiting for approval here.") : t("Nothing has been approved yet.")}</p></div>`;
@@ -263,6 +289,16 @@
   async function send(sup, keys, x) {
     const r = await fetch("/api/library/set", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ sup, keys, on: x }) });
     if (!r.ok) { const j = await r.json().catch(() => ({})); throw Object.assign(new Error(j.message || "save"), { code: j.code }); }
+  }
+  // An admin moves images to another product type; the server merges it into librarytypes/<catalogue>.
+  function setType(l, code) {
+    const by = {}; l.forEach(o => (by[o.sup] = by[o.sup] || []).push(o.key));
+    Object.entries(by).forEach(([sup, keys]) => {
+      tov[sup] = { ...(tov[sup] || {}) }; keys.forEach(k => (tov[sup][k] = code));
+      fetch("/api/library/type", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ sup, keys, type: code }) })
+        .then(r => { if (!r.ok) throw new Error(); }).catch(() => { host.toast(t("Couldn't save. Check your connection and try again.")); fetchTypes().catch(() => {}); });
+    });
+    repaint();
   }
   function setOn(sup, keys, x) {
     const s = new Set(on[sup] || []); keys.forEach(k => (x ? s.add(k) : s.delete(k))); on[sup] = s;
@@ -313,7 +349,7 @@
       ${full.has(o.file) ? `<div class="sbl-hero big"><button class="sbl-zoom" data-sbl="zoom" title="${t("Click to see it full screen")}"><span class="sbl-sw" ${sprite(o)}></span><img class="sbl-big" src="/lib/full/${esc(o.file)}" alt="${esc(o.file)}"></button>${navHTML()}</div>`
         : `<div class="sbl-hero"><span class="sbl-sw" ${sprite(o)}></span>${navHTML()}</div>`}
       <div class="sbl-body">
-        <div class="sbl-top"><span class="eyebrow">${t("Sourcing library")} · ${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""}</span><span class="sbl-topr">${cur ? `<button class="btn sm sbl-appr ${x ? "on" : ""}" data-sbl="toggle" aria-pressed="${x}">${x ? "✓ " + t("Approved") : t("Approve")}</button>` : ""}<button class="sbl-x" data-sbl="close" aria-label="${t("Close")}">×</button></span></div>
+        <div class="sbl-top"><span class="eyebrow">${esc(typeName(typeOf(o)))} · ${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""}</span><span class="sbl-topr">${cur ? `<button class="btn sm sbl-appr ${x ? "on" : ""}" data-sbl="toggle" aria-pressed="${x}">${x ? "✓ " + t("Approved") : t("Approve")}</button>` : ""}<button class="sbl-x" data-sbl="close" aria-label="${t("Close")}">×</button></span></div>
         ${ui.seq.length > 1 || cur ? `<p class="sbl-hint" style="margin-top:6px">${t(ui.seq.length > 1 ? (cur ? "← → to move between products · Space to approve" : "← → to move between products") : "Space to approve")}</p>` : ""}
         <h2>${esc(name(o))}</h2>
         <p class="sbl-file">${esc(o.file)}</p>
@@ -329,6 +365,9 @@
             <div class="k">${t("Image file")}</div><div class="m">${esc(LIB_ROOT + "_IMAGE LIBRARY\\" + S.cat + "\\" + o.sup + "\\")}</div>` : ""}</div>
           ${host.internal() ? `<div class="sbl-note"><code id="sbl-note">${esc(sourceNote(o)).replace(/\n/g, "<br>")}</code><div class="sbl-row" style="margin-top:0"><button class="btn sm" data-sbl="copy">${t("Copy source note")}</button><span class="mono" style="font-size:11.5px;color:var(--muted)">${zh() ? `PDF 从第 1 页打开；此图片在第 ${o.page} 页。` : `The PDF opens at page 1; this image is on page ${o.page}.`}</span></div></div>` : ""}
         </section>
+        ${cur ? `<section class="sbl-sec"><header><h5>${t("Product type")}</h5></header>
+          <label class="sbl-pick" style="margin-top:10px"><select id="sbl-type">${TYPES.filter(x => x[0] !== "U" || typeOf(o) === "U").map(([c]) => `<option value="${c}" ${typeOf(o) === c ? "selected" : ""}>${esc(typeName(c))}</option>`).join("")}</select></label>
+        </section>` : ""}
         ${cur ? `<section class="sbl-sec"><header><h5>${t("In the library")}</h5><span class="mono" style="color:var(--muted)">${x ? t("Approved") : t("Not approved")}</span></header>
           <p class="sbl-hint">${t("Approved images are shown to everyone, clients included. Unapproving hides it again; pieces already added to projects stay.")}</p>
         </section>` : ""}
@@ -378,11 +417,11 @@
   // CATEGORY_Supplier-Catalogue_pPAGE_NN.jpg like the scanned catalogues. Nothing is approved.
   const CATS = ["FURNITURE", "LIGHTING", "PLUMBING", "MILLWORK", "DOORS", "STONE", "WALL PANELLING", "WOOD PRODUCTS", "PARTITION SYSTEMS", "SIGNAGE"];
   const CAT_ZH = { FURNITURE: "家具", LIGHTING: "灯具", PLUMBING: "卫浴", MILLWORK: "木作", DOORS: "门", STONE: "石材", "WALL PANELLING": "墙板", "WOOD PRODUCTS": "木制品", "PARTITION SYSTEMS": "隔断系统", SIGNAGE: "标识" };
-  let scan = null; // progress text while a PDF is being scanned
+  let scan = null, scanErr = ""; // progress text while a PDF is being scanned; why the last one stopped
   function addCatHTML() {
     if (scan) return `<div class="sbl-addcat"><p style="color:var(--ink);font-size:14px">${esc(scan)}</p></div>`;
     if (!ui.addcat) return `<button class="linkbtn" data-sbl="addcat">${t("Add a catalogue from a PDF")}</button>`;
-    return `<div class="sbl-addcat">
+    return `<div class="sbl-addcat">${scanErr ? `<p style="color:var(--crit);font-size:14px">${esc(scanErr)}</p>` : ""}
       <label>${t("PDF catalogue")}<input type="file" id="sbl-pdf" accept="application/pdf,.pdf"></label>
       <label>${t("Supplier")}<input id="sbl-supplier" autocomplete="off" placeholder="Billa"></label>
       <label>${t("Catalogue name (optional)")}<input id="sbl-product" autocomplete="off" placeholder="Sofa 2026"></label>
@@ -406,6 +445,7 @@
     if (!img.data) return null;
     const src = img.data, id = g.createImageData(w, h), d = id.data, n = w * h;
     if (img.kind === 3 && src.length >= n * 4) d.set(src.subarray(0, n * 4));
+    else if (img.kind === 1) { const row = (w + 7) >> 3; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const v = (src[y * row + (x >> 3)] >> (7 - (x & 7))) & 1 ? 255 : 0, i = (y * w + x) * 4; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; } }
     else if (img.kind === 2 && src.length >= n * 3) for (let i = 0, j = 0; i < n; i++, j += 3) { d[i * 4] = src[j]; d[i * 4 + 1] = src[j + 1]; d[i * 4 + 2] = src[j + 2]; d[i * 4 + 3] = 255; }
     else return null;
     const tmp = document.createElement("canvas"); tmp.width = w; tmp.height = h; tmp.getContext("2d").putImageData(id, 0, 0); g.drawImage(tmp, 0, 0);
@@ -431,7 +471,7 @@
     const dm = String(($("#sbl-drive") || {}).value || "").match(/[-\w]{25,}/);
     if (!file || !supplier.trim()) { host.toast(t("Choose a PDF and enter the supplier.")); return; }
     if (file.size > 300 * 1024 * 1024) { host.toast(zh() ? "PDF 超过 300 MB。" : "That PDF is over 300 MB."); return; }
-    const setScan = m => { scan = m; addLine(); };
+    const setScan = m => { scan = m; addLine(); }; scanErr = "";
     let sup = null;
     try {
       setScan(zh() ? "正在打开 PDF…" : "Opening the PDF…");
@@ -446,9 +486,21 @@
         setScan(zh() ? `正在扫描第 ${n} / ${doc.numPages} 页 · 已找到 ${items.length} 张图片` : `Scanning page ${n} of ${doc.numPages} · ${items.length} image${items.length === 1 ? "" : "s"} found`);
         const page = await doc.getPage(n);
         const ops = await page.getOperatorList();
-        const names = [];
-        ops.fnArray.forEach((fn, i) => { if (fn === OPS.paintImageXObject && !names.includes(ops.argsArray[i][0])) names.push(ops.argsArray[i][0]); });
+        const names = []; let imgOps = 0, pathOps = 0;
+        ops.fnArray.forEach((fn, i) => {
+          if (fn === OPS.paintImageXObject) { imgOps++; if (!names.includes(ops.argsArray[i][0])) names.push(ops.argsArray[i][0]); }
+          else if (fn === OPS.paintInlineImageXObject || fn === OPS.paintImageXObjectRepeat) imgOps++;
+          else if (fn === OPS.constructPath) pathOps++;
+        });
         let nn = 0;
+        const save = async cv => {
+          nn++;
+          const f = `${start.prefix}_p${String(n).padStart(3, "0")}_${String(nn).padStart(2, "0")}.jpg`;
+          const [big, th] = await Promise.all([toJPEG(cv, 2400, .88), toJPEG(cv, 280, .85, true)]);
+          await api(`/api/library/catalogue/${sup}/img/${f}`, { method: "PUT", headers: { "content-type": "image/jpeg" }, body: big });
+          await api(`/api/library/catalogue/${sup}/img/${f}?thumb=1`, { method: "PUT", headers: { "content-type": "image/jpeg" }, body: th });
+          const it = [f, n, "", ""]; items.push(it); return it;
+        };
         for (const name of names) {
           if (nn >= 99) break;
           const img = await pageObj(page, name); if (!img) continue;
@@ -456,12 +508,14 @@
           const cv = imgCanvas(img); if (!cv) continue;
           const fp = fingerprint(cv); if (fp.flat) continue;
           if (seen.has(fp.key)) { const x = seen.get(fp.key); if (x.page !== n) { x.pages++; x.page = n; } continue; }
-          nn++;
-          const f = `${start.prefix}_p${String(n).padStart(3, "0")}_${String(nn).padStart(2, "0")}.jpg`;
-          const [big, th] = await Promise.all([toJPEG(cv, 2400, .88), toJPEG(cv, 280, .85, true)]);
-          await api(`/api/library/catalogue/${sup}/img/${f}`, { method: "PUT", headers: { "content-type": "image/jpeg" }, body: big });
-          await api(`/api/library/catalogue/${sup}/img/${f}?thumb=1`, { method: "PUT", headers: { "content-type": "image/jpeg" }, body: th });
-          const it = [f, n, "", ""]; items.push(it); seen.set(fp.key, { it, pages: 1, page: n });
+          const it = await save(cv); seen.set(fp.key, { it, pages: 1, page: n });
+        }
+        // No separate photos (a page saved as tiles, small pieces or drawings): keep the whole page as one image.
+        if (!nn && (imgOps > 0 || pathOps > 150)) {
+          const v1 = page.getViewport({ scale: 1 }), vp = page.getViewport({ scale: Math.min(4, 2000 / Math.max(v1.width, v1.height)) });
+          const cv = document.createElement("canvas"); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+          const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height);
+          try { await page.render({ canvasContext: g, viewport: vp }).promise; if (!fingerprint(cv).flat) await save(cv); } catch (e) { if (e.code) throw e; }
         }
         if (nn) {
           const tc = await page.getTextContent().catch(() => null);
@@ -481,8 +535,9 @@
       host.toast(zh() ? `已添加 ${nf(done.n)} 张图片，尚未批准` : `${nf(done.n)} images added. None are approved yet`);
       reloadIndex();
     } catch (e) {
-      scan = null; addLine();
-      host.toast(e.code ? e.message : e.name === "InvalidPDFException" || e.name === "PasswordException" ? t("Couldn't read that PDF.") : (zh() ? "扫描中断，请重试。" : "The scan stopped part way. Try again.") + (e.message ? " (" + e.message + ")" : ""));
+      scan = null;
+      scanErr = e.code ? e.message : e.name === "InvalidPDFException" || e.name === "PasswordException" ? t("Couldn't read that PDF.") : (zh() ? "扫描中断，请重试。" : "The scan stopped part way. Try again.") + (e.message ? " (" + e.message + ")" : "");
+      addLine(); host.toast(scanErr);
     }
   }
   async function deleteCat(sup) {
@@ -561,8 +616,9 @@
   document.addEventListener("error", e => { const el = e.target; if (el.classList && el.classList.contains("sbl-big")) { const h = el.closest(".sbl-hero"); if (h) { h.classList.remove("big"); el.remove(); } } }, true);
 
   document.addEventListener("click", async e => {
-    const el = e.target.closest && e.target.closest("[data-sblsup],[data-sblshow],[data-sblmore],[data-sblopen],[data-sblbulk],[data-sblpage],[data-sbl]"); if (!el || !LIB) return;
+    const el = e.target.closest && e.target.closest("[data-sbltype],[data-sblsup],[data-sblshow],[data-sblmore],[data-sblopen],[data-sblbulk],[data-sblpage],[data-sbl]"); if (!el || !LIB) return;
     if (el.dataset.sblsup !== undefined) { ui.sup = el.dataset.sblsup || null; ui.n = 120; rerender(); return; }
+    if (el.dataset.sbltype !== undefined) { ui.type = el.dataset.sbltype || null; ui.sup = null; ui.n = 120; rerender(); const r = $("#sblib"); if (r && ui.type) r.scrollIntoView({ block: "start" }); return; }
     if (el.dataset.sblshow) { ui.show = el.dataset.sblshow; ui.n = 120; document.querySelectorAll("[data-sblshow]").forEach(b => b.setAttribute("aria-pressed", b === el)); repaint(); return; }
     if (el.dataset.sblmore !== undefined) { ui.n += 120; repaint(); return; }
     if (el.dataset.sblopen !== undefined) { ui.open = +el.dataset.sblopen; ui.seq = list().map(o => o.i); host.layer(); return; }
@@ -590,6 +646,7 @@
   document.addEventListener("change", e => {
     const el = e.target;
     if (el.id === "sbl-target") { ui.target = el.value; host.layer(); return; }
+    if (el.id === "sbl-type" && curating()) { const o = LIB && LIB.items[ui.open]; if (o) { setType([o], el.value); host.toast(zh() ? `已移至「${typeName(el.value)}」` : `Moved to ${typeName(el.value)}`); } return; }
     if (el.id === "sbl-up") { const f = [...el.files]; el.value = ""; upload(f); return; }
     if (!(el.dataset && el.dataset.sblkeep !== undefined) || !LIB || !curating()) return;
     const o = LIB.items[+el.dataset.sblkeep]; if (!o) return;

@@ -34,18 +34,59 @@ let libCache = null;
 // The scanned catalogues in lib/ plus the finished ones added from PDFs; uploaded catalogues carry label and up: 1.
 async function libIndex() {
   if (libCache) return libCache;
-  let d;
+  let d, types = {};
   try { d = JSON.parse(await fsp.readFile(path.join(LIB_DIR, "data.json"), "utf8")); } catch (_) { d = { sups: {}, items: [], cell: 280, grid: 8 }; }
+  // Product type of each scanned image (lib/types.json, { file: code }), added as item[7].
+  try { types = JSON.parse(await fsp.readFile(path.join(LIB_DIR, "types.json"), "utf8")); } catch (_) {}
+  d.items.forEach(x => { x[7] = types[x[0]] || ""; });
   for (const f of (await fsp.readdir(LIB_CATS_DIR).catch(() => [])).filter(f => f.endsWith(".json")).sort()) {
     try {
       const c = JSON.parse(await fsp.readFile(path.join(LIB_CATS_DIR, f), "utf8"));
       if (c.status !== "done" || d.sups[c.sup]) continue;
       d.sups[c.sup] = { pdf: c.pdf, drive: c.drive || "", pages: c.pages, cat: c.cat, n: c.items.length, label: [c.supplier, c.product || ""], up: 1, created: c.created };
-      c.items.forEach(x => d.items.push([x[0], c.sup, x[1], x[2] || "", x[3] || "", null, null]));
+      c.items.forEach(x => d.items.push([x[0], c.sup, x[1], x[2] || "", x[3] || "", null, null, x[4] || LIB_CAT_TYPE[c.cat] || ""]));
     } catch (_) {}
   }
   libCache = { sups: d.sups, byFile: new Map(d.items.map(x => [x[0], x])), json: JSON.stringify(d) };
   return libCache;
+}
+// Product types (see TYPES in library.js). Catalogues outside furniture take their category's type;
+// furniture images added from a PDF are sorted by Claude from their thumbnails when an API key is set.
+const LIB_TYPES = "SLCTBKDEGRHPMNWQYAO";
+const LIB_CAT_TYPE = { LIGHTING: "H", PLUMBING: "P", MILLWORK: "M", DOORS: "M", STONE: "N", "WALL PANELLING": "W", "WOOD PRODUCTS": "W", "PARTITION SYSTEMS": "Q", SIGNAGE: "Y" };
+const LIB_TYPE_PROMPT = `Each image is a product photo from a furniture catalogue. For each image, in order, give ONE letter for the main product shown:
+S sofa/sectional/loveseat · L lounge or arm chair · C dining or office chair · T stool or bar stool · B bench, ottoman or pouf · K coffee or side table · D dining table (a table shown with chairs is D) · E desk, console or dressing table · G cabinet, sideboard, chest, TV unit, shelving or wardrobe · R bed or nightstand · H lamp · A rug, mirror, vase, art or other decor · O logo, text, swatch, drawing or no clear product.
+In a room scene, use the most prominent piece. Reply with only the letters, no spaces.`;
+async function classifyCat(sup) {
+  if (!ANTHROPIC_API_KEY) return;
+  const c = await libCatRead(sup); if (!c || c.status !== "done") return;
+  const todo = c.items.filter(x => !x[4]);
+  for (let i = 0; i < todo.length; i += 20) {
+    const chunk = todo.slice(i, i + 20), content = [];
+    for (const [n, x] of chunk.entries()) {
+      try { content.push({ type: "text", text: `Image ${n + 1}` }, { type: "image", source: { type: "base64", media_type: "image/jpeg", data: (await fsp.readFile(path.join(LIB_THUMB_DIR, x[0]))).toString("base64") } }); } catch (_) { content.push({ type: "text", text: `Image ${n + 1}: missing` }); }
+    }
+    content.push({ type: "text", text: LIB_TYPE_PROMPT + ` There are ${chunk.length} images, so reply with exactly ${chunk.length} letters.` });
+    try {
+      const r = await fetch(API_URL, { method: "POST", headers: { "content-type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" }, body: JSON.stringify({ model: MODELS.quick, max_tokens: 100, messages: [{ role: "user", content }] }) });
+      const j = await r.json().catch(() => ({}));
+      const out = ((j.content || []).map(b => b.text || "").join("").toUpperCase().match(/[A-Z]/g) || []).join("");
+      if (r.ok && out.length === chunk.length) chunk.forEach((x, k) => { if (LIB_TYPES.includes(out[k])) x[4] = out[k]; });
+      else console.error("library sorting:", r.status, j?.error?.message || out);
+    } catch (e) { console.error("library sorting:", e.message); }
+  }
+  const cur = await libCatRead(sup); if (!cur || cur.status !== "done") return; // deleted meanwhile
+  const got = new Map(c.items.map(x => [x[0], x[4]])); cur.items.forEach(x => { if (!x[4] && got.get(x[0])) x[4] = got.get(x[0]); });
+  await fsp.writeFile(path.join(LIB_CATS_DIR, sup + ".json"), JSON.stringify(cur));
+  libCache = null; broadcast({ path: "library", index: true });
+}
+// On start, sort any furniture catalogue that still has unsorted images (added before sorting existed, or the key was off).
+async function classifyPending() {
+  if (!ANTHROPIC_API_KEY) return;
+  for (const f of (await fsp.readdir(LIB_CATS_DIR).catch(() => [])).filter(f => f.endsWith(".json"))) {
+    const c = await libCatRead(f.slice(0, -5));
+    if (c && c.status === "done" && !LIB_CAT_TYPE[c.cat] && c.items.some(x => !x[4])) enqueue(() => classifyCat(c.sup));
+  }
 }
 async function libCatRead(sup) { try { return JSON.parse(await fsp.readFile(path.join(LIB_CATS_DIR, sup + ".json"), "utf8")); } catch (_) { return null; } }
 // Streams a request body to a file, refusing it past the limit.
@@ -270,7 +311,7 @@ function currentUser(req) {
 const projectOf = p => { const m = /^projects\/([^/]+)/.exec(p || ""); return m ? m[1] : null; };
 function canSeeProject(u, id) { return allAccess(u) || (u.projects || []).includes(id); }
 // The sourcing library (library/<catalogue>) is studio-wide: everyone can see what's approved; only admins approve.
-const isLibPath = p => /^library(\/|$)/.test(p || "");
+const isLibPath = p => /^library(types)?(\/|$)/.test(p || "");
 function canRead(u, p) { if (isLibPath(p)) return true; if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
 // Internal fields a client never receives.
 const CLIENT_HIDDEN = ["notes", "match", "pendingSetup"];
@@ -734,6 +775,7 @@ const server = http.createServer(async (req, res) => {
         await fsp.unlink(path.join(LIB_CATS_DIR, sup + ".pdf")).catch(() => {});
         await fsp.unlink(path.join(LIB_CATS_DIR, sup + ".json")).catch(() => {});
         const dp = "library/" + sup; if (store[dp]) { delete store[dp]; persist(); }
+        if (store["librarytypes/" + sup]) { delete store["librarytypes/" + sup]; persist(); }
         libCache = null; broadcast({ path: dp, exists: false }); broadcast({ path: "library", index: true });
         return send(res, 200, { ok: true });
       }
@@ -752,7 +794,7 @@ const server = http.createServer(async (req, res) => {
         const b = await readJSON(req, 8 * 1024 * 1024);
         const have = new Set(await fsp.readdir(LIB_FULL_DIR).catch(() => []));
         const items = (Array.isArray(b.items) ? b.items : []).filter(x => Array.isArray(x) && typeof x[0] === "string" && x[0].startsWith(prefix) && have.has(x[0]))
-          .map(x => [x[0], Math.floor(Number(x[1])) || 1, String(x[2] || "").slice(0, 200), String(x[3] || "").slice(0, 600)]);
+          .map(x => [x[0], Math.floor(Number(x[1])) || 1, String(x[2] || "").slice(0, 200), String(x[3] || "").slice(0, 600), LIB_CAT_TYPE[c.cat] || ""]);
         if (!items.length) return send(res, 400, { code: "invalid_argument", message: "No product images were found in that PDF." });
         // Images uploaded but left out of the list (logos repeated on every page) are removed.
         const keep = new Set(items.map(x => x[0]));
@@ -760,7 +802,8 @@ const server = http.createServer(async (req, res) => {
         Object.assign(c, { items, status: "done", finished: new Date().toISOString() });
         await fsp.writeFile(path.join(LIB_CATS_DIR, sup + ".json"), JSON.stringify(c));
         libCache = null; broadcast({ path: "library", index: true });
-        return send(res, 200, { ok: true, n: items.length });
+        if (!LIB_CAT_TYPE[c.cat]) enqueue(() => classifyCat(sup));
+        return send(res, 200, { ok: true, n: items.length, sorting: !LIB_CAT_TYPE[c.cat] && !!ANTHROPIC_API_KEY });
       }
       return send(res, 404, { code: "not_found" });
     }
@@ -789,6 +832,19 @@ const server = http.createServer(async (req, res) => {
       const lib = await libIndex();
       const files = (await fsp.readdir(LIB_FULL_DIR).catch(() => [])).filter(f => lib && lib.byFile.has(f));
       return send(res, 200, { files });
+    }
+    if (p === "/api/library/type" && req.method === "POST") {
+      // { sup, keys, type } moves images to another product type in librarytypes/<sup>.t
+      if (!isAdmin) return deny("Only admins can sort library images.");
+      const b = await readJSON(req);
+      const dp = "librarytypes/" + b.sup;
+      if (typeof b.sup !== "string" || !validPath(dp, true) || !Array.isArray(b.keys) || b.keys.length > 5000 || typeof b.type !== "string" || b.type.length !== 1 || !LIB_TYPES.includes(b.type)) return send(res, 400, { code: "invalid_argument" });
+      const cur = store[dp], t0 = { ...(cur?.data?.t || {}) };
+      b.keys.map(Number).filter(k => Number.isInteger(k) && k >= 0 && k < 1e7).forEach(k => (t0[k] = b.type));
+      const next = { t: t0, updated: new Date().toISOString(), by: me.name || "" };
+      store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
+      persist(); broadcast({ path: dp, exists: true, data: next });
+      return send(res, 200, { ok: true });
     }
     if (p === "/api/library/set" && req.method === "POST") {
       // { sup, keys: [page*100 + image number], on: true|false } approves or unapproves images in library/<sup>.on
@@ -973,5 +1029,5 @@ const server = http.createServer(async (req, res) => {
   }
 });
 if (!exists(path.join(PUBLIC_DIR, "dashboard.html")) || !exists(path.join(PUBLIC_DIR, "index.html"))) console.error("MISSING APP FILES: dashboard.html and index.html must be in the repository (in public/ or at the top level).");
-server.listen(PORT, () => console.log(`Sourcebook running on port ${PORT} · data in ${DATA_DIR}${APP_PASSWORD ? " · password on" : " · NO PASSWORD SET"} · ${people.users.length} people${ANTHROPIC_API_KEY ? "" : " · Claude off (no ANTHROPIC_API_KEY)"}`));
+server.listen(PORT, () => { classifyPending().catch(() => {}); console.log(`Sourcebook running on port ${PORT} · data in ${DATA_DIR}${APP_PASSWORD ? " · password on" : " · NO PASSWORD SET"} · ${people.users.length} people${ANTHROPIC_API_KEY ? "" : " · Claude off (no ANTHROPIC_API_KEY)"}`); });
 process.on("SIGTERM", async () => { clearTimeout(saveTimer); try { fs.writeFileSync(DB_FILE, JSON.stringify(store)); } catch (_) {} process.exit(0); });

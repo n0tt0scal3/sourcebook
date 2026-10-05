@@ -646,8 +646,12 @@ select option,select optgroup{background-color:var(--paper);color:var(--ink)}
   .tab{flex:none;white-space:nowrap}
   .bar .tools{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .bar .tools .chip{flex:none;white-space:nowrap}
-  .ordtab{min-width:0}
-  .ordtab th{letter-spacing:.06em}
+  .ordtab,.qtab{min-width:0}
+  .ordtab th,.qtab th{letter-spacing:.06em}
+  .qtab .qin{width:84px}
+  .qtab td.n:nth-child(5) .qin{width:52px}
+  .qtab .sw{width:32px;height:32px}
+  .qtab td:nth-child(2){white-space:nowrap}
 }
 @media (hover:none) and (pointer:coarse){
   input,select,textarea,.f,.qin{font-size:16px}
@@ -696,8 +700,8 @@ select option,select optgroup{background-color:var(--paper);color:var(--ink)}
   .ordtab td:nth-child(8){grid-column:2;grid-row:5}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-/* quotation as cards on phones and portrait tablets (after the text-size widths so it wins) */
-@media (max-width:900px){
+/* quotation as cards on phones */
+@media (max-width:560px){
   table.qtab{min-width:0;display:block}
   .qtab thead{display:none}
   .qtab tbody,.qtab tfoot{display:block}
@@ -706,7 +710,7 @@ select option,select optgroup{background-color:var(--paper);color:var(--ink)}
   .qtab td.n{text-align:left}
   .qtab tr.month{display:block;padding:0;border:0}
   .qtab tr.month td{padding:26px 0 8px;border-bottom:1px solid var(--rule)}
-  .qtab .cl{display:block;font-size:13px}
+  .qtab .cl{display:block}
   .qtab tr.qrow td:nth-child(1){grid-column:1;grid-row:1/span 5}
   .qtab .sw{width:44px;height:44px}
   .qtab tr.qrow td:nth-child(2){grid-column:2/-1;grid-row:1}

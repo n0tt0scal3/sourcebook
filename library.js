@@ -151,7 +151,7 @@
   }
   function load() {
     if (LIB) return Promise.resolve(LIB);
-    return libP || (libP = fetch("/lib/data.json").then(r => { if (!r.ok) throw new Error("lib"); return r.json(); }).then(d => {
+    return libP || (libP = fetch("/lib/data.json", { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error("lib"); return r.json(); }).then(d => {
       d.items = d.items.map((it, i) => {
         const m = String(it[0]).match(/_p(\d+)_(\d+)\.jpg$/);
         const o = { i, file: it[0], sup: it[1], page: it[2], codes: it[3] ? String(it[3]).split(" ").filter(Boolean) : [], text: it[4] || "", s: it[5], k: it[6], key: m ? (+m[1]) * 100 + (+m[2]) : i };

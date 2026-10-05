@@ -855,8 +855,9 @@ const server = http.createServer(async (req, res) => {
       const full = path.join(PUBLIC_DIR, path.normalize(f).replace(/^(\.\.[\/\\])+/, ""));
       if (!full.startsWith(PUBLIC_DIR)) return send(res, 403, "Forbidden");
       try {
+        // Pages and scripts are always re-checked, so an update shows up on the next reload.
         const data = await fsp.readFile(full);
-        return send(res, 200, data, { "Content-Type": MIME[path.extname(full)] || "application/octet-stream", "Cache-Control": full.endsWith(".html") ? "no-cache" : "public, max-age=3600" });
+        return send(res, 200, data, { "Content-Type": MIME[path.extname(full)] || "application/octet-stream", "Cache-Control": /\.(html|js)$/.test(full) ? "no-cache" : "public, max-age=3600" });
       } catch (_) { return send(res, 404, "Not found"); }
     }
     send(res, 404, "Not found");

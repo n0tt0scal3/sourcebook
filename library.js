@@ -22,6 +22,7 @@
     "Couldn't add it. Try again.": "无法添加，请重试。", "Approved. Untick to hide it.": "已批准，取消勾选以隐藏。", "Not approved. Tick to approve.": "未批准，勾选以批准。", "Selected. Press Ctrl+C to copy.": "已选中，按 Ctrl+C 复制。",
     "Show": "显示", "Add to project": "添加到项目", "Project": "项目", "Choose a project": "选择项目", "No projects to add to yet.": "暂无可添加的项目。", "Add": "添加",
     "The studio hasn't approved any products yet.": "工作室尚未批准任何产品。",
+    "Previous": "上一个", "Next": "下一个", "← → to move between products · A to approve": "← → 切换产品 · 按 A 批准", "← → to move between products": "← → 切换产品",
     "Full-size images": "高清大图", "Upload zips": "上传压缩包", "Uploading…": "正在上传…", "Click to see it full screen": "点击全屏查看",
     "Choose the catalogue zips from Google Drive (or the JPEGs inside them). Images are matched to the library by file name.": "选择 Google 云端硬盘中的图册压缩包（或其中的 JPEG 图片）。图片按文件名与图库匹配。",
   };
@@ -75,7 +76,17 @@
 .sbl-empty{grid-column:1/-1;padding:40px 0;color:var(--muted);font-family:var(--display);font-size:22px;font-style:italic}
 .sbl-scrim{position:fixed;inset:0;background:var(--scrim);z-index:20}
 .sbl-sheet{position:fixed;inset:0;z-index:21;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);background:var(--paper);color:var(--ink)}
-.sbl-hero{background:#fff;display:flex;align-items:center;justify-content:center;padding:clamp(16px,4vw,48px);min-height:0}
+.sbl-hero{background:#fff;display:flex;align-items:center;justify-content:center;padding:clamp(16px,4vw,48px);min-height:0;position:relative}
+.sbl-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:48px;height:48px;border-radius:50%;border:1px solid var(--rule);background:rgba(255,255,255,.92);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;display:grid;place-items:center;box-shadow:0 1px 6px rgba(0,0,0,.08)}
+.sbl-nav:hover:not(:disabled){border-color:var(--ink)}
+.sbl-nav:disabled{opacity:.3;cursor:default}
+.sbl-nav.prev{left:clamp(8px,1.5vw,20px)}
+.sbl-nav.next{right:clamp(8px,1.5vw,20px)}
+.sbl-pos{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:2;font-family:var(--mono);font-size:11.5px;color:var(--muted);background:rgba(255,255,255,.92);padding:3px 9px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sbl-zoomview .sbl-nav{position:fixed}
+.sbl-topr{display:flex;gap:10px;align-items:center;flex:none}
+.sbl-appr{min-width:118px}
+.sbl-appr.on{background:var(--ok);border-color:var(--ok);color:#fff}
 .sbl-hero .sbl-sw{width:min(100%,560px);border:0}
 .sbl-sheet.big{grid-template-columns:minmax(0,1fr) minmax(min(380px,40vw),32vw)}
 .sbl-hero.big{padding:clamp(8px,2vw,24px);position:relative}
@@ -118,7 +129,7 @@
   const style = document.createElement("style"); style.textContent = CSS; document.head.appendChild(style);
 
   let LIB = null, libP = null, on = {}, watching = false, qT = null, full = new Set(), up = null;
-  const ui = { sup: null, q: "", show: null, n: 120, open: null, adding: false, target: "", zoom: false };
+  const ui = { sup: null, q: "", show: null, n: 120, open: null, adding: false, target: "", zoom: false, seq: [] };
   // host.ctx: "studio" (dashboard) or "project". canEdit: may approve (admins, on the dashboard).
   // project(): this project's id (project ctx). projects(): [{id, name}] to add to (studio ctx).
   let host = { ctx: "studio", internal: () => true, canEdit: () => false, canAdd: () => false, project: () => null, projectName: () => "", projects: () => [], inProject: () => new Map(), prefix: null, added: null, openPiece: () => {}, layer: () => {}, toast: m => console.log(m), toastUndo: m => console.log(m) };
@@ -264,16 +275,29 @@
     return `<label class="sbl-pick">${t("Add to project")}<select id="sbl-target"><option value="">${t("Choose a project")}</option>${ps.map(p => `<option value="${esc(p.id)}" ${p.id === ui.target ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select></label>
       <button class="btn" data-sbl="add" ${ui.adding || !ui.target ? "disabled" : ""}>${ui.adding ? t("Adding…") : t("Add")}</button>`;
   }
+  // Next / previous move through the images that were listed when the card was opened,
+  // so approving one while showing "Not approved" doesn't skip the next.
+  const seqPos = () => ui.seq.indexOf(ui.open);
+  function step(d) {
+    const i = seqPos(), j = i + d; if (i < 0 || j < 0 || j >= ui.seq.length || ui.adding) return;
+    ui.open = ui.seq[j]; host.layer();
+    const n = LIB.items[ui.seq[j + d]]; if (n && full.has(n.file)) new Image().src = `/lib/full/${n.file}`;
+  }
+  function navHTML() {
+    const i = seqPos(), n = ui.seq.length; if (i < 0 || n < 2) return "";
+    return `<button class="sbl-nav prev" data-sbl="prev" aria-label="${t("Previous")}" ${i === 0 ? "disabled" : ""}>‹</button><button class="sbl-nav next" data-sbl="next" aria-label="${t("Next")}" ${i === n - 1 ? "disabled" : ""}>›</button><span class="sbl-pos">${nf(i + 1)} / ${nf(n)}</span>`;
+  }
   function sheet() {
     const o = LIB && ui.open != null ? LIB.items[ui.open] : null; if (!o) { ui.open = null; return ""; }
     const S = LIB.sups[o.sup], L = label(o.sup), x = isOn(o), cur = curating();
     document.body.style.overflow = "hidden";
     return `<div class="sbl-scrim" data-sbl="close"></div>
     <section class="sbl-sheet${full.has(o.file) ? " big" : ""}" role="dialog" aria-modal="true" aria-label="${esc(o.file)}">
-      ${full.has(o.file) ? `<div class="sbl-hero big"><button class="sbl-zoom" data-sbl="zoom" title="${t("Click to see it full screen")}"><span class="sbl-sw" ${sprite(o)}></span><img class="sbl-big" src="/lib/full/${esc(o.file)}" alt="${esc(o.file)}"></button></div>`
-        : `<div class="sbl-hero"><span class="sbl-sw" ${sprite(o)}></span></div>`}
+      ${full.has(o.file) ? `<div class="sbl-hero big"><button class="sbl-zoom" data-sbl="zoom" title="${t("Click to see it full screen")}"><span class="sbl-sw" ${sprite(o)}></span><img class="sbl-big" src="/lib/full/${esc(o.file)}" alt="${esc(o.file)}"></button>${navHTML()}</div>`
+        : `<div class="sbl-hero"><span class="sbl-sw" ${sprite(o)}></span>${navHTML()}</div>`}
       <div class="sbl-body">
-        <div class="sbl-top"><span class="eyebrow">${t("Sourcing library")} · ${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""}</span><button class="sbl-x" data-sbl="close" aria-label="${t("Close")}">×</button></div>
+        <div class="sbl-top"><span class="eyebrow">${t("Sourcing library")} · ${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""}</span><span class="sbl-topr">${cur ? `<button class="btn sm sbl-appr ${x ? "on" : ""}" data-sbl="toggle" aria-pressed="${x}">${x ? "✓ " + t("Approved") : t("Approve")}</button>` : ""}<button class="sbl-x" data-sbl="close" aria-label="${t("Close")}">×</button></span></div>
+        ${ui.seq.length > 1 ? `<p class="sbl-hint" style="margin-top:6px">${t(cur ? "← → to move between products · A to approve" : "← → to move between products")}</p>` : ""}
         <h2>${esc(name(o))}</h2>
         <p class="sbl-file">${esc(o.file)}</p>
         <div class="sbl-facts">
@@ -289,14 +313,13 @@
           ${host.internal() ? `<div class="sbl-note"><code id="sbl-note">${esc(sourceNote(o)).replace(/\n/g, "<br>")}</code><div class="sbl-row" style="margin-top:0"><button class="btn sm" data-sbl="copy">${t("Copy source note")}</button><span class="mono" style="font-size:11.5px;color:var(--muted)">${zh() ? `PDF 从第 1 页打开；此图片在第 ${o.page} 页。` : `The PDF opens at page 1; this image is on page ${o.page}.`}</span></div></div>` : ""}
         </section>
         ${cur ? `<section class="sbl-sec"><header><h5>${t("In the library")}</h5><span class="mono" style="color:var(--muted)">${x ? t("Approved") : t("Not approved")}</span></header>
-          <div class="sbl-row"><button class="btn ${x ? "ghost" : ""}" data-sbl="toggle">${x ? t("Unapprove") : t("Approve")}</button></div>
           <p class="sbl-hint">${t("Approved images are shown to everyone, clients included. Unapproving hides it again; pieces already added to projects stay.")}</p>
         </section>` : ""}
         ${o.text ? `<p class="sbl-excerpt">${zh() ? "页面文字：" : "Text on the page: "}${esc(o.text.slice(0, 220))}${o.text.length > 220 ? "…" : ""}</p>` : ""}
       </div></section>
-    ${ui.zoom && full.has(o.file) ? `<div class="sbl-zoomview" data-sbl="unzoom" role="dialog" aria-label="${esc(o.file)}"><img src="/lib/full/${esc(o.file)}" alt="${esc(o.file)}"></div>` : ""}`;
+    ${ui.zoom && full.has(o.file) ? `<div class="sbl-zoomview" data-sbl="unzoom" role="dialog" aria-label="${esc(o.file)}"><img src="/lib/full/${esc(o.file)}" alt="${esc(o.file)}">${navHTML()}</div>` : ""}`;
   }
-  function close() { if (ui.open == null) return; ui.open = null; ui.adding = false; ui.zoom = false; document.body.style.overflow = ""; host.layer(); }
+  function close() { if (ui.open == null) return; ui.open = null; ui.adding = false; ui.zoom = false; ui.seq = []; document.body.style.overflow = ""; host.layer(); }
 
   // Cut one image out of its thumbnail sheet, for the piece's photo (JPEG, base64).
   async function crop(o) {
@@ -405,14 +428,15 @@
     if (el.dataset.sblsup !== undefined) { ui.sup = el.dataset.sblsup || null; ui.n = 120; rerender(); return; }
     if (el.dataset.sblshow) { ui.show = el.dataset.sblshow; ui.n = 120; document.querySelectorAll("[data-sblshow]").forEach(b => b.setAttribute("aria-pressed", b === el)); repaint(); return; }
     if (el.dataset.sblmore !== undefined) { ui.n += 120; repaint(); return; }
-    if (el.dataset.sblopen !== undefined) { ui.open = +el.dataset.sblopen; host.layer(); return; }
+    if (el.dataset.sblopen !== undefined) { ui.open = +el.dataset.sblopen; ui.seq = list().map(o => o.i); host.layer(); return; }
     if (!curating() && (el.dataset.sblbulk || el.dataset.sblpage)) return;
     if (el.dataset.sblbulk) { bulk(list(), el.dataset.sblbulk === "on"); return; }
     if (el.dataset.sblpage) { const p = +el.dataset.sblpage; bulk(list().filter(o => o.page === p), el.dataset.v === "on"); return; }
     const a = el.dataset.sbl;
     if (a === "close") close();
+    else if (a === "prev" || a === "next") { e.stopPropagation(); step(a === "next" ? 1 : -1); }
     else if (a === "zoom") { ui.zoom = true; host.layer(); }
-    else if (a === "unzoom") { ui.zoom = false; host.layer(); }
+    else if (a === "unzoom" && !e.target.closest(".sbl-nav")) { ui.zoom = false; host.layer(); }
     else if (a === "toggle" && curating()) { const o = LIB.items[ui.open]; if (o) { setOn(o.sup, [o.key], !isOn(o)); repaint(); host.layer(); } }
     else if (a === "add") add();
     else if (a === "piece") { const id = el.dataset.id; ui.open = null; host.openPiece(id); }
@@ -432,6 +456,19 @@
     const c = $("#sbl-cats"); if (c) c.innerHTML = catsHTML(); const k = $("#sbl-kept"); if (k) k.textContent = nf(approved());
   });
   document.addEventListener("input", e => { if (e.target.id === "sbl-q" && LIB) { ui.q = e.target.value; ui.n = 120; clearTimeout(qT); qT = setTimeout(() => { const g = $("#sbl-grid"); if (g) g.innerHTML = gridHTML(); }, 140); } });
+  document.addEventListener("keydown", e => {
+    if (ui.open == null || !LIB || document.getElementById("viewer") || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); step(e.key === "ArrowRight" ? 1 : -1); }
+    else if ((e.key === "a" || e.key === "A") && curating()) { const o = LIB.items[ui.open]; if (o) { setOn(o.sup, [o.key], !isOn(o)); repaint(); host.layer(); } }
+  });
+  // Swipe left or right on the picture to move between products on a phone or tablet.
+  let sw = null;
+  document.addEventListener("touchstart", e => { sw = ui.open != null && e.touches.length === 1 && e.target.closest(".sbl-hero,.sbl-zoomview") ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null; }, { passive: true });
+  document.addEventListener("touchend", e => {
+    if (!sw) return; const t0 = e.changedTouches[0], dx = t0.clientX - sw.x, dy = t0.clientY - sw.y; sw = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) step(dx < 0 ? 1 : -1);
+  }, { passive: true });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && ui.open != null && !document.getElementById("viewer")) { e.stopPropagation(); if (ui.zoom) { ui.zoom = false; host.layer(); } else close(); } }, true);
 
   window.SBLibrary = Object.freeze({

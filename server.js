@@ -28,7 +28,7 @@ const LIB_CATS_DIR = path.join(DATA_DIR, "lib-cats");
 const LIB_THUMB_DIR = path.join(DATA_DIR, "lib-thumbs");
 // The library index, read once and kept in memory for building pieces on the server.
 const LIB_LABEL = { "BILLA-Sofa": ["Billa", "Sofas & lounge chairs"], "BILLA-CoffeeTV": ["Billa", "Coffee tables & TV units"], "BILLA-Dining": ["Billa", "Dining"], "BILLA-Outdoor": ["Billa", "Outdoor"], "HALO": ["HALO", "Collection 2026"], "Kaiwuli": ["Kaiwuli", "Catalogue 2026"], "TO-Tearsheet": ["TO Interactive", "Tearsheets 2025"] };
-const LIB_CAT = { FURNITURE: "Furniture", LIGHTING: "Lighting", PLUMBING: "Plumbing", MILLWORK: "Millwork", DOORS: "Millwork", STONE: "Stone", "WALL PANELLING": "Finishes", "WOOD PRODUCTS": "Finishes", "PARTITION SYSTEMS": "Glazing", SIGNAGE: "Hardware" };
+const LIB_CAT = { FURNITURE: "Furniture", LIGHTING: "Lighting", PLUMBING: "Plumbing", MILLWORK: "Millwork", DOORS: "Millwork", STONE: "Stone", "WALL PANELLING": "Finishes", "WOOD PRODUCTS": "Finishes", "PARTITION SYSTEMS": "Glazing", "GLASS PRODUCTS": "Glazing", SIGNAGE: "Hardware" };
 const libCatFile = c => String(c).replace(/ /g, "-");
 let libCache = null;
 // The scanned catalogues in lib/ plus the finished ones added from PDFs; uploaded catalogues carry label and up: 1.
@@ -52,8 +52,8 @@ async function libIndex() {
 }
 // Product types (see TYPES in library.js). Catalogues outside furniture take their category's type;
 // furniture images added from a PDF are sorted by Claude from their thumbnails when an API key is set.
-const LIB_TYPES = "SLCTBKDEGRHPMNWQYAO";
-const LIB_CAT_TYPE = { LIGHTING: "H", PLUMBING: "P", MILLWORK: "M", DOORS: "M", STONE: "N", "WALL PANELLING": "W", "WOOD PRODUCTS": "W", "PARTITION SYSTEMS": "Q", SIGNAGE: "Y" };
+const LIB_TYPES = "SLCTBKDEGRHPMNWQVYAO";
+const LIB_CAT_TYPE = { LIGHTING: "H", PLUMBING: "P", MILLWORK: "M", DOORS: "M", STONE: "N", "WALL PANELLING": "W", "WOOD PRODUCTS": "W", "PARTITION SYSTEMS": "Q", "GLASS PRODUCTS": "V", SIGNAGE: "Y" };
 const LIB_TYPE_PROMPT = `Each image is a product photo from a furniture catalogue. For each image, in order, give ONE letter for the main product shown:
 S sofa/sectional/loveseat · L lounge or arm chair · C dining or office chair · T stool or bar stool · B bench, ottoman or pouf · K coffee or side table · D dining table (a table shown with chairs is D) · E desk, console or dressing table · G cabinet, sideboard, chest, TV unit, shelving or wardrobe · R bed or nightstand · H lamp · A rug, mirror, vase, art or other decor · O logo, text, swatch, drawing or no clear product.
 In a room scene, use the most prominent piece. Reply with only the letters, no spaces.`;

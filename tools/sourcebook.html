@@ -377,6 +377,11 @@ td.n .qin{margin-left:auto;display:block}
 .qtab tfoot td:first-child{text-align:right;padding-right:14px}
 .qadj{display:inline-flex;align-items:center;gap:8px;justify-content:flex-end}
 .qadj input{width:90px;text-align:right;padding:3px 2px}
+.qsec td{text-align:left!important;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-top:18px!important}
+.qland td{font-weight:600;border-top:1px solid var(--ink2)}
+.qprov{width:auto;max-width:230px;padding:3px 4px;font-size:13px}
+.qin.qduty{width:64px}
+.qhelp{max-width:90ch;font-size:12.5px}
 .qgrand td{font-family:var(--display);font-size:22px;border-bottom:1px solid var(--ink)!important}
 .qgrand td.mono{font-family:var(--mono);font-size:16px;font-weight:600}
 /* lookbook jump to materials */
@@ -1206,21 +1211,29 @@ function unitCAD(it){if(it.priceBase==="CNY"&&it.unitCostCNY!=null&&it.unitCostC
 function unitCNY(it){if(it.priceBase==="CNY"&&it.unitCostCNY!=null&&it.unitCostCNY!=="")return Number(it.unitCostCNY);const c=unitCAD(it);return c==null?null:c*fx()}
 const fmtC=(n,cur)=>n==null||!isFinite(n)?"—":(cur==="CNY"?"¥":"$")+n.toLocaleString(lang==="zh"?"zh-CN":"en-CA",{minimumFractionDigits:2,maximumFractionDigits:2});
 const num=v=>v==null||v===""||!isFinite(Number(v))?null:Number(v);
-function quoteTotals(list){
-  const sub=list.reduce((s,it)=>s+((num(it.qty)||0)*(unitCAD(it)||0)),0);
-  const feeP=num(project.quoteFee)||0,freight=num(project.quoteFreight)||0,taxP=num(project.quoteTax)||0;
-  const fee=sub*feeP/100,taxable=sub+fee+freight,tax=taxable*taxP/100;
-  return{sub,fee,feeP,freight,tax,taxP,total:taxable+tax};
+// Sales tax by province (Oct 2026). Landed cost = products + fee + freight + insurance + duty + brokerage + delivery; sales tax is charged on the landed cost.
+const PROVINCES=[["ON","Ontario","HST",13],["BC","British Columbia","GST + PST",12],["AB","Alberta","GST",5],["QC","Quebec","GST + QST",14.975],["MB","Manitoba","GST + PST",12],["SK","Saskatchewan","GST + PST",11],["NS","Nova Scotia","HST",14],["NB","New Brunswick","HST",15],["NL","Newfoundland and Labrador","HST",15],["PE","Prince Edward Island","HST",15],["YT","Yukon","GST",5],["NT","Northwest Territories","GST",5],["NU","Nunavut","GST",5]];
+const provOf=()=>PROVINCES.find(p=>p[0]===(project.quoteProv||"ON"))||PROVINCES[0];
+const taxRate=()=>num(project.quoteTax)??provOf()[3];
+const dutyOf=it=>num(it.dutyRate)??(num(project.quoteDuty)||0);
+function quoteTotals(list,P=project){
+  const line=it=>(num(it.qty)||0)*(unitCAD(it)||0);
+  const sub=list.reduce((s,it)=>s+line(it),0);
+  const feeP=num(P.quoteFee)||0,freight=num(P.quoteFreight)||0,insP=num(P.quoteIns)||0,broker=num(P.quoteBroker)||0,deliv=num(P.quoteDeliv)||0;
+  const taxP=num(P.quoteTax)??(PROVINCES.find(p=>p[0]===(P.quoteProv||"ON"))||PROVINCES[0])[3];
+  const dflt=num(P.quoteDuty)||0,duty=list.reduce((s,it)=>s+line(it)*(num(it.dutyRate)??dflt)/100,0);
+  const fee=sub*feeP/100,ins=sub*insP/100,ship=freight+ins+duty+broker+deliv,landed=sub+fee+ship,tax=landed*taxP/100;
+  return{sub,fee,feeP,freight,ins,insP,duty,broker,deliv,ship,landed,tax,taxP,total:landed+tax};
 }
 function quotation(){
   const list=filtered().slice().sort((a,b)=>String(a.category||"").localeCompare(String(b.category||""))||String(a.code||"").localeCompare(String(b.code||""),undefined,{numeric:true}));
   const ed=canWrite&&!preview;const r=fx();
   const priced=list.filter(it=>unitCAD(it)!=null).length,noQty=list.filter(it=>num(it.qty)==null).length;
-  const T=quoteTotals(list);
+  const T=quoteTotals(list);const dc=ed?"<td></td>":"",ncol=ed?10:9;
   let grp=null,gsum=0,rows="";
-  const flush=()=>{if(grp!=null)rows+=`<tr class="qsub"><td colspan="6">${esc(grp)} subtotal</td><td class="n mono">${fmtC(gsum,"CAD")}</td><td></td><td class="n mono">${fmtC(gsum*r,"CNY")}</td></tr>`};
+  const flush=()=>{if(grp!=null)rows+=`<tr class="qsub"><td colspan="6">${esc(grp)} subtotal</td><td class="n mono">${fmtC(gsum,"CAD")}</td><td></td><td class="n mono">${fmtC(gsum*r,"CNY")}</td>${dc}</tr>`};
   list.forEach(it=>{
-    const g=it.category||"Other";if(g!==grp){flush();grp=g;gsum=0;rows+=`<tr class="month"><td colspan="9">${esc(g)}</td></tr>`}
+    const g=it.category||"Other";if(g!==grp){flush();grp=g;gsum=0;rows+=`<tr class="month"><td colspan="${ncol}">${esc(g)}</td></tr>`}
     const q=num(it.qty),uc=unitCAD(it),un=unitCNY(it),tot=q!=null&&uc!=null?q*uc:null;gsum+=tot||0;
     const inp=(id,val,cur,base)=>ed?`<input class="qin mono ${base?"base":""}" type="number" step="any" min="0" inputmode="decimal" id="${id}" data-q="${cur}" data-id="${it.id}" value="${val==null?"":(cur==="qty"?val:Math.round(val*100)/100)}" placeholder="—" aria-label="${cur==="qty"?"Quantity":"Unit price "+cur}">`:(cur==="qty"?(val??"—"):fmtC(val,cur));
     rows+=`<tr class="qrow">
@@ -1232,33 +1245,47 @@ function quotation(){
       <td class="n">${inp("qc-"+it.id,uc,"CAD",it.priceBase!=="CNY")}</td>
       <td class="n mono strong">${tot==null?`<span class="tbd">${uc==null?"Price TBD":"Qty TBD"}</span>`:fmtC(tot,"CAD")}</td>
       <td class="n">${inp("qn-"+it.id,un,"CNY",it.priceBase==="CNY")}</td>
-      <td class="n mono strong">${tot==null?"—":fmtC(tot*r,"CNY")}</td></tr>`;
+      <td class="n mono strong">${tot==null?"—":fmtC(tot*r,"CNY")}</td>${ed?`<td class="n"><input class="qin qduty mono" type="number" step="any" min="0" inputmode="decimal" id="qd-${it.id}" data-q="duty" data-id="${it.id}" value="${num(it.dutyRate)??""}" placeholder="${num(project.quoteDuty)||0}" aria-label="Duty rate %"></td>`:""}</tr>`;
   });flush();
-  const adj=(id,label,val,suffix)=>`<label class="qadj">${label}${ed?`<input class="f mono" type="number" step="any" min="0" id="${id}" data-qp="${id}" value="${val||""}" placeholder="0">`:`<span class="mono">${val||0}</span>`}<span class="mono muted">${suffix}</span></label>`;
+  const adj=(id,label,val,suffix)=>`<label class="qadj">${label}${ed?`<input class="f mono" type="number" step="any" min="0" id="${id}" data-qp="${id}" value="${val??""}" placeholder="0">`:`<span class="mono">${val||0}</span>`}<span class="mono muted">${suffix}</span></label>`;
+  const line=(label,v,cls="")=>`<tr class="${cls}"><td colspan="6">${label}</td><td class="n mono">${fmtC(v,"CAD")}</td><td></td><td class="n mono">${fmtC(v*r,"CNY")}</td>${dc}</tr>`;
+  const pv=provOf();
+  const prov=ed?`<select class="f qprov" id="q-prov" data-qp="q-prov" aria-label="Province">${PROVINCES.map(p=>`<option value="${p[0]}" ${p[0]===pv[0]?"selected":""}>${p[1]} · ${p[2]} ${p[3]}%</option>`).join("")}</select>`:`<span>${pv[1]} · ${pv[2]}</span>`;
+  const mixed=list.some(it=>num(it.dutyRate)!=null);
   return`<div class="schedhead"><div><div class="eyebrow">${esc(project.name)} · ${fmtD(new Date(),true)}</div><h2>Quotation</h2></div>
     <div class="row2">${downloads?`<button class="btn ghost sm" data-a="csvquote">Export CSV</button>`:""}</div></div>
   <div class="sum qsum"><div><span class="eyebrow">Total (CAD)</span><b>${fmtC(T.total,"CAD")}</b></div><div><span class="eyebrow">Total (CNY)</span><b>${fmtC(T.total*r,"CNY")}</b></div><div><span class="eyebrow">Items priced</span><b class="${priced<list.length?"warnnum":""}">${priced} / ${list.length}</b></div>
     <div><span class="eyebrow">Exchange rate</span>${ed?`<span class="fxrow"><span class="mono">1 CAD =</span><input class="f mono" type="number" step="0.0001" min="0" id="q-fx" data-qp="fx" value="${r}"><span class="mono">CNY</span></span>`:`<b>${r}</b>`}<span class="muted fxnote">${project.fxRate?"Set for this project":"Market rate on "+fmtD(parseD(FX_DATE),true)}</span></div></div>
   <p class="muted finnote">Enter a unit price in either currency; the other is converted at the project rate.${noQty?` ${noQty} item${noQty===1?"":"s"} still need a quantity.`:""}</p>
-  <div class="tablewrap"><table class="qtab"><thead><tr><th></th><th>Code</th><th>Item</th><th>Unit</th><th class="n">Qty</th><th class="n">Unit price (CAD)</th><th class="n">Total (CAD)</th><th class="n">Unit price (CNY)</th><th class="n">Total (CNY)</th></tr></thead>
-    <tbody>${rows||`<tr><td colspan="9" class="muted">No materials or products yet.</td></tr>`}</tbody>
+  <div class="tablewrap"><table class="qtab"><thead><tr><th></th><th>Code</th><th>Item</th><th>Unit</th><th class="n">Qty</th><th class="n">Unit price (CAD)</th><th class="n">Total (CAD)</th><th class="n">Unit price (CNY)</th><th class="n">Total (CNY)</th>${ed?`<th class="n">Duty %</th>`:""}</tr></thead>
+    <tbody>${rows||`<tr><td colspan="${ncol}" class="muted">No materials or products yet.</td></tr>`}</tbody>
     <tfoot>
-      <tr><td colspan="6">Subtotal</td><td class="n mono">${fmtC(T.sub,"CAD")}</td><td></td><td class="n mono">${fmtC(T.sub*r,"CNY")}</td></tr>
-      <tr><td colspan="6">${adj("q-fee","Sourcing fee",project.quoteFee,"%")}</td><td class="n mono">${fmtC(T.fee,"CAD")}</td><td></td><td class="n mono">${fmtC(T.fee*r,"CNY")}</td></tr>
-      <tr><td colspan="6">${adj("q-freight","Freight &amp; logistics",project.quoteFreight,"CAD")}</td><td class="n mono">${fmtC(T.freight,"CAD")}</td><td></td><td class="n mono">${fmtC(T.freight*r,"CNY")}</td></tr>
-      <tr><td colspan="6">${adj("q-tax","Tax",project.quoteTax,"%")}</td><td class="n mono">${fmtC(T.tax,"CAD")}</td><td></td><td class="n mono">${fmtC(T.tax*r,"CNY")}</td></tr>
-      <tr class="qgrand"><td colspan="6">Total</td><td class="n mono">${fmtC(T.total,"CAD")}</td><td></td><td class="n mono">${fmtC(T.total*r,"CNY")}</td></tr>
-    </tfoot></table></div>`;
+      ${line("Products subtotal",T.sub)}
+      ${line(adj("q-fee","Sourcing fee",project.quoteFee,"%"),T.fee)}
+      <tr class="qsec"><td colspan="${ncol}">Shipping, duty &amp; delivery</td></tr>
+      ${line(adj("q-freight","Ocean freight",project.quoteFreight,"CAD"),T.freight)}
+      ${line(adj("q-ins","Cargo insurance",project.quoteIns,"% of products"),T.ins)}
+      ${line(ed?adj("q-duty","Duty",project.quoteDuty,mixed?"% default":"% of products"):"Duty",T.duty)}
+      ${line(adj("q-broker","Customs brokerage",project.quoteBroker,"CAD"),T.broker)}
+      ${line(adj("q-deliv","Delivery &amp; storage",project.quoteDeliv,"CAD"),T.deliv)}
+      ${line("Landed cost",T.landed,"qland")}
+      <tr><td colspan="6"><span class="qadj">Sales tax ${prov}${ed?`<input class="f mono" type="number" step="any" min="0" id="q-tax" data-qp="q-tax" value="${taxRate()}"><span class="mono muted">%</span>`:`<span class="mono">${taxRate()}%</span>`}</span></td><td class="n mono">${fmtC(T.tax,"CAD")}</td><td></td><td class="n mono">${fmtC(T.tax*r,"CNY")}</td>${dc}</tr>
+      <tr class="qgrand"><td colspan="6">Total</td><td class="n mono">${fmtC(T.total,"CAD")}</td><td></td><td class="n mono">${fmtC(T.total*r,"CNY")}</td>${dc}</tr>
+    </tfoot></table></div>
+  ${ed?`<p class="muted finnote qhelp">Freight benchmark (Oct 2026): a 40 ft high cube from China to Vancouver or Montreal is about US$8,640 to $10,560; shared container (LCL) about US$190 per cubic metre. Get a firm quote at booking.</p>
+  <p class="muted finnote qhelp">Duty is charged on the product value. Set a default rate for the project and override it per item in the Duty % column. Confirm rates with a customs broker: upholstered seating from China can carry 188% anti-dumping duty, and some steel and aluminum goods a 25% surtax.</p>`:""}`;
 }
 function saveQuoteInput(t){
-  const v=t.value===""?null:Number(t.value);if(v!=null&&!(v>=0))return;
+  const v=t.dataset.qp==="q-prov"||t.value===""?null:Number(t.value);if(v!=null&&!(v>=0))return;
   if(t.dataset.qp){
-    const key={fx:"fxRate","q-fee":"quoteFee","q-freight":"quoteFreight","q-tax":"quoteTax"}[t.dataset.qp];
+    if(t.dataset.qp==="q-prov"){const p=PROVINCES.find(x=>x[0]===t.value)||PROVINCES[0];project={...project,quoteProv:p[0],quoteTax:p[3]};write("project",()=>db.doc("project/main").set(project));setTimeout(()=>{force=true;render();force=false},0);return}
+    const key={fx:"fxRate","q-fee":"quoteFee","q-freight":"quoteFreight","q-ins":"quoteIns","q-duty":"quoteDuty","q-broker":"quoteBroker","q-deliv":"quoteDeliv","q-tax":"quoteTax"}[t.dataset.qp];
     project={...project,[key]:v};write("project",()=>db.doc("project/main").set(project));
     if(key==="fxRate"){const r=fx();items.filter(i=>i.priceBase==="CNY"&&i.unitCostCNY!=null).forEach(i=>setItem(i.id,{unitCost:Math.round(Number(i.unitCostCNY)/r*100)/100}))}
   }else{
     const it=items.find(i=>i.id===t.dataset.id);if(!it)return;const c=t.dataset.q;
     if(c==="qty")setItem(it.id,{qty:v});
+    else if(c==="duty")setItem(it.id,{dutyRate:v});
     else if(c==="CAD")setItem(it.id,{unitCost:v,priceBase:"CAD",unitCostCNY:null});
     else setItem(it.id,{unitCostCNY:v,unitCost:v==null?null:Math.round(v/fx()*100)/100,priceBase:"CNY"});
   }
@@ -1271,7 +1298,7 @@ async function exportQuoteCSV(){
   const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;const f2=n=>n==null?"":n.toFixed(2);
   const rows=list.map(it=>{const qt=num(it.qty),uc=unitCAD(it),tot=qt!=null&&uc!=null?qt*uc:null;return[it.category,it.code,it.name,it.supplier,it.modelCode,it.unit||"ea",qt,f2(uc),f2(tot),f2(uc==null?null:unitCNY(it)),f2(tot==null?null:tot*r)].map(q).join(",")});
   const T=quoteTotals(list);const blank=["","","","","","",""];
-  const tail=[["Subtotal",T.sub],[`Sourcing fee ${T.feeP}%`,T.fee],["Freight & logistics",T.freight],[`Tax ${T.taxP}%`,T.tax],["Total",T.total]].map(([l,v])=>[...blank.slice(0,6),l,"",f2(v),"",f2(v*r)].map(q).join(","));
+  const tail=[["Products subtotal",T.sub],[`Sourcing fee ${T.feeP}%`,T.fee],["Ocean freight",T.freight],[`Cargo insurance ${T.insP}%`,T.ins],["Duty",T.duty],["Customs brokerage",T.broker],["Delivery & storage",T.deliv],["Landed cost",T.landed],[`Sales tax (${provOf()[1]} ${provOf()[2]}) ${T.taxP}%`,T.tax],["Total",T.total]].map(([l,v])=>[...blank.slice(0,6),l,"",f2(v),"",f2(v*r)].map(q).join(","));
   const csv=[["Category","Code","Item","Supplier","Model","Unit","Qty","Unit price CAD","Total CAD","Unit price CNY","Total CNY"].map(q).join(","),...rows,"",...tail,"",q(`Exchange rate: 1 CAD = ${r} CNY`)].join("\n");
   try{await downloads.save({filename:(project.name||"project").replace(/\W+/g,"-")+"-quotation.csv",data:new Blob([csv],{type:"text/csv"})})}catch(e){if(e&&e.code!=="cancelled"&&e.code!=="declined")toast("Export didn't complete.")}
 }
@@ -1316,8 +1343,7 @@ async function loadSummaries(){
       const [its,ims,drs,mainSnap]=await Promise.all([g("items"),g("images"),g("drawings"),rawdb.doc(ns+"project/main").get()]);
       const main=mainSnap.exists?mainSnap.data():{};const fxr=Number(main.fxRate)>0?Number(main.fxRate):FX_DEFAULT;
       const uc=it=>it.priceBase==="CNY"&&it.unitCostCNY!=null&&it.unitCostCNY!==""?Number(it.unitCostCNY)/fxr:it.unitCost==null||it.unitCost===""?null:Number(it.unitCost);
-      const sub=its.reduce((s,it)=>s+(Number(it.qty)||0)*(uc(it)||0),0);
-      const total=(sub+sub*(Number(main.quoteFee)||0)/100+(Number(main.quoteFreight)||0))*(1+(Number(main.quoteTax)||0)/100);
+      const total=quoteTotals(its.map(it=>({...it,unitCost:uc(it),priceBase:"CAD"})),main).total;
       const stages=Object.fromEntries(STAGES.map(s=>[s,its.filter(i=>i.status===s).length]));
       let overdue=0,soon=0;its.forEach(it=>{if(STAGES.indexOf(it.status)>=3)return;const ob=orderBy(it);if(!ob)return;const d=Math.round((ob-today)/DAY);if(d<0)overdue++;else if(d<=21)soon++});
       const cover=ims.slice().sort((a,b)=>(a.order??0)-(b.order??0))[0]?.asset||its.find(i=>i.photo)?.photo||null;
@@ -2938,7 +2964,7 @@ const ZH={
 "No materials were identified. Try a clearer or closer view.":"未识别到材料，请尝试更清晰或更近的视图。","The answer came back in the wrong shape. Try again.":"返回结果格式不正确，请重试。","You've hit your Claude usage limit for now. Try again later.":"您暂时已达到 Claude 使用上限，请稍后再试。","Only PDFs and images can be read. Link files like .dwg as references instead.":"只能读取 PDF 和图片。.dwg 等文件请作为参考链接添加。",
 "Claude isn't available to this page right now. Reload the book, and allow it to use Claude when asked.":"此页面暂时无法使用 Claude。请重新加载手册，并在提示时允许使用 Claude。","This view can't send images to Claude. Open the book in a web browser on claude.ai to read attachments.":"当前视图无法向 Claude 发送图片。请在浏览器中通过 claude.ai 打开手册以读取附件。",
 "Nothing pasted yet. Copy the rows in Google Sheets first.":"尚未粘贴内容，请先在 Google 表格中复制行。","There are no rows under a header row. Make sure the copy or file includes the headings and at least one item.":"表头下没有数据行。请确认复制内容或文件包含表头及至少一个项目。",
-"Primary ensuite":"主卧卫生间","Location ":"位置","Linked to":"已关联","your Google Sheet ↗":"您的 Google 表格 ↗","download it as Excel":"下载为 Excel","download it as Excel ↗":"下载为 Excel ↗","Upload the download":"上传下载的文件","Paste rows":"粘贴行","or drop / paste an image":"或拖放 / 粘贴图片","Drop an image on the picture, or use a material plate below":"将图片拖放到画面上，或使用下方的材料样板","Use a JPG, PNG, WebP or GIF image.":"请使用 JPG、PNG、WebP 或 GIF 图片。","Save the image to your device first, then drop the file here.":"请先将图片保存到设备，再将文件拖放到这里。","Size":"尺寸","Small":"小","Medium":"中","Large":"大","Fill":"填满","Whole":"完整","Card size":"卡片尺寸","Show whole image":"显示完整图片","Fill the frame":"填满画框","Projects":"项目","All projects":"全部项目","← All projects":"← 全部项目","Sourcebook · Studio":"选材手册 · 工作室","New project":"新建项目","Active projects":"进行中项目","Pieces in sourcing":"采购中项目","Orders overdue":"逾期未下单","Due in 3 weeks":"三周内需下单","Quoted value":"报价总额","Active":"进行中","Archived":"已归档","Open now":"当前打开","No pictures yet":"暂无图片","pieces":"个项目","drawings":"张图纸","quoted (CAD)":"报价（加元）","Open":"打开","Archive":"归档","Restore":"恢复","Delete project…":"删除项目…","Start a book for a new job: its lookbook, schedules and quotation.":"为新工作建立手册：效果册、清单与报价单。","Create project":"创建项目","Project created":"已创建项目","Project deleted":"已删除项目","Loading projects…":"正在加载项目…","Updating…":"正在更新…","No archived projects.":"没有已归档的项目。","Project options":"项目选项","across all projects":"所有项目合计","Couldn't create the project. Try again.":"无法创建项目，请重试。","Some of the project couldn't be removed. Try again.":"部分项目内容无法删除，请重试。","Projects appear here once the book is open on claude.ai.":"在 claude.ai 中打开手册后，项目会显示在这里。","Quotation":"报价单","Total (CAD)":"合计（加元）","Total (CNY)":"合计（人民币）","Items priced":"已报价项目","Exchange rate":"汇率","Set for this project":"本项目设定","Unit price (CAD)":"单价（加元）","Unit price (CNY)":"单价（人民币）","Price TBD":"价格待定","Qty TBD":"数量待定","Subtotal":"小计","Sourcing fee":"采购服务费","Freight & logistics":"运费与物流","Tax":"税费","Total":"合计","Enter a unit price in either currency; the other is converted at the project rate.":"可以任一币种输入单价，另一币种按项目汇率自动换算。","No materials or products yet.":"暂无材料或产品。","1 CAD =":"1 加元 =","Other":"其他","Unit price CAD":"单价 加元","Unit price CNY":"单价 人民币","Language":"语言","View all":"查看全部"
+"Primary ensuite":"主卧卫生间","Location ":"位置","Linked to":"已关联","your Google Sheet ↗":"您的 Google 表格 ↗","download it as Excel":"下载为 Excel","download it as Excel ↗":"下载为 Excel ↗","Upload the download":"上传下载的文件","Paste rows":"粘贴行","or drop / paste an image":"或拖放 / 粘贴图片","Drop an image on the picture, or use a material plate below":"将图片拖放到画面上，或使用下方的材料样板","Use a JPG, PNG, WebP or GIF image.":"请使用 JPG、PNG、WebP 或 GIF 图片。","Save the image to your device first, then drop the file here.":"请先将图片保存到设备，再将文件拖放到这里。","Size":"尺寸","Small":"小","Medium":"中","Large":"大","Fill":"填满","Whole":"完整","Card size":"卡片尺寸","Show whole image":"显示完整图片","Fill the frame":"填满画框","Projects":"项目","All projects":"全部项目","← All projects":"← 全部项目","Sourcebook · Studio":"选材手册 · 工作室","New project":"新建项目","Active projects":"进行中项目","Pieces in sourcing":"采购中项目","Orders overdue":"逾期未下单","Due in 3 weeks":"三周内需下单","Quoted value":"报价总额","Active":"进行中","Archived":"已归档","Open now":"当前打开","No pictures yet":"暂无图片","pieces":"个项目","drawings":"张图纸","quoted (CAD)":"报价（加元）","Open":"打开","Archive":"归档","Restore":"恢复","Delete project…":"删除项目…","Start a book for a new job: its lookbook, schedules and quotation.":"为新工作建立手册：效果册、清单与报价单。","Create project":"创建项目","Project created":"已创建项目","Project deleted":"已删除项目","Loading projects…":"正在加载项目…","Updating…":"正在更新…","No archived projects.":"没有已归档的项目。","Project options":"项目选项","across all projects":"所有项目合计","Couldn't create the project. Try again.":"无法创建项目，请重试。","Some of the project couldn't be removed. Try again.":"部分项目内容无法删除，请重试。","Projects appear here once the book is open on claude.ai.":"在 claude.ai 中打开手册后，项目会显示在这里。","Quotation":"报价单","Total (CAD)":"合计（加元）","Total (CNY)":"合计（人民币）","Items priced":"已报价项目","Exchange rate":"汇率","Set for this project":"本项目设定","Unit price (CAD)":"单价（加元）","Unit price (CNY)":"单价（人民币）","Price TBD":"价格待定","Qty TBD":"数量待定","Subtotal":"小计","Sourcing fee":"采购服务费","Freight & logistics":"运费与物流","Products subtotal":"产品小计","Shipping, duty & delivery":"运输、关税与配送","Ocean freight":"海运费","Cargo insurance":"货运保险","% of products":"% 按产品金额","Duty":"关税","Duty %":"关税 %","Duty rate %":"关税税率 %","Customs brokerage":"清关代理费","Delivery & storage":"配送与仓储","Landed cost":"到岸总成本","Sales tax":"销售税","Province":"省份","Ontario":"安大略省","British Columbia":"不列颠哥伦比亚省","Alberta":"阿尔伯塔省","Quebec":"魁北克省","Manitoba":"曼尼托巴省","Saskatchewan":"萨斯喀彻温省","Nova Scotia":"新斯科舍省","New Brunswick":"新不伦瑞克省","Newfoundland and Labrador":"纽芬兰与拉布拉多省","Prince Edward Island":"爱德华王子岛省","Yukon":"育空地区","Northwest Territories":"西北地区","Nunavut":"努纳武特地区","% default":"% 默认","Freight benchmark (Oct 2026): a 40 ft high cube from China to Vancouver or Montreal is about US$8,640 to $10,560; shared container (LCL) about US$190 per cubic metre. Get a firm quote at booking.":"运费参考（2026年10月）：中国至温哥华或蒙特利尔的 40 尺高柜约 8,640 至 10,560 美元；拼箱（LCL）约每立方米 190 美元。订舱时请获取确定报价。","Duty is charged on the product value. Set a default rate for the project and override it per item in the Duty % column. Confirm rates with a customs broker: upholstered seating from China can carry 188% anti-dumping duty, and some steel and aluminum goods a 25% surtax.":"关税按产品金额计算。可为项目设定默认税率，并在“关税 %”列中为单项另设税率。请向报关行确认税率：来自中国的软包座椅可能被征收 188% 反倾销税，部分钢铝制品另有 25% 附加税。","Tax":"税费","Total":"合计","Enter a unit price in either currency; the other is converted at the project rate.":"可以任一币种输入单价，另一币种按项目汇率自动换算。","No materials or products yet.":"暂无材料或产品。","1 CAD =":"1 加元 =","Other":"其他","Unit price CAD":"单价 加元","Unit price CNY":"单价 人民币","Language":"语言","View all":"查看全部"
 };
 const ZH_PAT=[
  [/^(\d+) · drop images here$/,m=>`${m[1]} · 可将图片拖放到这里`],[/^(.+) · Additional images$/,m=>`${m[1]} · 更多图片`],
@@ -2949,7 +2975,7 @@ const ZH_PAT=[
  [/^Uploading (.+)$/,m=>`正在上传 ${m[1]}`],[/^(.+) · large models can take a minute$/,m=>`${m[1]} · 大型模型可能需要一分钟`],[/^That model is (.+)\. Keep it under 100 MB.*$/,m=>`模型大小为 ${m[1]}，请控制在 100 MB 以内：开启 Draco 压缩或使用较小的贴图。`],
  [/^by (.+) · (.+)$/,m=>`${m[1]} · ${m[2]}`],[/^(\d+) comments?$/,m=>`${m[1]} 条评论`],
  [/^(\d+) pieces? · (\d+) decisions?$/,m=>`${m[1]} 个项目 · ${m[2]} 项决策`],
- [/^(\d+) pieces?$/,m=>`${m[1]} 个项目`],[/^Image added to (.+)$/,m=>`已为 ${m[1]} 添加图片`],[/^(\d+) active · (\d+) archived$/,m=>`${m[1]} 个进行中 · ${m[2]} 个已归档`],[/^(\d+) overdue$/,m=>`${m[1]} 项逾期`],[/^(\d+) due soon$/,m=>`${m[1]} 项即将到期`],[/^Delete (.+), its pieces, drawings and images\?.*$/,m=>`删除 ${m[1]} 及其所有项目、图纸和图片？此操作无法撤销。`],[/^(.+) subtotal$/,m=>`${trPart(m[1])||m[1]} 小计`],[/^Market rate on (.+)$/,m=>`${m[1]} 市场汇率`],[/^Enter a unit price in either currency; the other is converted at the project rate\. (\d+) items? still need a quantity\.$/,m=>`可以任一币种输入单价，另一币种按项目汇率自动换算。仍有 ${m[1]} 个项目缺少数量。`],[/^(\d+) pieces? with images, specifications, quantities and attachments$/,m=>`${m[1]} 个项目，含图片、规格、数量和附件`],[/^(\d+) images?$/,m=>`${m[1]} 张图片`],[/^(\d+) sheets?$/,m=>`${m[1]} 张图纸`],[/^(\d+) finish(es)?$/,m=>`${m[1]} 项饰面`],[/^(\d+) of (\d+)$/,m=>`${m[1]} / ${m[2]}`],
+ [/^(\d+) pieces?$/,m=>`${m[1]} 个项目`],[/^Image added to (.+)$/,m=>`已为 ${m[1]} 添加图片`],[/^(\d+) active · (\d+) archived$/,m=>`${m[1]} 个进行中 · ${m[2]} 个已归档`],[/^(\d+) overdue$/,m=>`${m[1]} 项逾期`],[/^(\d+) due soon$/,m=>`${m[1]} 项即将到期`],[/^Delete (.+), its pieces, drawings and images\?.*$/,m=>`删除 ${m[1]} 及其所有项目、图纸和图片？此操作无法撤销。`],[/^(.+) subtotal$/,m=>`${trPart(m[1])||m[1]} 小计`],[/^Market rate on (.+)$/,m=>`${m[1]} 市场汇率`],[/^(HST|GST|GST \+ PST|GST \+ QST) ([\d.]+)%$/,m=>`${{HST:"统一销售税",GST:"联邦消费税","GST + PST":"联邦消费税 + 省销售税","GST + QST":"联邦消费税 + 魁省销售税"}[m[1]]} ${m[2]}%`],[/^Enter a unit price in either currency; the other is converted at the project rate\. (\d+) items? still need a quantity\.$/,m=>`可以任一币种输入单价，另一币种按项目汇率自动换算。仍有 ${m[1]} 个项目缺少数量。`],[/^(\d+) pieces? with images, specifications, quantities and attachments$/,m=>`${m[1]} 个项目，含图片、规格、数量和附件`],[/^(\d+) images?$/,m=>`${m[1]} 张图片`],[/^(\d+) sheets?$/,m=>`${m[1]} 张图纸`],[/^(\d+) finish(es)?$/,m=>`${m[1]} 项饰面`],[/^(\d+) of (\d+)$/,m=>`${m[1]} / ${m[2]}`],
  [/^(\d+) still need a manufacturer, finish name or model code\. Tap a finish to fill in its details(, or drag it by its handle into another family)?\.$/,m=>`${m[1]} 项仍缺少制造商、饰面名称或型号。点按饰面填写信息${m[2]?"，或拖动手柄移到其他类别":""}。`],
  [/^(\d+) finish(?:es)? (?:doesn't|don't) use a standard code yet\.$/,m=>`${m[1]} 项饰面尚未使用标准编号。`],
  [/^(\d+) pieces? (?:doesn't|don't) use a standard furniture tag yet\.$/,m=>`${m[1]} 件家具尚未使用标准编号。`],

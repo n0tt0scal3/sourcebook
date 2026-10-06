@@ -9,7 +9,7 @@
   const LIB_ROOT = "G:\\My Drive\\LMNL\\90 CHINA PRODUCTS\\";
   const ZH = {
     "Sourcing library": "采购图库", "Approved": "已批准", "Not approved": "未批准", "All": "全部", "Scanned": "已扫描", "In this project": "本项目中", "All catalogues": "全部图册",
-    "Approve all shown": "批准全部显示项", "Unapprove all shown": "取消批准全部显示项", "Approve page": "批准本页", "Unapprove page": "取消批准本页", "In project": "已在项目中",
+    "Approve all shown": "批准全部显示项", "Move selected to…": "将所选移至…", "Select all shown": "全选显示项", "Clear selection": "清除选择", "Select images first.": "请先选择图片。", "Select to move": "选择以移动", "Unapprove all shown": "取消批准全部显示项", "Approve page": "批准本页", "Unapprove page": "取消批准本页", "In project": "已在项目中",
     "Loading catalogues…": "正在加载图册…", "The catalogue index didn't load. Reload the page to try again.": "图册索引未能加载，请刷新页面重试。",
     "Nothing matches that search.": "没有匹配的结果。", "Nothing is waiting for approval here.": "这里没有待批准的图片。", "Nothing has been approved yet.": "尚未批准任何图片。",
     "Every image scanned from the supplier catalogues, each kept with its catalogue and page. Tick an image to approve it; only approved images are shown to the team and clients.": "从供应商图册中扫描出的所有图片，均保留其图册和页码。勾选即可批准；只有已批准的图片会向团队和客户显示。",
@@ -75,6 +75,12 @@
 .sbl-sw{display:block;width:100%;aspect-ratio:1;max-width:100%;background-color:#fff;background-repeat:no-repeat;border:1px solid var(--rule2);transition:border-color .2s}
 .sbl-open:hover .sbl-sw{border-color:var(--ink)}
 .sbl-chk{position:absolute;top:6px;right:6px;width:30px;height:30px;display:grid;place-items:center;background:var(--paper);border:1px solid var(--rule);cursor:pointer}
+.sbl-sel{position:absolute;top:6px;left:6px;width:30px;height:30px;display:grid;place-items:center;background:var(--paper);border:1px solid var(--rule);cursor:pointer;z-index:1}
+.sbl-sel input{width:17px;height:17px;margin:0;accent-color:var(--ink);cursor:pointer}
+.sbl-tile.sel .sbl-open{outline:2px solid var(--ink);outline-offset:2px}
+.sbl-sortbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:12px 14px;margin:18px 0 4px;background:var(--paper);border:1px solid var(--rule);font-size:14px}
+.sbl-sortbar select{font:inherit;font-size:14px;color:var(--ink);background:var(--paper);border:1px solid var(--rule);padding:6px 8px}
+.sbl-sortbar b{font-weight:500}
 .sbl-chk input{width:17px;height:17px;margin:0;accent-color:var(--ok);cursor:pointer}
 .sbl-cap{display:flex;gap:6px;align-items:baseline;font-family:var(--mono);font-size:11px;color:var(--ink2);overflow:hidden;white-space:nowrap}
 .sbl-cap b{font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis}
@@ -273,17 +279,29 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const l = list(), cur = curating(), inP = host.ctx === "project" ? host.inProject() : new Map();
     setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = zh() ? `${nf(l.length)} 张图片` : `${nf(l.length)} image${l.length === 1 ? "" : "s"}`; }, 0);
     if (!l.length) return `<div class="sbl-grid"><p class="sbl-empty">${ui.q ? t("Nothing matches that search.") : showMode() === "off" ? t("Nothing is waiting for approval here.") : t("Nothing has been approved yet.")}</p></div>`;
+    // Not sorted yet: admins tick images and send them to a type in one go.
+    const sorting = cur && ui.type === "U";
+    if (!sorting) sel.clear(); else { const ids = new Set(l.map(o => o.i)); [...sel].forEach(i => ids.has(i) || sel.delete(i)); }
     let page = null, html = ""; const bySup = !!ui.sup;
     for (const o of l.slice(0, ui.n)) {
       if (bySup && o.page !== page) { page = o.page; html += `<div class="sbl-page"><b>${t("Page")} ${o.page}</b>${cur ? `<span><button class="linkbtn" data-sblpage="${o.page}" data-v="on">${t("Approve page")}</button><button class="linkbtn" data-sblpage="${o.page}" data-v="off">${t("Unapprove page")}</button></span>` : ""}</div>`; }
       const x = isOn(o);
-      html += `<div class="sbl-tile ${cur && !x ? "off" : ""}"><button class="sbl-open" data-sblopen="${o.i}" aria-label="${esc(o.file)}"><span class="sbl-sw" ${sprite(o)}></span></button>
+      html += `<div class="sbl-tile ${cur && !x ? "off" : ""} ${sel.has(o.i) ? "sel" : ""}"><button class="sbl-open" data-sblopen="${o.i}" aria-label="${esc(o.file)}"><span class="sbl-sw" ${sprite(o)}></span></button>
+        ${sorting ? `<label class="sbl-sel" title="${t("Select to move")}"><input type="checkbox" data-sblsel="${o.i}" ${sel.has(o.i) ? "checked" : ""} aria-label="${t("Select to move")} ${esc(o.file)}"></label>` : ""}
         ${cur ? `<label class="sbl-chk" title="${x ? t("Approved. Untick to hide it.") : t("Not approved. Tick to approve.")}"><input type="checkbox" data-sblkeep="${o.i}" ${x ? "checked" : ""} aria-label="${t("Approve")} ${esc(o.file)}"></label>` : ""}
         ${inP.has(o.file) ? `<span class="sbl-inproj">${t("In project")}</span>` : ""}
         <span class="sbl-cap"><b>${esc(o.codes[0] || label(o.sup)[0])}</b><span>${bySup ? "" : esc(label(o.sup)[0]) + " · "}p${o.page}</span></span></div>`;
     }
-    return `<div class="sbl-grid">${html}</div>${l.length > ui.n ? `<div class="sbl-more"><button class="btn ghost" data-sblmore>${zh() ? `再显示 ${Math.min(120, l.length - ui.n)} 张（还有 ${nf(l.length - ui.n)} 张）` : `Show ${Math.min(120, l.length - ui.n)} more of ${nf(l.length - ui.n)}`}</button></div>` : ""}`;
+    return `${sorting ? sortBarHTML() : ""}<div class="sbl-grid">${html}</div>${l.length > ui.n ? `<div class="sbl-more"><button class="btn ghost" data-sblmore>${zh() ? `再显示 ${Math.min(120, l.length - ui.n)} 张（还有 ${nf(l.length - ui.n)} 张）` : `Show ${Math.min(120, l.length - ui.n)} more of ${nf(l.length - ui.n)}`}</button></div>` : ""}`;
   }
+  const sel = new Set();
+  function sortBarHTML() {
+    return `<div class="sbl-sortbar"><b id="sbl-selcount">${selCount()}</b>
+      <select id="sbl-moveto" aria-label="${t("Move selected to…")}"><option value="">${t("Move selected to…")}</option>${TYPES.filter(x => x[0] !== "U").map(x => `<option value="${x[0]}">${esc(typeName(x[0]))}</option>`).join("")}</select>
+      <button class="linkbtn" data-sbl="selall">${t("Select all shown")}</button><button class="linkbtn" data-sbl="selnone">${t("Clear selection")}</button></div>`;
+  }
+  const selCount = () => zh() ? `已选 ${nf(sel.size)} 张` : `${nf(sel.size)} selected`;
+  function selPaint() { const c = $("#sbl-selcount"); if (c) c.textContent = selCount(); document.querySelectorAll("[data-sblsel]").forEach(el => { const on = sel.has(+el.dataset.sblsel); el.checked = on; el.closest(".sbl-tile")?.classList.toggle("sel", on); }); }
   function repaint() {
     if (!LIB) return;
     const r = $("#sblib");
@@ -647,6 +665,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const a = el.dataset.sbl;
     if (a === "close") close();
     else if (a === "addcat" && curating()) { ui.addcat = true; addLine(); }
+    else if (a === "selall" && curating()) { list().forEach(o => sel.add(o.i)); selPaint(); }
+    else if (a === "selnone") { sel.clear(); selPaint(); }
     else if (a === "addcancel") { ui.addcat = false; addLine(); }
     else if (a === "scan" && curating() && !scan) scanPDF();
     else if (a === "delcat" && curating() && ui.sup) deleteCat(ui.sup);
@@ -667,6 +687,13 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (el.id === "sbl-target") { ui.target = el.value; host.layer(); return; }
     if (el.id === "sbl-type" && curating()) { const o = LIB && LIB.items[ui.open]; if (o) { setType([o], el.value); host.toast(zh() ? `已移至「${typeName(el.value)}」` : `Moved to ${typeName(el.value)}`); } return; }
     if (el.id === "sbl-pdf") { pdfName(); return; }
+    if (el.dataset && el.dataset.sblsel !== undefined) { const i = +el.dataset.sblsel; el.checked ? sel.add(i) : sel.delete(i); selPaint(); return; }
+    if (el.id === "sbl-moveto" && curating()) {
+      const code = el.value; if (!code) return;
+      if (!sel.size) { el.value = ""; host.toast(t("Select images first.")); return; }
+      const l = [...sel].map(i => LIB.items[i]).filter(Boolean); sel.clear(); setType(l, code);
+      host.toast(zh() ? `已将 ${nf(l.length)} 张移至「${typeName(code)}」` : `Moved ${nf(l.length)} to ${typeName(code)}`); return;
+    }
     if (el.name === "sbl-mode") { pdfMode = el.value; const g = $("#sbl-go"); if (g) g.textContent = t(pdfMode === "pages" ? "Import pages" : "Scan and add"); return; }
     if (el.id === "sbl-up") { const f = [...el.files]; el.value = ""; upload(f); return; }
     if (!(el.dataset && el.dataset.sblkeep !== undefined) || !LIB || !curating()) return;

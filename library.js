@@ -86,7 +86,7 @@
 .sbl-star{margin-left:auto;flex:none;border:0;background:none;padding:0 2px;font-size:17px;line-height:1;color:var(--muted);cursor:pointer;font-family:inherit}
 .sbl-star[aria-pressed=true]{color:#c8a046}
 .sbl-star:hover{color:var(--ink)}
-.sbl-cat .sbl-favic{display:grid;place-items:center;aspect-ratio:1;background:var(--paper);border:1px solid var(--rule);font-size:44px;color:#c8a046}
+.sbl-cat .sbl-favic{display:grid;place-items:center;width:100%;aspect-ratio:4/3;background:var(--paper);border:1px solid var(--rule);font-size:44px;color:#c8a046}
 .btn.sbl-favbtn[aria-pressed=true]{color:#a07a20}
 .sbl-cap b{font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis}
 .sbl-cap span{flex:none;color:var(--muted)}
@@ -168,7 +168,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   // an admin's corrections are stored as librarytypes/<catalogue> = { t: { key: code } }.
   const TYPES = [["S", "Sofas", "沙发"], ["L", "Lounge chairs", "休闲椅"], ["C", "Dining chairs", "餐椅"], ["T", "Stools & bar stools", "凳子与吧凳"], ["B", "Benches & ottomans", "长凳与脚凳"],
     ["K", "Coffee & side tables", "茶几与边几"], ["D", "Dining tables", "餐桌"], ["E", "Desks & consoles", "书桌与玄关桌"], ["G", "Storage & TV units", "储物柜与电视柜"], ["R", "Beds & nightstands", "床与床头柜"],
-    ["H", "Lighting", "灯具"], ["P", "Plumbing", "卫浴"], ["M", "Millwork & doors", "木作与门"], ["N", "Stone", "石材"], ["W", "Wall panelling & wood", "墙板与木制品"], ["Q", "Partition systems", "隔断系统"], ["V", "Glass products", "玻璃制品"], ["Y", "Signage", "标识"],
+    ["H", "Lighting", "灯具"], ["P", "Plumbing fixtures", "卫浴洁具"], ["M", "Millwork & doors", "木作与门"], ["N", "Stone", "石材"], ["W", "Wall panelling & wood", "墙板与木制品"], ["Q", "Partition systems", "隔断系统"], ["V", "Glass products", "玻璃制品"], ["Y", "Signage", "标识"],
     ["A", "Decor & accessories", "装饰与配饰"], ["O", "Other", "其他"], ["U", "Not sorted yet", "尚未分类"]];
   const typeName = c => { if (c === "F") return t("Favourites"); const x = TYPES.find(y => y[0] === c) || TYPES[TYPES.length - 1]; return zh() ? x[2] : x[1]; };
   // Each person's own starred images (file names), saved on the server for their account.
@@ -461,7 +461,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   // embedded on each page and uploads each one full size (up to 2400px) with a 280px thumbnail, named
   // CATEGORY_Supplier-Catalogue_pPAGE_NN.jpg like the scanned catalogues. Nothing is approved.
   const CATS = ["FURNITURE", "LIGHTING", "PLUMBING", "MILLWORK", "DOORS", "STONE", "WALL PANELLING", "WOOD PRODUCTS", "PARTITION SYSTEMS", "GLASS PRODUCTS", "SIGNAGE"];
-  const CAT_ZH = { FURNITURE: "家具", LIGHTING: "灯具", PLUMBING: "卫浴", MILLWORK: "木作", DOORS: "门", STONE: "石材", "WALL PANELLING": "墙板", "WOOD PRODUCTS": "木制品", "PARTITION SYSTEMS": "隔断系统", "GLASS PRODUCTS": "玻璃制品", SIGNAGE: "标识" };
+  const catName = c => zh() ? CAT_ZH[c] || c : c === "PLUMBING" ? "Plumbing fixtures" : c[0] + c.slice(1).toLowerCase();
+  const CAT_ZH = { FURNITURE: "家具", LIGHTING: "灯具", PLUMBING: "卫浴洁具", MILLWORK: "木作", DOORS: "门", STONE: "石材", "WALL PANELLING": "墙板", "WOOD PRODUCTS": "木制品", "PARTITION SYSTEMS": "隔断系统", "GLASS PRODUCTS": "玻璃制品", SIGNAGE: "标识" };
   let scan = null, scanErr = "", pdfMode = "scan"; // progress text while a PDF is being scanned; why the last one stopped
   function addCatHTML() {
     if (scan) return `<div class="sbl-addcat"><p style="color:var(--ink);font-size:14px">${esc(scan)}</p></div>`;
@@ -473,7 +474,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
         <label><input type="radio" name="sbl-mode" value="pages" ${pdfMode === "pages" ? "checked" : ""}><span>${t("Import page by page")}<small>${t("Each page becomes one image.")}</small></span></label></fieldset>
       <label>${t("Supplier")}<input id="sbl-supplier" autocomplete="off" placeholder="Billa"></label>
       <label>${t("Catalogue name (optional)")}<input id="sbl-product" autocomplete="off" placeholder="Sofa 2026"></label>
-      <label>${t("Category")}<select id="sbl-cat">${CATS.map(c => `<option value="${c}">${zh() ? CAT_ZH[c] : c[0] + c.slice(1).toLowerCase()}</option>`).join("")}</select></label>
+      <label>${t("Category")}<select id="sbl-cat">${CATS.map(c => `<option value="${c}">${catName(c)}</option>`).join("")}</select></label>
       <label style="grid-column:1/-1">${t("Google Drive link to the PDF (optional)")}<input id="sbl-drive" autocomplete="off" placeholder="https://drive.google.com/file/d/…"></label>
       <p>${t("The PDF is scanned in this browser, so keep this tab open until it finishes. Photos in the PDF become library images named like the others (category_supplier_page_number) and start unapproved. Up to 300 MB and 2,000 pages.")}</p>
       <div class="sbl-row"><button class="btn" data-sbl="scan" id="sbl-go">${t(pdfMode === "pages" ? "Import pages" : "Scan and add")}</button><button class="btn ghost" data-sbl="addcancel">${t("Cancel")}</button></div></div>`;

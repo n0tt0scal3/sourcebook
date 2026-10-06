@@ -264,13 +264,17 @@ textarea.f{resize:vertical;min-height:70px;border:1px solid var(--rule);padding:
 .mbadge.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .mlook{display:flex;gap:10px;align-items:flex-start;margin:16px 0 4px;font-size:14px}.mlook>span{display:flex;flex-direction:column}.mlook .muted{font-size:12.5px}
 .refsec.imgdrop,.ximgsec.imgdrop{outline:2px dashed var(--accent);outline-offset:6px}
+.ximgsec.imgdrop::after{content:"Drop to add images"}
+:root[lang="zh-CN"] .ximgsec.imgdrop::after{content:"拖放以添加图片"}
 .xgal{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin-top:12px}
 .xg{position:relative}
 .xgimg{display:block;width:100%;aspect-ratio:1;padding:0;border:1px solid var(--rule2);background:var(--paper);cursor:zoom-in;overflow:hidden}
 .xgimg img{width:100%;height:100%;object-fit:contain;display:block}
 .xgdel{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(26,25,24,.7);color:#fff;font-size:15px;line-height:1;cursor:pointer}
 .xgdel:hover{background:var(--crit)}
-.xgtools{margin-top:12px}
+.xgdrop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;border:1px dashed var(--ink2);padding:22px 16px;margin-top:12px;cursor:pointer}
+.xgdrop b{font-family:var(--display);font-weight:400;font-size:20px}
+.ximgsec.imgdrop .xgdrop{border:2px solid var(--accent);background:var(--accent-soft)}
 .model3d header .mono{font-size:11px;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mvbox{position:relative;aspect-ratio:4/3;background:radial-gradient(120% 90% at 50% 35%,#FBFAF8 0%,#ECEAE6 62%,#DEDBD5 100%);border:1px solid var(--rule);margin-top:10px;overflow:hidden}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .mvbox,:root:not([data-theme="light"]) #mvfull{background:radial-gradient(120% 90% at 50% 35%,#34322F 0%,#1F1E1C 65%,#151413 100%)}}
@@ -2098,9 +2102,9 @@ function renderLayer(passive){
 }
 function extraImagesSection(it,ed){
   const ims=it.images||[];if(!ims.length&&!ed)return"";
-  return`<section class="sec ximgsec" data-ximgdrop="${it.id}"><header><h5>Additional images</h5><span class="mono muted">${ims.length}${ed?" · drop images here":""}</span></header>
+  return`<section class="sec ximgsec" data-ximgdrop="${it.id}"><header><h5>Additional images</h5><span class="mono muted">${ims.length}</span></header>
     ${ims.length?`<div class="xgal">${ims.map((m,i)=>`<div class="xg"><button class="xgimg" data-viewximg="${it.id}:${i}" aria-label="Enlarge image"><img alt="" src="${blobSrc(m.asset)}" loading="lazy"></button>${ed?`<button class="xgdel" data-delximg="${i}" aria-label="Remove image">×</button>`:""}</div>`).join("")}</div>`:`<p class="muted">No additional images yet.</p>`}
-    ${ed?`<div class="row2 xgtools"><label class="btn ghost sm">Add images<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-ximgfile hidden></label></div>`:""}
+    ${ed?`<label class="xgdrop"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-ximgfile hidden><b>Drop images here</b><span class="muted">or click to choose. You can add several at once.</span></label>`:""}
   </section>`;
 }
 async function addExtraImages(id,files){
@@ -2930,7 +2934,7 @@ const ZH={
 "Find the materials in this view":"找出此视图中的材料","Claude reads the image and drafts pieces for the schedule. You review them before anything is added.":"Claude 会读取图片并起草清单项目，添加前由您审核。","Pieces from this view":"来自此视图的项目","None yet.":"暂无。","Remove image":"移除图片","Remove from project":"从项目中移除","Name this view, e.g. Primary ensuite, looking north":"为此视图命名，例如：主卧卫生间，朝北","Notes about this view":"关于此视图的备注","Untitled view":"未命名视图",
 "Claude is reading the title block, notes and callouts. This usually takes 20 to 60 seconds.":"Claude 正在读取图签、说明和标注，通常需要 20 到 60 秒。","Dismiss":"关闭","Try again":"重试","Reference":"参考",
 "The document doesn't state anything about this piece that isn't already recorded.":"文件中没有关于此项目的新信息。","Manufacturer / supplier":"制造商 / 供应商","Product / collection":"产品 / 系列","Model / item code":"型号 / 编号","Colour / finish name ":"颜色 / 饰面名称","Unit ":"单位","Application":"应用部位",
-"Fit":"适应","Rename":"重命名","New tab ↗":"新标签页 ↗","Remove sheet":"移除图纸","Remove":"移除","Keep":"保留","Opening…":"正在打开…","Sheet no. e.g. A-501":"图号，例如 A-501","Sheet title":"图纸标题","Previous sheet":"上一张","Next sheet":"下一张","Additional images":"更多图片","No additional images yet.":"暂无更多图片。","Enlarge image":"放大图片","Previous image":"上一张图片","Next image":"下一张图片","Zoom in":"放大","Zoom out":"缩小","Attachments":"附件","Remove this sheet?":"移除这张图纸？",
+"Fit":"适应","Rename":"重命名","New tab ↗":"新标签页 ↗","Remove sheet":"移除图纸","Remove":"移除","Keep":"保留","Opening…":"正在打开…","Sheet no. e.g. A-501":"图号，例如 A-501","Sheet title":"图纸标题","Previous sheet":"上一张","Next sheet":"下一张","Additional images":"更多图片","No additional images yet.":"暂无更多图片。","Drop images here":"将图片拖放到这里","or click to choose. You can add several at once.":"或点击选择，可一次添加多张。","Enlarge image":"放大图片","Previous image":"上一张图片","Next image":"下一张图片","Zoom in":"放大","Zoom out":"缩小","Attachments":"附件","Remove this sheet?":"移除这张图纸？",
 "Piece added":"已添加项目","Saved":"已保存","Piece deleted":"已删除项目","Finish details saved":"已保存饰面信息","Furniture details saved":"已保存家具信息","Image added":"已添加图片","Image removed":"已移除图片","Sheet removed":"已移除图纸","Sheet renamed":"已重命名图纸","Sheet linked":"已关联表格","Link removed":"已移除链接","Book cleared":"已清空手册","Uploading image…":"正在上传图片…","Uploading file…":"正在上传文件…","Images added to the project":"已将图片添加到项目",
 "You can view this project but not edit it.":"您可以查看但不能编辑此项目。","Couldn't save. Check your connection and try again.":"无法保存，请检查网络后重试。","Storage is full. Remove unused items to add more.":"存储空间已满，请删除不用的内容。","Export didn't complete.":"导出未完成。","Project file storage is full.":"项目文件存储已满。",
 "That file is over 20 MB. Compress it and try again.":"文件超过 20 MB，请压缩后重试。","Use a PDF, JPG, PNG or WebP file.":"请使用 PDF、JPG、PNG 或 WebP 文件。","Upload failed. Try again.":"上传失败，请重试。","Drop a PDF drawing set.":"请拖入 PDF 图纸集。",

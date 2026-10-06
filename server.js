@@ -833,6 +833,19 @@ const server = http.createServer(async (req, res) => {
       const files = (await fsp.readdir(LIB_FULL_DIR).catch(() => [])).filter(f => lib && lib.byFile.has(f));
       return send(res, 200, { files });
     }
+    // Favourites: each person's own starred library images, in libraryfav/<user id> = { f: [file names] }.
+    if (p === "/api/library/fav") {
+      const dp = "libraryfav/" + me.id;
+      if (req.method === "GET") return send(res, 200, { files: store[dp]?.data?.f || [] });
+      if (req.method !== "POST") return send(res, 405, { code: "method_not_allowed" });
+      const b = await readJSON(req), idx = await libIndex();
+      if (typeof b.file !== "string" || !idx.byFile.has(b.file)) return send(res, 400, { code: "invalid_argument" });
+      const cur = store[dp], f = new Set(cur?.data?.f || []);
+      if (b.on) { if (f.size >= 5000) return send(res, 400, { code: "invalid_argument", message: "Favourites are full (5,000 images)." }); f.add(b.file); } else f.delete(b.file);
+      const next = { f: [...f], updated: new Date().toISOString() };
+      store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
+      persist(); return send(res, 200, { ok: true, files: next.f });
+    }
     if (p === "/api/library/type" && req.method === "POST") {
       // { sup, keys, type } moves images to another product type in librarytypes/<sup>.t
       if (!isAdmin) return deny("Only admins can sort library images.");

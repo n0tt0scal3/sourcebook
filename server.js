@@ -911,7 +911,7 @@ const server = http.createServer(async (req, res) => {
 
     // find products online
     if (p.startsWith("/api/match/") && req.method === "POST") {
-      if (isClient) return deny();
+      if (!isAdmin) return deny("Only admins can find products online.");
       const b = await readJSON(req, 12 * 1024 * 1024);
       const dp = `projects/${b.project}/items/${b.item}`;
       if (!validPath(dp, true) || !canRead(me, dp)) return deny();

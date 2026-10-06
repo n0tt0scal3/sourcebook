@@ -279,8 +279,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const l = list(), cur = curating(), inP = host.ctx === "project" ? host.inProject() : new Map();
     setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = zh() ? `${nf(l.length)} 张图片` : `${nf(l.length)} image${l.length === 1 ? "" : "s"}`; }, 0);
     if (!l.length) return `<div class="sbl-grid"><p class="sbl-empty">${ui.q ? t("Nothing matches that search.") : showMode() === "off" ? t("Nothing is waiting for approval here.") : t("Nothing has been approved yet.")}</p></div>`;
-    // Not sorted yet: admins tick images and send them to a type in one go.
-    const sorting = cur && ui.type === "U";
+    // Inside a product type, admins tick images and send them to another type in one go.
+    const sorting = cur && !!ui.type;
     if (!sorting) sel.clear(); else { const ids = new Set(l.map(o => o.i)); [...sel].forEach(i => ids.has(i) || sel.delete(i)); }
     let page = null, html = ""; const bySup = !!ui.sup;
     for (const o of l.slice(0, ui.n)) {
@@ -297,7 +297,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   const sel = new Set();
   function sortBarHTML() {
     return `<div class="sbl-sortbar"><b id="sbl-selcount">${selCount()}</b>
-      <select id="sbl-moveto" aria-label="${t("Move selected to…")}"><option value="">${t("Move selected to…")}</option>${TYPES.filter(x => x[0] !== "U").map(x => `<option value="${x[0]}">${esc(typeName(x[0]))}</option>`).join("")}</select>
+      <select id="sbl-moveto" aria-label="${t("Move selected to…")}"><option value="">${t("Move selected to…")}</option>${TYPES.filter(x => x[0] !== "U" && x[0] !== ui.type).map(x => `<option value="${x[0]}">${esc(typeName(x[0]))}</option>`).join("")}</select>
       <button class="linkbtn" data-sbl="selall">${t("Select all shown")}</button><button class="linkbtn" data-sbl="selnone">${t("Clear selection")}</button></div>`;
   }
   const selCount = () => zh() ? `已选 ${nf(sel.size)} 张` : `${nf(sel.size)} selected`;

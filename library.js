@@ -23,7 +23,7 @@
     "Show": "显示", "Add to project": "添加到项目", "Project": "项目", "Choose a project": "选择项目", "No projects to add to yet.": "暂无可添加的项目。", "Add": "添加",
     "The studio hasn't approved any products yet.": "工作室尚未批准任何产品。",
     "Previous": "上一个", "Next": "下一个", "← → to move between products · Space to approve": "← → 切换产品 · 按空格键批准", "Space to approve": "按空格键批准", "← → to move between products": "← → 切换产品",
-    "Add a catalogue from a PDF": "从 PDF 添加图册", "PDF catalogue": "PDF 图册", "Drop the PDF here, or click to choose it": "将 PDF 拖到这里，或点击选择", "That isn't a PDF.": "这不是 PDF 文件。", "Supplier": "供应商", "Catalogue name (optional)": "图册名称（可选）", "Category": "类别",
+    "Add a catalogue from a PDF": "从 PDF 添加图册", "PDF catalogue": "PDF 图册", "How to add it": "添加方式", "Scan for product images": "扫描产品图片", "Pulls out each photo in the PDF.": "提取 PDF 中的每张照片。", "Import page by page": "逐页导入", "Each page becomes one image.": "每一页成为一张图片。", "Import pages": "导入页面", "Drop the PDF here, or click to choose it": "将 PDF 拖到这里，或点击选择", "That isn't a PDF.": "这不是 PDF 文件。", "Supplier": "供应商", "Catalogue name (optional)": "图册名称（可选）", "Category": "类别",
     "Google Drive link to the PDF (optional)": "PDF 的 Google 云端硬盘链接（可选）", "Scan and add": "扫描并添加", "Cancel": "取消", "Delete this catalogue": "删除此图册",
     "Choose a PDF and enter the supplier.": "请选择 PDF 并填写供应商。", "Couldn't read that PDF.": "无法读取该 PDF。",
     "The PDF is scanned in this browser, so keep this tab open until it finishes. Photos in the PDF become library images named like the others (category_supplier_page_number) and start unapproved. Up to 300 MB and 2,000 pages.": "PDF 在此浏览器中扫描，请保持此标签页打开直到完成。PDF 中的照片会按与其他图片相同的方式命名（类别_供应商_页码_编号）成为图库图片，默认未批准。最大 300 MB、2000 页。",
@@ -115,6 +115,12 @@
 .sbl-drop b{font-weight:500;color:var(--ink);font-size:14px;word-break:break-all}
 .sbl-addcat.over .sbl-drop,.sbl-drop:hover,.sbl-drop:focus-within{border-color:var(--ink);color:var(--ink);background:var(--ground)}
 button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
+.sbl-mode{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px;border:0;padding:0;margin:0}
+.sbl-mode legend{font-size:12px;color:var(--muted);padding:0;margin-bottom:6px;width:100%}
+.sbl-addcat .sbl-mode label{flex:1 1 220px;flex-direction:row;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--rule);cursor:pointer;color:var(--ink);font-size:14px}
+.sbl-mode label:has(input:checked){border-color:var(--ink);background:var(--ground)}
+.sbl-mode input{margin-top:3px;accent-color:var(--ink)}
+.sbl-mode small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
 .sbl-addcat p{grid-column:1/-1;margin:0;font-size:12.5px;color:var(--muted)}
 .sbl-addcat .sbl-row{grid-column:1/-1;margin:0}
 .sbl-body{overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 22px) clamp(18px,4vw,48px) calc(env(safe-area-inset-bottom,0px) + 60px)}
@@ -421,18 +427,21 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   // CATEGORY_Supplier-Catalogue_pPAGE_NN.jpg like the scanned catalogues. Nothing is approved.
   const CATS = ["FURNITURE", "LIGHTING", "PLUMBING", "MILLWORK", "DOORS", "STONE", "WALL PANELLING", "WOOD PRODUCTS", "PARTITION SYSTEMS", "SIGNAGE"];
   const CAT_ZH = { FURNITURE: "家具", LIGHTING: "灯具", PLUMBING: "卫浴", MILLWORK: "木作", DOORS: "门", STONE: "石材", "WALL PANELLING": "墙板", "WOOD PRODUCTS": "木制品", "PARTITION SYSTEMS": "隔断系统", SIGNAGE: "标识" };
-  let scan = null, scanErr = ""; // progress text while a PDF is being scanned; why the last one stopped
+  let scan = null, scanErr = "", pdfMode = "scan"; // progress text while a PDF is being scanned; why the last one stopped
   function addCatHTML() {
     if (scan) return `<div class="sbl-addcat"><p style="color:var(--ink);font-size:14px">${esc(scan)}</p></div>`;
     if (!ui.addcat) return `<button class="linkbtn" data-sbl="addcat">${t("Add a catalogue from a PDF")}</button>`;
     return `<div class="sbl-addcat">${scanErr ? `<p style="color:var(--crit);font-size:14px">${esc(scanErr)}</p>` : ""}
       <label class="sbl-drop">${t("PDF catalogue")}<span>${t("Drop the PDF here, or click to choose it")}</span><b id="sbl-pdfname"></b><input type="file" id="sbl-pdf" accept="application/pdf,.pdf"></label>
+      <fieldset class="sbl-mode" id="sbl-mode" hidden><legend>${t("How to add it")}</legend>
+        <label><input type="radio" name="sbl-mode" value="scan" ${pdfMode === "scan" ? "checked" : ""}><span>${t("Scan for product images")}<small>${t("Pulls out each photo in the PDF.")}</small></span></label>
+        <label><input type="radio" name="sbl-mode" value="pages" ${pdfMode === "pages" ? "checked" : ""}><span>${t("Import page by page")}<small>${t("Each page becomes one image.")}</small></span></label></fieldset>
       <label>${t("Supplier")}<input id="sbl-supplier" autocomplete="off" placeholder="Billa"></label>
       <label>${t("Catalogue name (optional)")}<input id="sbl-product" autocomplete="off" placeholder="Sofa 2026"></label>
       <label>${t("Category")}<select id="sbl-cat">${CATS.map(c => `<option value="${c}">${zh() ? CAT_ZH[c] : c[0] + c.slice(1).toLowerCase()}</option>`).join("")}</select></label>
       <label style="grid-column:1/-1">${t("Google Drive link to the PDF (optional)")}<input id="sbl-drive" autocomplete="off" placeholder="https://drive.google.com/file/d/…"></label>
       <p>${t("The PDF is scanned in this browser, so keep this tab open until it finishes. Photos in the PDF become library images named like the others (category_supplier_page_number) and start unapproved. Up to 300 MB and 2,000 pages.")}</p>
-      <div class="sbl-row"><button class="btn" data-sbl="scan">${t("Scan and add")}</button><button class="btn ghost" data-sbl="addcancel">${t("Cancel")}</button></div></div>`;
+      <div class="sbl-row"><button class="btn" data-sbl="scan" id="sbl-go">${t(pdfMode === "pages" ? "Import pages" : "Scan and add")}</button><button class="btn ghost" data-sbl="addcancel">${t("Cancel")}</button></div></div>`;
   }
   function addLine() { const el = $("#sbl-addwrap"); if (el) el.innerHTML = addCatHTML(); }
   let PDFJS = null;
@@ -485,9 +494,16 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       sup = start.sup;
       setScan(zh() ? "正在上传 PDF…" : "Uploading the PDF…");
       await api(`/api/library/catalogue/${sup}/pdf`, { method: "PUT", headers: { "content-type": "application/pdf" }, body: file });
-      const items = [], seen = new Map(), OPS = pj.OPS;
+      const items = [], seen = new Map(), OPS = pj.OPS, pages = pdfMode === "pages";
+      // The whole page drawn on a white canvas, up to max px on its long side.
+      const renderPage = async (page, max) => {
+        const v1 = page.getViewport({ scale: 1 }), vp = page.getViewport({ scale: Math.min(4, max / Math.max(v1.width, v1.height)) });
+        const cv = document.createElement("canvas"); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+        const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height);
+        await page.render({ canvasContext: g, viewport: vp }).promise; return cv;
+      };
       for (let n = 1; n <= doc.numPages; n++) {
-        setScan(zh() ? `正在扫描第 ${n} / ${doc.numPages} 页 · 已找到 ${items.length} 张图片` : `Scanning page ${n} of ${doc.numPages} · ${items.length} image${items.length === 1 ? "" : "s"} found`);
+        setScan(pages ? (zh() ? `正在导入第 ${n} / ${doc.numPages} 页` : `Importing page ${n} of ${doc.numPages}`) : zh() ? `正在扫描第 ${n} / ${doc.numPages} 页 · 已找到 ${items.length} 张图片` : `Scanning page ${n} of ${doc.numPages} · ${items.length} image${items.length === 1 ? "" : "s"} found`);
         const page = await doc.getPage(n);
         const ops = await page.getOperatorList();
         const names = []; let imgOps = 0, pathOps = 0;
@@ -505,7 +521,9 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
           await api(`/api/library/catalogue/${sup}/img/${f}?thumb=1`, { method: "PUT", headers: { "content-type": "image/jpeg" }, body: th });
           const it = [f, n, "", ""]; items.push(it); return it;
         };
-        for (const name of names) {
+        // Page by page: every page becomes one image, blank ones included so page numbers stay complete.
+        if (pages) await save(await renderPage(page, 2400));
+        else for (const name of names) {
           if (nn >= 99) break;
           const img = await pageObj(page, name); if (!img) continue;
           if (Math.min(img.width, img.height) < 160 || img.width * img.height < 60000) continue;
@@ -515,11 +533,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
           const it = await save(cv); seen.set(fp.key, { it, pages: 1, page: n });
         }
         // No separate photos (a page saved as tiles, small pieces or drawings): keep the whole page as one image.
-        if (!nn && (imgOps > 0 || pathOps > 150)) {
-          const v1 = page.getViewport({ scale: 1 }), vp = page.getViewport({ scale: Math.min(4, 2000 / Math.max(v1.width, v1.height)) });
-          const cv = document.createElement("canvas"); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
-          const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height);
-          try { await page.render({ canvasContext: g, viewport: vp }).promise; if (!fingerprint(cv).flat) await save(cv); } catch (e) { if (e.code) throw e; }
+        if (!pages && !nn && (imgOps > 0 || pathOps > 150)) {
+          try { const cv = await renderPage(page, 2000); if (!fingerprint(cv).flat) await save(cv); } catch (e) { if (e.code) throw e; }
         }
         if (nn) {
           const tc = await page.getTextContent().catch(() => null);
@@ -652,6 +667,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (el.id === "sbl-target") { ui.target = el.value; host.layer(); return; }
     if (el.id === "sbl-type" && curating()) { const o = LIB && LIB.items[ui.open]; if (o) { setType([o], el.value); host.toast(zh() ? `已移至「${typeName(el.value)}」` : `Moved to ${typeName(el.value)}`); } return; }
     if (el.id === "sbl-pdf") { pdfName(); return; }
+    if (el.name === "sbl-mode") { pdfMode = el.value; const g = $("#sbl-go"); if (g) g.textContent = t(pdfMode === "pages" ? "Import pages" : "Scan and add"); return; }
     if (el.id === "sbl-up") { const f = [...el.files]; el.value = ""; upload(f); return; }
     if (!(el.dataset && el.dataset.sblkeep !== undefined) || !LIB || !curating()) return;
     const o = LIB.items[+el.dataset.sblkeep]; if (!o) return;
@@ -659,7 +675,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const c = $("#sbl-cats"); if (c) c.innerHTML = catsHTML(); const k = $("#sbl-kept"); if (k) k.textContent = nf(approved());
   });
   // Drag a PDF onto the add form (or the link that opens it) instead of choosing it.
-  const pdfName = () => { const f = $("#sbl-pdf") && $("#sbl-pdf").files[0], b = $("#sbl-pdfname"); if (b) b.textContent = f ? f.name : ""; };
+  const pdfName = () => { const f = $("#sbl-pdf") && $("#sbl-pdf").files[0], b = $("#sbl-pdfname"), m = $("#sbl-mode"); if (b) b.textContent = f ? f.name : ""; if (m) m.hidden = !f; };
   const dropZone = e => !scan && curating() && e.dataTransfer && [...e.dataTransfer.types].includes("Files") && e.target.closest && e.target.closest(".sbl-addcat,[data-sbl=addcat]");
   document.addEventListener("dragover", e => { const z = dropZone(e); if (!z) return; e.preventDefault(); e.dataTransfer.dropEffect = "copy"; z.classList.add("over"); });
   document.addEventListener("dragleave", e => { const z = dropZone(e); if (z && !z.contains(e.relatedTarget)) z.classList.remove("over"); });

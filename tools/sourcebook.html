@@ -7,6 +7,7 @@
   --ground:#EEEDEA; --paper:#F7F6F4; --ink:#1A1918; --ink2:#4A4744; --muted:#8A8580;
   --rule:#D6D3CE; --rule2:#E3E1DD; --accent:#2E3A8C; --accent-soft:#E3E5F2;
   --ok:#3C6B4A; --warn:#A5621E; --crit:#A3322B; --scrim:rgba(20,19,18,.42);
+  --new:#1E7A3C; --new-soft:#DDF0E1;
   --display:"Bodoni Moda","Didot","Bodoni 72","Noto Serif SC","Songti SC",Georgia,serif;
   --sans:"Hanken Grotesk","Noto Sans SC","PingFang SC",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
@@ -17,6 +18,7 @@
     --ground:#141413; --paper:#1C1B1A; --ink:#ECEAE6; --ink2:#BDB9B3; --muted:#86817B;
     --rule:#34322F; --rule2:#282725; --accent:#9AA6F0; --accent-soft:#262A45;
     --ok:#7FB08D; --warn:#D99A5B; --crit:#E07A72; --scrim:rgba(0,0,0,.6);
+    --new:#86D69C; --new-soft:#1C3424;
   }
 }
 :root[data-theme="dark"]{
@@ -24,6 +26,7 @@
   --ground:#141413; --paper:#1C1B1A; --ink:#ECEAE6; --ink2:#BDB9B3; --muted:#86817B;
   --rule:#34322F; --rule2:#282725; --accent:#9AA6F0; --accent-soft:#262A45;
   --ok:#7FB08D; --warn:#D99A5B; --crit:#E07A72; --scrim:rgba(0,0,0,.6);
+  --new:#86D69C; --new-soft:#1C3424;
 }
 *{box-sizing:border-box}
 body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
@@ -381,6 +384,32 @@ textarea.f{resize:vertical;min-height:70px;border:1px solid var(--rule);padding:
 .qin.base{border-bottom:1px solid var(--ink2)}
 .qin:focus{outline:none;border-bottom-color:var(--accent);background:var(--accent-soft)}
 td.n .qin{margin-left:auto;display:block}
+/* changes from the studio / the sourcing agent, highlighted until marked seen */
+.chg,.qin.chg{font-weight:700!important;color:var(--new)!important;background:var(--new-soft)}
+td.chg,b.chg{padding-inline:4px}
+tr.newsrow>td:first-child{box-shadow:inset 4px 0 0 var(--new)}
+.newpill{display:flex;width:max-content;align-items:center;gap:8px;margin-top:5px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--new);font-weight:600}
+.seenbtn{font:inherit;font-size:11px;letter-spacing:.04em;text-transform:none;font-weight:500;padding:2px 8px;border:1px solid var(--new);background:transparent;color:var(--new);cursor:pointer}
+.seenbtn:hover{background:var(--new);color:var(--paper)}
+.newsbar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:10px 14px;margin-top:14px;background:var(--new-soft);border-left:4px solid var(--new);font-size:14px}
+.newsbar b{color:var(--new)}
+.newsbar .linkbtn{color:var(--ink)}
+.card .newtag{position:absolute;left:10px;bottom:10px;background:var(--new);color:var(--paper);font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px}
+.newsline{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:9px 12px;margin:10px 0 4px;background:var(--new-soft);border-left:4px solid var(--new);font-size:13.5px}
+.newsline b{color:var(--new)}
+/* Excel round trip on the quotation */
+.qdrop{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:12px 14px;margin:14px 0 4px;border:1.5px dashed var(--rule);font-size:13.5px;color:var(--muted)}
+.qdrop b{color:var(--ink);font-weight:500}
+body.xlover .qdrop{border-color:var(--new);background:var(--new-soft);color:var(--ink)}
+.xlwrap{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:var(--scrim);padding:16px}
+.xlbox{background:var(--paper);color:var(--ink);width:min(900px,100%);max-height:86vh;overflow:auto;padding:22px clamp(16px,3vw,28px);border:1px solid var(--rule)}
+.xlbox h2{font-family:var(--display);font-weight:400;font-size:30px;margin:4px 0 6px}
+.xlbox table{width:100%;border-collapse:collapse;font-size:13.5px;margin:12px 0}
+.xlbox th,.xlbox td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--rule2);vertical-align:top}
+.xlbox th{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:400}
+.xlbox td.was{color:var(--muted);text-decoration:line-through}
+.xlbox td.now{color:var(--new);font-weight:700}
+.xlbox .row2{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}
 .qtab td.n:nth-child(5) .qin{width:70px}
 .qsub td{font-size:12.5px;color:var(--ink2);border-bottom:1px solid var(--rule);background:transparent}
 .qsub td:first-child{text-align:right;padding-right:14px;font-style:italic}
@@ -678,6 +707,34 @@ let loaded=false, imp=null, db=null, assets=null, downloads=null, canWrite=true,
 let ME=null, comments=[];
 const isClient=()=>!!(ME&&ME.role==="client");
 const ROLE_LABEL={admin:"Admin",agent:"Sourcing agent",client:"Client"};
+/* ---------- what's new between the studio and the sourcing agent ----------
+   The server stamps each piece with chg = { field: { r: role, n: name, at } } when an admin or agent changes it
+   (chg._new when it's added). Each side sees the other side's changes in bold green until they mark them seen. */
+const otherSide=()=>ME&&(ME.role==="admin"?"agent":ME.role==="agent"?"admin":null);
+function newsOf(it){const o=otherSide();if(!o||!it||!it.chg)return null;const e=Object.entries(it.chg).filter(([,c])=>c&&c.r===o);if(!e.length)return null;
+  const last=e.map(x=>x[1]).sort((a,b)=>String(b.at).localeCompare(String(a.at)))[0];return{fields:new Set(e.map(x=>x[0])),isNew:e.some(x=>x[0]==="_new"),by:last.n||"",at:last.at}}
+const hot=(it,...f)=>{const n=newsOf(it);return n&&(n.isNew||f.some(x=>n.fields.has(x)))?" chg":""};
+const CHG_LABEL={qty:"Qty",unitCost:"Unit price",unitCostCNY:"Unit price",priceBase:"Unit price",supplier:"Supplier",leadWeeks:"Lead time",needBy:"On site",status:"Status",name:"Name",code:"Code",unit:"Unit",modelCode:"Model",notes:"Notes",refs:"Attachments",images:"Images",photo:"Photo",model:"3D model",description:"Description",category:"Category",specs:"Specification",dutyRate:"Duty %"};
+const chgFields=(n)=>[...new Set([...n.fields].filter(f=>f!=="_new").map(f=>CHG_LABEL[f]||"Details"))];
+const newsFrom=()=>otherSide()==="agent"?"the sourcing agent":"the studio";
+function newsPill(it){const n=newsOf(it);if(!n)return"";return`<div class="newpill">${n.isNew?"New":"Updated"}<button class="seenbtn" data-seen="${it.id}" title="Mark as seen">✓ Seen</button></div>`}
+function newsBar(){const o=otherSide();if(!o||preview)return"";const n=items.filter(newsOf).length;if(!n)return"";
+  const canAlert=window.Notification&&Notification.permission==="default";
+  return`<div class="newsbar" role="status"><span><b>●</b> ${n} piece${n===1?"":"s"} new or updated by ${newsFrom()}</span>${ui.view!=="sched"&&!isClient()?`<button class="linkbtn" data-view="sched">Show in order schedule</button>`:""}<button class="linkbtn" data-seen="all">Mark all seen</button>${canAlert?`<button class="linkbtn" data-a="alerts">Turn on alerts</button>`:""}</div>`}
+function markSeen(ids){const o=otherSide();if(!o||!HOSTED)return;
+  items.forEach(it=>{if(it.chg&&(!ids||ids.includes(it.id))){const keep=Object.fromEntries(Object.entries(it.chg).filter(([,c])=>c&&c.r!==o));if(Object.keys(keep).length)it.chg=keep;else delete it.chg}});
+  force=true;render();renderLayer();force=false;
+  fetch("/api/changes/seen",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({project:window.SOURCEBOOK_PROJECT,...(ids?{items:ids}:{})})}).then(r=>{if(!r.ok)throw 0}).catch(()=>toast("Couldn't save. Check your connection and try again."))}
+let newsKeys=null;
+// Tell this person when the other side changes something while the book is open (a toast, plus a system alert if allowed).
+function checkNews(){const o=otherSide();if(!o||preview)return;const keys=new Set(),fresh=new Set();let by="";
+  items.forEach(it=>Object.entries(it.chg||{}).forEach(([f,c])=>{if(c&&c.r===o){const k=it.id+"|"+f+"|"+c.at;keys.add(k);if(newsKeys&&!newsKeys.has(k)){fresh.add(it.id);by=c.n||by}}}));
+  const first=newsKeys==null;newsKeys=keys;if(first||!fresh.size)return;
+  const msg=`${fresh.size} piece${fresh.size===1?"":"s"} new or updated by ${newsFrom()}`;toast(msg);
+  if(window.Notification&&Notification.permission==="granted"&&(document.hidden||!document.hasFocus())){try{new Notification((project.name||"Sourcebook"),{body:(lang==="zh"?trText(msg):msg)+(by?" · "+by:""),icon:"/icon-192.png",tag:"sb-news-"+(window.SOURCEBOOK_PROJECT||"")})}catch(_){}}}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-seen],[data-a=alerts]");if(!b)return;e.preventDefault();e.stopPropagation();
+  if(b.dataset.a==="alerts"){Notification.requestPermission().then(p=>{toast(p==="granted"?"Alerts are on for this device while Sourcebook is open.":"Alerts are off. You can allow them in your browser settings.");force=true;render();force=false});return}
+  markSeen(b.dataset.seen==="all"?null:[b.dataset.seen])},true);
 let project={name:"Untitled project",client:"",location:"",phase:""};
 let items=[], decisions=[];
 let ui={view:"look",cat:"All",stage:null,open:null,mode:"view",confirmDel:false,editProject:false};
@@ -1253,11 +1310,12 @@ function quotation(){
   list.forEach(it=>{
     const g=it.category||"Other";if(g!==grp){flush();grp=g;gsum=0;rows+=`<tr class="month"><td colspan="${ncol}">${esc(g)}</td></tr>`}
     const q=num(it.qty),uc=unitCAD(it),un=unitCNY(it),tot=q!=null&&uc!=null?q*uc:null;gsum+=tot||0;
-    const inp=(id,val,cur,base)=>ed?`<input class="qin mono ${base?"base":""}" type="number" step="any" min="0" inputmode="decimal" id="${id}" data-q="${cur}" data-id="${it.id}" value="${val==null?"":(cur==="qty"?val:Math.round(val*100)/100)}" placeholder="—" aria-label="${cur==="qty"?"Quantity":"Unit price "+cur}">`:(cur==="qty"?(val??"—"):fmtC(val,cur));
-    rows+=`<tr class="qrow">
+    const hq=cur=>hot(it,...(cur==="qty"?["qty"]:["unitCost","unitCostCNY","priceBase"]));
+    const inp=(id,val,cur,base)=>ed?`<input class="qin mono ${base?"base":""}${hq(cur)}" type="number" step="any" min="0" inputmode="decimal" id="${id}" data-q="${cur}" data-id="${it.id}" value="${val==null?"":(cur==="qty"?val:Math.round(val*100)/100)}" placeholder="—" aria-label="${cur==="qty"?"Quantity":"Unit price "+cur}">`:`<span class="${hq(cur).trim()}">${cur==="qty"?(val??"—"):fmtC(val,cur)}</span>`;
+    rows+=`<tr class="qrow${newsOf(it)?" newsrow":""}">
       <td><span class="sw" style="background-image:url(${imgFor(it,80)})" data-open="${it.id}"></span></td>
       <td class="mono strong"><button class="linkbtn mono" data-open="${it.id}">${esc(it.code||"—")}</button></td>
-      <td><div class="qname">${esc(it.name)}</div><div class="muted qsup">${esc([it.supplier,it.modelCode].filter(Boolean).join(" · "))}</div></td>
+      <td><div class="qname${hot(it,"name")}">${esc(it.name)}</div><div class="muted qsup${hot(it,"supplier","modelCode")}">${esc([it.supplier,it.modelCode].filter(Boolean).join(" · "))}</div>${newsPill(it)}</td>
       <td class="mono">${esc(it.unit||"ea")}</td>
       <td class="n">${inp("qq-"+it.id,q,"qty")}</td>
       <td class="n">${inp("qc-"+it.id,uc,"CAD",it.priceBase!=="CNY")}</td>
@@ -1271,7 +1329,8 @@ function quotation(){
   const prov=ed?`<select class="f qprov" id="q-prov" data-qp="q-prov" aria-label="Province">${PROVINCES.map(p=>`<option value="${p[0]}" ${p[0]===pv[0]?"selected":""}>${p[1]} · ${p[2]} ${p[3]}%</option>`).join("")}</select>`:`<span>${pv[1]} · ${pv[2]}</span>`;
   const mixed=list.some(it=>num(it.dutyRate)!=null);
   return`<div class="schedhead"><div><div class="eyebrow">${esc(project.name)} · ${fmtD(new Date(),true)}</div><h2>Quotation</h2></div>
-    <div class="row2">${downloads?`<button class="btn ghost sm" data-a="csvquote">Export CSV</button>`:""}</div></div>
+    <div class="row2">${downloads&&!isClient()?`<button class="btn ghost sm" data-a="xlsxquote">Export Excel</button>`:""}${downloads?`<button class="btn ghost sm" data-a="csvquote">Export CSV</button>`:""}</div></div>
+  ${xlCanImport()?`<label class="qdrop" id="q-xldrop"><span><b>Drop the sourcing agent's Excel file here</b> to bring in their prices, quantities and notes. You'll see every change before it's saved.</span><span class="btn ghost sm">Choose Excel file<input type="file" accept=".xlsx,.xls,.csv" data-xlimport hidden></span></label>`:""}
   <div class="sum qsum"><div><span class="eyebrow">Total (CAD)</span><b>${fmtC(T.total,"CAD")}</b></div><div><span class="eyebrow">Total (CNY)</span><b>${fmtC(T.total*r,"CNY")}</b></div><div><span class="eyebrow">Items priced</span><b class="${priced<list.length?"warnnum":""}">${priced} / ${list.length}</b></div>
     <div><span class="eyebrow">Exchange rate</span>${ed?`<span class="fxrow"><span class="mono">1 CAD =</span><input class="f mono" type="number" step="0.0001" min="0" id="q-fx" data-qp="fx" value="${r}"><span class="mono">CNY</span></span>`:`<b>${r}</b>`}<span class="muted fxnote">${project.fxRate?"Set for this project":"Market rate on "+fmtD(parseD(FX_DATE),true)}</span></div></div>
   <p class="muted finnote">Enter a unit price in either currency; the other is converted at the project rate.${noQty?` ${noQty} item${noQty===1?"":"s"} still need a quantity.`:""}</p>
@@ -1321,6 +1380,79 @@ async function exportQuoteCSV(){
   try{await downloads.save({filename:(project.name||"project").replace(/\W+/g,"-")+"-quotation.csv",data:new Blob([csv],{type:"text/csv"})})}catch(e){if(e&&e.code!=="cancelled"&&e.code!=="declined")toast("Export didn't complete.")}
 }
 
+/* ---------- Excel round trip with the sourcing agent ----------
+   Export the quotation as .xlsx (bilingual headers, one row per piece, a hidden-in-plain-sight ID column),
+   the agent edits it in Excel, and it's dropped back on this page. Every change is shown before it's saved. */
+const XL_COLS=[["code","Code","编号",10],["name","Item","名称",34],["category","Category","类别",14],["supplier","Supplier","供应商",22],["modelCode","Model","型号",16],["unit","Unit","单位",7],["qty","Qty","数量",8],
+  ["cny","Unit price CNY","单价（人民币）",14],["cad","Unit price CAD","单价（加元）",14],["totcny","Total CNY","合计（人民币）",14],["leadWeeks","Lead time (weeks)","交货期（周）",12],["notes","Notes","备注",36],["chg","Changed by studio","工作室变更",24],["id","ID (do not change)","编号（请勿修改）",24]];
+const XL_EDIT={name:"Name",supplier:"Supplier",modelCode:"Model",unit:"Unit",qty:"Qty",cny:"Unit price (CNY)",cad:"Unit price (CAD)",leadWeeks:"Lead time",notes:"Notes"};
+const xlCanImport=()=>HOSTED&&canWrite&&!preview&&!!db&&!isClient();
+const xlDropHere=e=>ui.view==="quote"&&xlCanImport()&&!ui.open&&!(e.target.closest&&e.target.closest(".sheet,.xlwrap"));
+const quoteList=()=>filtered().slice().sort((a,b)=>String(a.category||"").localeCompare(String(b.category||""))||String(a.code||"").localeCompare(String(b.code||""),undefined,{numeric:true}));
+const r2=n=>n==null||!isFinite(n)?null:Math.round(n*100)/100;
+async function exportQuoteXLSX(){
+  let X;try{X=await loadXLSX()}catch(_){toast("Couldn't load the Excel tools. Check your connection and try again.");return}
+  const r=fx(),list=quoteList();
+  const studio=it=>{const e=Object.entries(it.chg||{}).filter(([,c])=>c&&c.r==="admin");if(!e.length)return"";if(e.some(x=>x[0]==="_new"))return"NEW 新";
+    const ZHL={Qty:"数量","Unit price":"单价",Supplier:"供应商","Lead time":"交货期","On site":"到场日期",Status:"状态",Name:"名称",Code:"编号",Unit:"单位",Model:"型号",Notes:"备注",Attachments:"附件",Images:"图片",Photo:"照片","3D model":"3D 模型",Description:"描述",Category:"类别",Specification:"规格","Duty %":"关税 %",Details:"详情"};
+    return[...new Set(e.map(([f])=>CHG_LABEL[f]||"Details"))].map(l=>l+" "+(ZHL[l]||"")).join(", ")};
+  const title=[`${project.name||"Project"} · Quotation 报价单 · ${iso(new Date())} · 1 CAD = ${r} CNY`];
+  const help=["Change prices, quantities, supplier, model, lead time and notes, then send the file back. Keep the ID column as it is. 可修改单价、数量、供应商、型号、交货期和备注，然后发回此文件。请勿修改 ID 列。"];
+  const head=XL_COLS.map(c=>c[1]+" "+c[2]);
+  const body=list.map(it=>{const un=unitCNY(it),uc=unitCAD(it);return XL_COLS.map(([k])=>k==="cny"?r2(un):k==="cad"?r2(uc):k==="totcny"?null:k==="chg"?studio(it):k==="qty"||k==="leadWeeks"?num(it[k]):k==="unit"?(it.unit||"ea"):String(it[k]??""))});
+  const ws=X.utils.aoa_to_sheet([title,help,[],head,...body]);
+  const ci=k=>XL_COLS.findIndex(c=>c[0]===k),A=i=>X.utils.encode_col(i);
+  body.forEach((_,i)=>{const row=i+5,q=A(ci("qty"))+row,p=A(ci("cny"))+row;ws[A(ci("totcny"))+row]={t:"n",f:`IF(AND(ISNUMBER(${q}),ISNUMBER(${p})),${q}*${p},"")`}});
+  ws["!cols"]=XL_COLS.map(c=>({wch:c[3]}));
+  const wb=X.utils.book_new();X.utils.book_append_sheet(wb,ws,"Quotation 报价单");
+  const out=X.write(wb,{bookType:"xlsx",type:"array"});
+  try{await downloads.save({filename:(project.name||"project").replace(/\W+/g,"-")+"-quotation-"+iso(new Date())+".xlsx",data:new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})})}catch(e){if(e&&e.code!=="cancelled"&&e.code!=="declined")toast("Export didn't complete.")}
+}
+let xl=null;
+async function importQuoteFile(file){
+  let X;try{X=await loadXLSX()}catch(_){toast("Couldn't load the Excel tools. Check your connection and try again.");return}
+  let rows;try{const wb=X.read(await file.arrayBuffer(),{type:"array"});rows=X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:""})}catch(_){toast("Couldn't read that file. Save it as .xlsx and try again.");return}
+  const eng=v=>String(v||"").split(/[^\x00-\x7F]/)[0].trim().toLowerCase();
+  const hi=rows.findIndex(rw=>rw.some(v=>/^id \(do not change\)/.test(eng(v)+" ")||eng(v)==="id (do not change)"));
+  if(hi<0){toast("That file doesn't have the ID column from a Sourcebook Excel export.");return}
+  const H=rows[hi].map(eng),at=k=>H.indexOf(XL_COLS.find(c=>c[0]===k)[1].toLowerCase());
+  const col=Object.fromEntries(XL_COLS.map(c=>[c[0],at(c[0])]));
+  const changes=[];let unmatched=0,matched=0;const r=fx();
+  rows.slice(hi+1).forEach(rw=>{
+    const cell=k=>col[k]<0?"":rw[col[k]];const id=String(cell("id")).trim(),code=String(cell("code")).trim();
+    if(!id&&!code)return;
+    const it=items.find(i=>i.id===id)||(code?items.find(i=>String(i.code||"").trim().toUpperCase()===code.toUpperCase()):null);
+    if(!it){if(rw.some(v=>String(v).trim()))unmatched++;return}matched++;
+    const add=(f,was,now,patch)=>changes.push({id:it.id,code:it.code||"",name:it.name||"",f,was,now,patch,on:true});
+    ["name","supplier","modelCode","unit","notes"].forEach(f=>{if(col[f]<0)return;const v=String(cell(f)).trim();if(!v)return;if(v!==String(it[f]??"").trim())add(f,String(it[f]??""),v,{[f]:v})});
+    ["qty","leadWeeks"].forEach(f=>{if(col[f]<0)return;const v=toNum(cell(f));if(v==null)return;const c=num(it[f]);if(c==null||Math.abs(c-v)>1e-9)add(f,c==null?"":String(c),String(v),{[f]:v})});
+    const cn=col.cny<0?null:toNum(cell("cny")),ca=col.cad<0?null:toNum(cell("cad")),curN=r2(unitCNY(it)),curA=r2(unitCAD(it));
+    if(cn!=null&&(curN==null||Math.abs(curN-cn)>0.004))add("cny",curN==null?"":fmtC(curN,"CNY"),fmtC(cn,"CNY"),{unitCostCNY:cn,unitCost:r2(cn/r),priceBase:"CNY"});
+    else if(ca!=null&&(curA==null||Math.abs(curA-ca)>0.004))add("cad",curA==null?"":fmtC(curA,"CAD"),fmtC(ca,"CAD"),{unitCost:ca,unitCostCNY:null,priceBase:"CAD"});
+  });
+  xl={fname:file.name,changes,unmatched,matched};renderXL();
+}
+function renderXL(){
+  document.getElementById("xlimp")?.remove();if(!xl)return;
+  const on=xl.changes.filter(c=>c.on).length,pieces=new Set(xl.changes.filter(c=>c.on).map(c=>c.id)).size;
+  const d=document.createElement("div");d.className="xlwrap";d.id="xlimp";
+  d.innerHTML=`<div class="xlbox" role="dialog" aria-modal="true" aria-label="Changes from Excel"><div class="eyebrow">${esc(xl.fname)}</div><h2>Changes from Excel</h2>
+    <p class="muted"><span>${xl.changes.length?`Untick anything you don't want. Blank cells are left as they are.`:`Nothing in this file differs from the quotation.`}</span>${xl.unmatched?` <span>${xl.unmatched} row${xl.unmatched===1?"":"s"} didn't match a piece and will be skipped.</span>`:""}</p>
+    ${xl.changes.length?`<table><thead><tr><th></th><th>Code</th><th>Item</th><th>What</th><th>Was</th><th>Now</th></tr></thead><tbody>${xl.changes.map((c,i)=>`<tr><td><input type="checkbox" data-xlon="${i}" ${c.on?"checked":""} aria-label="Apply this change"></td><td class="mono">${esc(c.code)}</td><td>${esc(c.name)}</td><td>${esc(XL_EDIT[c.f]||c.f)}</td><td class="was">${esc(c.was||"—")}</td><td class="now">${esc(c.now)}</td></tr>`).join("")}</tbody></table>`:""}
+    <div class="row2"><button class="btn ghost" data-xl="cancel">${xl.changes.length?"Cancel":"Close"}</button>${xl.changes.length?`<button class="btn" data-xl="apply" ${on?"":"disabled"}>Save ${on} change${on===1?"":"s"} to ${pieces} piece${pieces===1?"":"s"}</button>`:""}</div></div>`;
+  document.body.appendChild(d);
+}
+function applyXL(){
+  const by={};xl.changes.filter(c=>c.on).forEach(c=>{by[c.id]={...(by[c.id]||{}),...c.patch}});
+  const ids=Object.keys(by);ids.forEach(id=>setItem(id,by[id]));xl=null;renderXL();
+  toast(`Updated ${ids.length} piece${ids.length===1?"":"s"} from Excel`);
+}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-xl]");if(b){e.preventDefault();if(b.dataset.xl==="apply")applyXL();else{xl=null;renderXL()}return}
+  if(e.target.classList&&e.target.classList.contains("xlwrap")){xl=null;renderXL()}});
+document.addEventListener("change",e=>{const t=e.target;if(t.dataset&&t.dataset.xlon!=null&&xl){xl.changes[+t.dataset.xlon].on=t.checked;const st=document.querySelector("#xlimp .xlbox")?.scrollTop||0;renderXL();const bx=document.querySelector("#xlimp .xlbox");if(bx)bx.scrollTop=st}
+  else if(t.matches&&t.matches("[data-xlimport]")&&t.files&&t.files[0]){importQuoteFile(t.files[0]);t.value=""}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&xl){xl=null;renderXL()}});
+
 /* ---------- multiple projects ---------- */
 // The first book keeps its original storage ("main"); each new project lives under projects/<id>/.
 let rawdb=null,cur="main",registry=[],summaries=null,sumLoading=false,unsubs=[];
@@ -1330,11 +1462,11 @@ const nsdb={doc:p=>rawdb.doc(NS()+p),collection:p=>rawdb.collection(NS()+p)};
 const nsFor=id=>id==="main"?"":`projects/${id}/`;
 function subscribeProject(){
   unsubs.forEach(u=>{try{u()}catch(_){}});unsubs=[];
-  items=[];decisions=[];gallery=[];drawings=[];loaded=false;project={name:"Untitled project",client:"",location:"",phase:""};
+  items=[];decisions=[];gallery=[];drawings=[];loaded=false;newsKeys=null;project={name:"Untitled project",client:"",location:"",phase:""};
   unsubs.push(db.collection("drawings").onSnapshot(s=>{drawings=s.docs.map(d=>({id:d.id,...d.data()}));render()},()=>{}));
   unsubs.push(db.collection("images").onSnapshot(s=>{gallery=s.docs.map(d=>({id:d.id,...d.data()}));render()},()=>{}));
   unsubs.push(db.doc("project/main").onSnapshot(s=>{if(s.exists){project={name:"Untitled project",client:"",location:"",phase:"",...s.data()};render()}},()=>{}));
-  unsubs.push(db.collection("items").onSnapshot(s=>{items=s.docs.map(d=>({id:d.id,...d.data()}));loaded=true;render();if(typeof finishPendingSetups==="function")finishPendingSetups()},()=>{}));
+  unsubs.push(db.collection("items").onSnapshot(s=>{items=s.docs.map(d=>({id:d.id,...d.data()}));loaded=true;render();checkNews();if(typeof finishPendingSetups==="function")finishPendingSetups()},()=>{}));
   unsubs.push(db.collection("decisions").onSnapshot(s=>{decisions=s.docs.map(d=>({id:d.id,...d.data()}));render()},()=>{}));
   comments=[];if(HOSTED)unsubs.push(db.collection("comments").onSnapshot(s=>{comments=s.docs.map(d=>({id:d.id,...d.data()}));render()},()=>{}));
 }
@@ -1492,13 +1624,16 @@ const hasFiles=e=>e.dataTransfer&&[...e.dataTransfer.types].includes("Files");
 document.addEventListener("dragover",e=>{
   if(!hasFiles(e))return;
   if(e.target.closest&&e.target.closest("#drawsec,#gal-drop,#start-drop,.pick.add,#imp-drop"))return;
+  if(xlDropHere(e)){e.preventDefault();e.dataTransfer.dropEffect="copy";hl(null);document.body.classList.add("xlover");return}
+  document.body.classList.remove("xlover");
   const z=dropZone(e.target);e.preventDefault();e.dataTransfer.dropEffect=z?"copy":"none";hl(z?z.el:null);
 });
-document.addEventListener("dragleave",e=>{if(!e.relatedTarget||!document.contains(e.relatedTarget))hl(null)});
+document.addEventListener("dragleave",e=>{if(!e.relatedTarget||!document.contains(e.relatedTarget)){hl(null);document.body.classList.remove("xlover")}});
 document.addEventListener("drop",e=>{
   if(!hasFiles(e))return;
   if(e.target.closest&&e.target.closest("#drawsec,#gal-drop,#start-drop,.pick.add,#imp-drop"))return;
   e.preventDefault();hl(null);
+  if(xlDropHere(e)){document.body.classList.remove("xlover");const f=[...e.dataTransfer.files].find(x=>/\.(xlsx|xls|csv)$/i.test(x.name));if(f)importQuoteFile(f);else toast("Drop an Excel file (.xlsx) exported from this quotation.");return}
   const z=dropZone(e.target);if(!z)return;
   if(z.kind==="refs"){addRefFiles(z.id,e.dataTransfer.files);return}
   if(z.kind==="ximg"){addExtraImages(z.id,e.dataTransfer.files);return}
@@ -1511,7 +1646,7 @@ document.addEventListener("drop",e=>{
   else if(z.kind==="form")formPhoto(f);
   else if(z.kind==="new")quickAdd(f);
 });
-document.addEventListener("dragend",()=>hl(null));
+document.addEventListener("dragend",()=>{hl(null);document.body.classList.remove("xlover")});
 document.addEventListener("paste",e=>{
   if(!ui.open||ui.img||!(canWrite&&!preview))return;
   const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA)$/.test(a.tagName)&&a.type!=="file")return;
@@ -1948,6 +2083,7 @@ function render(){
     </div>
     ${ui.view!=="dec"&&ui.view!=="look"&&ui.view!=="lib"?`<div class="tools">${cats.map(c=>`<button class="chip" data-cat="${esc(c)}" aria-pressed="${ui.cat===c}">${esc(c)}</button>`).join("")}</div>`:""}
   </div>
+  ${ui.view!=="lib"?newsBar():""}
   <main id="main">${ui.view==="lib"&&window.SBLibrary?SBLibrary.view():!items.length&&loaded&&canWrite&&!preview?startPanel():ui.view==="look"?spacesStrip()+drawingsSection()+lookJump():ui.view==="mat"?lookbook():ui.view==="sched"?schedule():ui.view==="finish"?finishSchedule():ui.view==="furn"?furnitureSchedule():ui.view==="quote"?quotation():decisionLog()}</main>`;
   renderLayer(true);
 }
@@ -2004,7 +2140,7 @@ function lookbook(){
   const size=ui.cardSize||"m";const pattern=size==="m"?["feature","feature","","","tall","","",""]:[""];
   return head+`<div class="look size-${size}">${list.map((it,i)=>{const p=pattern[i%pattern.length];const u=urgency(it);return`
     <button class="card ${p}" data-open="${it.id}">
-      <div class="plate ${fitOf(it)==="contain"?"fitwhole":""}"><img alt="" src="${imgFor(it,size==="l"||p==="feature"?760:size==="s"?360:520)}" loading="lazy"><span class="tag mono">${esc(it.code||"")}</span>${hasModel(it)?`<span class="b3d mono" title="3D model">3D</span>`:""}${canMatch()&&it.match&&["searching","pulling"].includes(it.match.status)?`<span class="mbadge mono"><span class="scanpulse"></span>Searching</span>`:canMatch()&&it.match&&["found","ready"].includes(it.match.status)?`<span class="mbadge mono on">Matches ready</span>`:""}${clip(it,"onplate")}${u?`<span class="late mono">${u.label}</span>`:""}</div>
+      <div class="plate ${fitOf(it)==="contain"?"fitwhole":""}"><img alt="" src="${imgFor(it,size==="l"||p==="feature"?760:size==="s"?360:520)}" loading="lazy"><span class="tag mono">${esc(it.code||"")}</span>${hasModel(it)?`<span class="b3d mono" title="3D model">3D</span>`:""}${canMatch()&&it.match&&["searching","pulling"].includes(it.match.status)?`<span class="mbadge mono"><span class="scanpulse"></span>Searching</span>`:canMatch()&&it.match&&["found","ready"].includes(it.match.status)?`<span class="mbadge mono on">Matches ready</span>`:""}${clip(it,"onplate")}${u?`<span class="late mono">${u.label}</span>`:""}${newsOf(it)?`<span class="newtag">${newsOf(it).isNew?"New":"Updated"}</span>`:""}</div>
       <div class="cap"><h3>${esc(it.name)}</h3><span class="q">${esc(qtyStr(it))}</span>
       <div class="sub"><span><i class="dot s-${esc(it.status)}"></i>${esc(it.status)}</span><span>${esc(it.category||"")}</span>${it.supplier?`<span>${esc(it.supplier)}</span>`:""}${reviewChip(it)}${(()=>{const n=commentsFor(it.id).length;return n?`<span class="ccount">${n} comment${n===1?"":"s"}</span>`:""})()}</div></div>
     </button>`}).join("")}${addTile}</div>`;
@@ -2018,16 +2154,16 @@ function schedule(){
   let month="";
   const rows=list.map(it=>{const ob=orderBy(it);const m=ob?ob.toLocaleDateString(lang==="zh"?"zh-CN":"en-CA",{month:"long",year:"numeric"}):"No site date";const u=urgency(it);
     const head=m!==month?(month=m,`<tr class="month"><td colspan="9">${esc(m)}</td></tr>`):"";
-    return head+`<tr class="row" data-open="${it.id}">
+    return head+`<tr class="row${newsOf(it)?" newsrow":""}" data-open="${it.id}">
       <td><span class="sw" style="background-image:url(${imgFor(it,80)})"></span></td>
-      <td class="mono">${fmtD(ob)}</td>
-      <td><div style="font-weight:600">${esc(it.name)}</div><div class="mono muted codeclip">${esc(it.code||"")} · ${esc(it.zone||it.category||"")}${clip(it)}</div></td>
-      <td class="n mono">${esc(Number(it.qty).toLocaleString("en-CA"))}</td>
-      <td class="mono">${esc(it.unit||"")}</td>
-      <td>${esc(it.supplier||"—")}</td>
-      <td class="n mono">${it.leadWeeks?esc(it.leadWeeks)+" wk":"—"}</td>
-      <td class="mono">${fmtD(parseD(it.needBy))}</td>
-      <td>${u?`<span class="pill ${u.cls}">${u.label}</span>`:`<span><i class="dot s-${esc(it.status)}"></i>${esc(it.status)}</span>`}</td>
+      <td class="mono${hot(it,"needBy","leadWeeks")}">${fmtD(ob)}</td>
+      <td><div style="font-weight:600" class="${hot(it,"name")}">${esc(it.name)}</div><div class="mono muted codeclip"><span class="${hot(it,"code")}">${esc(it.code||"")}</span> · ${esc(it.zone||it.category||"")}${clip(it)}</div>${newsPill(it)}</td>
+      <td class="n mono${hot(it,"qty")}">${esc(Number(it.qty).toLocaleString("en-CA"))}</td>
+      <td class="mono${hot(it,"unit")}">${esc(it.unit||"")}</td>
+      <td class="${hot(it,"supplier")}">${esc(it.supplier||"—")}</td>
+      <td class="n mono${hot(it,"leadWeeks")}">${it.leadWeeks?esc(it.leadWeeks)+" wk":"—"}</td>
+      <td class="mono${hot(it,"needBy")}">${fmtD(parseD(it.needBy))}</td>
+      <td class="${hot(it,"status")}">${u?`<span class="pill ${u.cls}">${u.label}</span>`:`<span><i class="dot s-${esc(it.status)}"></i>${esc(it.status)}</span>`}</td>
     </tr>`}).join("");
   return`
   <div class="sum">
@@ -2096,15 +2232,16 @@ function renderLayer(passive){
       <div class="top"><span class="eyebrow">${[it.code,it.category].filter(Boolean).map(esc).join(" · ")}${it.zone?" · "+esc(it.zone):""}</span>
         <div class="row2">${HOSTED?`<button class="btn ghost sm" data-a="savepdf" title="Download this product sheet as a PDF, ready to print or send">Save PDF</button><button class="btn ghost sm" data-a="pkg" title="Product sheet PDF with its drawings, spec sheets, photo and 3D model, in one ZIP">Download package</button>`:""}${ed?`<button class="btn ghost sm" data-a="edit">Edit</button>`:""}<button class="close" data-a="close" aria-label="Close">×</button></div></div>
       <h2>${esc(it.name)}</h2>
+      ${(()=>{const n=newsOf(it);if(!n)return"";const f=chgFields(n);return`<div class="newsline"><span><b>●</b> ${n.isNew?"New from "+newsFrom():"Updated by "+newsFrom()}${n.by?" ("+esc(n.by)+")":""} · ${fmtD(new Date(n.at),true)}</span>${!n.isNew&&f.length?`<span>${f.map(esc).join(", ")}</span>`:""}<button class="seenbtn" data-seen="${it.id}">✓ Mark seen</button></div>`})()}
       ${it.description?`<p class="lede">${esc(it.description)}</p>`:""}
       <div class="steps">${STAGES.map((s,i)=>`<button class="step ${i<si?"done":""} ${i===si?"cur":""}" data-status="${s}" ${ed?"":"disabled"}>${s}</button>`).join("")}</div>
       <div class="facts">
-        <div><span class="eyebrow">Quantity</span><b>${esc(qtyStr(it))}</b></div>
-        <div><span class="eyebrow">Supplier</span><b>${esc(it.supplier||"—")}</b></div>
-        <div><span class="eyebrow">Lead time</span><b>${it.leadWeeks?esc(it.leadWeeks)+" weeks":"—"}</b></div>
-        <div><span class="eyebrow">Required on site</span><b>${fmtD(parseD(it.needBy),true)}</b></div>
+        <div><span class="eyebrow">Quantity</span><b class="${hot(it,"qty","unit")}">${esc(qtyStr(it))}</b></div>
+        <div><span class="eyebrow">Supplier</span><b class="${hot(it,"supplier")}">${esc(it.supplier||"—")}</b></div>
+        <div><span class="eyebrow">Lead time</span><b class="${hot(it,"leadWeeks")}">${it.leadWeeks?esc(it.leadWeeks)+" weeks":"—"}</b></div>
+        <div><span class="eyebrow">Required on site</span><b class="${hot(it,"needBy")}">${fmtD(parseD(it.needBy),true)}</b></div>
         <div><span class="eyebrow">Order by</span><b class="${u&&u.cls==="crit"?"crit":""}">${fmtD(ob,true)}</b></div>
-        <div><span class="eyebrow">${isClient()?"Unit price":"Unit cost"}</span><b>${it.unitCost?"$"+Number(it.unitCost).toLocaleString("en-CA"):"—"}</b></div>
+        <div><span class="eyebrow">${isClient()?"Unit price":"Unit cost"}</span><b class="${hot(it,"unitCost","unitCostCNY","priceBase")}">${it.unitCost?"$"+Number(it.unitCost).toLocaleString("en-CA"):"—"}</b></div>
       </div>
 
       ${matchSection(it)}
@@ -2286,6 +2423,7 @@ document.addEventListener("click",async e=>{
   else if(a==="csvfin"){exportFinishCSV()}
   else if(a==="csvfur"){exportFurnitureCSV()}
   else if(a==="csvquote"){exportQuoteCSV()}
+  else if(a==="xlsxquote"){exportQuoteXLSX()}
   else if(a==="togglefit"){const it=items.find(i=>i.id===ui.open);if(it){setItem(it.id,{photoFit:it.photoFit==="contain"?"cover":"contain"});renderLayer()}}
   else if(a==="newproj"){ui.newProj=true;renderLayer()}
   else if(a==="closenewproj"){ui.newProj=false;document.body.style.overflow="";renderLayer()}
@@ -2961,6 +3099,7 @@ document.addEventListener("dragstart",e=>{if(e.target.closest&&e.target.closest(
 
 /* ---------- English / 中文 ---------- */
 const ZH={
+"Model":"型号","New":"新增","What":"更改内容","Was":"原值","Now":"新值","Details":"详情","Images":"图片","Duty %":"关税 %","✓ Seen":"✓ 已查看","✓ Mark seen":"✓ 标为已查看","Mark as seen":"标为已查看","Mark all seen":"全部标为已查看","Show in order schedule":"在订货计划中查看","Turn on alerts":"开启提醒","Alerts are on for this device while Sourcebook is open.":"此设备在打开选材手册时会收到提醒。","Alerts are off. You can allow them in your browser settings.":"提醒已关闭。可在浏览器设置中允许。","Export Excel":"导出 Excel","Drop the sourcing agent's Excel file here":"将采购代理的 Excel 文件拖放到这里","to bring in their prices, quantities and notes. You'll see every change before it's saved.":"即可导入其价格、数量和备注。保存前会显示每一项更改。","Choose Excel file":"选择 Excel 文件","Changes from Excel":"来自 Excel 的更改","Untick anything you don't want. Blank cells are left as they are.":"取消勾选不需要的更改。空白单元格保持不变。","Nothing in this file differs from the quotation.":"此文件与报价单没有差异。","Apply this change":"应用此更改","Unit price (CNY)":"单价（人民币）","Unit price (CAD)":"单价（加元）","Couldn't load the Excel tools. Check your connection and try again.":"无法加载 Excel 工具，请检查网络后重试。","Couldn't read that file. Save it as .xlsx and try again.":"无法读取该文件，请另存为 .xlsx 后重试。","That file doesn't have the ID column from a Sourcebook Excel export.":"该文件没有选材手册 Excel 导出中的 ID 列。","Drop an Excel file (.xlsx) exported from this quotation.":"请拖入从此报价单导出的 Excel 文件（.xlsx）。",
 "Download package":"下载资料包","Product sheet PDF with its drawings, spec sheets, photo and 3D model, in one ZIP":"产品资料 PDF 及其图纸、规格书、照片和 3D 模型，打包为一个 ZIP","Preparing the package…":"正在准备资料包…","The package couldn't be made. Try again.":"无法生成资料包，请重试。","Photo":"照片","Links":"链接","Sourcebook":"选材手册","Changes requested":"需修改","Client review":"客户审核","Specification":"规格","Save PDF":"保存 PDF","Download this product sheet as a PDF, ready to print or send":"将此产品资料下载为 PDF，可直接打印或发送","Preparing the PDF…":"正在生成 PDF…","PDF downloaded":"PDF 已下载","The PDF couldn't be made. Try again.":"无法生成 PDF，请重试。","Product sheet":"产品资料","Extended":"小计","Unit price":"单价","Required on site":"现场需用日期","Order by":"下单截止","Drawings & references":"图纸与参考资料","(attached in Sourcebook)":"（附于选材手册中）","Approved":"已批准","Code":"编号","Category":"类别","Status":"状态","Notes":"备注","Find it online":"在线查找","Search again":"重新搜索","Start over":"重新开始","Optional hint: brand, retailer or what to look for":"可选提示：品牌、零售商或查找重点","Claude searches the web for this product, shows you likely matches, and pulls the details of the one you pick. About 10–20¢ of Claude usage per search.":"Claude 会在网上搜索此产品，列出可能的匹配项，并获取您所选产品的详细信息。每次搜索约消耗 0.1–0.2 美元的 Claude 用量。","Find this product online":"在线查找此产品","Searching the web for matches…":"正在网上搜索匹配产品…","This usually takes 30 to 90 seconds. You can close this and keep working; the matches will be waiting here.":"通常需要 30 到 90 秒。您可以关闭此页继续工作，结果会保留在这里。","The search didn't finish":"搜索未完成","Try again":"重试","No confident match found":"未找到可靠的匹配","Add a hint, such as the brand or where you saw it, and search again.":"添加提示（例如品牌或出处）后重新搜索。","✓ Matched":"✓ 已匹配","Use this":"使用此项","Pull again":"重新获取","Pulling details…":"正在获取详情…","Product photo":"产品照片","Replaces the current image":"替换当前图片","Uses the photo from the product page":"使用产品页面的照片","Check prices and lead times with the supplier before ordering; web listings change.":"下单前请向供应商核实价格和交货期；网上信息可能变动。","Dismiss":"关闭","Add products or materials":"添加产品或材料","Drop an image or tap to choose one. Claude finds the product online and fills in its details.":"拖入图片或点击选择。Claude 会在网上查找该产品并填写详情。","or fill in by hand":"或手动填写","Matches ready":"匹配结果已就绪","Searching":"搜索中","Find each piece online":"在线查找每一项","Claude searches the web for every piece you add and lines up matches for you to confirm. About 10–20¢ of Claude usage per piece.":"Claude 会为您添加的每一项在网上搜索，并列出匹配结果供您确认。每项约消耗 0.1–0.2 美元的 Claude 用量。","Adding the piece…":"正在添加…","Add a photo first.":"请先添加照片。","Spec sheet":"规格书","Link":"链接","Listed price":"标价","Unit cost (CAD)":"单价（加元）","Unit cost (CNY)":"单价（人民币）","New piece":"新项目","Drop PDFs or images. Link other files (like .dwg) with the form instead.":"请拖入 PDF 或图片。其他文件（如 .dwg）请通过表单添加链接。","The product photo couldn't be downloaded. Your image was kept.":"无法下载产品照片，已保留您的图片。","A finish, fixture, fitting or piece of furniture, with its image, specification and quantity. Or drop an image here.":"饰面、灯具、配件或家具，以及其图片、规格和数量。也可将图片拖到这里。","3D model":"3D 模型","Add a 3D model":"添加 3D 模型","GLB exported from Rhino, SketchUp or Revit, with its materials. Drop it here or choose a file. Up to 100 MB.":"从 Rhino、SketchUp 或 Revit 导出的含材质 GLB 文件。拖放到此处或选择文件，最大 100 MB。","Drag to turn · pinch or scroll to zoom":"拖动旋转 · 双指或滚轮缩放","Drag to turn · pinch or scroll to zoom · double-tap to reset":"拖动旋转 · 双指或滚轮缩放 · 双击复位","View in your room":"在您的房间中查看","View in 3D":"3D 查看","Replace model":"替换模型","Remove model":"移除模型","3D model added":"已添加 3D 模型","3D model removed":"已移除 3D 模型","USDZ added for iPhone and iPad":"已为 iPhone 和 iPad 添加 USDZ","Add USDZ for iPhone & iPad":"为 iPhone 和 iPad 添加 USDZ","Replace USDZ for iPhone & iPad":"替换 iPhone 和 iPad 的 USDZ","Full screen":"全屏","Upload failed. Try again.":"上传失败，请重试。","Open a product, then drop the model on its 3D model section.":"请先打开产品，再将模型拖到其 3D 模型区域。","Export as glTF Binary (.glb) so the textures travel inside one file.":"请导出为 glTF 二进制（.glb），使贴图包含在同一文件中。","Use a GLB file (or USDZ for iPhone and iPad).":"请使用 GLB 文件（iPhone 和 iPad 可用 USDZ）。","Add the GLB first. The USDZ is an extra for Apple AR.":"请先添加 GLB。USDZ 仅用于苹果 AR。","That isn't a GLB file. Export as glTF Binary (.glb).":"这不是 GLB 文件。请导出为 glTF 二进制（.glb）。","That model is over 100 MB.":"模型超过 100 MB。","The 3D viewer couldn't load. Check your connection.":"3D 查看器无法加载，请检查网络。","Admin":"管理员","Sourcing agent":"采购代理","Client":"客户","Sign out":"退出登录","Signed in":"已登录","Client review":"客户审核","✓ Client approved":"✓ 客户已批准","Changes requested":"需修改","✓ Approved":"✓ 已批准","Let the studio know if this piece works for you.":"请告诉工作室此项目是否合适。","Waiting for the client's review.":"等待客户审核。","Add a note (optional)":"添加备注（可选）","Approve":"批准","Request changes":"要求修改","Clear my review":"撤销我的审核","Comments":"评论","No comments yet.":"暂无评论。","Ask a question or leave a note for the studio":"向工作室提问或留言","Write a comment":"写评论","Post":"发布","Remove comment":"删除评论","Approved. The studio can see it.":"已批准，工作室可以看到。","Sent to the studio.":"已发送给工作室。","Review cleared":"审核已撤销","Your role can't do that.":"您的角色无法执行此操作。","Clients can view, approve and comment.":"客户可以查看、批准和评论。","Only admins can delete projects.":"只有管理员可以删除项目。","Only admins can find products online.":"只有管理员可以在线查找产品。","← Projects":"← 项目",
 "Sourcebook":"选材手册","Sourcing library":"采购图库","Design to construction":"从设计到施工","Untitled":"未命名","project":"项目","Untitled project":"未命名项目",
 "Import":"导入","Add product":"添加产品","Edit project":"编辑项目","Update from sheet":"从表格更新","Linked Google Sheet ↗":"已关联 Google 表格 ↗",
@@ -3025,6 +3164,9 @@ const ZH={
 "Primary ensuite":"主卧卫生间","Location ":"位置","Linked to":"已关联","your Google Sheet ↗":"您的 Google 表格 ↗","download it as Excel":"下载为 Excel","download it as Excel ↗":"下载为 Excel ↗","Upload the download":"上传下载的文件","Paste rows":"粘贴行","or drop / paste an image":"或拖放 / 粘贴图片","Drop an image on the picture, or use a material plate below":"将图片拖放到画面上，或使用下方的材料样板","Use a JPG, PNG, WebP or GIF image.":"请使用 JPG、PNG、WebP 或 GIF 图片。","Save the image to your device first, then drop the file here.":"请先将图片保存到设备，再将文件拖放到这里。","Size":"尺寸","Small":"小","Medium":"中","Large":"大","Fill":"填满","Whole":"完整","Card size":"卡片尺寸","Show whole image":"显示完整图片","Fill the frame":"填满画框","Projects":"项目","All projects":"全部项目","← All projects":"← 全部项目","Sourcebook · Studio":"选材手册 · 工作室","New project":"新建项目","Active projects":"进行中项目","Pieces in sourcing":"采购中项目","Orders overdue":"逾期未下单","Due in 3 weeks":"三周内需下单","Quoted value":"报价总额","Active":"进行中","Archived":"已归档","Open now":"当前打开","No pictures yet":"暂无图片","pieces":"个项目","drawings":"张图纸","quoted (CAD)":"报价（加元）","Open":"打开","Archive":"归档","Restore":"恢复","Delete project…":"删除项目…","Start a book for a new job: its lookbook, schedules and quotation.":"为新工作建立手册：效果册、清单与报价单。","Create project":"创建项目","Project created":"已创建项目","Project deleted":"已删除项目","Loading projects…":"正在加载项目…","Updating…":"正在更新…","No archived projects.":"没有已归档的项目。","Project options":"项目选项","across all projects":"所有项目合计","Couldn't create the project. Try again.":"无法创建项目，请重试。","Some of the project couldn't be removed. Try again.":"部分项目内容无法删除，请重试。","Projects appear here once the book is open on claude.ai.":"在 claude.ai 中打开手册后，项目会显示在这里。","Quotation":"报价单","Total (CAD)":"合计（加元）","Total (CNY)":"合计（人民币）","Items priced":"已报价项目","Exchange rate":"汇率","Set for this project":"本项目设定","Unit price (CAD)":"单价（加元）","Unit price (CNY)":"单价（人民币）","Price TBD":"价格待定","Qty TBD":"数量待定","Subtotal":"小计","Sourcing fee":"采购服务费","Freight & logistics":"运费与物流","Products subtotal":"产品小计","Shipping, duty & delivery":"运输、关税与配送","Ocean freight":"海运费","Cargo insurance":"货运保险","% of products":"% 按产品金额","Duty":"关税","Duty %":"关税 %","Duty rate %":"关税税率 %","Customs brokerage":"清关代理费","Delivery & storage":"配送与仓储","Landed cost":"到岸总成本","Sales tax":"销售税","Province":"省份","Ontario":"安大略省","British Columbia":"不列颠哥伦比亚省","Alberta":"阿尔伯塔省","Quebec":"魁北克省","Manitoba":"曼尼托巴省","Saskatchewan":"萨斯喀彻温省","Nova Scotia":"新斯科舍省","New Brunswick":"新不伦瑞克省","Newfoundland and Labrador":"纽芬兰与拉布拉多省","Prince Edward Island":"爱德华王子岛省","Yukon":"育空地区","Northwest Territories":"西北地区","Nunavut":"努纳武特地区","% default":"% 默认","Freight benchmark (Oct 2026): a 40 ft high cube from China to Vancouver or Montreal is about US$8,640 to $10,560; shared container (LCL) about US$190 per cubic metre. Get a firm quote at booking.":"运费参考（2026年10月）：中国至温哥华或蒙特利尔的 40 尺高柜约 8,640 至 10,560 美元；拼箱（LCL）约每立方米 190 美元。订舱时请获取确定报价。","Duty is charged on the product value. Set a default rate for the project and override it per item in the Duty % column. Confirm rates with a customs broker: upholstered seating from China can carry 188% anti-dumping duty, and some steel and aluminum goods a 25% surtax.":"关税按产品金额计算。可为项目设定默认税率，并在“关税 %”列中为单项另设税率。请向报关行确认税率：来自中国的软包座椅可能被征收 188% 反倾销税，部分钢铝制品另有 25% 附加税。","Tax":"税费","Total":"合计","Enter a unit price in either currency; the other is converted at the project rate.":"可以任一币种输入单价，另一币种按项目汇率自动换算。","No materials or products yet.":"暂无材料或产品。","1 CAD =":"1 加元 =","Other":"其他","Unit price CAD":"单价 加元","Unit price CNY":"单价 人民币","Language":"语言","View all":"查看全部"
 };
 const ZH_PAT=[
+ [/^(\d+) pieces? new or updated by the sourcing agent$/,m=>`采购代理新增或更新了 ${m[1]} 项`],[/^(\d+) pieces? new or updated by the studio$/,m=>`工作室新增或更新了 ${m[1]} 项`],
+ [/^New from the sourcing agent(.*)$/,m=>`采购代理新增${m[1]}`],[/^New from the studio(.*)$/,m=>`工作室新增${m[1]}`],[/^Updated by the sourcing agent(.*)$/,m=>`采购代理已更新${m[1]}`],[/^Updated by the studio(.*)$/,m=>`工作室已更新${m[1]}`],
+ [/^(\d+) rows? didn't match a piece and will be skipped\.$/,m=>`${m[1]} 行未匹配到项目，将被跳过。`],[/^Save (\d+) changes? to (\d+) pieces?$/,m=>`保存 ${m[1]} 项更改到 ${m[2]} 个项目`],[/^Updated (\d+) pieces? from Excel$/,m=>`已从 Excel 更新 ${m[1]} 个项目`],
  [/^(\d+) · drop images here$/,m=>`${m[1]} · 可将图片拖放到这里`],[/^(.+) · Additional images$/,m=>`${m[1]} · 更多图片`],[/^(.+) · Supplier response$/,m=>`${m[1]} · 供应商回复`],[/^(.+) · RFI$/,m=>`${m[1]} · 询问`],
  [/^Added to (.+) as (.+)$/,m=>`已添加到 ${m[1]}，编号 ${m[2]}`],[/^Already in (.+) as (.+)$/,m=>`已在 ${m[1]} 中，编号 ${m[2]}`],
  [/^Package downloaded · (\d+) files?$/,m=>`资料包已下载 · ${m[1]} 个文件`],[/^Package downloaded · (\d+) files? couldn't be included$/,m=>`资料包已下载 · ${m[1]} 个文件无法包含`],
@@ -3107,7 +3249,7 @@ async function boot(){
   c.use("sample").then(async sm=>{if(!sm)return;sample=sm;imgLimits=await sm.limits().catch(()=>null);force=true;render();force=false}).catch(()=>{});
   if(HOSTED)cur="main";subscribeProject();if(!HOSTED)watchRegistry();else if(ui.view==="proj")ui.view="look";
   c.use("downloads").then(d=>{downloads=d;if(ui.view==="sched")render()}).catch(()=>{});
-  if(HOSTED){const u=await c.use("user").catch(()=>null);ME=u&&u.me?await u.me().catch(()=>null):null;if(isClient()){canWrite=false;if(ui.view==="sched")ui.view="look"}render()}
+  if(HOSTED){const u=await c.use("user").catch(()=>null);ME=u&&u.me?await u.me().catch(()=>null):null;if(isClient()){canWrite=false;if(ui.view==="sched")ui.view="look"}render();if(loaded)checkNews()}
   c.use("user").then(u=>{if(u&&u.can){Promise.resolve(u.can("data.write")).then(v=>{if(v===false){canWrite=false;render()}}).catch(()=>{})}}).catch(()=>{});
 }
 /* ---------- sourcing library (shared module in library.js) ---------- */

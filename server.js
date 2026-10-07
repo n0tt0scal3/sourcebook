@@ -28,7 +28,7 @@ const LIB_CATS_DIR = path.join(DATA_DIR, "lib-cats");
 const LIB_THUMB_DIR = path.join(DATA_DIR, "lib-thumbs");
 // The library index, read once and kept in memory for building pieces on the server.
 const LIB_LABEL = { "BILLA-Sofa": ["Billa", "Sofas & lounge chairs"], "BILLA-CoffeeTV": ["Billa", "Coffee tables & TV units"], "BILLA-Dining": ["Billa", "Dining"], "BILLA-Outdoor": ["Billa", "Outdoor"], "HALO": ["HALO", "Collection 2026"], "Kaiwuli": ["Kaiwuli", "Catalogue 2026"], "TO-Tearsheet": ["TO Interactive", "Tearsheets 2025"] };
-const LIB_CAT = { FURNITURE: "Furniture", LIGHTING: "Lighting", PLUMBING: "Plumbing", MILLWORK: "Millwork", DOORS: "Millwork", STONE: "Stone", "WALL PANELLING": "Finishes", "WOOD PRODUCTS": "Finishes", "PARTITION SYSTEMS": "Glazing", "GLASS PRODUCTS": "Glazing", SIGNAGE: "Hardware" };
+const LIB_CAT = { FURNITURE: "Furniture", LIGHTING: "Lighting", PLUMBING: "Plumbing", MILLWORK: "Millwork", DOORS: "Millwork", STONE: "Stone", "WALL PANELLING": "Finishes", "WOOD PRODUCTS": "Finishes", "PARTITION SYSTEMS": "Glazing", "GLASS PRODUCTS": "Glazing", VANITIES: "Plumbing", MIRRORS: "Glazing", SIGNAGE: "Hardware" };
 const libCatFile = c => String(c).replace(/ /g, "-");
 let libCache = null;
 // The scanned catalogues in lib/ plus the finished ones added from PDFs; uploaded catalogues carry label and up: 1.
@@ -52,10 +52,10 @@ async function libIndex() {
 }
 // Product types (see TYPES in library.js). Catalogues outside furniture take their category's type;
 // furniture images added from a PDF are sorted by Claude from their thumbnails when an API key is set.
-const LIB_TYPES = "SLCTBKDEGRHPMNWQVYAO";
-const LIB_CAT_TYPE = { LIGHTING: "H", PLUMBING: "P", MILLWORK: "M", DOORS: "M", STONE: "N", "WALL PANELLING": "W", "WOOD PRODUCTS": "W", "PARTITION SYSTEMS": "Q", "GLASS PRODUCTS": "V", SIGNAGE: "Y" };
+const LIB_TYPES = "SLCTBKDEGRHPXZMNWQVYAO";
+const LIB_CAT_TYPE = { LIGHTING: "H", PLUMBING: "P", MILLWORK: "M", DOORS: "M", STONE: "N", "WALL PANELLING": "W", "WOOD PRODUCTS": "W", "PARTITION SYSTEMS": "Q", "GLASS PRODUCTS": "V", VANITIES: "X", MIRRORS: "Z", SIGNAGE: "Y" };
 const LIB_TYPE_PROMPT = `Each image is a product photo from a furniture catalogue. For each image, in order, give ONE letter for the main product shown:
-S sofa/sectional/loveseat · L lounge or arm chair · C dining or office chair · T stool or bar stool · B bench, ottoman or pouf · K coffee or side table · D dining table (a table shown with chairs is D) · E desk, console or dressing table · G cabinet, sideboard, chest, TV unit, shelving or wardrobe · R bed or nightstand · H lamp · A rug, mirror, vase, art or other decor · O logo, text, swatch, drawing or no clear product.
+S sofa/sectional/loveseat · L lounge or arm chair · C dining or office chair · T stool or bar stool · B bench, ottoman or pouf · K coffee or side table · D dining table (a table shown with chairs is D) · E desk, console or dressing table · G cabinet, sideboard, chest, TV unit, shelving or wardrobe · R bed or nightstand · H lamp · Z mirror · A rug, vase, art or other decor · O logo, text, swatch, drawing or no clear product.
 In a room scene, use the most prominent piece. Reply with only the letters, no spaces.`;
 async function classifyCat(sup) {
   if (!ANTHROPIC_API_KEY) return;
@@ -875,6 +875,19 @@ const server = http.createServer(async (req, res) => {
       const lib = await libIndex();
       const files = (await fsp.readdir(LIB_FULL_DIR).catch(() => [])).filter(f => lib && lib.byFile.has(f));
       return send(res, 200, { files });
+    }
+    // Favourites: each person's own starred library images, in libraryfav/<user id> = { f: [file names] }.
+    if (p === "/api/library/fav") {
+      const dp = "libraryfav/" + me.id;
+      if (req.method === "GET") return send(res, 200, { files: store[dp]?.data?.f || [] });
+      if (req.method !== "POST") return send(res, 405, { code: "method_not_allowed" });
+      const b = await readJSON(req), idx = await libIndex();
+      if (typeof b.file !== "string" || !idx.byFile.has(b.file)) return send(res, 400, { code: "invalid_argument" });
+      const cur = store[dp], f = new Set(cur?.data?.f || []);
+      if (b.on) { if (f.size >= 5000) return send(res, 400, { code: "invalid_argument", message: "Favourites are full (5,000 images)." }); f.add(b.file); } else f.delete(b.file);
+      const next = { f: [...f], updated: new Date().toISOString() };
+      store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
+      persist(); return send(res, 200, { ok: true, files: next.f });
     }
     if (p === "/api/library/type" && req.method === "POST") {
       // { sup, keys, type } moves images to another product type in librarytypes/<sup>.t

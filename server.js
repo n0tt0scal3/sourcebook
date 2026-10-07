@@ -314,10 +314,35 @@ function canSeeProject(u, id) { return allAccess(u) || (u.projects || []).includ
 const isLibPath = p => /^library(types)?(\/|$)/.test(p || "");
 function canRead(u, p) { if (isLibPath(p)) return true; if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
 // Internal fields a client never receives.
-const CLIENT_HIDDEN = ["notes", "match", "pendingSetup"];
+const CLIENT_HIDDEN = ["notes", "match", "pendingSetup", "chg"];
 function forUser(u, p, data) {
   if (u.role !== "client" || !data || !/^projects\/[^/]+\/items\/[^/]+$/.test(p)) return data;
   const o = { ...data }; CLIENT_HIDDEN.forEach(k => delete o[k]); return o;
+}
+/* ---------------- what's changed between the studio and the sourcing agent ---------------- */
+// Each piece keeps chg = { field: { r: role, n: name, at } } for fields an admin or agent changed
+// (chg._new when it was added). The other side sees those fields highlighted until they mark them seen.
+const ITEM_DOC = /^projects\/[^/]+\/items\/[^/]+$/;
+const CHG_SKIP = new Set(["chg", "order", "pendingSetup", "match", "photoFit", "created", "addedBy", "updated"]);
+const sideOf = u => u.role === "admin" || u.role === "agent" ? u.role : null;
+function trackChanges(me, prev, next) {
+  const side = sideOf(me); if (!side) return next;
+  const chg = { ...(prev?.chg || {}) }, stamp = { r: side, n: me.name || "", at: new Date().toISOString() };
+  if (!prev) chg._new = stamp;
+  else for (const k of new Set([...Object.keys(prev), ...Object.keys(next)])) {
+    if (CHG_SKIP.has(k)) continue;
+    if (JSON.stringify(prev[k] ?? null) !== JSON.stringify(next[k] ?? null)) chg[k] = stamp;
+  }
+  const out = { ...next }; delete out.chg;
+  if (Object.keys(chg).length) out.chg = chg;
+  return out;
+}
+// Number of pieces in a project with changes from the other side that this person hasn't marked seen.
+function newsCount(u, id) {
+  const side = sideOf(u); if (!side) return 0;
+  const pre = `projects/${id}/items/`; let n = 0;
+  for (const [k, v] of Object.entries(store)) if (k.startsWith(pre) && Object.values(v.data?.chg || {}).some(c => c && c.r !== side)) n++;
+  return n;
 }
 function loginPage(error) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -637,7 +662,24 @@ const server = http.createServer(async (req, res) => {
     }
 
     // projects
-    if (p === "/api/projects" && req.method === "GET") return send(res, 200, { projects: projectSummaries().filter(x => canSeeProject(me, x.id)) });
+    if (p === "/api/projects" && req.method === "GET") return send(res, 200, { projects: projectSummaries().filter(x => canSeeProject(me, x.id)).map(x => ({ ...x, news: newsCount(me, x.id) })) });
+    // mark changes from the other side as seen: { project, items: [ids] } (all pieces in the project when items is left out)
+    if (p === "/api/changes/seen" && req.method === "POST") {
+      const side = sideOf(me); if (!side) return deny();
+      const { project, items: ids } = await readJSON(req);
+      if (!validPath("projects/" + project, true) || !canSeeProject(me, project)) return deny();
+      const pre = `projects/${project}/items/`, only = Array.isArray(ids) ? new Set(ids.map(String)) : null; let n = 0;
+      for (const [k, v] of Object.entries(store)) {
+        if (!k.startsWith(pre) || !ITEM_DOC.test(k) || (only && !only.has(k.slice(pre.length)))) continue;
+        const chg = v.data?.chg; if (!chg || !Object.values(chg).some(c => c && c.r !== side)) continue;
+        const keep = Object.fromEntries(Object.entries(chg).filter(([, c]) => c && c.r === side));
+        const next = { ...v.data }; delete next.chg; if (Object.keys(keep).length) next.chg = keep;
+        store[k] = { data: next, version: v.version + 1, updatedAt: v.updatedAt };
+        broadcast({ path: k, exists: true, data: next }); n++;
+      }
+      if (n) persist();
+      return send(res, 200, { ok: true, cleared: n });
+    }
     if (p === "/api/projects/delete" && req.method === "POST") {
       if (!isAdmin) return deny("Only admins can delete projects. You can archive it instead.");
       const { id } = await readJSON(req);
@@ -713,7 +755,8 @@ const server = http.createServer(async (req, res) => {
       if (op === "set" || op === "update") {
         if (!data || typeof data !== "object" || Array.isArray(data)) return send(res, 400, { code: "invalid_argument" });
         if (op === "update" && !cur) return send(res, 400, { code: "invalid_argument", message: "document does not exist" });
-        const next = stripUndefined(op === "set" ? data : mergeDeep(cur.data, data));
+        let next = stripUndefined(op === "set" ? data : mergeDeep(cur.data, data));
+        if (ITEM_DOC.test(dp)) { if (op === "update") next.chg = cur.data.chg; next = trackChanges(me, cur?.data, next); }
         if (Buffer.byteLength(JSON.stringify(next)) > 256 * 1024) return send(res, 400, { code: "invalid_argument", message: "document too large" });
         store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: new Date().toISOString() };
         persist(); broadcast({ path: dp, exists: true, data: next });
@@ -903,9 +946,9 @@ const server = http.createServer(async (req, res) => {
         notes: `From the sourcing library: ${file}`, refs: [{ kind: "Spec sheet", no: "p." + page, title: S.pdf || "", url: drive, asset: null }],
         libSource: { file, sup, page, pdf: S.pdf || "", drive: S.drive || "" }, created: new Date().toISOString(), source: "Sourcing library", addedBy: { id: me.id, name: me.name || "", role: me.role } };
       const id = crypto.randomBytes(10).toString("hex");
-      const dp = pre + id;
-      store[dp] = { data: doc, version: 1, updatedAt: doc.created };
-      persist(); broadcast({ path: dp, exists: true, data: doc });
+      const dp = pre + id, tracked = trackChanges(me, null, doc);
+      store[dp] = { data: tracked, version: 1, updatedAt: doc.created };
+      persist(); broadcast({ path: dp, exists: true, data: tracked });
       return send(res, 200, { ok: true, id, code });
     }
 

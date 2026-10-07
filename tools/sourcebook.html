@@ -264,13 +264,25 @@ textarea.f{resize:vertical;min-height:70px;border:1px solid var(--rule);padding:
 .mbadge.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .mlook{display:flex;gap:10px;align-items:flex-start;margin:16px 0 4px;font-size:14px}.mlook>span{display:flex;flex-direction:column}.mlook .muted{font-size:12.5px}
 .refsec.imgdrop,.ximgsec.imgdrop{outline:2px dashed var(--accent);outline-offset:6px}
+.ximgsec.imgdrop::after,.rfisec.imgdrop::after{content:"Drop to add images"}
+:root[lang="zh-CN"] .ximgsec.imgdrop::after,:root[lang="zh-CN"] .rfisec.imgdrop::after{content:"拖放以添加图片"}
 .xgal{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin-top:12px}
 .xg{position:relative}
-.xgimg{display:block;width:100%;aspect-ratio:1;padding:0;border:1px solid var(--rule2);background:var(--rule2);cursor:zoom-in;overflow:hidden}
-.xgimg img{width:100%;height:100%;object-fit:cover;display:block}
+.xgimg{display:block;width:100%;aspect-ratio:1;padding:0;border:1px solid var(--rule2);background:var(--paper);cursor:zoom-in;overflow:hidden}
+.xgimg img{width:100%;height:100%;object-fit:contain;display:block}
 .xgdel{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(26,25,24,.7);color:#fff;font-size:15px;line-height:1;cursor:pointer}
 .xgdel:hover{background:var(--crit)}
-.xgtools{margin-top:12px}
+.xgdrop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;border:1px dashed var(--ink2);padding:22px 16px;margin-top:12px;cursor:pointer}
+.xgdrop b{font-family:var(--display);font-weight:400;font-size:20px}
+.rfisec.imgdrop{outline:2px dashed var(--accent);outline-offset:6px}
+.rfilist{display:flex;flex-direction:column;gap:18px;margin-top:12px}
+.rfi{border-left:2px solid var(--ink2);padding:2px 0 2px 12px}.rfi.resp{border-left-color:var(--accent)}
+.rfi p{margin:4px 0 0;white-space:pre-wrap}
+.rfi .cmeta{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.rfi .cmeta .x{margin-left:auto;padding:0 0 0 8px}
+.rfikind{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}.rfi.resp .rfikind{color:var(--accent)}
+.rfiform{display:flex;flex-direction:column;gap:10px;margin-top:18px}.rfiform .xgal{margin-top:0}
+.xgdrop.sm{padding:12px 16px;margin-top:0}.xgdrop.sm b{font-size:17px}
+.ximgsec.imgdrop .xgdrop,.rfisec.imgdrop .xgdrop{border:2px solid var(--accent);background:var(--accent-soft)}
 .model3d header .mono{font-size:11px;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mvbox{position:relative;aspect-ratio:4/3;background:radial-gradient(120% 90% at 50% 35%,#FBFAF8 0%,#ECEAE6 62%,#DEDBD5 100%);border:1px solid var(--rule);margin-top:10px;overflow:hidden}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .mvbox,:root:not([data-theme="light"]) #mvfull{background:radial-gradient(120% 90% at 50% 35%,#34322F 0%,#1F1E1C 65%,#151413 100%)}}
@@ -1056,7 +1068,7 @@ async function openAsset(o){
   closeClip();closeViewer();
   viewer={...o,zoom:1,type:null,pdf:null,blob:null,token:{}};
   const el=document.createElement("div");el.id="viewer";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");el.setAttribute("aria-label",o.title);
-  const ed=canWrite&&!preview;const xims=o.ximgItem?(items.find(x=>x.id===o.ximgItem)?.images||[]):null;const seq=o.drawingId?drawingsOrdered():xims&&xims.length>1?xims:null;const at=!seq?-1:o.drawingId?seq.findIndex(x=>x.id===o.drawingId):o.ximgIndex;
+  const ed=canWrite&&!preview;const xims=o.ximgItem?ximgList(o.ximgItem,o.ximgRfi):null;const seq=o.drawingId?drawingsOrdered():xims&&xims.length>1?xims:null;const at=!seq?-1:o.drawingId?seq.findIndex(x=>x.id===o.drawingId):o.ximgIndex;
   const d=o.drawingId&&drawings.find(x=>x.id===o.drawingId);
   el.innerHTML=`<div class="vbar">
       <div class="vtitle">${seq?`<span class="vnav"><button class="vbtn" data-v="prev" ${at<=0?"disabled":""} aria-label="${o.ximgItem?"Previous image":"Previous sheet"}">‹</button><button class="vbtn" data-v="next" ${at>=seq.length-1?"disabled":""} aria-label="${o.ximgItem?"Next image":"Next sheet"}">›</button></span>`:""}<span><span class="eyebrow">${esc(o.eyebrow)}</span><b>${esc(o.title)}</b></span></div>
@@ -1098,14 +1110,20 @@ async function renderViewer(){
 }
 function closeViewer(){if(!viewer&&!$("#viewer"))return;if(viewer&&viewer.url)URL.revokeObjectURL(viewer.url);viewer=null;$("#viewer")?.remove();if(!ui.open&&!ui.img&&!ui.detOpen&&!ui.importOpen&&!ui.editProject)document.body.style.overflow=""}
 let vzT=null;
-function stepDrawing(dir){if(viewer.ximgItem){const ims=items.find(x=>x.id===viewer.ximgItem)?.images||[];if(ims[viewer.ximgIndex+dir])openExtraImage(viewer.ximgItem,viewer.ximgIndex+dir);return}const seq=drawingsOrdered();const i=seq.findIndex(x=>x.id===viewer.drawingId);const n=seq[i+dir];if(n)openDrawing(n.id)}
+function stepDrawing(dir){if(viewer.ximgItem){const ims=ximgList(viewer.ximgItem,viewer.ximgRfi);if(ims[viewer.ximgIndex+dir])openExtraImage(viewer.ximgItem,viewer.ximgIndex+dir,viewer.ximgRfi);return}const seq=drawingsOrdered();const i=seq.findIndex(x=>x.id===viewer.drawingId);const n=seq[i+dir];if(n)openDrawing(n.id)}
 document.addEventListener("click",e=>{
   const vr=e.target.closest&&e.target.closest("[data-viewref]");
   if(vr){e.preventDefault();e.stopPropagation();const [id,i]=vr.dataset.viewref.split(":");openViewer(id,+i);return}
   const vx=e.target.closest&&e.target.closest("[data-viewximg]");
-  if(vx){e.preventDefault();e.stopPropagation();const [id,i]=vx.dataset.viewximg.split(":");openExtraImage(id,+i);return}
+  if(vx){e.preventDefault();e.stopPropagation();const [id,i,r]=vx.dataset.viewximg.split(":");openExtraImage(id,+i,r);return}
   const dx=e.target.closest&&e.target.closest(".sheet [data-delximg]");
   if(dx&&ui.open){e.preventDefault();e.stopPropagation();const it=items.find(i=>i.id===ui.open);if(it)setItem(it.id,{images:(it.images||[]).filter((_,i)=>i!=dx.dataset.delximg)});toast("Image removed");return}
+  const rk=e.target.closest&&e.target.closest(".sheet [data-rfikind]");
+  if(rk&&ui.open){e.preventDefault();e.stopPropagation();const d=rfiDraftFor(ui.open);const ta=$("#rfi-text");if(ta)d.text=ta.value;d.kind=rk.dataset.rfikind;renderLayer();return}
+  const ri=e.target.closest&&e.target.closest(".sheet [data-delrfiimg]");
+  if(ri&&ui.open){e.preventDefault();e.stopPropagation();const d=rfiDraftFor(ui.open);const ta=$("#rfi-text");if(ta)d.text=ta.value;d.images.splice(+ri.dataset.delrfiimg,1);renderLayer();return}
+  const dr=e.target.closest&&e.target.closest(".sheet [data-delrfi]");
+  if(dr&&ui.open){e.preventDefault();e.stopPropagation();const it=items.find(i=>i.id===ui.open);if(it){const ta=$("#rfi-text");if(ta&&rfiDraft)rfiDraft.text=ta.value;setItem(it.id,{rfis:(it.rfis||[]).filter(r=>r.id!==dr.dataset.delrfi)});renderLayer();toast("Entry removed")}return}
   const b=e.target.closest&&e.target.closest("#viewer [data-v]");if(!b||!viewer)return;e.preventDefault();e.stopPropagation();
   const a=b.dataset.v;
   if(a==="close"){closeViewer();return}
@@ -1435,6 +1453,7 @@ function dropZone(el){
     const md=el.closest(".sheet [data-mdrop]");if(md&&ui.open)return{el:md,kind:"piece",id:ui.open};
     const rs=el.closest(".sheet .refsec");if(rs&&ui.open&&assets)return{el:rs,kind:"refs",id:ui.open};
     const xs=el.closest(".sheet [data-ximgdrop]");if(xs&&ui.open&&assets)return{el:xs,kind:"ximg",id:ui.open};
+    const rs2=el.closest(".sheet [data-rfidrop]");if(rs2&&ui.open&&assets&&rs2.querySelector("form"))return{el:rs2,kind:"rfi",id:ui.open};
     const h=el.closest(".sheet .hero");return h&&ui.open?{el:h,kind:"piece",id:ui.open}:null;
   }
   const c=el.closest(".card[data-open], .fincard[data-open]");if(c)return{el:c.querySelector(".plate, .finimg")||c,kind:"piece",id:c.dataset.open};
@@ -1457,6 +1476,7 @@ document.addEventListener("drop",e=>{
   const z=dropZone(e.target);if(!z)return;
   if(z.kind==="refs"){addRefFiles(z.id,e.dataTransfer.files);return}
   if(z.kind==="ximg"){addExtraImages(z.id,e.dataTransfer.files);return}
+  if(z.kind==="rfi"){addRfiImages(z.id,e.dataTransfer.files);return}
   const mf=[...e.dataTransfer.files].find(isModelFile);
   if(mf){if(z.kind==="piece"&&HOSTED&&assets)attachModel(z.id,mf);else toast("Open a product, then drop the model on its 3D model section.");return}
   const f=[...e.dataTransfer.files].find(x=>/^image\//.test(x.type));
@@ -2043,8 +2063,8 @@ function renderLayer(passive){
   const keepMV=same?L.querySelector("model-viewer.mvinline"):null;
   L.innerHTML=`<div class="scrim" data-a="close"></div>
   <section class="sheet" role="dialog" aria-modal="true" aria-label="${esc(it.name)}">
-    <div class="hero ${it.photo&&it.photoFit==="contain"?"fitwhole":""}"><img alt="${esc(it.name)}" src="${imgFor(it,900)}">${hasModel(it)?`<button class="hero3d" data-a="mvopen">View in 3D</button>`:""}
-      ${ed&&assets?`<div class="herotools"><label class="btn sm">${it.photo?"Replace image":"Add photo"}<input type="file" accept="image/*" data-up="photo" hidden></label><span class="drophint">or drop / paste an image</span>${it.photo?`<button class="btn sm" data-a="togglefit">${it.photoFit==="contain"?"Fill the frame":"Show whole image"}</button><button class="btn sm" data-a="unphoto">Use material plate</button>`:""}</div>`:""}
+    <div class="hero ${it.photo?"fitwhole":""}"><img alt="${esc(it.name)}" src="${imgFor(it,900)}">${hasModel(it)?`<button class="hero3d" data-a="mvopen">View in 3D</button>`:""}
+      ${ed&&assets?`<div class="herotools"><label class="btn sm">${it.photo?"Replace image":"Add photo"}<input type="file" accept="image/*" data-up="photo" hidden></label><span class="drophint">or drop / paste an image</span>${it.photo?`<button class="btn sm" data-a="unphoto">Use material plate</button>`:""}</div>`:""}
     </div>
     <div class="body">
       <div class="top"><span class="eyebrow">${[it.code,it.category].filter(Boolean).map(esc).join(" · ")}${it.zone?" · "+esc(it.zone):""}</span>
@@ -2074,6 +2094,7 @@ function renderLayer(passive){
           <div class="row2 wide">${assets?`<label class="btn ghost sm">Attach file<input type="file" accept="application/pdf,image/*" name="file" data-reffile hidden></label><span class="mono muted" data-fname></span>`:""}<button class="btn sm" style="margin-left:auto">Add reference</button></div>
         </form>`:""}
       </section>
+      ${isClient()?"":rfiSection(it,ed&&!!assets)}
       ${inFurniture(it)?furSection(it,ed):finSection(it,ed)}
       ${!inFurniture(it)&&!inFinish(it)&&ed?`<p class="muted listhint">Add to the <button class="linkbtn" data-a="listfin">finish schedule</button> or the <button class="linkbtn" data-a="listfur">furniture schedule</button>.</p>`:""}
       <section class="sec"><header><h5>Specification</h5><span class="mono muted">${(it.specs||[]).length}</span></header>
@@ -2098,9 +2119,9 @@ function renderLayer(passive){
 }
 function extraImagesSection(it,ed){
   const ims=it.images||[];if(!ims.length&&!ed)return"";
-  return`<section class="sec ximgsec" data-ximgdrop="${it.id}"><header><h5>Additional images</h5><span class="mono muted">${ims.length}${ed?" · drop images here":""}</span></header>
+  return`<section class="sec ximgsec" data-ximgdrop="${it.id}"><header><h5>Additional images</h5><span class="mono muted">${ims.length}</span></header>
     ${ims.length?`<div class="xgal">${ims.map((m,i)=>`<div class="xg"><button class="xgimg" data-viewximg="${it.id}:${i}" aria-label="Enlarge image"><img alt="" src="${blobSrc(m.asset)}" loading="lazy"></button>${ed?`<button class="xgdel" data-delximg="${i}" aria-label="Remove image">×</button>`:""}</div>`).join("")}</div>`:`<p class="muted">No additional images yet.</p>`}
-    ${ed?`<div class="row2 xgtools"><label class="btn ghost sm">Add images<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-ximgfile hidden></label></div>`:""}
+    ${ed?`<label class="xgdrop"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-ximgfile hidden><b>Drop images here</b><span class="muted">or click to choose. You can add several at once.</span></label>`:""}
   </section>`;
 }
 async function addExtraImages(id,files){
@@ -2114,9 +2135,40 @@ async function addExtraImages(id,files){
   const cur=items.find(i=>i.id===id);setItem(id,{images:[...(cur.images||[]),...added]});
   toast(added.length>1?`${added.length} images added`:"Image added");
 }
-function openExtraImage(itemId,i){
-  const it=items.find(x=>x.id===itemId);const ims=(it&&it.images)||[];const m=ims[i];if(!m)return;
-  openAsset({asset:m.asset,title:it.name,eyebrow:[it.code,"Additional images"].filter(Boolean).join(" · "),ximgItem:itemId,ximgIndex:i});
+function ximgList(itemId,rfiId){const it=items.find(x=>x.id===itemId);if(!it)return[];if(rfiId)return((it.rfis||[]).find(r=>r.id===rfiId)||{}).images||[];return it.images||[]}
+function openExtraImage(itemId,i,rfiId){
+  const it=items.find(x=>x.id===itemId);const ims=ximgList(itemId,rfiId);const m=ims[i];if(!m)return;
+  const r=rfiId&&(it.rfis||[]).find(x=>x.id===rfiId);
+  openAsset({asset:m.asset,title:it.name,eyebrow:[it.code,r?(r.kind==="resp"?"Supplier response":"RFI"):"Additional images"].filter(Boolean).join(" · "),ximgItem:itemId,ximgIndex:i,ximgRfi:rfiId||null});
+}
+/* ---------- supplier RFIs and responses (studio only) ---------- */
+let rfiDraft=null;
+function rfiDraftFor(id){if(!rfiDraft||rfiDraft.item!==id)rfiDraft={item:id,kind:"rfi",text:"",images:[],busy:0};return rfiDraft}
+function rfiSection(it,ed){
+  const list=(it.rfis||[]).slice().sort((a,b)=>(a.at||"").localeCompare(b.at||""));
+  if(!list.length&&!ed)return"";
+  const d=ed?rfiDraftFor(it.id):null;
+  return`<section class="sec rfisec" data-rfidrop="${it.id}"><header><h5>Supplier RFIs</h5><span class="mono muted">${list.length}</span></header>
+    ${list.length?`<div class="rfilist">${list.map(r=>`<div class="rfi ${r.kind==="resp"?"resp":""}"><div class="cmeta"><span class="rfikind mono">${r.kind==="resp"?"Supplier response":"RFI"}</span><span class="muted">${fmtD(new Date(r.at),true)}</span>${r.name?`<span class="muted">${esc(r.name)}</span>`:""}${ed?`<button class="x" data-delrfi="${r.id}" aria-label="Remove entry">×</button>`:""}</div>
+      ${r.text?`<p>${esc(r.text)}</p>`:""}
+      ${(r.images||[]).length?`<div class="xgal">${r.images.map((m,i)=>`<div class="xg"><button class="xgimg" data-viewximg="${it.id}:${i}:${r.id}" aria-label="Enlarge image"><img alt="" src="${blobSrc(m.asset)}" loading="lazy"></button></div>`).join("")}</div>`:""}</div>`).join("")}</div>`:`<p class="muted">No RFIs or supplier responses yet.</p>`}
+    ${ed?`<form class="rfiform" data-form="rfi">
+      <div class="seg" role="group" aria-label="Entry type"><button type="button" class="chip" data-rfikind="rfi" aria-pressed="${d.kind==="rfi"}">RFI to supplier</button><button type="button" class="chip" data-rfikind="resp" aria-pressed="${d.kind==="resp"}">Supplier response</button></div>
+      <textarea class="f" id="rfi-text" name="text" rows="3" placeholder="${d.kind==="resp"?"What the supplier said":"Question for the supplier"}">${esc(d.text)}</textarea>
+      ${d.images.length?`<div class="xgal">${d.images.map((m,i)=>`<div class="xg"><span class="xgimg"><img alt="" src="${blobSrc(m.asset)}"></span><button type="button" class="xgdel" data-delrfiimg="${i}" aria-label="Remove image">×</button></div>`).join("")}</div>`:""}
+      <label class="xgdrop sm"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-rfifile hidden><b>${d.busy?"Uploading…":"Drop images here"}</b><span class="muted">or click to choose</span></label>
+      <div class="row2"><button class="btn sm" ${d.busy?"disabled":""}>${d.kind==="resp"?"Add response":"Add RFI"}</button></div>
+    </form>`:""}
+  </section>`;
+}
+async function addRfiImages(id,files){
+  if(!assets)return;const d=rfiDraftFor(id);
+  const ok=[...files].filter(f=>/^image\/(jpeg|png|webp|gif)$/.test(f.type));
+  if(!ok.length){toast("Use a JPG, PNG, WebP or GIF image.");return}
+  const ta=$("#rfi-text");if(ta)d.text=ta.value;
+  d.busy++;renderLayer();
+  for(const f of ok){try{const r=await assets.upload(f);d.images.push({asset:r.id,name:f.name})}catch(err){toast(uploadMsg(err))}}
+  d.busy--;const ta2=$("#rfi-text");if(ta2)d.text=ta2.value;renderLayer();
 }
 let draftSw=null;
 function formSheet(it){
@@ -2275,6 +2327,7 @@ document.addEventListener("change",async e=>{
     try{const r=await assets.upload(t.files[0]);setItem(it.id,{photo:r.id});toast("Image added")}catch(err){toast(uploadMsg(err))}
     return}
   if(t.hasAttribute("data-ximgfile")&&t.files.length&&ui.open){const f=[...t.files];t.value="";addExtraImages(ui.open,f);return}
+  if(t.hasAttribute("data-rfifile")&&t.files.length&&ui.open){const f=[...t.files];t.value="";addRfiImages(ui.open,f);return}
   if(t.hasAttribute("data-reffile")){const n=t.closest("form").querySelector("[data-fname]");if(n)n.textContent=t.files[0]?t.files[0].name:"";const ti=t.closest("form").querySelector("[name=title]");if(ti&&!ti.value&&t.files[0])ti.value=t.files[0].name.replace(/\.[^.]+$/,"")}
 });
 function uploadMsg(err){const c=err&&err.code;return c==="too_large"?"That file is over 20 MB. Compress it and try again.":c==="unsupported_type"?"Use a PDF, JPG, PNG or WebP file.":c==="quota_or_state"?"Project file storage is full.":"Upload failed. Try again."}
@@ -2313,6 +2366,11 @@ document.addEventListener("submit",async e=>{
     const idx=(it.refs||[]).length;
     setItem(it.id,{refs:[...(it.refs||[]),{kind:fd.kind,no:fd.no.trim(),title:fd.title.trim(),url:fd.url.trim()||null,asset,mime:file?file.type||null:null}]});
     if(file&&asset&&canDetect()&&/(pdf|^image\/)/.test(file.type||""))scanRef(it.id,idx,file);
+  }else if(kind==="rfi"){
+    const it=items.find(i=>i.id===ui.open);if(!it)return;const d=rfiDraftFor(it.id);if(d.busy)return;
+    const text=(fd.text||"").trim();if(!text&&!d.images.length){toast("Write something or add an image first.");return}
+    const r={id:"r"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),kind:d.kind,text,images:d.images.slice(),at:new Date().toISOString(),name:(ME&&ME.name)||""};
+    setItem(it.id,{rfis:[...(it.rfis||[]),r]});rfiDraft=null;rfiDraftFor(it.id).kind=r.kind==="rfi"?"resp":"rfi";renderLayer();toast(r.kind==="resp"?"Response added":"RFI added");
   }else if(kind==="comment"){
     const text=(fd.text||"").trim();if(!text||!ui.open)return;
     const ref=db.collection("comments").doc();const d={itemId:ui.open,text};
@@ -2930,7 +2988,7 @@ const ZH={
 "Find the materials in this view":"找出此视图中的材料","Claude reads the image and drafts pieces for the schedule. You review them before anything is added.":"Claude 会读取图片并起草清单项目，添加前由您审核。","Pieces from this view":"来自此视图的项目","None yet.":"暂无。","Remove image":"移除图片","Remove from project":"从项目中移除","Name this view, e.g. Primary ensuite, looking north":"为此视图命名，例如：主卧卫生间，朝北","Notes about this view":"关于此视图的备注","Untitled view":"未命名视图",
 "Claude is reading the title block, notes and callouts. This usually takes 20 to 60 seconds.":"Claude 正在读取图签、说明和标注，通常需要 20 到 60 秒。","Dismiss":"关闭","Try again":"重试","Reference":"参考",
 "The document doesn't state anything about this piece that isn't already recorded.":"文件中没有关于此项目的新信息。","Manufacturer / supplier":"制造商 / 供应商","Product / collection":"产品 / 系列","Model / item code":"型号 / 编号","Colour / finish name ":"颜色 / 饰面名称","Unit ":"单位","Application":"应用部位",
-"Fit":"适应","Rename":"重命名","New tab ↗":"新标签页 ↗","Remove sheet":"移除图纸","Remove":"移除","Keep":"保留","Opening…":"正在打开…","Sheet no. e.g. A-501":"图号，例如 A-501","Sheet title":"图纸标题","Previous sheet":"上一张","Next sheet":"下一张","Additional images":"更多图片","No additional images yet.":"暂无更多图片。","Enlarge image":"放大图片","Previous image":"上一张图片","Next image":"下一张图片","Zoom in":"放大","Zoom out":"缩小","Attachments":"附件","Remove this sheet?":"移除这张图纸？",
+"Fit":"适应","Rename":"重命名","New tab ↗":"新标签页 ↗","Remove sheet":"移除图纸","Remove":"移除","Keep":"保留","Opening…":"正在打开…","Sheet no. e.g. A-501":"图号，例如 A-501","Sheet title":"图纸标题","Previous sheet":"上一张","Next sheet":"下一张","Additional images":"更多图片","No additional images yet.":"暂无更多图片。","Supplier RFIs":"供应商询问（RFI）","RFI":"询问","Supplier response":"供应商回复","RFI to supplier":"向供应商询问","No RFIs or supplier responses yet.":"暂无询问或供应商回复。","Question for the supplier":"向供应商提出的问题","What the supplier said":"供应商的回复内容","or click to choose":"或点击选择","Add RFI":"添加询问","Add response":"添加回复","RFI added":"已添加询问","Response added":"已添加回复","Entry removed":"已移除记录","Remove entry":"移除记录","Entry type":"记录类型","Uploading…":"正在上传…","Write something or add an image first.":"请先填写内容或添加图片。","Drop images here":"将图片拖放到这里","or click to choose. You can add several at once.":"或点击选择，可一次添加多张。","Enlarge image":"放大图片","Previous image":"上一张图片","Next image":"下一张图片","Zoom in":"放大","Zoom out":"缩小","Attachments":"附件","Remove this sheet?":"移除这张图纸？",
 "Piece added":"已添加项目","Saved":"已保存","Piece deleted":"已删除项目","Finish details saved":"已保存饰面信息","Furniture details saved":"已保存家具信息","Image added":"已添加图片","Image removed":"已移除图片","Sheet removed":"已移除图纸","Sheet renamed":"已重命名图纸","Sheet linked":"已关联表格","Link removed":"已移除链接","Book cleared":"已清空手册","Uploading image…":"正在上传图片…","Uploading file…":"正在上传文件…","Images added to the project":"已将图片添加到项目",
 "You can view this project but not edit it.":"您可以查看但不能编辑此项目。","Couldn't save. Check your connection and try again.":"无法保存，请检查网络后重试。","Storage is full. Remove unused items to add more.":"存储空间已满，请删除不用的内容。","Export didn't complete.":"导出未完成。","Project file storage is full.":"项目文件存储已满。",
 "That file is over 20 MB. Compress it and try again.":"文件超过 20 MB，请压缩后重试。","Use a PDF, JPG, PNG or WebP file.":"请使用 PDF、JPG、PNG 或 WebP 文件。","Upload failed. Try again.":"上传失败，请重试。","Drop a PDF drawing set.":"请拖入 PDF 图纸集。",
@@ -2941,7 +2999,7 @@ const ZH={
 "Primary ensuite":"主卧卫生间","Location ":"位置","Linked to":"已关联","your Google Sheet ↗":"您的 Google 表格 ↗","download it as Excel":"下载为 Excel","download it as Excel ↗":"下载为 Excel ↗","Upload the download":"上传下载的文件","Paste rows":"粘贴行","or drop / paste an image":"或拖放 / 粘贴图片","Drop an image on the picture, or use a material plate below":"将图片拖放到画面上，或使用下方的材料样板","Use a JPG, PNG, WebP or GIF image.":"请使用 JPG、PNG、WebP 或 GIF 图片。","Save the image to your device first, then drop the file here.":"请先将图片保存到设备，再将文件拖放到这里。","Size":"尺寸","Small":"小","Medium":"中","Large":"大","Fill":"填满","Whole":"完整","Card size":"卡片尺寸","Show whole image":"显示完整图片","Fill the frame":"填满画框","Projects":"项目","All projects":"全部项目","← All projects":"← 全部项目","Sourcebook · Studio":"选材手册 · 工作室","New project":"新建项目","Active projects":"进行中项目","Pieces in sourcing":"采购中项目","Orders overdue":"逾期未下单","Due in 3 weeks":"三周内需下单","Quoted value":"报价总额","Active":"进行中","Archived":"已归档","Open now":"当前打开","No pictures yet":"暂无图片","pieces":"个项目","drawings":"张图纸","quoted (CAD)":"报价（加元）","Open":"打开","Archive":"归档","Restore":"恢复","Delete project…":"删除项目…","Start a book for a new job: its lookbook, schedules and quotation.":"为新工作建立手册：效果册、清单与报价单。","Create project":"创建项目","Project created":"已创建项目","Project deleted":"已删除项目","Loading projects…":"正在加载项目…","Updating…":"正在更新…","No archived projects.":"没有已归档的项目。","Project options":"项目选项","across all projects":"所有项目合计","Couldn't create the project. Try again.":"无法创建项目，请重试。","Some of the project couldn't be removed. Try again.":"部分项目内容无法删除，请重试。","Projects appear here once the book is open on claude.ai.":"在 claude.ai 中打开手册后，项目会显示在这里。","Quotation":"报价单","Total (CAD)":"合计（加元）","Total (CNY)":"合计（人民币）","Items priced":"已报价项目","Exchange rate":"汇率","Set for this project":"本项目设定","Unit price (CAD)":"单价（加元）","Unit price (CNY)":"单价（人民币）","Price TBD":"价格待定","Qty TBD":"数量待定","Subtotal":"小计","Sourcing fee":"采购服务费","Freight & logistics":"运费与物流","Tax":"税费","Total":"合计","Enter a unit price in either currency; the other is converted at the project rate.":"可以任一币种输入单价，另一币种按项目汇率自动换算。","No materials or products yet.":"暂无材料或产品。","1 CAD =":"1 加元 =","Other":"其他","Unit price CAD":"单价 加元","Unit price CNY":"单价 人民币","Language":"语言","View all":"查看全部"
 };
 const ZH_PAT=[
- [/^(\d+) · drop images here$/,m=>`${m[1]} · 可将图片拖放到这里`],[/^(.+) · Additional images$/,m=>`${m[1]} · 更多图片`],
+ [/^(\d+) · drop images here$/,m=>`${m[1]} · 可将图片拖放到这里`],[/^(.+) · Additional images$/,m=>`${m[1]} · 更多图片`],[/^(.+) · Supplier response$/,m=>`${m[1]} · 供应商回复`],[/^(.+) · RFI$/,m=>`${m[1]} · 询问`],
  [/^Added to (.+) as (.+)$/,m=>`已添加到 ${m[1]}，编号 ${m[2]}`],[/^Already in (.+) as (.+)$/,m=>`已在 ${m[1]} 中，编号 ${m[2]}`],
  [/^Package downloaded · (\d+) files?$/,m=>`资料包已下载 · ${m[1]} 个文件`],[/^Package downloaded · (\d+) files? couldn't be included$/,m=>`资料包已下载 · ${m[1]} 个文件无法包含`],
  [/^Product sheet · (.+)$/,m=>`产品资料 · ${m[1]}`],

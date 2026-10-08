@@ -205,7 +205,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   // an admin's corrections are stored as librarytypes/<catalogue> = { t: { key: code } }.
   const TYPES = [["S", "Sofas", "沙发"], ["L", "Lounge chairs", "休闲椅"], ["C", "Dining chairs", "餐椅"], ["T", "Stools & bar stools", "凳子与吧凳"], ["B", "Benches & ottomans", "长凳与脚凳"],
     ["K", "Coffee & side tables", "茶几与边几"], ["D", "Dining tables", "餐桌"], ["E", "Desks & consoles", "书桌与玄关桌"], ["G", "Storage & TV units", "储物柜与电视柜"], ["R", "Beds & nightstands", "床与床头柜"],
-    ["H", "Lighting", "灯具"], ["P", "Plumbing fixtures", "卫浴洁具"], ["X", "Vanities", "浴室柜"], ["Z", "Mirrors", "镜子"], ["M", "Millwork & doors", "木作与门"], ["N", "Stone", "石材"], ["J", "Flooring", "地板"], ["W", "Wall panelling & wood", "墙板与木制品"], ["Q", "Partition systems", "隔断系统"], ["V", "Glass products", "玻璃制品"], ["Y", "Signage", "标识"],
+    ["H", "Lighting", "灯具"], ["P", "Plumbing fixtures", "卫浴洁具"], ["X", "Vanities", "浴室柜"], ["Z", "Mirrors", "镜子"], ["M", "Millwork", "木作"], ["I", "Doors", "门"], ["N", "Stone", "石材"], ["J", "Flooring", "地板"], ["W", "Wall panelling & wood", "墙板与木制品"], ["Q", "Partition systems", "隔断系统"], ["V", "Glass products", "玻璃制品"], ["Y", "Signage", "标识"],
     ["A", "Decor & accessories", "装饰与配饰"], ["O", "Other", "其他"], ["U", "Not sorted yet", "尚未分类"]];
   const typeName = c => { if (c === "F") return t("Favourites"); const x = TYPES.find(y => y[0] === c) || TYPES[TYPES.length - 1]; return zh() ? x[2] : x[1]; };
   // Each person's own starred images (file names), saved on the server for their account.

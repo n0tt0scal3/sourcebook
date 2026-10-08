@@ -28,7 +28,7 @@ const LIB_CATS_DIR = path.join(DATA_DIR, "lib-cats");
 const LIB_THUMB_DIR = path.join(DATA_DIR, "lib-thumbs");
 // The library index, read once and kept in memory for building pieces on the server.
 const LIB_LABEL = { "BILLA-Sofa": ["Billa", "Sofas & lounge chairs"], "BILLA-CoffeeTV": ["Billa", "Coffee tables & TV units"], "BILLA-Dining": ["Billa", "Dining"], "BILLA-Outdoor": ["Billa", "Outdoor"], "HALO": ["HALO", "Collection 2026"], "Kaiwuli": ["Kaiwuli", "Catalogue 2026"], "TO-Tearsheet": ["TO Interactive", "Tearsheets 2025"] };
-const LIB_CAT = { FURNITURE: "Furniture", LIGHTING: "Lighting", PLUMBING: "Plumbing", MILLWORK: "Millwork", DOORS: "Millwork", STONE: "Stone", "WALL PANELLING": "Finishes", "WOOD PRODUCTS": "Finishes", "PARTITION SYSTEMS": "Glazing", "GLASS PRODUCTS": "Glazing", VANITIES: "Plumbing", MIRRORS: "Glazing", SIGNAGE: "Hardware" };
+const LIB_CAT = { FURNITURE: "Furniture", LIGHTING: "Lighting", PLUMBING: "Plumbing", MILLWORK: "Millwork", DOORS: "Millwork", STONE: "Stone", "WALL PANELLING": "Finishes", "WOOD PRODUCTS": "Finishes", "PARTITION SYSTEMS": "Glazing", "GLASS PRODUCTS": "Glazing", FLOORING: "Finishes", VANITIES: "Plumbing", MIRRORS: "Glazing", SIGNAGE: "Hardware" };
 const libCatFile = c => String(c).replace(/ /g, "-");
 let libCache = null;
 // The scanned catalogues in lib/ plus the finished ones added from PDFs; uploaded catalogues carry label and up: 1.
@@ -52,8 +52,8 @@ async function libIndex() {
 }
 // Product types (see TYPES in library.js). Catalogues outside furniture take their category's type;
 // furniture images added from a PDF are sorted by Claude from their thumbnails when an API key is set.
-const LIB_TYPES = "SLCTBKDEGRHPXZMNWQVYAO";
-const LIB_CAT_TYPE = { LIGHTING: "H", PLUMBING: "P", MILLWORK: "M", DOORS: "M", STONE: "N", "WALL PANELLING": "W", "WOOD PRODUCTS": "W", "PARTITION SYSTEMS": "Q", "GLASS PRODUCTS": "V", VANITIES: "X", MIRRORS: "Z", SIGNAGE: "Y" };
+const LIB_TYPES = "SLCTBKDEGRHPXZMNJWQVYAO";
+const LIB_CAT_TYPE = { LIGHTING: "H", PLUMBING: "P", MILLWORK: "M", DOORS: "M", STONE: "N", "WALL PANELLING": "W", "WOOD PRODUCTS": "W", "PARTITION SYSTEMS": "Q", "GLASS PRODUCTS": "V", FLOORING: "J", VANITIES: "X", MIRRORS: "Z", SIGNAGE: "Y" };
 const LIB_TYPE_PROMPT = `Each image is a product photo from a furniture catalogue. For each image, in order, give ONE letter for the main product shown:
 S sofa/sectional/loveseat · L lounge or arm chair · C dining or office chair · T stool or bar stool · B bench, ottoman or pouf · K coffee or side table · D dining table (a table shown with chairs is D) · E desk, console or dressing table · G cabinet, sideboard, chest, TV unit, shelving or wardrobe · R bed or nightstand · H lamp · Z mirror · A rug, vase, art or other decor · O logo, text, swatch, drawing or no clear product.
 In a room scene, use the most prominent piece. Reply with only the letters, no spaces.`;
@@ -911,7 +911,7 @@ const server = http.createServer(async (req, res) => {
       try {
         if (b.step === "type") {
           const out = await ask([photo, { type: "text", text: `${note ? `The person says: "${note}"\n` : ""}What product is this person looking for? Pick the product types to search, most likely first (one, or two if it could be either):
-S sofa · L lounge or arm chair · C dining or office chair · T stool or bar stool · B bench, ottoman or pouf · K coffee or side table · D dining table · E desk, console or dressing table · G cabinet, sideboard, shelving, TV unit or wardrobe · R bed or nightstand · H light or lamp · P plumbing fixture (tap, sink, toilet, bath, shower) · X bathroom vanity · Z mirror · M millwork or door · N stone · W wall panelling or wood product · Q partition system · V glass product · Y signage · A rug, vase, art or other decor · O anything else.
+S sofa · L lounge or arm chair · C dining or office chair · T stool or bar stool · B bench, ottoman or pouf · K coffee or side table · D dining table · E desk, console or dressing table · G cabinet, sideboard, shelving, TV unit or wardrobe · R bed or nightstand · H light or lamp · P plumbing fixture (tap, sink, toilet, bath, shower) · X bathroom vanity · Z mirror · M millwork or door · N stone · J flooring (tile, wood, vinyl, carpet) · W wall panelling or wood product · Q partition system · V glass product · Y signage · A rug, vase, art or other decor · O anything else.
 In a room scene, use the most prominent piece unless the person says otherwise. Reply with JSON only: {"types":"D","what":"short description in English","zh":"the same in Chinese"}` }], MODELS.quick, 200);
           const types = [...new Set(String(out.types || "").toUpperCase().replace(/[^A-Z]/g, "").split(""))].filter(c => LIB_TYPES.includes(c)).slice(0, 2);
           return send(res, 200, { types: types.length ? types : ["O"], what: String(out.what || "").slice(0, 200), zh: String(out.zh || "").slice(0, 200) });

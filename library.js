@@ -205,7 +205,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   // an admin's corrections are stored as librarytypes/<catalogue> = { t: { key: code } }.
   const TYPES = [["S", "Sofas", "沙发"], ["L", "Lounge chairs", "休闲椅"], ["C", "Dining chairs", "餐椅"], ["T", "Stools & bar stools", "凳子与吧凳"], ["B", "Benches & ottomans", "长凳与脚凳"],
     ["K", "Coffee & side tables", "茶几与边几"], ["D", "Dining tables", "餐桌"], ["E", "Desks & consoles", "书桌与玄关桌"], ["G", "Storage & TV units", "储物柜与电视柜"], ["R", "Beds & nightstands", "床与床头柜"],
-    ["H", "Lighting", "灯具"], ["P", "Plumbing fixtures", "卫浴洁具"], ["X", "Vanities", "浴室柜"], ["Z", "Mirrors", "镜子"], ["M", "Millwork & doors", "木作与门"], ["N", "Stone", "石材"], ["W", "Wall panelling & wood", "墙板与木制品"], ["Q", "Partition systems", "隔断系统"], ["V", "Glass products", "玻璃制品"], ["Y", "Signage", "标识"],
+    ["H", "Lighting", "灯具"], ["P", "Plumbing fixtures", "卫浴洁具"], ["X", "Vanities", "浴室柜"], ["Z", "Mirrors", "镜子"], ["M", "Millwork & doors", "木作与门"], ["N", "Stone", "石材"], ["J", "Flooring", "地板"], ["W", "Wall panelling & wood", "墙板与木制品"], ["Q", "Partition systems", "隔断系统"], ["V", "Glass products", "玻璃制品"], ["Y", "Signage", "标识"],
     ["A", "Decor & accessories", "装饰与配饰"], ["O", "Other", "其他"], ["U", "Not sorted yet", "尚未分类"]];
   const typeName = c => { if (c === "F") return t("Favourites"); const x = TYPES.find(y => y[0] === c) || TYPES[TYPES.length - 1]; return zh() ? x[2] : x[1]; };
   // Each person's own starred images (file names), saved on the server for their account.
@@ -297,7 +297,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const lede = cur ? "Every image scanned from the supplier catalogues, each kept with its catalogue and page. Tick an image to approve it; only approved images are shown to the team and clients."
       : host.ctx === "project" ? "Products approved by the studio. Open one to see where it comes from, or add it to this project with its source attached." : "Products approved by the studio. Open one to see where it comes from, or add it to a project.";
     if (!cur && !a) return `<div id="sblib"><section class="sbl-head"><div>${host.ctx === "project" ? `<h2>${t("Sourcing library")}</h2>` : ""}<p>${t(lede)}</p></div></section><div id="sbl-findwrap">${findHTML()}</div><div id="sbl-grid"><p class="sbl-empty">${t("The studio hasn't approved any products yet.")}</p></div></div>`;
-    return `<div id="sblib"><section class="sbl-head"><div><span class="eyebrow">${zh() ? `90 中国产品 · ${esc(cats.map(c => ({ Furniture: "家具", Lighting: "灯具", Doors: "门", Millwork: "木作", Stone: "石材", Signage: "标识" })[c] || c).join("、"))}` : `90 China Products · ${esc(cats.join(", "))}`}</span>
+    return `<div id="sblib"><section class="sbl-head"><div><span class="eyebrow">${zh() ? `90 中国产品 · ${esc(cats.map(c => ({ Furniture: "家具", Lighting: "灯具", Doors: "门", Millwork: "木作", Stone: "石材", Flooring: "地板", Signage: "标识" })[c] || c).join("、"))}` : `90 China Products · ${esc(cats.join(", "))}`}</span>
       ${host.ctx === "project" ? `<h2>${t("Sourcing library")}</h2>` : ""}
       <p>${t(lede)}</p></div>
       <div class="sbl-stat"><div><span class="eyebrow">${t("Approved")}</span><b id="sbl-kept">${nf(a)}</b></div>${cur ? `<div><span class="eyebrow">${t("Scanned")}</span><b>${nf(tot)}</b></div>` : ""}${host.ctx === "project" ? `<div><span class="eyebrow">${t("In this project")}</span><b>${host.inProject().size}</b></div>` : ""}</div>
@@ -497,9 +497,9 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   // Adding a catalogue from a PDF (admins). The browser reads the PDF with pdf.js, takes out the photos
   // embedded on each page and uploads each one full size (up to 2400px) with a 280px thumbnail, named
   // CATEGORY_Supplier-Catalogue_pPAGE_NN.jpg like the scanned catalogues. Nothing is approved.
-  const CATS = ["FURNITURE", "LIGHTING", "PLUMBING", "VANITIES", "MIRRORS", "MILLWORK", "DOORS", "STONE", "WALL PANELLING", "WOOD PRODUCTS", "PARTITION SYSTEMS", "GLASS PRODUCTS", "SIGNAGE"];
+  const CATS = ["FURNITURE", "LIGHTING", "PLUMBING", "VANITIES", "MIRRORS", "MILLWORK", "DOORS", "STONE", "FLOORING", "WALL PANELLING", "WOOD PRODUCTS", "PARTITION SYSTEMS", "GLASS PRODUCTS", "SIGNAGE"];
   const catName = c => zh() ? CAT_ZH[c] || c : c === "PLUMBING" ? "Plumbing fixtures" : c[0] + c.slice(1).toLowerCase();
-  const CAT_ZH = { FURNITURE: "家具", LIGHTING: "灯具", PLUMBING: "卫浴洁具", VANITIES: "浴室柜", MIRRORS: "镜子", MILLWORK: "木作", DOORS: "门", STONE: "石材", "WALL PANELLING": "墙板", "WOOD PRODUCTS": "木制品", "PARTITION SYSTEMS": "隔断系统", "GLASS PRODUCTS": "玻璃制品", SIGNAGE: "标识" };
+  const CAT_ZH = { FURNITURE: "家具", LIGHTING: "灯具", PLUMBING: "卫浴洁具", VANITIES: "浴室柜", MIRRORS: "镜子", MILLWORK: "木作", DOORS: "门", STONE: "石材", FLOORING: "地板", "WALL PANELLING": "墙板", "WOOD PRODUCTS": "木制品", "PARTITION SYSTEMS": "隔断系统", "GLASS PRODUCTS": "玻璃制品", SIGNAGE: "标识" };
   let scan = null, scanErr = "", pdfMode = "scan"; // progress text while a PDF is being scanned; why the last one stopped
   function addCatHTML() {
     if (scan) return `<div class="sbl-addcat"><p style="color:var(--ink);font-size:14px">${esc(scan)}</p></div>`;

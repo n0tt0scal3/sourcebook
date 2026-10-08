@@ -8,6 +8,8 @@
   const LIB_LABEL = { "BILLA-Sofa": ["Billa", "Sofas & lounge chairs"], "BILLA-CoffeeTV": ["Billa", "Coffee tables & TV units"], "BILLA-Dining": ["Billa", "Dining"], "BILLA-Outdoor": ["Billa", "Outdoor"], "HALO": ["HALO", "Collection 2026"], "Kaiwuli": ["Kaiwuli", "Catalogue 2026"], "TO-Tearsheet": ["TO Interactive", "Tearsheets 2025"] };
   const LIB_ROOT = "G:\\My Drive\\LMNL\\90 CHINA PRODUCTS\\";
   const ZH = {
+    "Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.": "把图片拖到这里，我们会在图库中搜索相似的产品。如果找不到，我们会为您采购。", "Choose a photo": "选择图片", "What are you looking for? (optional) e.g. the chair, in walnut": "您想找什么？（可选）例如：这把椅子，胡桃木", "Sending it to our sourcing agent…": "正在发送给采购代理…", "Searching our library for something similar…": "正在图库中搜索相似产品…", "We couldn't find anything similar in our library, so we've sent it to our sourcing agent. We'll source it for you.": "图库中没有找到相似的产品，已发送给采购代理，我们会为您采购。", "Sent to our sourcing agent. We'll source it for you.": "已发送给采购代理，我们会为您采购。", "Withdraw the request": "撤回请求", "Search for something else": "搜索其他产品", "None of these? Send it to our sourcing agent": "都不合适？发送给采购代理", "Waiting to be sourced": "等待采购", "We're sourcing it": "正在为您采购", "Sourced": "已采购", "Note for the person who asked (optional)": "给提出请求者的备注（可选）", "Mark as sourced": "标为已采购", "Reopen": "重新打开", "Remove": "移除", "Sourcing requests": "采购请求", "Your sourcing requests": "您的采购请求", "Hide sourced": "隐藏已采购", "Nothing waiting to be sourced.": "没有待采购的请求。", "That isn't a photo.": "这不是图片。", "The search didn't finish. Try again.": "搜索未完成，请重试。", "Couldn't send it. Check your connection and try again.": "无法发送，请检查网络后重试。", "Photo": "图片", "Studio owner": "工作室负责人",
+    "You have 50 open requests. Wait for some to be sourced first.": "您有 50 个未完成的请求，请等部分采购完成后再提交。", "Only admins can remove a request.": "只有管理员可以移除请求。", "Only the studio and the sourcing agent can update a request.": "只有工作室和采购代理可以更新请求。", "Add a photo first.": "请先添加图片。", "Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.": "此服务器尚未设置 Claude。请在 Render 中添加 Anthropic API 密钥（ANTHROPIC_API_KEY）。",
     "Sourcing library": "采购图库", "Approved": "已批准", "Not approved": "未批准", "All": "全部", "Scanned": "已扫描", "In this project": "本项目中", "All catalogues": "全部图册",
     "Approve all shown": "批准全部显示项", "Move selected to…": "将所选移至…", "Select all shown": "全选显示项", "Clear selection": "清除选择", "Select images first.": "请先选择图片。", "Select to move": "选择以移动", "Unapprove all shown": "取消批准全部显示项", "Approve page": "批准本页", "Unapprove page": "取消批准本页", "In project": "已在项目中",
     "Loading catalogues…": "正在加载图册…", "The catalogue index didn't load. Reload the page to try again.": "图册索引未能加载，请刷新页面重试。",
@@ -118,6 +120,41 @@
 .sbl-zoomview img{max-width:100%;max-height:100%;object-fit:contain}
 .sbl-full{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;grid-column:1/-1;font-size:13px;color:var(--ink2)}
 .sbl-full .mono{font-size:12px;color:var(--muted)}
+.sbl-find{margin-top:22px;padding:18px;background:var(--paper);border:1.5px dashed var(--ink2);transition:background .2s,border-color .2s}
+.sbl-find.busy{border-style:solid;border-color:var(--rule)}
+.sbl-find.over{border-color:var(--ink);background:var(--ground)}
+.sbl-find .sbl-fdrop{position:relative;display:flex;flex-direction:row;align-items:center;gap:14px 22px;flex-wrap:wrap;cursor:pointer;font-size:inherit;color:var(--ink)}
+.sbl-fdrop input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.sbl-fcopy{flex:1 1 300px;display:flex;flex-direction:column;gap:4px}
+.sbl-fcopy b{font-family:var(--display);font-weight:400;font-size:clamp(22px,2.4vw,28px);line-height:1.1}
+.sbl-fcopy span{color:var(--ink2);font-size:14px;max-width:62ch}
+.sbl-fnote{display:block;width:100%;max-width:520px;margin-top:12px;font:inherit;font-size:14px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px}
+.sbl-fnote:focus{outline:none;border-color:var(--ink)}
+.sbl-ferr{margin:10px 0 0;color:var(--crit);font-size:14px}
+.sbl-fwork{display:flex;gap:16px;align-items:flex-start}
+.sbl-fwork > div{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+.sbl-fwork b{font-family:var(--display);font-weight:400;font-size:21px;line-height:1.2}
+.sbl-fwork span{color:var(--ink2);font-size:13.5px}
+.sbl-fwork .sbl-row{margin-top:6px}
+.sbl-fpic{width:96px;height:96px;object-fit:contain;background:#fff;border:1px solid var(--rule2);flex:none}
+.sbl-fbar{display:block;height:3px;max-width:320px;margin-top:6px;background:var(--rule2);overflow:hidden}
+.sbl-fbar i{display:block;height:100%;width:35%;background:var(--ink);animation:sblbar 1.4s ease-in-out infinite}
+@keyframes sblbar{0%{transform:translateX(-100%)}100%{transform:translateX(290%)}}
+.sbl-reqs{margin-top:22px}
+.sbl-reqs > header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--ink);padding-bottom:8px}
+.sbl-reqs h5{margin:0;font-family:var(--display);font-style:italic;font-weight:400;font-size:22px}
+.sbl-reqlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:14px;padding-top:14px}
+.sbl-req{display:flex;gap:14px;padding:12px;background:var(--paper);border:1px solid var(--rule)}
+.sbl-req.done{opacity:.75}
+.sbl-req img{width:88px;height:88px;object-fit:contain;background:#fff;border:1px solid var(--rule2);display:block}
+.sbl-req > div{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.sbl-req b{font-weight:500;font-size:14.5px}
+.sbl-req p{margin:0;font-size:13.5px;color:var(--ink2);overflow-wrap:anywhere}
+.sbl-req .sbl-fnote{margin-top:4px;font-size:13px}
+.sbl-req .sbl-row{margin-top:6px}
+.sbl-rstate{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+.sbl-rstate.ok{color:var(--ok)}
+.sbl-rreply{padding:8px 10px;background:var(--accent-soft)}
 .sbl-addcat{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:14px 18px;align-items:end;padding:16px;background:var(--paper);border:1px solid var(--rule)}
 .sbl-addcat label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
 .sbl-addcat input:not([type=file]),.sbl-addcat select{font:inherit;font-size:15px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px;min-width:0}
@@ -224,11 +261,11 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
   function watch() {
     if (watching) return; watching = true;
-    fetchOn().catch(() => {}); fetchFull().catch(() => {}); fetchTypes().catch(() => {}); fetchFav().catch(() => {});
+    fetchOn().catch(() => {}); fetchFull().catch(() => {}); fetchTypes().catch(() => {}); fetchFav().catch(() => {}); fetchReqs().catch(() => {});
     try {
       const es = new EventSource("/api/events");
-      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); } catch (_) {} };
-      es.onopen = () => { fetchOn().catch(() => {}); fetchTypes().catch(() => {}); };
+      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "")) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); } catch (_) {} };
+      es.onopen = () => { fetchOn().catch(() => {}); fetchTypes().catch(() => {}); fetchReqs().catch(() => {}); };
     } catch (_) {}
   }
 
@@ -259,14 +296,14 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const cats = [...new Set(Object.values(LIB.sups).map(s => s.cat))].map(c => c[0] + c.slice(1).toLowerCase());
     const lede = cur ? "Every image scanned from the supplier catalogues, each kept with its catalogue and page. Tick an image to approve it; only approved images are shown to the team and clients."
       : host.ctx === "project" ? "Products approved by the studio. Open one to see where it comes from, or add it to this project with its source attached." : "Products approved by the studio. Open one to see where it comes from, or add it to a project.";
-    if (!cur && !a) return `<div id="sblib"><section class="sbl-head"><div>${host.ctx === "project" ? `<h2>${t("Sourcing library")}</h2>` : ""}<p>${t(lede)}</p></div></section><div id="sbl-grid"><p class="sbl-empty">${t("The studio hasn't approved any products yet.")}</p></div></div>`;
+    if (!cur && !a) return `<div id="sblib"><section class="sbl-head"><div>${host.ctx === "project" ? `<h2>${t("Sourcing library")}</h2>` : ""}<p>${t(lede)}</p></div></section><div id="sbl-findwrap">${findHTML()}</div><div id="sbl-grid"><p class="sbl-empty">${t("The studio hasn't approved any products yet.")}</p></div></div>`;
     return `<div id="sblib"><section class="sbl-head"><div><span class="eyebrow">${zh() ? `90 中国产品 · ${esc(cats.map(c => ({ Furniture: "家具", Lighting: "灯具", Doors: "门", Millwork: "木作", Stone: "石材", Signage: "标识" })[c] || c).join("、"))}` : `90 China Products · ${esc(cats.join(", "))}`}</span>
       ${host.ctx === "project" ? `<h2>${t("Sourcing library")}</h2>` : ""}
       <p>${t(lede)}</p></div>
       <div class="sbl-stat"><div><span class="eyebrow">${t("Approved")}</span><b id="sbl-kept">${nf(a)}</b></div>${cur ? `<div><span class="eyebrow">${t("Scanned")}</span><b>${nf(tot)}</b></div>` : ""}${host.ctx === "project" ? `<div><span class="eyebrow">${t("In this project")}</span><b>${host.inProject().size}</b></div>` : ""}</div>
       ${cur ? `<div class="sbl-full" id="sbl-full">${fullHTML()}</div><div id="sbl-addwrap" style="grid-column:1/-1">${addCatHTML()}</div>` : ""}</section>
     ${ui.type ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All product types")}</button><h3>${esc(typeName(ui.type))}</h3></div><div class="sbl-chips" id="sbl-cats">${catsHTML()}</div>`
-      : `<div class="sbl-cats" id="sbl-cats">${catsHTML()}</div>`}
+      : `<div id="sbl-findwrap">${findHTML()}</div><div class="sbl-cats" id="sbl-cats">${catsHTML()}</div>`}
     <div class="sbl-tools"><input class="sbl-q" type="search" id="sbl-q" value="${esc(ui.q)}" placeholder="${esc(t("Search a code, product or page, e.g. AA01, Ampleforth, p44"))}" autocomplete="off" aria-label="${esc(t("Sourcing library"))}">
       ${cur ? `<span class="sbl-seg" role="group" aria-label="${t("Show")}">${[["on", "Approved"], ["off", "Not approved"], ["all", "All"]].map(([v, l]) => `<button class="chip" data-sblshow="${v}" aria-pressed="${show === v}">${t(l)}</button>`).join("")}</span>` : ""}
       <span class="sbl-count" id="sbl-count"></span>
@@ -667,6 +704,134 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
         : jobs.length ? `${nf(done - bad)} full-size image${done - bad === 1 ? "" : "s"} uploaded${bad ? `, ${nf(bad)} failed. Upload again to retry them` : ""}` : "None of those files match the library.");
     } catch (_) { up = null; fullLine(); host.toast(zh() ? "无法读取该压缩包。" : "Couldn't read that zip."); }
   }
+  // "Have something you want?": drop a photo, Claude looks for similar products among the images this person
+  // can see, and if there's nothing similar the photo goes to the sourcing agent as a sourcing request.
+  const find = { st: "idle", url: "", b64: "", note: "", what: "", zh: "", m: [], err: "", req: null, auto: false };
+  let reqs = new Map(), showDone = false;
+  const staff = () => host.internal();
+  async function fetchReqs() { const r = await fetch("/api/sourcing"); if (!r.ok) return; reqs = new Map(((await r.json()).requests || []).map(x => [x.id, x])); findPaint(); }
+  async function prepPhoto(f) {
+    const b = await createImageBitmap(f), sc = Math.min(1, 1024 / Math.max(b.width, b.height)), cv = document.createElement("canvas");
+    cv.width = Math.max(1, Math.round(b.width * sc)); cv.height = Math.max(1, Math.round(b.height * sc));
+    const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(b, 0, 0, cv.width, cv.height);
+    const url = cv.toDataURL("image/jpeg", .85); return { url, b64: url.split(",")[1] };
+  }
+  const imgs = new Map();
+  const loadImg = src => imgs.get(src) || imgs.set(src, new Promise((res, rej) => { const x = new Image(); x.onload = () => res(x); x.onerror = () => { imgs.delete(src); rej(new Error("img")); }; x.src = src; })).get(src);
+  // Numbered contact sheets (6 x 6 squares of 160px) of the images to compare, drawn from the thumbnail sprites.
+  async function contactSheets(items) {
+    const out = [], C = 160, N = 6;
+    for (let i = 0; i < items.length; i += N * N) {
+      const part = items.slice(i, i + N * N), rows = Math.ceil(part.length / N), cv = document.createElement("canvas");
+      cv.width = C * N; cv.height = C * rows; const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height);
+      for (const [n, o] of part.entries()) {
+        const x = (n % N) * C, y = Math.floor(n / N) * C;
+        try {
+          if (o.s == null) { const im = await loadImg(`/lib/thumb/${encodeURIComponent(o.file)}`), sc = Math.min((C - 8) / im.width, (C - 8) / im.height); g.drawImage(im, x + (C - im.width * sc) / 2, y + (C - im.height * sc) / 2, im.width * sc, im.height * sc); }
+          else { const im = await loadImg(`/lib/sprites/s${String(o.s).padStart(3, "0")}.jpg`), c = LIB.cell, k = LIB.grid; g.drawImage(im, (o.k % k) * c, Math.floor(o.k / k) * c, c, c, x + 4, y + 4, C - 8, C - 8); }
+        } catch (_) {}
+        g.strokeStyle = "#ccc"; g.strokeRect(x + .5, y + .5, C - 1, C - 1);
+        g.fillStyle = "#000"; g.fillRect(x, y, 34, 24); g.fillStyle = "#fff"; g.font = "bold 17px sans-serif"; g.textBaseline = "middle"; g.fillText(String(n + 1), x + 5, y + 12);
+      }
+      out.push({ items: part, data: cv.toDataURL("image/jpeg", .82).split(",")[1], n: part.length });
+    }
+    return out;
+  }
+  async function findSearch(f) {
+    if (!LIB || find.st === "type" || find.st === "match") return;
+    const note = (($("#sbl-fnote") || {}).value || find.note || "").trim();
+    Object.assign(find, { st: "type", note, m: [], err: "", req: null, auto: false, what: "", zh: "" }); findPaint();
+    try {
+      Object.assign(find, await prepPhoto(f)); findPaint();
+      const image = { media_type: "image/jpeg", data: find.b64 };
+      const ty = await api("/api/library/similar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ step: "type", image, note }) });
+      find.what = ty.what || ""; find.zh = ty.zh || ""; find.st = "match"; findPaint();
+      const cur = curating(), pool = LIB.items.filter(o => (cur || isOn(o)) && ty.types.includes(typeOf(o))).slice(0, 4 * 8 * 36);
+      let found = [];
+      if (pool.length) {
+        const sh = await contactSheets(pool), calls = [];
+        for (let i = 0; i < sh.length; i += 8) calls.push(sh.slice(i, i + 8));
+        const res = await Promise.all(calls.map(part => api("/api/library/similar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ step: "match", image, note, sheets: part.map(s => ({ data: s.data, n: s.n })) }) })
+          .then(r => r.matches.map(m => ({ o: part[m.s - 1].items[m.c - 1], score: m.score })))));
+        found = res.flat().filter(x => x.o).sort((a, b) => b.score - a.score).slice(0, 12);
+      }
+      find.m = [...new Set(found.map(x => x.o.i))]; find.st = "done";
+      if (!find.m.length) { find.auto = true; await sendReq(); return; }
+      findPaint();
+    } catch (e) { find.st = "error"; find.err = e.code === "sampling_disabled" ? t(e.message) : t("The search didn't finish. Try again."); findPaint(); }
+  }
+  async function sendReq() {
+    if (!find.b64 || find.st === "sending") return;
+    find.st = "sending"; findPaint();
+    try {
+      const j = await api("/api/sourcing/request", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ photo: find.b64, note: find.note, what: find.what, zh: find.zh, project: host.ctx === "project" ? host.project() : "" }) });
+      find.req = j.id; find.st = "sent"; fetchReqs().catch(() => {});
+    } catch (e) { find.st = "error"; find.err = e.message && e.code === "invalid_argument" ? t(e.message) : t("Couldn't send it. Check your connection and try again."); }
+    findPaint();
+  }
+  // quiet: save without redrawing, so a button clicked while a note loses focus still gets the click.
+  function updReq(id, body, quiet) {
+    const x = reqs.get(id); if (x && body.status) x.status = body.status; if (x && typeof body.reply === "string") x.reply = body.reply;
+    if (body.remove) { reqs.delete(id); if (find.req === id) { find.req = null; find.st = find.m.length ? "done" : "idle"; } }
+    if (!quiet) findPaint();
+    api("/api/sourcing/update", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, ...body }) }).catch(e => { host.toast(e.code === "forbidden" ? t(e.message) : t("Couldn't save. Check your connection and try again.")); fetchReqs().catch(() => {}); });
+  }
+  const ago = s => { const d = new Date(s); return isNaN(d) ? "" : d.toLocaleDateString(zh() ? "zh-CN" : "en-CA", { month: "short", day: "numeric" }); };
+  function tileHTML(o) {
+    return `<div class="sbl-tile"><button class="sbl-open" data-sblopen="${o.i}" data-sblseq="find" aria-label="${esc(o.file)}"><span class="sbl-sw" ${sprite(o)}></span></button>
+      <span class="sbl-cap"><b>${esc(o.codes[0] || label(o.sup)[0])}</b><span>${esc(typeName(typeOf(o)))}</span><button class="sbl-star" data-sblfav="${o.i}" aria-pressed="${fav.has(o.file)}" title="${t(fav.has(o.file) ? "Remove from favourites" : "Add to favourites")}">${fav.has(o.file) ? "★" : "☆"}</button></span></div>`;
+  }
+  function findHTML() {
+    const pic = find.url ? `<img class="sbl-fpic" src="${find.url}" alt="">` : "";
+    const what = (zh() ? find.zh : find.what) || find.what;
+    let body;
+    if (find.st === "idle" || find.st === "error") body = `<label class="sbl-fdrop"><input type="file" id="sbl-fimg" accept="image/*"><span class="sbl-fcopy"><b>${t("Have something you want?")}</b><span>${t("Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.")}</span></span><span class="btn ghost sm">${t("Choose a photo")}</span></label>
+      <input class="sbl-fnote" id="sbl-fnote" value="${esc(find.note)}" maxlength="300" autocomplete="off" placeholder="${esc(t("What are you looking for? (optional) e.g. the chair, in walnut"))}">
+      ${find.st === "error" ? `<p class="sbl-ferr">${esc(find.err)}</p>` : ""}`;
+    else if (find.st === "type" || find.st === "match" || find.st === "sending") body = `<div class="sbl-fwork">${pic}<div><b>${t(find.st === "sending" ? "Sending it to our sourcing agent…" : "Searching our library for something similar…")}</b>${what ? `<span>${esc(what)}</span>` : ""}<span class="sbl-fbar"><i></i></span></div></div>`;
+    else if (find.st === "sent") {
+      const r = reqs.get(find.req);
+      body = `<div class="sbl-fwork">${pic}<div><b>${t(find.auto ? "We couldn't find anything similar in our library, so we've sent it to our sourcing agent. We'll source it for you." : "Sent to our sourcing agent. We'll source it for you.")}</b>${what ? `<span>${esc(what)}</span>` : ""}
+        <span class="sbl-row">${r && r.status === "open" ? `<button class="linkbtn" data-sbl="freqcancel">${t("Withdraw the request")}</button>` : ""}<button class="linkbtn" data-sbl="freset">${t("Search for something else")}</button></span></div></div>
+        ${find.m.length ? `<div class="sbl-grid">${find.m.map(i => tileHTML(LIB.items[i])).join("")}</div>` : ""}`;
+    } else body = `<div class="sbl-fwork">${pic}<div><b>${zh() ? `图库中有 ${find.m.length} 件相似产品` : `${find.m.length} similar in our library`}</b>${what ? `<span>${esc(what)}</span>` : ""}
+        <span class="sbl-row"><button class="btn sm" data-sbl="freq">${t("None of these? Send it to our sourcing agent")}</button><button class="linkbtn" data-sbl="freset">${t("Search for something else")}</button></span></div></div>
+      <div class="sbl-grid">${find.m.map(i => tileHTML(LIB.items[i])).join("")}</div>`;
+    return `<section class="sbl-find${find.st === "idle" || find.st === "error" ? "" : " busy"}" id="sbl-find">${body}</section>${reqsHTML()}`;
+  }
+  function reqsHTML() {
+    const all = [...reqs.values()]; if (!all.length) return "";
+    const st = staff(), open = all.filter(x => x.status === "open"), done = all.filter(x => x.status !== "open");
+    const card = x => `<article class="sbl-req${x.status === "open" ? "" : " done"}"><a href="/_blob/${esc(x.photo)}" target="_blank" rel="noopener"><img src="/_blob/${esc(x.photo)}" alt="" loading="lazy"></a><div>
+      <b>${esc((zh() ? x.zh : x.what) || x.what || t("Photo"))}</b>${x.note ? `<p>“${esc(x.note)}”</p>` : ""}
+      <span class="sbl-sub">${st ? esc(x.by && x.by.name || t("Studio owner")) + " · " : ""}${esc(ago(x.at))}${x.project && x.project.name ? " · " + esc(x.project.name) : ""}</span>
+      ${x.status === "open" ? `<span class="sbl-rstate">${t(st ? "Waiting to be sourced" : "We're sourcing it")}</span>` : `<span class="sbl-rstate ok">✓ ${t("Sourced")}${x.done && x.done.by && st ? " · " + esc(x.done.by) : ""}</span>`}
+      ${x.reply && !st ? `<p class="sbl-rreply">${esc(x.reply)}</p>` : ""}
+      ${st ? `<input class="sbl-fnote" data-sblreply="${esc(x.id)}" value="${esc(x.reply || "")}" maxlength="2000" placeholder="${esc(t("Note for the person who asked (optional)"))}">` : ""}
+      <span class="sbl-row">${st ? (x.status === "open" ? `<button class="btn sm" data-sbl="rdone" data-id="${esc(x.id)}">${t("Mark as sourced")}</button>` : `<button class="linkbtn" data-sbl="ropen" data-id="${esc(x.id)}">${t("Reopen")}</button>`) : ""}
+        ${(!st && x.status === "open") || curating() ? `<button class="linkbtn" data-sbl="rdel" data-id="${esc(x.id)}" style="color:var(--crit)">${t(st ? "Remove" : "Withdraw the request")}</button>` : ""}</span></div></article>`;
+    const list = st ? open.concat(showDone ? done : []) : all;
+    return `<section class="sbl-reqs" id="sbl-reqs"><header><h5>${t(st ? "Sourcing requests" : "Your sourcing requests")}</h5><span class="sbl-sub">${zh() ? `${nf(open.length)} 项待采购` : `${nf(open.length)} waiting`}</span>
+      ${st && done.length ? `<button class="linkbtn" data-sbl="rshow">${showDone ? t("Hide sourced") : (zh() ? `显示已采购（${nf(done.length)}）` : `Show sourced (${nf(done.length)})`)}</button>` : ""}</header>
+      ${list.length ? `<div class="sbl-reqlist">${list.map(card).join("")}</div>` : `<p class="sbl-hint">${t("Nothing waiting to be sourced.")}</p>`}</section>`;
+  }
+  function findPaint() { const el = $("#sbl-findwrap"); if (el) el.innerHTML = findHTML(); }
+  // Drop or paste a photo on the box.
+  const findZone = e => e.dataTransfer && [...e.dataTransfer.types].includes("Files") && e.target.closest && e.target.closest("#sbl-find");
+  document.addEventListener("dragover", e => { const z = findZone(e); if (!z) return; e.preventDefault(); e.dataTransfer.dropEffect = "copy"; z.classList.add("over"); });
+  document.addEventListener("dragleave", e => { const z = findZone(e); if (z && !z.contains(e.relatedTarget)) z.classList.remove("over"); });
+  document.addEventListener("drop", e => {
+    const z = findZone(e); if (!z) return; e.preventDefault(); z.classList.remove("over");
+    const f = [...e.dataTransfer.files].find(f => /^image\//.test(f.type)); if (!f) { host.toast(t("That isn't a photo.")); return; }
+    findSearch(f);
+  });
+  document.addEventListener("paste", e => {
+    if (!$("#sbl-find") || ui.open != null || (find.st !== "idle" && find.st !== "error")) return;
+    const f = [...(e.clipboardData && e.clipboardData.files || [])].find(f => /^image\//.test(f.type)); if (f) { e.preventDefault(); findSearch(f); }
+  });
+  document.addEventListener("change", e => { if (e.target.id === "sbl-fimg") { const f = e.target.files[0]; e.target.value = ""; if (f) findSearch(f); } });
+  document.addEventListener("input", e => { if (e.target.id === "sbl-fnote") find.note = e.target.value; });
+  document.addEventListener("focusout", e => { const id = e.target.dataset && e.target.dataset.sblreply; if (!id) return; const x = reqs.get(id); if (x && (x.reply || "") !== e.target.value.trim()) updReq(id, { reply: e.target.value.trim() }, true); });
   document.addEventListener("load", e => { const el = e.target; if (el.classList && el.classList.contains("sbl-big")) el.closest(".sbl-hero")?.classList.add("loaded"); }, true);
   document.addEventListener("error", e => { const el = e.target; if (el.classList && el.classList.contains("sbl-big")) { const h = el.closest(".sbl-hero"); if (h) { h.classList.remove("big"); el.remove(); } } }, true);
 
@@ -681,7 +846,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (el.dataset.sbltype !== undefined) { ui.type = el.dataset.sbltype || null; ui.sup = null; ui.n = 120; rerender(); const r = $("#sblib"); if (r && ui.type) r.scrollIntoView({ block: "start" }); return; }
     if (el.dataset.sblshow) { ui.show = el.dataset.sblshow; ui.n = 120; document.querySelectorAll("[data-sblshow]").forEach(b => b.setAttribute("aria-pressed", b === el)); repaint(); return; }
     if (el.dataset.sblmore !== undefined) { ui.n += 120; repaint(); return; }
-    if (el.dataset.sblopen !== undefined) { ui.open = +el.dataset.sblopen; ui.seq = list().map(o => o.i); host.layer(); return; }
+    if (el.dataset.sblopen !== undefined) { ui.open = +el.dataset.sblopen; ui.seq = el.dataset.sblseq === "find" ? find.m.slice() : list().map(o => o.i); host.layer(); return; }
     if (!curating() && (el.dataset.sblbulk || el.dataset.sblpage)) return;
     if (el.dataset.sblbulk) { bulk(list(), el.dataset.sblbulk === "on"); return; }
     if (el.dataset.sblpage) { const p = +el.dataset.sblpage; bulk(list().filter(o => o.page === p), el.dataset.v === "on"); return; }
@@ -691,6 +856,12 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     else if (a === "selall" && curating()) { list().forEach(o => sel.add(o.i)); selPaint(); }
     else if (a === "selnone") { sel.clear(); selPaint(); }
     else if (a === "addcancel") { ui.addcat = false; addLine(); }
+    else if (a === "freq") sendReq();
+    else if (a === "freset") { Object.assign(find, { st: "idle", url: "", b64: "", note: "", what: "", zh: "", m: [], err: "", req: null, auto: false }); findPaint(); }
+    else if (a === "freqcancel" && find.req) updReq(find.req, { remove: true });
+    else if (a === "rdone" || a === "ropen") { const inp = document.querySelector(`[data-sblreply="${el.dataset.id}"]`); updReq(el.dataset.id, { status: a === "rdone" ? "sourced" : "open", ...(inp ? { reply: inp.value.trim() } : {}) }); }
+    else if (a === "rdel") updReq(el.dataset.id, { remove: true });
+    else if (a === "rshow") { showDone = !showDone; findPaint(); }
     else if (a === "scan" && curating() && !scan) scanPDF();
     else if (a === "delcat" && curating() && ui.sup) deleteCat(ui.sup);
     else if (a === "prev" || a === "next") { e.stopPropagation(); step(a === "next" ? 1 : -1); }

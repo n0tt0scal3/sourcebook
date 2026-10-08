@@ -312,7 +312,9 @@ const projectOf = p => { const m = /^projects\/([^/]+)/.exec(p || ""); return m 
 function canSeeProject(u, id) { return allAccess(u) || (u.projects || []).includes(id); }
 // The sourcing library (library/<catalogue>) is studio-wide: everyone can see what's approved; only admins approve.
 const isLibPath = p => /^library(types)?(\/|$)/.test(p || "");
-function canRead(u, p) { if (isLibPath(p)) return true; if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
+// Sourcing requests (sourcing/<id>): the studio and sourcing agents see them all; anyone else only their own.
+const isSourcingPath = p => /^sourcing(\/|$)/.test(p || "");
+function canRead(u, p) { if (isLibPath(p)) return true; if (isSourcingPath(p)) return u.role === "admin" || u.role === "agent" || (p !== "sourcing" && store[p]?.data?.by?.id === u.id); if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
 // Internal fields a client never receives.
 const CLIENT_HIDDEN = ["notes", "match", "pendingSetup", "chg"];
 function forUser(u, p, data) {
@@ -711,6 +713,7 @@ const server = http.createServer(async (req, res) => {
       const { path: dp, data } = await readJSON(req);
       if (!validPath(dp, true)) return send(res, 400, { code: "invalid_argument", message: "bad path" });
       if (isLibPath(dp) && !isAdmin) return deny("Only admins can approve library images.");
+      if (isSourcingPath(dp)) return deny();
       const cur = store[dp];
       const commit = (next) => {
         store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: new Date().toISOString() };
@@ -888,6 +891,86 @@ const server = http.createServer(async (req, res) => {
       const next = { f: [...f], updated: new Date().toISOString() };
       store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
       persist(); return send(res, 200, { ok: true, files: next.f });
+    }
+    // "Have something you want?": find similar products in the library from a photo, step by step.
+    // type: Claude says which product types to look in. match: the browser sends numbered contact sheets of the
+    // images in those types that this person can see, and Claude picks the ones that look like the photo.
+    if (p === "/api/library/similar" && req.method === "POST") {
+      if (!ANTHROPIC_API_KEY) return send(res, 503, { code: "sampling_disabled", message: "Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render." });
+      const b = await readJSON(req, 16 * 1024 * 1024);
+      const img = b.image && /^image\/(jpeg|png|webp)$/.test(b.image.media_type) && typeof b.image.data === "string" && b.image.data.length < 4e6 ? b.image : null;
+      if (!img) return send(res, 400, { code: "invalid_argument", message: "Add a photo first." });
+      const note = String(b.note || "").trim().slice(0, 300);
+      const ask = async (content, model, max_tokens) => {
+        const r = await fetch(API_URL, { method: "POST", headers: { "content-type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" }, body: JSON.stringify({ model, max_tokens, messages: [{ role: "user", content }] }) });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw Object.assign(new Error(j?.error?.message || "Claude API error " + r.status), { code: r.status === 429 ? "rate_limited" : "upstream_error" });
+        return parseJSON((j.content || []).map(x => x.text || "").join("")) || {};
+      };
+      const photo = { type: "image", source: { type: "base64", media_type: img.media_type, data: img.data } };
+      try {
+        if (b.step === "type") {
+          const out = await ask([photo, { type: "text", text: `${note ? `The person says: "${note}"\n` : ""}What product is this person looking for? Pick the product types to search, most likely first (one, or two if it could be either):
+S sofa · L lounge or arm chair · C dining or office chair · T stool or bar stool · B bench, ottoman or pouf · K coffee or side table · D dining table · E desk, console or dressing table · G cabinet, sideboard, shelving, TV unit or wardrobe · R bed or nightstand · H light or lamp · P plumbing fixture (tap, sink, toilet, bath, shower) · X bathroom vanity · Z mirror · M millwork or door · N stone · W wall panelling or wood product · Q partition system · V glass product · Y signage · A rug, vase, art or other decor · O anything else.
+In a room scene, use the most prominent piece unless the person says otherwise. Reply with JSON only: {"types":"D","what":"short description in English","zh":"the same in Chinese"}` }], MODELS.quick, 200);
+          const types = [...new Set(String(out.types || "").toUpperCase().replace(/[^A-Z]/g, "").split(""))].filter(c => LIB_TYPES.includes(c)).slice(0, 2);
+          return send(res, 200, { types: types.length ? types : ["O"], what: String(out.what || "").slice(0, 200), zh: String(out.zh || "").slice(0, 200) });
+        }
+        if (b.step === "match") {
+          const sheets = Array.isArray(b.sheets) ? b.sheets.filter(s => s && typeof s.data === "string" && s.data.length < 1.5e6 && Number.isInteger(s.n) && s.n > 0 && s.n <= 36).slice(0, 8) : [];
+          if (!sheets.length) return send(res, 400, { code: "invalid_argument" });
+          const content = [{ type: "text", text: "This is what the person wants:" }, photo];
+          sheets.forEach((s, i) => content.push({ type: "text", text: `Sheet ${i + 1} (${s.n} products, numbered 1 to ${s.n} in the top-left corner of each square):` }, { type: "image", source: { type: "base64", media_type: "image/jpeg", data: s.data } }));
+          content.push({ type: "text", text: `${note ? `The person says: "${note}"\n` : ""}Find the products on the sheets that are most similar to what the person wants: the same kind of product with a similar shape, style and look. Score each from 0 to 100 (100 = the same or nearly the same product, 70 = clearly similar, below 55 = not really similar). List at most 12, best first, and leave out anything under 55. If nothing is similar, return an empty list.
+Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number, c = square number)` });
+          const out = await ask(content, MODELS.default, 600);
+          const matches = (Array.isArray(out.matches) ? out.matches : []).map(m => ({ s: Number(m.s), c: Number(m.c), score: Math.round(Number(m.score) || 0) }))
+            .filter(m => Number.isInteger(m.s) && m.s >= 1 && m.s <= sheets.length && Number.isInteger(m.c) && m.c >= 1 && m.c <= sheets[m.s - 1].n && m.score >= 55).slice(0, 12);
+          return send(res, 200, { matches });
+        }
+      } catch (e) { console.error("similar:", e.message); return send(res, 502, { code: e.code || "upstream_error", message: "The search didn't finish. Try again." }); }
+      return send(res, 400, { code: "invalid_argument" });
+    }
+    // Sourcing requests: a photo someone wants that the library doesn't have, for the sourcing agent to find.
+    // Stored as sourcing/<id>. Admins and sourcing agents see them all; anyone else sees their own.
+    if (p === "/api/sourcing" && req.method === "GET") {
+      const all = Object.entries(store).filter(([k]) => /^sourcing\/[^/]+$/.test(k)).map(([k, v]) => ({ id: k.slice(9), ...v.data })).filter(x => canRead(me, "sourcing/" + x.id));
+      return send(res, 200, { requests: all.sort((x, y) => String(y.at).localeCompare(String(x.at))) });
+    }
+    if (p === "/api/sourcing/request" && req.method === "POST") {
+      const b = await readJSON(req, 6 * 1024 * 1024);
+      const buf = typeof b.photo === "string" && b.photo.length < 4e6 ? Buffer.from(b.photo, "base64") : null;
+      if (!buf || sniffBuf(buf) !== "image/jpeg") return send(res, 400, { code: "invalid_argument", message: "Add a photo first." });
+      const mine = Object.entries(store).filter(([k, v]) => /^sourcing\//.test(k) && v.data?.by?.id === me.id && v.data.status === "open").length;
+      if (mine >= 50) return send(res, 400, { code: "invalid_argument", message: "You have 50 open requests. Wait for some to be sourced first." });
+      const photo = crypto.randomBytes(16).toString("hex");
+      await fsp.writeFile(path.join(BLOB_DIR, photo), buf);
+      await fsp.writeFile(path.join(BLOB_DIR, photo + ".json"), JSON.stringify({ contentType: "image/jpeg", sizeBytes: buf.length, createdAt: new Date().toISOString(), source: "sourcing request" }));
+      const pid = String(b.project || ""), proj = pid && store["projects/" + pid] && canSeeProject(me, pid) ? { id: pid, name: String(store["projects/" + pid].data?.name || "") } : null;
+      const doc = { photo, note: String(b.note || "").trim().slice(0, 1000), what: String(b.what || "").slice(0, 200), zh: String(b.zh || "").slice(0, 200), project: proj,
+        by: { id: me.id, name: me.name || "", role: me.role }, at: new Date().toISOString(), status: "open" };
+      const id = crypto.randomBytes(10).toString("hex"), dp = "sourcing/" + id;
+      store[dp] = { data: doc, version: 1, updatedAt: doc.at };
+      persist(); broadcast({ path: dp, exists: true, data: doc });
+      return send(res, 200, { ok: true, id });
+    }
+    if (p === "/api/sourcing/update" && req.method === "POST") {
+      const b = await readJSON(req), dp = "sourcing/" + String(b.id || ""), cur = store[dp];
+      if (!/^sourcing\/[0-9a-f]{20}$/.test(dp) || !cur) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
+      const own = cur.data.by?.id === me.id, staff = me.role === "admin" || me.role === "agent";
+      if (b.remove) {
+        // The person who asked can withdraw it while it's open; admins can remove any.
+        if (!isAdmin && !(own && cur.data.status === "open")) return deny("Only admins can remove a request.");
+        delete store[dp]; persist(); broadcast({ path: dp, exists: false });
+        fsp.unlink(path.join(BLOB_DIR, cur.data.photo)).catch(() => {}); fsp.unlink(path.join(BLOB_DIR, cur.data.photo + ".json")).catch(() => {});
+        return send(res, 200, { ok: true });
+      }
+      if (!staff) return deny("Only the studio and the sourcing agent can update a request.");
+      const status = ["open", "sourced"].includes(b.status) ? b.status : cur.data.status;
+      const next = { ...cur.data, status, reply: typeof b.reply === "string" ? b.reply.trim().slice(0, 2000) : cur.data.reply || "", ...(status !== cur.data.status ? { done: status === "sourced" ? { by: me.name || "", role: me.role, at: new Date().toISOString() } : null } : {}) };
+      store[dp] = { data: next, version: cur.version + 1, updatedAt: new Date().toISOString() };
+      persist(); broadcast({ path: dp, exists: true, data: next });
+      return send(res, 200, { ok: true });
     }
     if (p === "/api/library/type" && req.method === "POST") {
       // { sup, keys, type } moves images to another product type in librarytypes/<sup>.t

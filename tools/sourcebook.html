@@ -464,6 +464,10 @@ body.xlover .qdrop{border-color:var(--new);background:var(--new-soft);color:var(
 .vtitle > span:last-child{display:flex;flex-direction:column;min-width:0}
 .vnav{display:flex;gap:4px}
 .vbtn:disabled{opacity:.3}
+.vside{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:56px;height:56px;border-radius:50%;border:0;background:rgba(14,14,13,.55);color:#EEECE8;font-size:34px;line-height:1;display:grid;place-items:center;padding:0 0 4px;cursor:pointer}
+.vside:hover{background:rgba(14,14,13,.85)}
+.vside.prev{left:16px}.vside.next{right:16px}
+@media (max-width:640px){.vside{width:44px;height:44px;font-size:28px}.vside.prev{left:6px}.vside.next{right:6px}}
 .vbtn.danger{border-color:#E07A72;color:#E07A72}
 .vedit{flex-basis:100%;display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding-top:6px}
 .vedit .f{color:#EEECE8;border-color:#4a4744;max-width:260px}
@@ -1133,7 +1137,7 @@ async function openAsset(o){
   const ed=canWrite&&!preview;const xims=o.ximgItem?ximgList(o.ximgItem,o.ximgRfi):null;const seq=o.drawingId?drawingsOrdered():xims&&xims.length>1?xims:null;const at=!seq?-1:o.drawingId?seq.findIndex(x=>x.id===o.drawingId):o.ximgIndex;
   const d=o.drawingId&&drawings.find(x=>x.id===o.drawingId);
   el.innerHTML=`<div class="vbar">
-      <div class="vtitle">${seq?`<span class="vnav"><button class="vbtn" data-v="prev" ${at<=0?"disabled":""} aria-label="${o.ximgItem?"Previous image":"Previous sheet"}">‹</button><button class="vbtn" data-v="next" ${at>=seq.length-1?"disabled":""} aria-label="${o.ximgItem?"Next image":"Next sheet"}">›</button></span>`:""}<span><span class="eyebrow">${esc(o.eyebrow)}</span><b>${esc(o.title)}</b></span></div>
+      <div class="vtitle">${seq?`<span class="vnav"><button class="vbtn" data-v="prev" ${at<=0&&!o.ximgItem?"disabled":""} aria-label="${o.ximgItem?"Previous image":"Previous sheet"}">‹</button><button class="vbtn" data-v="next" ${at>=seq.length-1&&!o.ximgItem?"disabled":""} aria-label="${o.ximgItem?"Next image":"Next sheet"}">›</button></span>`:""}<span><span class="eyebrow">${esc(o.eyebrow)}</span><b>${esc(o.title)}</b></span></div>
       <div class="vtools"><span class="mono muted" id="vinfo">${seq?`${at+1} / ${seq.length}`:""}</span>
         <button class="vbtn" data-v="out" aria-label="Zoom out">−</button><button class="vbtn wide" data-v="fit">Fit</button><button class="vbtn" data-v="in" aria-label="Zoom in">+</button>
         ${ed&&o.canRead?`<button class="btn sm" data-v="read">Read details</button>`:""}
@@ -1142,7 +1146,7 @@ async function openAsset(o){
         <button class="vbtn close" data-v="close" aria-label="Close">×</button></div>
       ${ed&&o.drawingId?`<form class="vedit" data-vform hidden><input class="f" id="vd-no" name="no" value="${esc(d?.no||"")}" placeholder="Sheet no. e.g. A-501"><input class="f" id="vd-title" name="title" value="${esc(d?.title||"")}" placeholder="Sheet title"><button class="btn sm">Save</button>
         <span class="vdel">${`<button type="button" class="vbtn wide" data-v="askdel">Remove sheet</button>`}</span></form>`:""}</div>
-    <div class="vbody" id="vbody"><p class="vmsg mono">Opening…</p></div>`;
+    <div class="vbody" id="vbody"><p class="vmsg mono">Opening…</p></div>${o.ximgItem&&seq?`<button class="vside prev" data-v="prev" aria-label="Previous image">‹</button><button class="vside next" data-v="next" aria-label="Next image">›</button>`:""}`;
   document.body.appendChild(el);document.body.style.overflow="hidden";
   try{
     const blob=pdfCache.get(o.asset)?.blob||await blobForAsset(o.asset);if(!viewer)return;viewer.blob=blob;
@@ -1172,7 +1176,7 @@ async function renderViewer(){
 }
 function closeViewer(){if(!viewer&&!$("#viewer"))return;if(viewer&&viewer.url)URL.revokeObjectURL(viewer.url);viewer=null;$("#viewer")?.remove();if(!ui.open&&!ui.img&&!ui.detOpen&&!ui.importOpen&&!ui.editProject)document.body.style.overflow=""}
 let vzT=null;
-function stepDrawing(dir){if(viewer.ximgItem){const ims=ximgList(viewer.ximgItem,viewer.ximgRfi);if(ims[viewer.ximgIndex+dir])openExtraImage(viewer.ximgItem,viewer.ximgIndex+dir,viewer.ximgRfi);return}const seq=drawingsOrdered();const i=seq.findIndex(x=>x.id===viewer.drawingId);const n=seq[i+dir];if(n)openDrawing(n.id)}
+function stepDrawing(dir){if(viewer.ximgItem){const ims=ximgList(viewer.ximgItem,viewer.ximgRfi);if(ims.length>1)openExtraImage(viewer.ximgItem,(viewer.ximgIndex+dir+ims.length)%ims.length,viewer.ximgRfi);return}const seq=drawingsOrdered();const i=seq.findIndex(x=>x.id===viewer.drawingId);const n=seq[i+dir];if(n)openDrawing(n.id)}
 document.addEventListener("click",e=>{
   const vr=e.target.closest&&e.target.closest("[data-viewref]");
   if(vr){e.preventDefault();e.stopPropagation();const [id,i]=vr.dataset.viewref.split(":");openViewer(id,+i);return}

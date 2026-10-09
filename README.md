@@ -94,11 +94,13 @@ Images scanned from the supplier catalogues in `G:\My Drive\LMNL\90 CHINA PRODUC
 - **Favourites**: everyone, clients included, can star an image (the ☆ under each image, or the button in its card). Each person's stars are their own, saved on the server as `libraryfav/<user id>` = `{ f: [file names] }` (`GET`/`POST /api/library/fav`), and shown in the **★ Favourites** tile before the product types. Clients only see their favourites that are still approved.
 - Files: `library.js` (the tab, shared by dashboard and projects), `lib/data.json` (index), `lib/types.json` (types) and `lib/sprites/` (thumbnail sheets).
 
-### Have something you want?
+### Have something you want? and TBS (to be sourced)
 
-The box at the top of the Sourcing library takes a photo (drop it, paste it, or choose it). Claude works out what kind of product it is, then compares the photo with the images in that product type that the person can see (clients only search approved images) and shows the most similar ones. If nothing is similar, the photo goes straight to the sourcing agent as a sourcing request; if there are matches but none is right, "None of these? Send it to our sourcing agent" sends it too. Each search costs a few cents of Claude usage.
+The box at the top of the Sourcing library takes a photo (drop it, paste it, or choose it). Claude works out what kind of product it is, compares the photo with the images in that type that the person can see (clients only search approved images) and shows the most similar ones. If nothing is similar, the photo is added to **TBS (to be sourced)**; if there are matches but none is right, "None of these?" adds it too. Each search costs a few cents of Claude usage.
 
-Sourcing requests appear under the box. Admins and sourcing agents see every request, can leave a note for the person who asked and mark it as sourced; clients see only their own requests and their status. Admins can remove a request; the person who asked can withdraw it while it's still open.
+TBS is a tile among the product types. New items wait there **to review**: admins get an alert in the app (a count on the Sourcing library tab, a toast, and a browser notification if alerts are on) and, with email set up, an email. An admin then presses **Send to the sourcing agent**, which emails the agent's QQ Mail address with the photo attached and a link back to the item, and shows it to sourcing agents in Sourcebook. The agent (or an admin) adds where it was found and marks it **sourced**; the person who asked sees that note. Sourcing agents only see items sent to them; clients only see their own. Inside a product type, more images load as you scroll, and **Back to all product types** in the bar returns to the tiles.
+
+Email (Render → Environment): `SMTP_HOST`, `SMTP_PORT` (465 for SSL or 587), `SMTP_USER`, `SMTP_PASS` (the mailbox's app password or QQ Mail authorization code, not its sign-in password), optional `MAIL_FROM`, and optional `TBS_NOTIFY_EMAIL` (who hears about new TBS items; otherwise admins with an email address). Without them, TBS still works inside Sourcebook.
 
 ## Editing the project book
 

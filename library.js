@@ -10,6 +10,8 @@
   const ZH = {
     "Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.": "把图片拖到这里，我们会在图库中搜索相似的产品。如果找不到，我们会为您采购。", "Choose a photo": "选择图片", "What are you looking for? (optional) e.g. the chair, in walnut": "您想找什么？（可选）例如：这把椅子，胡桃木", "Sending it to our sourcing agent…": "正在发送给采购代理…", "Searching our library for something similar…": "正在图库中搜索相似产品…", "We couldn't find anything similar in our library, so we've sent it to our sourcing agent. We'll source it for you.": "图库中没有找到相似的产品，已发送给采购代理，我们会为您采购。", "Sent to our sourcing agent. We'll source it for you.": "已发送给采购代理，我们会为您采购。", "Withdraw the request": "撤回请求", "Search for something else": "搜索其他产品", "None of these? Send it to our sourcing agent": "都不合适？发送给采购代理", "Waiting to be sourced": "等待采购", "We're sourcing it": "正在为您采购", "Sourced": "已采购", "Note for the person who asked (optional)": "给提出请求者的备注（可选）", "Mark as sourced": "标为已采购", "Reopen": "重新打开", "Remove": "移除", "Sourcing requests": "采购请求", "Your sourcing requests": "您的采购请求", "Hide sourced": "隐藏已采购", "Nothing waiting to be sourced.": "没有待采购的请求。", "That isn't a photo.": "这不是图片。", "The search didn't finish. Try again.": "搜索未完成，请重试。", "Couldn't send it. Check your connection and try again.": "无法发送，请检查网络后重试。", "Photo": "图片", "Studio owner": "工作室负责人",
     "You have 50 open requests. Wait for some to be sourced first.": "您有 50 个未完成的请求，请等部分采购完成后再提交。", "Only admins can remove a request.": "只有管理员可以移除请求。", "Only the studio and the sourcing agent can update a request.": "只有工作室和采购代理可以更新请求。", "Add a photo first.": "请先添加图片。", "Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.": "此服务器尚未设置 Claude。请在 Render 中添加 Anthropic API 密钥（ANTHROPIC_API_KEY）。",
+    "Back to all product types": "返回全部产品类型",
+    "To be sourced": "待采购", "To review": "待审核", "With the studio": "工作室审核中", "With the sourcing agent": "采购代理处理中", "To find": "待寻找", "Turn on alerts for new requests": "开启新请求提醒", "Photos sent from the Sourcing library that we couldn't match. Review each one, then send it to the sourcing agent; with email set up, it goes to their QQ Mail with the photo attached.": "从采购图库提交、但未找到匹配的图片。逐一审核后发送给采购代理；设置邮件后会附上照片发送到其 QQ 邮箱。", "Items the studio has asked you to find. Mark each one sourced when you've found it, with a note on where.": "工作室请您寻找的产品。找到后请标记为已采购，并备注来源。", "Things you've asked us to find. We review each one and send it to our sourcing agent.": "您请我们寻找的产品。我们会逐一审核并交给采购代理。", "Nothing here.": "这里没有内容。", "Nothing to be sourced yet. Drop a photo in the box on the Sourcing library page.": "还没有待采购的产品。可在采购图库页面的方框中拖入图片。", "Sourcing agent's email (QQ Mail)": "采购代理的邮箱（QQ 邮箱）", "Email isn't set up yet, so this sends it in Sourcebook only. Add the SMTP settings in Render to email the agent's QQ Mail.": "尚未设置邮件，因此仅在选材手册中发送。在 Render 中添加 SMTP 设置后即可发送到代理的 QQ 邮箱。", "Message to the agent (optional)": "给代理的留言（可选）", "e.g. Need 6, walnut, by November": "例如：需要 6 件，胡桃木，11 月前", "Sending…": "正在发送…", "Send to the sourcing agent again": "再次发送给采购代理", "Send to the sourcing agent": "发送给采购代理", "Client": "客户", "Message to the agent": "给代理的留言", "Where it was found, for the person who asked (optional)": "在哪里找到的，告诉提出请求的人（可选）", "Add the sourcing agent's email first.": "请先填写采购代理的邮箱。", "Sent to the sourcing agent by email.": "已通过邮件发送给采购代理。", "Sent to the sourcing agent in Sourcebook.": "已在选材手册中发送给采购代理。", "Adding it to TBS (to be sourced)…": "正在加入待采购 TBS…", "Nothing similar in our library, so it's been added to TBS (to be sourced).": "图库中没有相似产品，已加入待采购 TBS。", "We couldn't find anything similar in our library, so it's been added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "图库中没有找到相似的产品，已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Added to TBS (to be sourced).": "已加入待采购 TBS。", "Added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Open TBS": "打开待采购 TBS", "None of these? Add it to TBS (to be sourced)": "都不合适？加入待采购 TBS", "Email isn't set up on this server yet. Add the SMTP settings in Render, or send it in Sourcebook only.": "此服务器尚未设置邮件。请在 Render 中添加 SMTP 设置，或仅在选材手册中发送。", "The email couldn't be sent. Check the SMTP settings in Render and try again.": "邮件无法发送，请检查 Render 中的 SMTP 设置后重试。", "That email doesn't look right.": "邮箱格式不正确。", "Only admins can send requests to the sourcing agent.": "只有管理员可以将请求发送给采购代理。",
     "Sourcing library": "采购图库", "Approved": "已批准", "Not approved": "未批准", "All": "全部", "Scanned": "已扫描", "In this project": "本项目中", "All catalogues": "全部图册",
     "Approve all shown": "批准全部显示项", "Move selected to…": "将所选移至…", "Select all shown": "全选显示项", "Clear selection": "清除选择", "Select images first.": "请先选择图片。", "Select to move": "选择以移动", "Unapprove all shown": "取消批准全部显示项", "Approve page": "批准本页", "Unapprove page": "取消批准本页", "In project": "已在项目中",
     "Loading catalogues…": "正在加载图册…", "The catalogue index didn't load. Reload the page to try again.": "图册索引未能加载，请刷新页面重试。",
@@ -140,6 +142,17 @@
 .sbl-fbar{display:block;height:3px;max-width:320px;margin-top:6px;background:var(--rule2);overflow:hidden}
 .sbl-fbar i{display:block;height:100%;width:35%;background:var(--ink);animation:sblbar 1.4s ease-in-out infinite}
 @keyframes sblbar{0%{transform:translateX(-100%)}100%{transform:translateX(290%)}}
+.sbl-cat .sbl-tbsic{position:relative;background-size:cover;background-position:center}
+.sbl-tbsic i{position:absolute;top:8px;right:8px;min-width:26px;padding:3px 8px;border-radius:13px;background:var(--accent);color:#fff;font-style:normal;font-family:var(--mono);font-size:12px;text-align:center}
+.sbl-cat .sbl-tbsword{font-family:var(--display);font-size:40px;letter-spacing:.06em;color:var(--ink)}
+.sbl-send{display:flex;flex-direction:column;gap:8px;margin-top:8px;padding:10px 12px;background:var(--ground);border:1px solid var(--rule2)}
+.sbl-send label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted)}
+.sbl-send input{font:inherit;font-size:14px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:6px 2px}
+.sbl-send input:focus{outline:none;border-color:var(--ink)}
+.sbl-rstate.sent{color:#8a5a00}
+.sbl-req.focus{outline:2px solid var(--ink);outline-offset:2px}
+.sbl-rmsg{font-size:12.5px!important;color:var(--muted)!important}
+.sbl-tools .sbl-back{margin-left:4px}
 .sbl-reqs{margin-top:22px}
 .sbl-reqs > header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--ink);padding-bottom:8px}
 .sbl-reqs h5{margin:0;font-family:var(--display);font-style:italic;font-weight:400;font-size:22px}
@@ -264,7 +277,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     fetchOn().catch(() => {}); fetchFull().catch(() => {}); fetchTypes().catch(() => {}); fetchFav().catch(() => {}); fetchReqs().catch(() => {});
     try {
       const es = new EventSource("/api/events");
-      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "")) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); } catch (_) {} };
+      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data && !was && isAdm() && inReview(m.data) && !(m.data.by && m.data.by.id === tbsCfg.me)) tbsAlert({ id, ...m.data }); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "") && JSON.stringify(was.sent || null) === JSON.stringify(m.data.sent || null)) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); } catch (_) {} };
       es.onopen = () => { fetchOn().catch(() => {}); fetchTypes().catch(() => {}); fetchReqs().catch(() => {}); };
     } catch (_) {}
   }
@@ -302,14 +315,16 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       <p>${t(lede)}</p></div>
       <div class="sbl-stat"><div><span class="eyebrow">${t("Approved")}</span><b id="sbl-kept">${nf(a)}</b></div>${cur ? `<div><span class="eyebrow">${t("Scanned")}</span><b>${nf(tot)}</b></div>` : ""}${host.ctx === "project" ? `<div><span class="eyebrow">${t("In this project")}</span><b>${host.inProject().size}</b></div>` : ""}</div>
       ${cur ? `<div class="sbl-full" id="sbl-full">${fullHTML()}</div><div id="sbl-addwrap" style="grid-column:1/-1">${addCatHTML()}</div>` : ""}</section>
-    ${ui.type ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All product types")}</button><h3>${esc(typeName(ui.type))}</h3></div><div class="sbl-chips" id="sbl-cats">${catsHTML()}</div>`
+    ${ui.type === "TBS" ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All product types")}</button><h3>TBS · ${t("To be sourced")}</h3></div><div id="sbl-tbs">${tbsHTML()}</div><div class="sbl-tools"><button class="btn ghost sm sbl-back" data-sbltype="" data-sbltop>‹ ${t("Back to all product types")}</button></div>`
+      : ""}${ui.type === "TBS" ? "" : `${ui.type ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All product types")}</button><h3>${esc(typeName(ui.type))}</h3></div><div class="sbl-chips" id="sbl-cats">${catsHTML()}</div>`
       : `<div id="sbl-findwrap">${findHTML()}</div><div class="sbl-cats" id="sbl-cats">${catsHTML()}</div>`}
     <div class="sbl-tools"><input class="sbl-q" type="search" id="sbl-q" value="${esc(ui.q)}" placeholder="${esc(t("Search a code, product or page, e.g. AA01, Ampleforth, p44"))}" autocomplete="off" aria-label="${esc(t("Sourcing library"))}">
       ${cur ? `<span class="sbl-seg" role="group" aria-label="${t("Show")}">${[["on", "Approved"], ["off", "Not approved"], ["all", "All"]].map(([v, l]) => `<button class="chip" data-sblshow="${v}" aria-pressed="${show === v}">${t(l)}</button>`).join("")}</span>` : ""}
       <span class="sbl-count" id="sbl-count"></span>
+      ${ui.type || ui.q.trim() ? `<button class="btn ghost sm sbl-back" data-sbltype="" data-sbltop>‹ ${t("Back to all product types")}</button>` : ""}
       ${cur && ui.sup && LIB.sups[ui.sup] && LIB.sups[ui.sup].up ? `<button class="linkbtn" data-sbl="delcat" style="color:var(--crit)">${t("Delete this catalogue")}</button>` : ""}
       ${cur && (ui.sup || ui.type) ? `<span class="sbl-bulk"><button class="linkbtn" data-sblbulk="on">${t("Approve all shown")}</button><button class="linkbtn" data-sblbulk="off">${t("Unapprove all shown")}</button></span>` : ""}</div>
-    <div id="sbl-grid">${gridHTML()}</div></div>`;
+    <div id="sbl-grid">${gridHTML()}</div>`}</div>`;
   }
   function catsHTML() {
     const cur = curating(), vis = o => cur || isOn(o);
@@ -322,7 +337,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const by = {}; LIB.items.forEach(o => (by[typeOf(o)] = by[typeOf(o)] || []).push(o));
     const favs = LIB.items.filter(o => fav.has(o.file) && vis(o)), fc = favs[0];
     const favTile = `<button class="sbl-cat" data-sbltype="F">${fc ? `<span class="sbl-sw" ${sprite(fc)}></span>` : `<span class="sbl-favic">★</span>`}<span class="sbl-name">★ ${t("Favourites")}</span><span class="sbl-sub">${favs.length ? (zh() ? `${nf(favs.length)} 张图片` : `${nf(favs.length)} image${favs.length === 1 ? "" : "s"}`) : t("Star images to save them here")}</span></button>`;
-    return favTile + TYPES.filter(([c]) => by[c] && (cur || by[c].some(isOn))).map(([c]) => {
+    return favTile + tbsTileHTML() + TYPES.filter(([c]) => by[c] && (cur || by[c].some(isOn))).map(([c]) => {
       // Cover: an approved image if there is one, preferring product photos over tearsheet pages.
       const arr = by[c], ok = arr.filter(isOn), pool0 = cur && !ok.length ? arr : ok, photos = pool0.filter(o => !/tearsheet/i.test(o.sup)), pool = photos.length ? photos : pool0, cover = pool[Math.min(pool.length - 1, Math.floor(pool.length * .12))];
       return `<button class="sbl-cat" data-sbltype="${c}">${cover ? `<span class="sbl-sw" ${sprite(cover)}></span>` : ""}<span class="sbl-name">${esc(typeName(c))}</span><span class="sbl-sub">${sub(ok.length, arr.length)}</span>${cur ? `<span class="sbl-bar"><i style="width:${arr.length ? ok.length / arr.length * 100 : 0}%"></i></span>` : ""}</button>`;
@@ -331,7 +346,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   function gridHTML() {
     if (!ui.type && !ui.q.trim()) { setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = ""; }, 0); return `<p class="sbl-hint" style="padding-top:18px">${t("Choose a product type to see its images.")}</p>`; }
     const l = list(), cur = curating(), inP = host.ctx === "project" ? host.inProject() : new Map();
-    setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = zh() ? `${nf(l.length)} 张图片` : `${nf(l.length)} image${l.length === 1 ? "" : "s"}`; }, 0);
+    setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = zh() ? `${nf(l.length)} 张图片` : `${nf(l.length)} image${l.length === 1 ? "" : "s"}`; autoMore(); }, 0);
     if (!l.length) return `<div class="sbl-grid"><p class="sbl-empty">${ui.type === "F" && !ui.q ? t("No favourites yet. Tap the star on any image to save it here.") : ui.q ? t("Nothing matches that search.") : showMode() === "off" ? t("Nothing is waiting for approval here.") : t("Nothing has been approved yet.")}</p></div>`;
     // Inside a product type, admins tick images and send them to another type in one go.
     const sorting = cur && !!ui.type;
@@ -709,7 +724,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   const find = { st: "idle", url: "", b64: "", note: "", what: "", zh: "", m: [], err: "", req: null, auto: false };
   let reqs = new Map(), showDone = false;
   const staff = () => host.internal();
-  async function fetchReqs() { const r = await fetch("/api/sourcing"); if (!r.ok) return; reqs = new Map(((await r.json()).requests || []).map(x => [x.id, x])); findPaint(); }
+  async function fetchReqs() { const r = await fetch("/api/sourcing"); if (!r.ok) return; const j = await r.json(); reqs = new Map((j.requests || []).map(x => [x.id, x])); tbsCfg = { role: j.role || "", me: j.me || "", mail: !!j.mail, agentEmail: j.agentEmail || tbsCfg.agentEmail || "" }; findPaint(); }
   async function prepPhoto(f) {
     const b = await createImageBitmap(f), sc = Math.min(1, 1024 / Math.max(b.width, b.height)), cv = document.createElement("canvas");
     cv.width = Math.max(1, Math.round(b.width * sc)); cv.height = Math.max(1, Math.round(b.height * sc));
@@ -771,7 +786,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
   // quiet: save without redrawing, so a button clicked while a note loses focus still gets the click.
   function updReq(id, body, quiet) {
-    const x = reqs.get(id); if (x && body.status) x.status = body.status; if (x && typeof body.reply === "string") x.reply = body.reply;
+    const x = reqs.get(id); if (x && body.status && body.status !== "reopen") x.status = body.status; if (x && typeof body.reply === "string") x.reply = body.reply;
     if (body.remove) { reqs.delete(id); if (find.req === id) { find.req = null; find.st = find.m.length ? "done" : "idle"; } }
     if (!quiet) findPaint();
     api("/api/sourcing/update", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, ...body }) }).catch(e => { host.toast(e.code === "forbidden" ? t(e.message) : t("Couldn't save. Check your connection and try again.")); fetchReqs().catch(() => {}); });
@@ -788,34 +803,95 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (find.st === "idle" || find.st === "error") body = `<label class="sbl-fdrop"><input type="file" id="sbl-fimg" accept="image/*"><span class="sbl-fcopy"><b>${t("Have something you want?")}</b><span>${t("Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.")}</span></span><span class="btn ghost sm">${t("Choose a photo")}</span></label>
       <input class="sbl-fnote" id="sbl-fnote" value="${esc(find.note)}" maxlength="300" autocomplete="off" placeholder="${esc(t("What are you looking for? (optional) e.g. the chair, in walnut"))}">
       ${find.st === "error" ? `<p class="sbl-ferr">${esc(find.err)}</p>` : ""}`;
-    else if (find.st === "type" || find.st === "match" || find.st === "sending") body = `<div class="sbl-fwork">${pic}<div><b>${t(find.st === "sending" ? "Sending it to our sourcing agent…" : "Searching our library for something similar…")}</b>${what ? `<span>${esc(what)}</span>` : ""}<span class="sbl-fbar"><i></i></span></div></div>`;
+    else if (find.st === "type" || find.st === "match" || find.st === "sending") body = `<div class="sbl-fwork">${pic}<div><b>${t(find.st === "sending" ? "Adding it to TBS (to be sourced)…" : "Searching our library for something similar…")}</b>${what ? `<span>${esc(what)}</span>` : ""}<span class="sbl-fbar"><i></i></span></div></div>`;
     else if (find.st === "sent") {
       const r = reqs.get(find.req);
-      body = `<div class="sbl-fwork">${pic}<div><b>${t(find.auto ? "We couldn't find anything similar in our library, so we've sent it to our sourcing agent. We'll source it for you." : "Sent to our sourcing agent. We'll source it for you.")}</b>${what ? `<span>${esc(what)}</span>` : ""}
-        <span class="sbl-row">${r && r.status === "open" ? `<button class="linkbtn" data-sbl="freqcancel">${t("Withdraw the request")}</button>` : ""}<button class="linkbtn" data-sbl="freset">${t("Search for something else")}</button></span></div></div>
+      body = `<div class="sbl-fwork">${pic}<div><b>${t(find.auto ? (staff() ? "Nothing similar in our library, so it's been added to TBS (to be sourced)." : "We couldn't find anything similar in our library, so it's been added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.") : (staff() ? "Added to TBS (to be sourced)." : "Added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you."))}</b>${what ? `<span>${esc(what)}</span>` : ""}
+        <span class="sbl-row"><button class="btn sm ghost" data-sbltype="TBS">${t("Open TBS")}</button>${r && inReview(r) && !isAdm() ? `<button class="linkbtn" data-sbl="freqcancel">${t("Withdraw the request")}</button>` : ""}<button class="linkbtn" data-sbl="freset">${t("Search for something else")}</button></span></div></div>
         ${find.m.length ? `<div class="sbl-grid">${find.m.map(i => tileHTML(LIB.items[i])).join("")}</div>` : ""}`;
     } else body = `<div class="sbl-fwork">${pic}<div><b>${zh() ? `图库中有 ${find.m.length} 件相似产品` : `${find.m.length} similar in our library`}</b>${what ? `<span>${esc(what)}</span>` : ""}
-        <span class="sbl-row"><button class="btn sm" data-sbl="freq">${t("None of these? Send it to our sourcing agent")}</button><button class="linkbtn" data-sbl="freset">${t("Search for something else")}</button></span></div></div>
+        <span class="sbl-row"><button class="btn sm" data-sbl="freq">${t("None of these? Add it to TBS (to be sourced)")}</button><button class="linkbtn" data-sbl="freset">${t("Search for something else")}</button></span></div></div>
       <div class="sbl-grid">${find.m.map(i => tileHTML(LIB.items[i])).join("")}</div>`;
-    return `<section class="sbl-find${find.st === "idle" || find.st === "error" ? "" : " busy"}" id="sbl-find">${body}</section>${reqsHTML()}`;
+    return `<section class="sbl-find${find.st === "idle" || find.st === "error" ? "" : " busy"}" id="sbl-find">${body}</section>`;
   }
-  function reqsHTML() {
-    const all = [...reqs.values()]; if (!all.length) return "";
-    const st = staff(), open = all.filter(x => x.status === "open"), done = all.filter(x => x.status !== "open");
-    const card = x => `<article class="sbl-req${x.status === "open" ? "" : " done"}"><a href="/_blob/${esc(x.photo)}" target="_blank" rel="noopener"><img src="/_blob/${esc(x.photo)}" alt="" loading="lazy"></a><div>
+  // TBS (to be sourced): the requests this person can see. Admins review new ones and send them to the sourcing
+  // agent; agents see the ones sent to them; anyone else sees their own.
+  const inReview = x => x.status === "review" || x.status === "open";
+  let tbsCfg = { role: "", mail: false, agentEmail: "" }, tbsFilter = null, tbsSending = new Set(), tbsFocus = (location.search.match(/[?&]tbs=([0-9a-f]{20})/) || [])[1] || null;
+  if (tbsFocus) ui.type = "TBS";
+  const isAdm = () => tbsCfg.role === "admin";
+  // What needs this person's attention: new items for an admin, sent ones for the sourcing agent.
+  const tbsTodo = () => [...reqs.values()].filter(x => isAdm() ? inReview(x) : tbsCfg.role === "agent" ? x.status === "sent" : false).length;
+  let badgeEl = null;
+  function tbsBadge() {
+    if (!badgeEl) { badgeEl = document.createElement("style"); document.head.appendChild(badgeEl); }
+    const n = tbsTodo();
+    badgeEl.textContent = n ? `[data-dview="library"]::after,[data-view="lib"]::after{content:"${n}";display:inline-block;min-width:18px;margin-left:7px;padding:1px 6px;border-radius:9px;background:var(--accent,#9a3b2e);color:#fff;font-size:11px;line-height:16px;text-align:center;font-family:var(--mono,monospace)}` : "";
+  }
+  function tbsAlert(x) {
+    const msg = (zh() ? "新的待采购 TBS 需要审核：" : "New item to review in TBS: ") + ((zh() ? x.zh : x.what) || x.what || t("Photo")) + (x.by && x.by.name ? " · " + x.by.name : "");
+    host.toast(msg);
+    if (window.Notification && Notification.permission === "granted" && (document.hidden || !document.hasFocus())) { try { new Notification("Sourcebook · TBS", { body: msg, icon: "/icon-192.png", tag: "sb-tbs-" + x.id }); } catch (_) {} }
+  }
+  function tbsTileHTML() {
+    const all = [...reqs.values()]; if (!all.length && !staff()) return "";
+    const n = tbsTodo(), sub = isAdm() ? (zh() ? `${nf(all.filter(inReview).length)} 项待审核 · ${nf(all.filter(x => x.status === "sent").length)} 项采购中` : `${nf(all.filter(inReview).length)} to review · ${nf(all.filter(x => x.status === "sent").length)} with the agent`)
+      : tbsCfg.role === "agent" ? (zh() ? `${nf(n)} 项待寻找` : `${nf(n)} to find`) : (zh() ? `${nf(all.length)} 项请求` : `${nf(all.length)} request${all.length === 1 ? "" : "s"}`);
+    const cover = all.find(x => isAdm() ? inReview(x) : true) || all[0];
+    return `<button class="sbl-cat" data-sbltype="TBS">${cover ? `<span class="sbl-sw sbl-tbsic" style="background-image:url(/_blob/${esc(cover.photo)})">${n ? `<i>${nf(n)}</i>` : ""}</span>` : `<span class="sbl-favic sbl-tbsword">TBS</span>`}<span class="sbl-name">TBS · ${t("To be sourced")}</span><span class="sbl-sub">${sub}</span></button>`;
+  }
+  const tbsState = x => inReview(x) ? "review" : x.status;
+  function tbsHTML() {
+    const all = [...reqs.values()], st = staff(), adm = isAdm();
+    const counts = { review: all.filter(inReview).length, sent: all.filter(x => x.status === "sent").length, sourced: all.filter(x => x.status === "sourced").length };
+    if (!tbsFilter || (tbsFilter !== "all" && !counts[tbsFilter])) tbsFilter = adm && counts.review ? "review" : tbsCfg.role === "agent" && counts.sent ? "sent" : "all";
+    const list = all.filter(x => tbsFilter === "all" || tbsState(x) === tbsFilter);
+    const chips = st ? `<div class="sbl-chips">${(adm ? [["review", "To review"], ["sent", "With the sourcing agent"], ["sourced", "Sourced"], ["all", "All"]] : [["sent", "To find"], ["sourced", "Sourced"], ["all", "All"]]).map(([k, l]) => `<button class="chip" data-sbltbsf="${k}" aria-pressed="${tbsFilter === k}">${t(l)}${k === "all" ? "" : " · " + nf(counts[k])}</button>`).join("")}</div>` : "";
+    const alerts = adm && window.Notification && Notification.permission === "default" ? `<button class="linkbtn" data-sbl="tbsalerts">${t("Turn on alerts for new requests")}</button>` : "";
+    const lede = adm ? "Photos sent from the Sourcing library that we couldn't match. Review each one, then send it to the sourcing agent; with email set up, it goes to their QQ Mail with the photo attached."
+      : tbsCfg.role === "agent" ? "Items the studio has asked you to find. Mark each one sourced when you've found it, with a note on where." : "Things you've asked us to find. We review each one and send it to our sourcing agent.";
+    return `<p class="sbl-hint" style="max-width:70ch">${t(lede)} ${alerts}</p>${chips}${list.length ? `<div class="sbl-reqlist">${list.map(tbsCard).join("")}</div>` : `<p class="sbl-empty">${t(all.length ? "Nothing here." : "Nothing to be sourced yet. Drop a photo in the box on the Sourcing library page.")}</p>`}`;
+  }
+  function tbsCard(x) {
+    const st = staff(), adm = isAdm(), s = tbsState(x), sending = tbsSending.has(x.id);
+    const chip = s === "review" ? `<span class="sbl-rstate">${t(st ? "To review" : "With the studio")}</span>`
+      : s === "sent" ? `<span class="sbl-rstate sent">${t(st ? "With the sourcing agent" : "We're sourcing it")}${st && x.sent ? ` · ${esc(ago(x.sent.at))}${x.sent.emailed && x.sent.to ? " · " + (zh() ? "已发邮件至 " : "emailed to ") + esc(x.sent.to) : ""}` : ""}</span>`
+      : `<span class="sbl-rstate ok">✓ ${t("Sourced")}${x.done && x.done.by && st ? " · " + esc(x.done.by) : ""}</span>`;
+    const sendForm = adm && s !== "sourced" ? `<div class="sbl-send">
+        ${tbsCfg.mail ? `<label>${t("Sourcing agent's email (QQ Mail)")}<input data-sbltbsto="${esc(x.id)}" value="${esc(tbsCfg.agentEmail)}" placeholder="12345678@qq.com" autocomplete="off"></label>` : `<p class="sbl-hint" style="margin:0">${t("Email isn't set up yet, so this sends it in Sourcebook only. Add the SMTP settings in Render to email the agent's QQ Mail.")}</p>`}
+        <label>${t("Message to the agent (optional)")}<input data-sbltbsmsg="${esc(x.id)}" maxlength="2000" autocomplete="off" placeholder="${esc(t("e.g. Need 6, walnut, by November"))}"></label>
+        <span class="sbl-row"><button class="btn sm" data-sbl="tbssend" data-id="${esc(x.id)}" ${sending ? "disabled" : ""}>${t(sending ? "Sending…" : s === "sent" ? "Send to the sourcing agent again" : "Send to the sourcing agent")}</button></span></div>` : "";
+    return `<article class="sbl-req${s === "sourced" ? " done" : ""}${tbsFocus === x.id ? " focus" : ""}" id="sbl-req-${esc(x.id)}"><a href="/_blob/${esc(x.photo)}" target="_blank" rel="noopener"><img src="/_blob/${esc(x.photo)}" alt="" loading="lazy"></a><div>
       <b>${esc((zh() ? x.zh : x.what) || x.what || t("Photo"))}</b>${x.note ? `<p>“${esc(x.note)}”</p>` : ""}
-      <span class="sbl-sub">${st ? esc(x.by && x.by.name || t("Studio owner")) + " · " : ""}${esc(ago(x.at))}${x.project && x.project.name ? " · " + esc(x.project.name) : ""}</span>
-      ${x.status === "open" ? `<span class="sbl-rstate">${t(st ? "Waiting to be sourced" : "We're sourcing it")}</span>` : `<span class="sbl-rstate ok">✓ ${t("Sourced")}${x.done && x.done.by && st ? " · " + esc(x.done.by) : ""}</span>`}
+      <span class="sbl-sub">${st ? esc(x.by && x.by.name || t("Studio owner")) + (x.by && x.by.role === "client" ? " · " + t("Client") : "") + " · " : ""}${esc(ago(x.at))}${x.project && x.project.name ? " · " + esc(x.project.name) : ""}</span>
+      ${chip}
+      ${x.sent && x.sent.message && st ? `<p class="sbl-rmsg">${t("Message to the agent")}: ${esc(x.sent.message)}</p>` : ""}
       ${x.reply && !st ? `<p class="sbl-rreply">${esc(x.reply)}</p>` : ""}
-      ${st ? `<input class="sbl-fnote" data-sblreply="${esc(x.id)}" value="${esc(x.reply || "")}" maxlength="2000" placeholder="${esc(t("Note for the person who asked (optional)"))}">` : ""}
-      <span class="sbl-row">${st ? (x.status === "open" ? `<button class="btn sm" data-sbl="rdone" data-id="${esc(x.id)}">${t("Mark as sourced")}</button>` : `<button class="linkbtn" data-sbl="ropen" data-id="${esc(x.id)}">${t("Reopen")}</button>`) : ""}
-        ${(!st && x.status === "open") || curating() ? `<button class="linkbtn" data-sbl="rdel" data-id="${esc(x.id)}" style="color:var(--crit)">${t(st ? "Remove" : "Withdraw the request")}</button>` : ""}</span></div></article>`;
-    const list = st ? open.concat(showDone ? done : []) : all;
-    return `<section class="sbl-reqs" id="sbl-reqs"><header><h5>${t(st ? "Sourcing requests" : "Your sourcing requests")}</h5><span class="sbl-sub">${zh() ? `${nf(open.length)} 项待采购` : `${nf(open.length)} waiting`}</span>
-      ${st && done.length ? `<button class="linkbtn" data-sbl="rshow">${showDone ? t("Hide sourced") : (zh() ? `显示已采购（${nf(done.length)}）` : `Show sourced (${nf(done.length)})`)}</button>` : ""}</header>
-      ${list.length ? `<div class="sbl-reqlist">${list.map(card).join("")}</div>` : `<p class="sbl-hint">${t("Nothing waiting to be sourced.")}</p>`}</section>`;
+      ${sendForm}
+      ${st && s !== "review" ? `<input class="sbl-fnote" data-sblreply="${esc(x.id)}" value="${esc(x.reply || "")}" maxlength="2000" placeholder="${esc(t("Where it was found, for the person who asked (optional)"))}">` : ""}
+      <span class="sbl-row">${st && s === "sent" ? `<button class="btn sm" data-sbl="rdone" data-id="${esc(x.id)}">${t("Mark as sourced")}</button>` : ""}${st && s === "sourced" ? `<button class="linkbtn" data-sbl="ropen" data-id="${esc(x.id)}">${t("Reopen")}</button>` : ""}
+        ${(!st && s === "review") || adm ? `<button class="linkbtn" data-sbl="rdel" data-id="${esc(x.id)}" style="color:var(--crit)">${t(adm ? "Remove" : "Withdraw the request")}</button>` : ""}</span></div></article>`;
   }
-  function findPaint() { const el = $("#sbl-findwrap"); if (el) el.innerHTML = findHTML(); }
+  async function tbsSend(id) {
+    if (tbsSending.has(id)) return;
+    const to = (document.querySelector(`[data-sbltbsto="${id}"]`) || {}).value || "", message = (document.querySelector(`[data-sbltbsmsg="${id}"]`) || {}).value || "";
+    if (tbsCfg.mail && !to.trim()) { host.toast(t("Add the sourcing agent's email first.")); return; }
+    tbsSending.add(id); findPaint();
+    try {
+      const j = await api("/api/sourcing/send", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, to: tbsCfg.mail ? to : "", message }) });
+      if (tbsCfg.mail) tbsCfg.agentEmail = to.trim();
+      host.toast(t(j.emailed ? "Sent to the sourcing agent by email." : "Sent to the sourcing agent in Sourcebook."));
+      const x = reqs.get(id); if (x) { x.status = x.status === "sourced" ? "sourced" : "sent"; x.sent = { at: new Date().toISOString(), to: tbsCfg.mail ? to.trim() : "", emailed: !!j.emailed, message }; }
+    } catch (e) { host.toast(e.message && /mail|email|SMTP/i.test(e.message) ? t(e.message) : t("Couldn't send it. Check your connection and try again.")); }
+    tbsSending.delete(id); findPaint();
+  }
+  function tbsPaint() {
+    tbsBadge();
+    const v = $("#sbl-tbs"); if (v) v.innerHTML = tbsHTML();
+    if (!ui.type) { const c = $("#sbl-cats"); if (c && LIB) c.innerHTML = catsHTML(); }
+    if (tbsFocus && v) { const el = $("#sbl-req-" + tbsFocus); if (el) { el.scrollIntoView({ block: "center" }); tbsFocus = null; } }
+  }
+  function findPaint() { const el = $("#sbl-findwrap"); if (el) el.innerHTML = findHTML(); tbsPaint(); }
   // Drop or paste a photo on the box.
   const findZone = e => e.dataTransfer && [...e.dataTransfer.types].includes("Files") && e.target.closest && e.target.closest("#sbl-find");
   document.addEventListener("dragover", e => { const z = findZone(e); if (!z) return; e.preventDefault(); e.dataTransfer.dropEffect = "copy"; z.classList.add("over"); });
@@ -832,18 +908,27 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   document.addEventListener("change", e => { if (e.target.id === "sbl-fimg") { const f = e.target.files[0]; e.target.value = ""; if (f) findSearch(f); } });
   document.addEventListener("input", e => { if (e.target.id === "sbl-fnote") find.note = e.target.value; });
   document.addEventListener("focusout", e => { const id = e.target.dataset && e.target.dataset.sblreply; if (!id) return; const x = reqs.get(id); if (x && (x.reply || "") !== e.target.value.trim()) updReq(id, { reply: e.target.value.trim() }, true); });
+  // Inside a product type, the next images load by themselves as you near the bottom (the button stays as a fallback).
+  let moreBusy = false;
+  function autoMore() {
+    if (moreBusy || ui.open != null) return; const b = document.querySelector("[data-sblmore]"); if (!b || !b.offsetParent) return;
+    if (b.getBoundingClientRect().top < innerHeight + 700) { moreBusy = true; ui.n += 120; repaint(); requestAnimationFrame(() => { moreBusy = false; autoMore(); }); }
+  }
+  addEventListener("scroll", () => requestAnimationFrame(autoMore), { passive: true });
+  addEventListener("resize", () => requestAnimationFrame(autoMore));
   document.addEventListener("load", e => { const el = e.target; if (el.classList && el.classList.contains("sbl-big")) el.closest(".sbl-hero")?.classList.add("loaded"); }, true);
   document.addEventListener("error", e => { const el = e.target; if (el.classList && el.classList.contains("sbl-big")) { const h = el.closest(".sbl-hero"); if (h) { h.classList.remove("big"); el.remove(); } } }, true);
 
   document.addEventListener("click", async e => {
-    const el = e.target.closest && e.target.closest("[data-sbltype],[data-sblsup],[data-sblshow],[data-sblmore],[data-sblopen],[data-sblbulk],[data-sblpage],[data-sblfav],[data-sbl]"); if (!el || !LIB) return;
+    const el = e.target.closest && e.target.closest("[data-sbltype],[data-sblsup],[data-sblshow],[data-sblmore],[data-sblopen],[data-sblbulk],[data-sblpage],[data-sblfav],[data-sbltbsf],[data-sbl]"); if (!el || !LIB) return;
+    if (el.dataset.sbltbsf) { tbsFilter = el.dataset.sbltbsf; tbsPaint(); return; }
     if (el.dataset.sblfav !== undefined) {
       const o = LIB.items[+el.dataset.sblfav]; if (!o) return; const x = toggleFav(o);
       if (ui.type === "F") { repaint(); return; }
       el.setAttribute("aria-pressed", x); el.textContent = x ? "★" : "☆"; el.title = t(x ? "Remove from favourites" : "Add to favourites"); return;
     }
     if (el.dataset.sblsup !== undefined) { ui.sup = el.dataset.sblsup || null; ui.n = 120; rerender(); return; }
-    if (el.dataset.sbltype !== undefined) { ui.type = el.dataset.sbltype || null; ui.sup = null; ui.n = 120; rerender(); const r = $("#sblib"); if (r && ui.type) r.scrollIntoView({ block: "start" }); return; }
+    if (el.dataset.sbltype !== undefined) { ui.type = el.dataset.sbltype || null; ui.sup = null; ui.n = 120; if (el.dataset.sbltop !== undefined) { ui.q = ""; } rerender(); const r = $("#sblib"); if (r && (ui.type || el.dataset.sbltop !== undefined)) r.scrollIntoView({ block: "start" }); return; }
     if (el.dataset.sblshow) { ui.show = el.dataset.sblshow; ui.n = 120; document.querySelectorAll("[data-sblshow]").forEach(b => b.setAttribute("aria-pressed", b === el)); repaint(); return; }
     if (el.dataset.sblmore !== undefined) { ui.n += 120; repaint(); return; }
     if (el.dataset.sblopen !== undefined) { ui.open = +el.dataset.sblopen; ui.seq = el.dataset.sblseq === "find" ? find.m.slice() : list().map(o => o.i); host.layer(); return; }
@@ -859,9 +944,11 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     else if (a === "freq") sendReq();
     else if (a === "freset") { Object.assign(find, { st: "idle", url: "", b64: "", note: "", what: "", zh: "", m: [], err: "", req: null, auto: false }); findPaint(); }
     else if (a === "freqcancel" && find.req) updReq(find.req, { remove: true });
-    else if (a === "rdone" || a === "ropen") { const inp = document.querySelector(`[data-sblreply="${el.dataset.id}"]`); updReq(el.dataset.id, { status: a === "rdone" ? "sourced" : "open", ...(inp ? { reply: inp.value.trim() } : {}) }); }
+    else if (a === "rdone" || a === "ropen") { const inp = document.querySelector(`[data-sblreply="${el.dataset.id}"]`), x = reqs.get(el.dataset.id); if (a === "ropen" && x) { x.status = x.sent ? "sent" : "review"; } updReq(el.dataset.id, { status: a === "rdone" ? "sourced" : "reopen", ...(inp ? { reply: inp.value.trim() } : {}) }); }
+    else if (a === "tbssend") tbsSend(el.dataset.id);
+    else if (a === "tbsalerts") { Notification.requestPermission().then(() => findPaint()); }
     else if (a === "rdel") updReq(el.dataset.id, { remove: true });
-    else if (a === "rshow") { showDone = !showDone; findPaint(); }
+
     else if (a === "scan" && curating() && !scan) scanPDF();
     else if (a === "delcat" && curating() && ui.sup) deleteCat(ui.sup);
     else if (a === "prev" || a === "next") { e.stopPropagation(); step(a === "next" ? 1 : -1); }
@@ -926,7 +1013,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   document.addEventListener("keydown", e => { if (e.key === "Escape" && ui.open != null && !document.getElementById("viewer")) { e.stopPropagation(); if (ui.zoom) { ui.zoom = false; host.layer(); } else close(); } }, true);
 
   window.SBLibrary = Object.freeze({
-    configure(h) { host = { ...host, ...h }; },
+    configure(h) { host = { ...host, ...h }; if (host.internal() || tbsFocus) setTimeout(watch, 0); },
     view, sheet, close, repaint, load,
     isOpen: () => ui.open != null && !!LIB,
     t,

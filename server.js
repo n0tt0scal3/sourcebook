@@ -8,6 +8,7 @@ const path = require("path");
 const crypto = require("crypto");
 const dns = require("dns").promises;
 const net = require("net");
+const tls = require("tls");
 
 const PORT = Number(process.env.PORT) || 3000;
 const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, "data"));
@@ -237,7 +238,7 @@ function broadcast(msg) {
   for (const c of clients) {
     const u = liveUser(c); if (!u) continue;
     try {
-      if (allAccess(u)) c.res.write(line);
+      if (allAccess(u) && !isSourcingPath(msg.path)) c.res.write(line);
       else if (canRead(u, msg.path)) c.res.write(`data: ${JSON.stringify(msg.exists ? { ...msg, data: forUser(u, msg.path, msg.data) } : msg)}\n\n`);
     } catch (_) {}
   }
@@ -314,7 +315,7 @@ function canSeeProject(u, id) { return allAccess(u) || (u.projects || []).includ
 const isLibPath = p => /^library(types)?(\/|$)/.test(p || "");
 // Sourcing requests (sourcing/<id>): the studio and sourcing agents see them all; anyone else only their own.
 const isSourcingPath = p => /^sourcing(\/|$)/.test(p || "");
-function canRead(u, p) { if (isLibPath(p)) return true; if (isSourcingPath(p)) return u.role === "admin" || u.role === "agent" || (p !== "sourcing" && store[p]?.data?.by?.id === u.id); if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
+function canRead(u, p) { if (isLibPath(p)) return true; if (isSourcingPath(p)) { if (u.role === "admin") return true; if (p === "sourcing") return u.role === "agent"; const d = store[p]?.data; return !!d && (d.by?.id === u.id || (u.role === "agent" && !["review", "open"].includes(d.status))); } if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
 // Internal fields a client never receives.
 const CLIENT_HIDDEN = ["notes", "match", "pendingSetup", "chg"];
 function forUser(u, p, data) {
@@ -363,6 +364,45 @@ ${error ? '<p class="err">That sign-in and password don\'t match. Studio owner: 
 <p class="note">Studio owner: leave the first box blank and use the studio password.</p></form></main></body></html>`;
 }
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".webmanifest": "application/manifest+json", ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon" };
+
+/* ---------------- email (SMTP, no dependencies) ---------------- */
+// Set SMTP_HOST, SMTP_PORT (465 for SSL, 587 for STARTTLS), SMTP_USER, SMTP_PASS and optionally MAIL_FROM in Render.
+// A QQ Mail or Gmail account works: use the app password / authorization code, not the sign-in password.
+const MAIL = { host: process.env.SMTP_HOST || "", port: Number(process.env.SMTP_PORT || 465), user: process.env.SMTP_USER || "", pass: process.env.SMTP_PASS || "", from: process.env.MAIL_FROM || process.env.SMTP_USER || "" };
+const mailOn = () => !!(MAIL.host && MAIL.user && MAIL.pass && MAIL.from);
+const origin = req => process.env.PUBLIC_URL || `${req.headers["x-forwarded-proto"] || "https"}://${req.headers.host}`;
+function sendMail(to, subject, text, attachments = []) {
+  const b64 = s => Buffer.from(s).toString("base64").replace(/.{76}/g, "$&\r\n");
+  const bound = "sb" + crypto.randomBytes(12).toString("hex"), from = MAIL.from.replace(/[\r\n<>]/g, "");
+  const msg = [`From: Sourcebook <${from}>`, `To: ${to.join(", ")}`, `Subject: =?UTF-8?B?${Buffer.from(subject.replace(/[\r\n]+/g, " ")).toString("base64")}?=`, `Date: ${new Date().toUTCString()}`,
+    `Message-ID: <${crypto.randomBytes(12).toString("hex")}@sourcebook>`, "MIME-Version: 1.0", `Content-Type: multipart/mixed; boundary="${bound}"`, "",
+    `--${bound}`, "Content-Type: text/plain; charset=UTF-8", "Content-Transfer-Encoding: base64", "", b64(text),
+    ...attachments.flatMap(a => [`--${bound}`, `Content-Type: ${a.type}; name="${a.name}"`, `Content-Disposition: attachment; filename="${a.name}"`, "Content-Transfer-Encoding: base64", "", b64(a.data)]),
+    `--${bound}--`, ""].join("\r\n").replace(/^\./gm, "..");
+  return new Promise((resolve, reject) => {
+    let sock, buf = "", lines = [], pending = null, finished = false;
+    const end = (e) => { if (finished) return; finished = true; clearTimeout(timer); try { sock.end(); } catch (_) {} e ? reject(e) : resolve(); };
+    const timer = setTimeout(() => end(new Error("SMTP timeout")), 30000);
+    const onData = d => { buf += d; let i; while ((i = buf.indexOf("\n")) >= 0) { const l = buf.slice(0, i).replace(/\r$/, ""); buf = buf.slice(i + 1); lines.push(l); if (/^\d{3}( |$)/.test(l)) { const r = lines; lines = []; const p = pending; pending = null; if (p) p(r); } } };
+    const attach = s => { sock = s; s.setEncoding("utf8"); s.on("data", onData); s.on("error", e => end(e)); };
+    const cmd = async (line, ok) => { const got = new Promise(r => (pending = r)); if (line != null) sock.write(line + "\r\n"); const r = await got; const code = Number(r[r.length - 1].slice(0, 3)); if (!ok.includes(code)) throw new Error(`SMTP ${code}: ${r.join(" ").slice(0, 200)}`); return r; };
+    const local = /^(localhost|127\.0\.0\.1)$/.test(MAIL.host);
+    (async () => {
+      if (MAIL.port === 465) { const g = new Promise(r => (pending = r)); attach(tls.connect({ host: MAIL.host, port: 465, servername: MAIL.host })); const r = await g; if (!/^220/.test(r[r.length - 1])) throw new Error("SMTP greeting " + r.join(" ")); }
+      else { const g = new Promise(r => (pending = r)); attach(net.connect(MAIL.port, MAIL.host)); await g; }
+      let ehlo = await cmd("EHLO sourcebook", [250]);
+      if (MAIL.port !== 465) {
+        if (ehlo.some(l => /STARTTLS/i.test(l))) { await cmd("STARTTLS", [220]); sock.removeAllListeners("data"); attach(tls.connect({ socket: sock, servername: MAIL.host })); ehlo = await cmd("EHLO sourcebook", [250]); }
+        else if (!local) throw new Error("SMTP server doesn't offer STARTTLS");
+      }
+      await cmd("AUTH LOGIN", [334]); await cmd(Buffer.from(MAIL.user).toString("base64"), [334]); await cmd(Buffer.from(MAIL.pass).toString("base64"), [235]);
+      await cmd(`MAIL FROM:<${from}>`, [250]);
+      for (const t of to) await cmd(`RCPT TO:<${t.replace(/[\r\n<>]/g, "")}>`, [250, 251]);
+      await cmd("DATA", [354]); await cmd(msg + "\r\n.", [250]);
+      await cmd("QUIT", [221]).catch(() => {});
+    })().then(() => end(), e => end(e));
+  });
+}
 
 /* ---------------- Claude ---------------- */
 async function askClaude({ input, images = [], modelTier = "default" }) {
@@ -931,42 +971,85 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       } catch (e) { console.error("similar:", e.message); return send(res, 502, { code: e.code || "upstream_error", message: "The search didn't finish. Try again." }); }
       return send(res, 400, { code: "invalid_argument" });
     }
-    // Sourcing requests: a photo someone wants that the library doesn't have, for the sourcing agent to find.
-    // Stored as sourcing/<id>. Admins and sourcing agents see them all; anyone else sees their own.
+    // TBS (to be sourced): a photo someone wants that the library doesn't have. Stored as sourcing/<id>.
+    // It lands as "review" for an admin to look at; the admin sends it to the sourcing agent ("sent", emailed to
+    // their QQ address when mail is set up); the agent or an admin marks it "sourced". Old "open" ones count as review.
+    // Admins see them all; sourcing agents see the ones sent to them; anyone else sees their own.
     if (p === "/api/sourcing" && req.method === "GET") {
       const all = Object.entries(store).filter(([k]) => /^sourcing\/[^/]+$/.test(k)).map(([k, v]) => ({ id: k.slice(9), ...v.data })).filter(x => canRead(me, "sourcing/" + x.id));
-      return send(res, 200, { requests: all.sort((x, y) => String(y.at).localeCompare(String(x.at))) });
+      return send(res, 200, { requests: all.sort((x, y) => String(y.at).localeCompare(String(x.at))), role: me.role, me: me.id, ...(isAdmin ? { mail: mailOn(), agentEmail: store["tbscfg/main"]?.data?.agentEmail || people.users.filter(u => u.role === "agent" && u.email && !u.disabled).map(u => u.email)[0] || "" } : {}) });
     }
     if (p === "/api/sourcing/request" && req.method === "POST") {
       const b = await readJSON(req, 6 * 1024 * 1024);
       const buf = typeof b.photo === "string" && b.photo.length < 4e6 ? Buffer.from(b.photo, "base64") : null;
       if (!buf || sniffBuf(buf) !== "image/jpeg") return send(res, 400, { code: "invalid_argument", message: "Add a photo first." });
-      const mine = Object.entries(store).filter(([k, v]) => /^sourcing\//.test(k) && v.data?.by?.id === me.id && v.data.status === "open").length;
+      const mine = Object.entries(store).filter(([k, v]) => /^sourcing\//.test(k) && v.data?.by?.id === me.id && v.data.status !== "sourced").length;
       if (mine >= 50) return send(res, 400, { code: "invalid_argument", message: "You have 50 open requests. Wait for some to be sourced first." });
       const photo = crypto.randomBytes(16).toString("hex");
       await fsp.writeFile(path.join(BLOB_DIR, photo), buf);
       await fsp.writeFile(path.join(BLOB_DIR, photo + ".json"), JSON.stringify({ contentType: "image/jpeg", sizeBytes: buf.length, createdAt: new Date().toISOString(), source: "sourcing request" }));
       const pid = String(b.project || ""), proj = pid && store["projects/" + pid] && canSeeProject(me, pid) ? { id: pid, name: String(store["projects/" + pid].data?.name || "") } : null;
       const doc = { photo, note: String(b.note || "").trim().slice(0, 1000), what: String(b.what || "").slice(0, 200), zh: String(b.zh || "").slice(0, 200), project: proj,
-        by: { id: me.id, name: me.name || "", role: me.role }, at: new Date().toISOString(), status: "open" };
+        by: { id: me.id, name: me.name || "", role: me.role }, at: new Date().toISOString(), status: "review" };
       const id = crypto.randomBytes(10).toString("hex"), dp = "sourcing/" + id;
       store[dp] = { data: doc, version: 1, updatedAt: doc.at };
       persist(); broadcast({ path: dp, exists: true, data: doc });
+      // Let the studio know there's something to review (by email, when mail is set up).
+      const notify = (process.env.TBS_NOTIFY_EMAIL || "").split(/[,;\s]+/).filter(Boolean);
+      const admins = notify.length ? notify : people.users.filter(u => u.role === "admin" && u.email && !u.disabled).map(u => u.email);
+      if (mailOn() && admins.length && me.role !== "admin") {
+        const link = `${origin(req)}/?tbs=${id}`;
+        sendMail(admins, `Sourcebook · New item to review (TBS): ${doc.what || "photo"}`,
+          `${doc.by.name || "Someone"} (${doc.by.role}) sent a photo of something they want.\n\n${doc.what ? "What it looks like: " + doc.what + "\n" : ""}${doc.note ? "Their note: " + doc.note + "\n" : ""}${proj ? "Project: " + proj.name + "\n" : ""}\nReview it and send it to the sourcing agent: ${link}\n`,
+          [{ name: "photo.jpg", type: "image/jpeg", data: buf }]).catch(e => console.error("TBS notify email:", e.message));
+      }
       return send(res, 200, { ok: true, id });
+    }
+    if (p === "/api/sourcing/send" && req.method === "POST") {
+      // An admin sends a TBS item to the sourcing agent: by email (photo attached) when mail is set up, and in Sourcebook.
+      if (!isAdmin) return deny("Only admins can send requests to the sourcing agent.");
+      const b = await readJSON(req), dp = "sourcing/" + String(b.id || ""), cur = store[dp];
+      if (!/^sourcing\/[0-9a-f]{20}$/.test(dp) || !cur) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
+      const to = String(b.to || "").split(/[,;\s]+/).map(s => s.trim().toLowerCase()).filter(Boolean).slice(0, 3);
+      const msg = String(b.message || "").trim().slice(0, 2000);
+      let emailed = false;
+      if (to.length) {
+        if (!to.every(e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))) return send(res, 400, { code: "invalid_argument", message: "That email doesn't look right." });
+        if (!mailOn()) return send(res, 503, { code: "mail_disabled", message: "Email isn't set up on this server yet. Add the SMTP settings in Render, or send it in Sourcebook only." });
+        const d = cur.data, link = `${origin(req)}/?tbs=${b.id}`;
+        let photo = null; try { photo = await fsp.readFile(path.join(BLOB_DIR, d.photo)); } catch (_) {}
+        try {
+          await sendMail(to, `选材手册 · 待采购 TBS：${d.zh || d.what || "照片"}`,
+            `您好，\n\n请帮忙寻找这件产品，照片见附件。\n\n${d.zh || d.what ? "描述：" + (d.zh || d.what) + "\n" : ""}${d.note ? "请求人备注：" + d.note + "\n" : ""}${msg ? "工作室留言：" + msg + "\n" : ""}${d.project ? "项目：" + d.project.name + "\n" : ""}\n在选材手册中查看，找到后请标记为“已采购”：${link}\n\n` +
+            `----\nHello,\n\nPlease find this item for us. The photo is attached.\n\n${d.what ? "What it looks like: " + d.what + "\n" : ""}${d.note ? "Note from the person who asked: " + d.note + "\n" : ""}${msg ? "Message from the studio: " + msg + "\n" : ""}${d.project ? "Project: " + d.project.name + "\n" : ""}\nOpen it in Sourcebook and mark it sourced when you find it: ${link}\n`,
+            photo ? [{ name: "photo.jpg", type: "image/jpeg", data: photo }] : []);
+          emailed = true;
+        } catch (e) { console.error("TBS email:", e.message); return send(res, 502, { code: "mail_failed", message: "The email couldn't be sent. Check the SMTP settings in Render and try again." }); }
+        const cfg = store["tbscfg/main"];
+        store["tbscfg/main"] = { data: { ...(cfg?.data || {}), agentEmail: to.join(", ") }, version: (cfg?.version || 0) + 1, updatedAt: new Date().toISOString() };
+      }
+      const now = store[dp]; if (!now) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
+      const next = { ...now.data, status: now.data.status === "sourced" ? "sourced" : "sent", sent: { at: new Date().toISOString(), by: me.name || "", to: to.join(", "), emailed, message: msg } };
+      store[dp] = { data: next, version: now.version + 1, updatedAt: next.sent.at };
+      persist(); broadcast({ path: dp, exists: true, data: next });
+      return send(res, 200, { ok: true, emailed });
     }
     if (p === "/api/sourcing/update" && req.method === "POST") {
       const b = await readJSON(req), dp = "sourcing/" + String(b.id || ""), cur = store[dp];
-      if (!/^sourcing\/[0-9a-f]{20}$/.test(dp) || !cur) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
-      const own = cur.data.by?.id === me.id, staff = me.role === "admin" || me.role === "agent";
+      if (!/^sourcing\/[0-9a-f]{20}$/.test(dp) || !cur || !canRead(me, dp)) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
+      const own = cur.data.by?.id === me.id, staff = me.role === "admin" || me.role === "agent", inReview = ["review", "open"].includes(cur.data.status);
       if (b.remove) {
-        // The person who asked can withdraw it while it's open; admins can remove any.
-        if (!isAdmin && !(own && cur.data.status === "open")) return deny("Only admins can remove a request.");
+        // The person who asked can withdraw it until it's sent to the agent; admins can remove any.
+        if (!isAdmin && !(own && inReview)) return deny("Only admins can remove a request.");
         delete store[dp]; persist(); broadcast({ path: dp, exists: false });
         fsp.unlink(path.join(BLOB_DIR, cur.data.photo)).catch(() => {}); fsp.unlink(path.join(BLOB_DIR, cur.data.photo + ".json")).catch(() => {});
         return send(res, 200, { ok: true });
       }
       if (!staff) return deny("Only the studio and the sourcing agent can update a request.");
-      const status = ["open", "sourced"].includes(b.status) ? b.status : cur.data.status;
+      // Sourced, or back to sent (reopen). An agent's reopen goes back to them; an admin's to review if it was never sent.
+      let status = cur.data.status;
+      if (b.status === "sourced") status = "sourced";
+      else if (b.status === "reopen" && status === "sourced") status = cur.data.sent ? "sent" : "review";
       const next = { ...cur.data, status, reply: typeof b.reply === "string" ? b.reply.trim().slice(0, 2000) : cur.data.reply || "", ...(status !== cur.data.status ? { done: status === "sourced" ? { by: me.name || "", role: me.role, at: new Date().toISOString() } : null } : {}) };
       store[dp] = { data: next, version: cur.version + 1, updatedAt: new Date().toISOString() };
       persist(); broadcast({ path: dp, exists: true, data: next });

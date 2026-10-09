@@ -156,7 +156,7 @@ tr.row:hover td{background:var(--paper)}
 .x{background:none;border:0;color:var(--muted);padding:10px 0 10px 8px;font-size:15px;line-height:1}
 .x:hover{color:var(--crit)}
 .refs{display:flex;flex-direction:column}
-.ref{display:grid;grid-template-columns:62px 90px 1fr auto auto;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--rule2)}
+.ref{display:grid;grid-template-columns:62px 90px 1fr auto auto auto;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--rule2)}
 .ref .kind{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .ref a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
 .ref span.t{overflow-wrap:anywhere}
@@ -688,7 +688,7 @@ select option,select optgroup{background-color:var(--paper);color:var(--ink)}
   .facts div:nth-child(2n){padding-left:12px;border-left:1px solid var(--rule2)}
   .form{grid-template-columns:1fr}
   .dec{grid-template-columns:1fr}
-  .ref{grid-template-columns:52px 1fr auto auto}
+  .ref{grid-template-columns:52px 1fr auto auto auto}
   .ref .no{grid-column:2}
   .ref .t{grid-column:2/3}
   .mini.r{grid-template-columns:1fr 1fr}
@@ -1180,6 +1180,8 @@ function stepDrawing(dir){if(viewer.ximgItem){const ims=ximgList(viewer.ximgItem
 document.addEventListener("click",e=>{
   const vr=e.target.closest&&e.target.closest("[data-viewref]");
   if(vr){e.preventDefault();e.stopPropagation();const [id,i]=vr.dataset.viewref.split(":");openViewer(id,+i);return}
+  const dl=e.target.closest&&e.target.closest(".sheet [data-dlref]");
+  if(dl&&ui.open){e.preventDefault();e.stopPropagation();downloadRef(ui.open,+dl.dataset.dlref);return}
   const vx=e.target.closest&&e.target.closest("[data-viewximg]");
   if(vx){e.preventDefault();e.stopPropagation();const [id,i,r]=vx.dataset.viewximg.split(":");openExtraImage(id,+i,r);return}
   const dx=e.target.closest&&e.target.closest(".sheet [data-delximg]");
@@ -1968,6 +1970,13 @@ async function makeZip(files){
   const e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cenLen,true);e.setUint32(16,off,true);
   return new Blob([...out,...cen,e.buffer],{type:"application/zip"});
 }
+async function downloadRef(itemId,i){
+  const it=items.find(x=>x.id===itemId);const r=it&&(it.refs||[])[i];if(!r||!r.asset)return;
+  try{const res=await fetch("/_blob/"+r.asset);if(!res.ok)throw new Error("fetch");const b=await res.blob();
+    const ext=EXT[b.type]||EXT[r.mime]||"bin";const fn=`${safeName([it.code,r.no,r.title].filter(Boolean).join(" "))}.${ext}`;
+    if(downloads)await downloads.save({filename:fn,data:b});else{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=fn;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
+  }catch(_){toast("The file couldn't be downloaded. Try again.")}
+}
 const safeName=x=>String(x||"").replace(/[\\/:*?"<>|\u0000-\u001f]+/g," ").replace(/\s+/g," ").trim().slice(0,90)||"file";
 const EXT={"application/pdf":"pdf","image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/gif":"gif","model/gltf-binary":"glb","model/vnd.usdz+zip":"usdz"};
 let pkgBusy=false;
@@ -2252,7 +2261,7 @@ function renderLayer(passive){
       ${extraImagesSection(it,ed&&!!assets)}
       <section class="sec refsec"><header><h5>Drawings &amp; references</h5><span class="mono muted">${(it.refs||[]).length}${ed&&assets?" · drop PDFs or images here":""}</span></header>
         ${scanPanel(it)}
-        <div class="refs">${(it.refs||[]).map((r,i)=>{const href=r.asset?"/_blob/"+r.asset:r.url;return`<div class="ref"><span class="kind">${esc(r.kind)}</span><span class="mono no">${esc(r.no||"")}</span>${r.asset?`<a class="t" href="${esc(href)}" data-viewref="${it.id}:${i}">${esc(r.title||r.no||"Open")}</a>`:href?`<a class="t" href="${esc(href)}" target="_blank" rel="noopener">${esc(r.title||r.no||"Open")} ↗</a>`:`<span class="t">${esc(r.title)}</span>`}${ed&&r.asset?`<button class="readbtn" data-readref="${i}" title="Read this attachment and fill in details" ${ui.scan&&ui.scan.status==="run"?"disabled":""}>Read</button>`:"<span></span>"}${ed?`<button class="x" data-delref="${i}" aria-label="Remove">×</button>`:"<span></span>"}</div>`}).join("")||`<p class="muted">No drawings or spec sheets linked yet.</p>`}</div>
+        <div class="refs">${(it.refs||[]).map((r,i)=>{const href=r.asset?"/_blob/"+r.asset:r.url;return`<div class="ref"><span class="kind">${esc(r.kind)}</span><span class="mono no">${esc(r.no||"")}</span>${r.asset?`<a class="t" href="${esc(href)}" data-viewref="${it.id}:${i}">${esc(r.title||r.no||"Open")}</a>`:href?`<a class="t" href="${esc(href)}" target="_blank" rel="noopener">${esc(r.title||r.no||"Open")} ↗</a>`:`<span class="t">${esc(r.title)}</span>`}${ed&&r.asset?`<button class="readbtn" data-readref="${i}" title="Read this attachment and fill in details" ${ui.scan&&ui.scan.status==="run"?"disabled":""}>Read</button>`:"<span></span>"}${r.asset?`<button class="readbtn dl" data-dlref="${i}" title="Download this file">Download</button>`:"<span></span>"}${ed?`<button class="x" data-delref="${i}" aria-label="Remove">×</button>`:"<span></span>"}</div>`}).join("")||`<p class="muted">No drawings or spec sheets linked yet.</p>`}</div>
         ${ed?`<form class="mini r" data-form="ref">
           <select class="f" id="rk" name="kind"><option>Drawing</option><option>Spec sheet</option><option>Shop dwg</option><option>Sample</option><option>Quote</option><option>Link</option></select>
           <input class="f" id="rn" name="no" placeholder="Ref no. e.g. A-501">
@@ -3157,7 +3166,7 @@ const ZH={
 "Find the materials in this view":"找出此视图中的材料","Claude reads the image and drafts pieces for the schedule. You review them before anything is added.":"Claude 会读取图片并起草清单项目，添加前由您审核。","Pieces from this view":"来自此视图的项目","None yet.":"暂无。","Remove image":"移除图片","Remove from project":"从项目中移除","Name this view, e.g. Primary ensuite, looking north":"为此视图命名，例如：主卧卫生间，朝北","Notes about this view":"关于此视图的备注","Untitled view":"未命名视图",
 "Claude is reading the title block, notes and callouts. This usually takes 20 to 60 seconds.":"Claude 正在读取图签、说明和标注，通常需要 20 到 60 秒。","Dismiss":"关闭","Try again":"重试","Reference":"参考",
 "The document doesn't state anything about this piece that isn't already recorded.":"文件中没有关于此项目的新信息。","Manufacturer / supplier":"制造商 / 供应商","Product / collection":"产品 / 系列","Model / item code":"型号 / 编号","Colour / finish name ":"颜色 / 饰面名称","Unit ":"单位","Application":"应用部位",
-"Fit":"适应","Rename":"重命名","New tab ↗":"新标签页 ↗","Remove sheet":"移除图纸","Remove":"移除","Keep":"保留","Opening…":"正在打开…","Sheet no. e.g. A-501":"图号，例如 A-501","Sheet title":"图纸标题","Previous sheet":"上一张","Next sheet":"下一张","Additional images":"更多图片","No additional images yet.":"暂无更多图片。","Supplier RFIs":"供应商询问（RFI）","RFI":"询问","Supplier response":"供应商回复","RFI to supplier":"向供应商询问","No RFIs or supplier responses yet.":"暂无询问或供应商回复。","Question for the supplier":"向供应商提出的问题","What the supplier said":"供应商的回复内容","or click to choose":"或点击选择","Add RFI":"添加询问","Add response":"添加回复","RFI added":"已添加询问","Response added":"已添加回复","Entry removed":"已移除记录","Remove entry":"移除记录","Entry type":"记录类型","Uploading…":"正在上传…","Write something or add an image first.":"请先填写内容或添加图片。","Drop images here":"将图片拖放到这里","or click to choose. You can add several at once.":"或点击选择，可一次添加多张。","Enlarge image":"放大图片","Previous image":"上一张图片","Next image":"下一张图片","Zoom in":"放大","Zoom out":"缩小","Attachments":"附件","Remove this sheet?":"移除这张图纸？",
+"Fit":"适应","Rename":"重命名","New tab ↗":"新标签页 ↗","Remove sheet":"移除图纸","Remove":"移除","Keep":"保留","Opening…":"正在打开…","Sheet no. e.g. A-501":"图号，例如 A-501","Sheet title":"图纸标题","Previous sheet":"上一张","Next sheet":"下一张","Additional images":"更多图片","No additional images yet.":"暂无更多图片。","Supplier RFIs":"供应商询问（RFI）","RFI":"询问","Supplier response":"供应商回复","RFI to supplier":"向供应商询问","No RFIs or supplier responses yet.":"暂无询问或供应商回复。","Question for the supplier":"向供应商提出的问题","What the supplier said":"供应商的回复内容","or click to choose":"或点击选择","Add RFI":"添加询问","Add response":"添加回复","RFI added":"已添加询问","Response added":"已添加回复","Entry removed":"已移除记录","Remove entry":"移除记录","Entry type":"记录类型","Uploading…":"正在上传…","Write something or add an image first.":"请先填写内容或添加图片。","Drop images here":"将图片拖放到这里","Download":"下载","Download this file":"下载此文件","The file couldn't be downloaded. Try again.":"文件无法下载，请重试。","or click to choose. You can add several at once.":"或点击选择，可一次添加多张。","Enlarge image":"放大图片","Previous image":"上一张图片","Next image":"下一张图片","Zoom in":"放大","Zoom out":"缩小","Attachments":"附件","Remove this sheet?":"移除这张图纸？",
 "Piece added":"已添加项目","Saved":"已保存","Piece deleted":"已删除项目","Finish details saved":"已保存饰面信息","Furniture details saved":"已保存家具信息","Image added":"已添加图片","Image removed":"已移除图片","Sheet removed":"已移除图纸","Sheet renamed":"已重命名图纸","Sheet linked":"已关联表格","Link removed":"已移除链接","Book cleared":"已清空手册","Uploading image…":"正在上传图片…","Uploading file…":"正在上传文件…","Images added to the project":"已将图片添加到项目",
 "You can view this project but not edit it.":"您可以查看但不能编辑此项目。","Couldn't save. Check your connection and try again.":"无法保存，请检查网络后重试。","Storage is full. Remove unused items to add more.":"存储空间已满，请删除不用的内容。","Export didn't complete.":"导出未完成。","Project file storage is full.":"项目文件存储已满。",
 "That file is over 20 MB. Compress it and try again.":"文件超过 20 MB，请压缩后重试。","Use a PDF, JPG, PNG or WebP file.":"请使用 PDF、JPG、PNG 或 WebP 文件。","Upload failed. Try again.":"上传失败，请重试。","Drop a PDF drawing set.":"请拖入 PDF 图纸集。",

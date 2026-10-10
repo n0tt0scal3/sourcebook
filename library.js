@@ -8,7 +8,7 @@
   const LIB_LABEL = { "BILLA-Sofa": ["Billa", "Sofas & lounge chairs"], "BILLA-CoffeeTV": ["Billa", "Coffee tables & TV units"], "BILLA-Dining": ["Billa", "Dining"], "BILLA-Outdoor": ["Billa", "Outdoor"], "HALO": ["HALO", "Collection 2026"], "Kaiwuli": ["Kaiwuli", "Catalogue 2026"], "TO-Tearsheet": ["TO Interactive", "Tearsheets 2025"] };
   const LIB_ROOT = "G:\\My Drive\\LMNL\\90 CHINA PRODUCTS\\";
   const ZH = {
-    "Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.": "把图片拖到这里，我们会在图库中搜索相似的产品。如果找不到，我们会为您采购。", "Choose a photo": "选择图片", "What are you looking for? (optional) e.g. the chair, in walnut": "您想找什么？（可选）例如：这把椅子，胡桃木", "Sending it to our sourcing agent…": "正在发送给采购代理…", "Searching our library for something similar…": "正在图库中搜索相似产品…", "We couldn't find anything similar in our library, so we've sent it to our sourcing agent. We'll source it for you.": "图库中没有找到相似的产品，已发送给采购代理，我们会为您采购。", "Sent to our sourcing agent. We'll source it for you.": "已发送给采购代理，我们会为您采购。", "Withdraw the request": "撤回请求", "Search for something else": "搜索其他产品", "None of these? Send it to our sourcing agent": "都不合适？发送给采购代理", "Waiting to be sourced": "等待采购", "We're sourcing it": "正在为您采购", "Sourced": "已采购", "Note for the person who asked (optional)": "给提出请求者的备注（可选）", "Mark as sourced": "标为已采购", "Reopen": "重新打开", "Remove": "移除", "Sourcing requests": "采购请求", "Your sourcing requests": "您的采购请求", "Hide sourced": "隐藏已采购", "Nothing waiting to be sourced.": "没有待采购的请求。", "That isn't a photo.": "这不是图片。", "The search didn't finish. Try again.": "搜索未完成，请重试。", "Couldn't send it. Check your connection and try again.": "无法发送，请检查网络后重试。", "Photo": "图片", "Studio owner": "工作室负责人", "new": "新", "New": "新",
+    "Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.": "把图片拖到这里，我们会在图库中搜索相似的产品。如果找不到，我们会为您采购。", "Choose a photo": "选择图片", "What are you looking for? (optional) e.g. the chair, in walnut": "您想找什么？（可选）例如：这把椅子，胡桃木", "Sending it to our sourcing agent…": "正在发送给采购代理…", "Searching our library for something similar…": "正在图库中搜索相似产品…", "We couldn't find anything similar in our library, so we've sent it to our sourcing agent. We'll source it for you.": "图库中没有找到相似的产品，已发送给采购代理，我们会为您采购。", "Sent to our sourcing agent. We'll source it for you.": "已发送给采购代理，我们会为您采购。", "Withdraw the request": "撤回请求", "Search for something else": "搜索其他产品", "None of these? Send it to our sourcing agent": "都不合适？发送给采购代理", "Waiting to be sourced": "等待采购", "We're sourcing it": "正在为您采购", "Sourced": "已采购", "Note for the person who asked (optional)": "给提出请求者的备注（可选）", "Mark as sourced": "标为已采购", "Reopen": "重新打开", "Remove": "移除", "Sourcing requests": "采购请求", "Your sourcing requests": "您的采购请求", "Hide sourced": "隐藏已采购", "Nothing waiting to be sourced.": "没有待采购的请求。", "That isn't a photo.": "这不是图片。", "The search didn't finish. Try again.": "搜索未完成，请重试。", "Couldn't send it. Check your connection and try again.": "无法发送，请检查网络后重试。", "Photo": "图片", "Studio owner": "工作室负责人", "new": "新", "New": "新", "Add photos of what you found": "添加找到的产品照片", "Adding photos…": "正在添加照片…", "Photos of what was found": "找到的产品照片", "Up to 8 photos per request.": "每个请求最多 8 张照片。", "Only the studio and the sourcing agent can add photos to a request.": "只有工作室和采购代理可以为请求添加照片。",
     "You have 50 open requests. Wait for some to be sourced first.": "您有 50 个未完成的请求，请等部分采购完成后再提交。", "Only admins can remove a request.": "只有管理员可以移除请求。", "Only the studio and the sourcing agent can update a request.": "只有工作室和采购代理可以更新请求。", "Add a photo first.": "请先添加图片。", "Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.": "此服务器尚未设置 Claude。请在 Render 中添加 Anthropic API 密钥（ANTHROPIC_API_KEY）。",
     "Back to all product types": "返回全部产品类型",
     "To be sourced": "待采购", "To review": "待审核", "With the studio": "工作室审核中", "With the sourcing agent": "采购代理处理中", "To find": "待寻找", "Turn on alerts for new requests": "开启新请求提醒", "Photos sent from the Sourcing library that we couldn't match. Review each one, then send it to the sourcing agent; with email set up, it goes to their QQ Mail with the photo attached.": "从采购图库提交、但未找到匹配的图片。逐一审核后发送给采购代理；设置邮件后会附上照片发送到其 QQ 邮箱。", "Items the studio has asked you to find. Mark each one sourced when you've found it, with a note on where.": "工作室请您寻找的产品。找到后请标记为已采购，并备注来源。", "Things you've asked us to find. We review each one and send it to our sourcing agent.": "您请我们寻找的产品。我们会逐一审核并交给采购代理。", "Nothing here.": "这里没有内容。", "Nothing to be sourced yet. Drop a photo in the box on the Sourcing library page.": "还没有待采购的产品。可在采购图库页面的方框中拖入图片。", "Sourcing agent's email (QQ Mail)": "采购代理的邮箱（QQ 邮箱）", "Email isn't set up yet, so this sends it in Sourcebook only. Add the SMTP settings in Render to email the agent's QQ Mail.": "尚未设置邮件，因此仅在选材手册中发送。在 Render 中添加 SMTP 设置后即可发送到代理的 QQ 邮箱。", "Message to the agent (optional)": "给代理的留言（可选）", "e.g. Need 6, walnut, by November": "例如：需要 6 件，胡桃木，11 月前", "Sending…": "正在发送…", "Send to the sourcing agent again": "再次发送给采购代理", "Send to the sourcing agent": "发送给采购代理", "Client": "客户", "Message to the agent": "给代理的留言", "Where it was found, for the person who asked (optional)": "在哪里找到的，告诉提出请求的人（可选）", "Add the sourcing agent's email first.": "请先填写采购代理的邮箱。", "Sent to the sourcing agent by email.": "已通过邮件发送给采购代理。", "Sent to the sourcing agent in Sourcebook.": "已在选材手册中发送给采购代理。", "Adding it to TBS (to be sourced)…": "正在加入待采购 TBS…", "Nothing similar in our library, so it's been added to TBS (to be sourced).": "图库中没有相似产品，已加入待采购 TBS。", "We couldn't find anything similar in our library, so it's been added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "图库中没有找到相似的产品，已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Added to TBS (to be sourced).": "已加入待采购 TBS。", "Added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Open TBS": "打开待采购 TBS", "None of these? Add it to TBS (to be sourced)": "都不合适？加入待采购 TBS", "Email isn't set up on this server yet. Add the SMTP settings in Render, or send it in Sourcebook only.": "此服务器尚未设置邮件。请在 Render 中添加 SMTP 设置，或仅在选材手册中发送。", "The email couldn't be sent. Check the SMTP settings in Render and try again.": "邮件无法发送，请检查 Render 中的 SMTP 设置后重试。", "That email doesn't look right.": "邮箱格式不正确。", "Only admins can send requests to the sourcing agent.": "只有管理员可以将请求发送给采购代理。",
@@ -169,6 +169,12 @@
 .sbl-rstate{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
 .sbl-rstate.ok{color:var(--ok)}
 .sbl-rreply{padding:8px 10px;background:var(--accent-soft)}
+.sbl-found{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+.sbl-found span{position:relative;display:block}
+.sbl-req .sbl-found img{width:72px;height:72px}
+.sbl-found button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;padding:0;border:0;border-radius:50%;background:var(--ink);color:var(--paper);font-size:13px;line-height:20px;cursor:pointer}
+.sbl-addfound{align-self:flex-start;cursor:pointer}
+.sbl-addfound input{display:none}
 .sbl-addcat{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:14px 18px;align-items:end;padding:16px;background:var(--paper);border:1px solid var(--rule)}
 .sbl-addcat label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
 .sbl-addcat input:not([type=file]),.sbl-addcat select{font:inherit;font-size:15px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px;min-width:0}
@@ -278,7 +284,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     fetchOn().catch(() => {}); fetchFull().catch(() => {}); fetchTypes().catch(() => {}); fetchFav().catch(() => {}); fetchReqs().catch(() => {});
     try {
       const es = new EventSource("/api/events");
-      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data && !was && isAdm() && inReview(m.data) && !(m.data.by && m.data.by.id === tbsCfg.me)) tbsAlert({ id, ...m.data }); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "") && JSON.stringify(was.sent || null) === JSON.stringify(m.data.sent || null)) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); } catch (_) {} };
+      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data && !was && isAdm() && inReview(m.data) && !(m.data.by && m.data.by.id === tbsCfg.me)) tbsAlert({ id, ...m.data }); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "") && JSON.stringify(was.sent || null) === JSON.stringify(m.data.sent || null) && JSON.stringify(was.found || []) === JSON.stringify(m.data.found || [])) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); } catch (_) {} };
       es.onopen = () => { fetchOn().catch(() => {}); fetchTypes().catch(() => {}); fetchReqs().catch(() => {}); };
     } catch (_) {}
   }
@@ -818,7 +824,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   // TBS (to be sourced): the requests this person can see. Admins review new ones and send them to the sourcing
   // agent; agents see the ones sent to them; anyone else sees their own.
   const inReview = x => x.status === "review" || x.status === "open";
-  let tbsCfg = { role: "", mail: false, agentEmail: "" }, tbsFilter = null, tbsSending = new Set(), tbsFocus = (location.search.match(/[?&]tbs=([0-9a-f]{20})/) || [])[1] || null;
+  let tbsCfg = { role: "", mail: false, agentEmail: "" }, tbsFilter = null, tbsSending = new Set(), tbsUp = new Set(), tbsFocus = (location.search.match(/[?&]tbs=([0-9a-f]{20})/) || [])[1] || null;
   if (tbsFocus) ui.type = "TBS";
   const isAdm = () => tbsCfg.role === "admin";
   // What needs this person's attention: new items for an admin, sent ones for the sourcing agent.
@@ -855,7 +861,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     return `<p class="sbl-hint" style="max-width:70ch">${t(lede)} ${alerts}</p>${chips}${list.length ? `<div class="sbl-reqlist">${list.map(tbsCard).join("")}</div>` : `<p class="sbl-empty">${t(all.length ? "Nothing here." : "Nothing to be sourced yet. Drop a photo in the box on the Sourcing library page.")}</p>`}`;
   }
   function tbsCard(x) {
-    const st = staff(), adm = isAdm(), s = tbsState(x), sending = tbsSending.has(x.id);
+    const st = staff(), adm = isAdm(), s = tbsState(x), sending = tbsSending.has(x.id), found = Array.isArray(x.found) ? x.found : [];
     const chip = s === "review" ? `<span class="sbl-rstate">${t(st ? "To review" : "With the studio")}</span>`
       : s === "sent" ? `<span class="sbl-rstate sent">${t(st ? "With the sourcing agent" : "We're sourcing it")}${st && x.sent ? ` · ${esc(ago(x.sent.at))}${x.sent.emailed && x.sent.to ? " · " + (zh() ? "已发邮件至 " : "emailed to ") + esc(x.sent.to) : ""}` : ""}</span>`
       : `<span class="sbl-rstate ok">✓ ${t("Sourced")}${x.done && x.done.by && st ? " · " + esc(x.done.by) : ""}</span>`;
@@ -869,8 +875,9 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       ${chip}
       ${x.sent && x.sent.message && st ? `<p class="sbl-rmsg">${t("Message to the agent")}: ${esc(x.sent.message)}</p>` : ""}
       ${x.reply && !st ? `<p class="sbl-rreply">${esc(x.reply)}</p>` : ""}
+      ${found.length ? `<span class="sbl-found" title="${esc(t("Photos of what was found"))}">${found.map(ph => `<span><a href="/_blob/${esc(ph)}" target="_blank" rel="noopener"><img src="/_blob/${esc(ph)}" alt="" loading="lazy"></a>${st ? `<button data-sbl="rfoundrm" data-id="${esc(x.id)}" data-ph="${esc(ph)}" title="${esc(t("Remove"))}" aria-label="${esc(t("Remove"))}">×</button>` : ""}</span>`).join("")}</span>` : ""}
       ${sendForm}
-      ${st && s !== "review" ? `<input class="sbl-fnote" data-sblreply="${esc(x.id)}" value="${esc(x.reply || "")}" maxlength="2000" placeholder="${esc(t("Where it was found, for the person who asked (optional)"))}">` : ""}
+      ${st && s !== "review" ? `<input class="sbl-fnote" data-sblreply="${esc(x.id)}" value="${esc(x.reply || "")}" maxlength="2000" placeholder="${esc(t("Where it was found, for the person who asked (optional)"))}">${found.length < 8 ? `<label class="btn ghost sm sbl-addfound"><input type="file" accept="image/*" multiple data-sblfound="${esc(x.id)}">${t(tbsUp.has(x.id) ? "Adding photos…" : "Add photos of what you found")}</label>` : ""}` : ""}
       <span class="sbl-row">${st && s === "sent" ? `<button class="btn sm" data-sbl="rdone" data-id="${esc(x.id)}">${t("Mark as sourced")}</button>` : ""}${st && s === "sourced" ? `<button class="linkbtn" data-sbl="ropen" data-id="${esc(x.id)}">${t("Reopen")}</button>` : ""}
         ${(!st && s === "review") || adm ? `<button class="linkbtn" data-sbl="rdel" data-id="${esc(x.id)}" style="color:var(--crit)">${t(adm ? "Remove" : "Withdraw the request")}</button>` : ""}</span></div></article>`;
   }
@@ -907,7 +914,20 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (!$("#sbl-find") || ui.open != null || (find.st !== "idle" && find.st !== "error")) return;
     const f = [...(e.clipboardData && e.clipboardData.files || [])].find(f => /^image\//.test(f.type)); if (f) { e.preventDefault(); findSearch(f); }
   });
-  document.addEventListener("change", e => { if (e.target.id === "sbl-fimg") { const f = e.target.files[0]; e.target.value = ""; if (f) findSearch(f); } });
+  async function tbsAddFound(id, files) {
+    if (!files.length || tbsUp.has(id)) return;
+    tbsUp.add(id); findPaint();
+    try {
+      for (const f of files.slice(0, 8)) {
+        if (!/^image\//.test(f.type)) { host.toast(t("That isn't a photo.")); continue; }
+        const { b64 } = await prepPhoto(f);
+        const j = await api("/api/sourcing/photo", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, photo: b64 }) });
+        const x = reqs.get(id); if (x) x.found = j.found;
+      }
+    } catch (e) { host.toast(e.message ? t(e.message) : t("Couldn't send it. Check your connection and try again.")); }
+    tbsUp.delete(id); findPaint();
+  }
+  document.addEventListener("change", e => { if (e.target.dataset && e.target.dataset.sblfound) { const files = [...e.target.files]; tbsAddFound(e.target.dataset.sblfound, files); return; } if (e.target.id === "sbl-fimg") { const f = e.target.files[0]; e.target.value = ""; if (f) findSearch(f); } });
   document.addEventListener("input", e => { if (e.target.id === "sbl-fnote") find.note = e.target.value; });
   document.addEventListener("focusout", e => { const id = e.target.dataset && e.target.dataset.sblreply; if (!id) return; const x = reqs.get(id); if (x && (x.reply || "") !== e.target.value.trim()) updReq(id, { reply: e.target.value.trim() }, true); });
   // Inside a product type, the next images load by themselves as you near the bottom (the button stays as a fallback).
@@ -948,6 +968,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     else if (a === "freqcancel" && find.req) updReq(find.req, { remove: true });
     else if (a === "rdone" || a === "ropen") { const inp = document.querySelector(`[data-sblreply="${el.dataset.id}"]`), x = reqs.get(el.dataset.id); if (a === "ropen" && x) { x.status = x.sent ? "sent" : "review"; } updReq(el.dataset.id, { status: a === "rdone" ? "sourced" : "reopen", ...(inp ? { reply: inp.value.trim() } : {}) }); }
     else if (a === "tbssend") tbsSend(el.dataset.id);
+    else if (a === "rfoundrm") { const x = reqs.get(el.dataset.id); if (x && x.found) { x.found = x.found.filter(p => p !== el.dataset.ph); findPaint(); } api("/api/sourcing/photo", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: el.dataset.id, remove: el.dataset.ph }) }).catch(() => host.toast(t("Couldn't send it. Check your connection and try again."))); }
     else if (a === "tbsalerts") { Notification.requestPermission().then(() => findPaint()); }
     else if (a === "rdel") updReq(el.dataset.id, { remove: true });
 

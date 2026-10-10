@@ -1036,6 +1036,32 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       persist(); broadcast({ path: dp, exists: true, data: next });
       return send(res, 200, { ok: true, emailed });
     }
+    if (p === "/api/sourcing/photo" && req.method === "POST") {
+      // The studio or the sourcing agent attaches a photo of what they found (shown with the reply). { id, photo } adds; { id, remove } takes one off.
+      const b = await readJSON(req, 6 * 1024 * 1024), dp = "sourcing/" + String(b.id || ""), cur = store[dp];
+      if (!/^sourcing\/[0-9a-f]{20}$/.test(dp) || !cur || !canRead(me, dp)) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
+      if (me.role !== "admin" && me.role !== "agent") return deny("Only the studio and the sourcing agent can add photos to a request.");
+      const have = Array.isArray(cur.data.found) ? cur.data.found : [];
+      let found;
+      if (b.remove) {
+        const rm = String(b.remove); if (!have.includes(rm)) return send(res, 200, { ok: true });
+        found = have.filter(x => x !== rm);
+        fsp.unlink(path.join(BLOB_DIR, rm)).catch(() => {}); fsp.unlink(path.join(BLOB_DIR, rm + ".json")).catch(() => {});
+      } else {
+        if (have.length >= 8) return send(res, 400, { code: "invalid_argument", message: "Up to 8 photos per request." });
+        const buf = typeof b.photo === "string" && b.photo.length < 4e6 ? Buffer.from(b.photo, "base64") : null;
+        if (!buf || sniffBuf(buf) !== "image/jpeg") return send(res, 400, { code: "invalid_argument", message: "That isn't a photo." });
+        const photo = crypto.randomBytes(16).toString("hex");
+        await fsp.writeFile(path.join(BLOB_DIR, photo), buf);
+        await fsp.writeFile(path.join(BLOB_DIR, photo + ".json"), JSON.stringify({ contentType: "image/jpeg", sizeBytes: buf.length, createdAt: new Date().toISOString(), source: "sourcing reply" }));
+        found = [...have, photo];
+      }
+      const now = store[dp]; if (!now) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
+      const next = { ...now.data, found };
+      store[dp] = { data: next, version: now.version + 1, updatedAt: new Date().toISOString() };
+      persist(); broadcast({ path: dp, exists: true, data: next });
+      return send(res, 200, { ok: true, found });
+    }
     if (p === "/api/sourcing/update" && req.method === "POST") {
       const b = await readJSON(req), dp = "sourcing/" + String(b.id || ""), cur = store[dp];
       if (!/^sourcing\/[0-9a-f]{20}$/.test(dp) || !cur || !canRead(me, dp)) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
@@ -1044,7 +1070,7 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
         // The person who asked can withdraw it until it's sent to the agent; admins can remove any.
         if (!isAdmin && !(own && inReview)) return deny("Only admins can remove a request.");
         delete store[dp]; persist(); broadcast({ path: dp, exists: false });
-        fsp.unlink(path.join(BLOB_DIR, cur.data.photo)).catch(() => {}); fsp.unlink(path.join(BLOB_DIR, cur.data.photo + ".json")).catch(() => {});
+        for (const ph of [cur.data.photo, ...(Array.isArray(cur.data.found) ? cur.data.found : [])]) { fsp.unlink(path.join(BLOB_DIR, ph)).catch(() => {}); fsp.unlink(path.join(BLOB_DIR, ph + ".json")).catch(() => {}); }
         return send(res, 200, { ok: true });
       }
       if (!staff) return deny("Only the studio and the sourcing agent can update a request.");

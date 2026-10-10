@@ -375,9 +375,13 @@ textarea.f{resize:vertical;min-height:70px;border:1px solid var(--rule);padding:
 .fxrow{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:13px}
 .fxrow input{width:90px;font-size:18px;padding:2px}
 .fxnote{display:block;font-size:11.5px;margin-top:4px}
-.qtab{min-width:1080px}
+.qtab{min-width:1200px}
 .qtab td{vertical-align:middle}
 .qtab .sw{cursor:pointer;width:40px;height:40px}
+.qtab .qpic .sw{width:76px;height:76px;background-size:cover;background-position:center}
+.qtxt{font-size:13px;max-width:170px;line-height:1.35}
+.qunit{display:block;text-align:right;font-size:11px;margin-top:2px}
+.qtab tr.qband td{background:color-mix(in srgb,var(--ink) 7%,transparent);text-align:center;padding-block:12px}
 .qname{font-weight:500}
 .qsup{font-size:12px}
 .qin{width:110px;text-align:right;background:transparent;border:0;border-bottom:1px dashed var(--rule);padding:4px 2px;font-size:13px;color:var(--ink)}
@@ -388,6 +392,7 @@ td.n .qin{margin-left:auto;display:block}
 .chg,.qin.chg{font-weight:700!important;color:var(--new)!important;background:var(--new-soft)}
 td.chg,b.chg{padding-inline:4px}
 tr.newsrow>td:first-child{box-shadow:inset 4px 0 0 var(--new)}
+.qtab td:first-child{padding-left:10px}
 .newpill{display:flex;width:max-content;align-items:center;gap:8px;margin-top:5px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--new);font-weight:600}
 .seenbtn{font:inherit;font-size:11px;letter-spacing:.04em;text-transform:none;font-weight:500;padding:2px 8px;border:1px solid var(--new);background:transparent;color:var(--new);cursor:pointer}
 .seenbtn:hover{background:var(--new);color:var(--paper)}
@@ -416,7 +421,7 @@ body.xlover .qdrop{border-color:var(--new);background:var(--new-soft);color:var(
 .xlbox td.was{color:var(--muted);text-decoration:line-through}
 .xlbox td.now{color:var(--new);font-weight:700}
 .xlbox .row2{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}
-.qtab td.n:nth-child(5) .qin{width:70px}
+.qtab td.n:nth-child(6) .qin{width:64px}
 .qsub td{font-size:12.5px;color:var(--ink2);border-bottom:1px solid var(--rule);background:transparent}
 .qsub td:first-child{text-align:right;padding-right:14px;font-style:italic}
 .qtab tfoot td{border-bottom:1px solid var(--rule2);padding-block:10px}
@@ -1319,37 +1324,38 @@ function quotation(){
   const list=filtered().slice().sort((a,b)=>String(a.category||"").localeCompare(String(b.category||""))||String(a.code||"").localeCompare(String(b.code||""),undefined,{numeric:true}));
   const ed=canWrite&&!preview;const r=fx();
   const priced=list.filter(it=>unitCAD(it)!=null).length,noQty=list.filter(it=>num(it.qty)==null).length;
-  const T=quoteTotals(list);const dc=ed?"<td></td>":"",ncol=ed?10:9;
+  const T=quoteTotals(list);const dc=ed?"<td></td>":"",ncol=ed?11:10;
   let grp=null,gsum=0,rows="";
-  const flush=()=>{if(grp!=null)rows+=`<tr class="qsub"><td colspan="6">${esc(grp)} subtotal</td><td class="n mono">${fmtC(gsum,"CAD")}</td><td></td><td class="n mono">${fmtC(gsum*r,"CNY")}</td>${dc}</tr>`};
+  const flush=()=>{if(grp!=null)rows+=`<tr class="qsub"><td colspan="7">${esc(grp)} subtotal</td><td class="n mono">${fmtC(gsum*r,"CNY")}</td><td></td><td class="n mono">${fmtC(gsum,"CAD")}</td>${dc}</tr>`};
   list.forEach(it=>{
-    const g=it.category||"Other";if(g!==grp){flush();grp=g;gsum=0;rows+=`<tr class="month"><td colspan="${ncol}">${esc(g)}</td></tr>`}
+    const g=it.category||"Other";if(g!==grp){flush();grp=g;gsum=0;rows+=`<tr class="month qband"><td colspan="${ncol}">${esc(g)}</td></tr>`}
     const q=num(it.qty),uc=unitCAD(it),un=unitCNY(it),tot=q!=null&&uc!=null?q*uc:null;gsum+=tot||0;
     const hq=cur=>hot(it,...(cur==="qty"?["qty"]:["unitCost","unitCostCNY","priceBase"]));
     const inp=(id,val,cur,base)=>ed?`<input class="qin mono ${base?"base":""}${hq(cur)}" type="number" step="any" min="0" inputmode="decimal" id="${id}" data-q="${cur}" data-id="${it.id}" value="${val==null?"":(cur==="qty"?val:Math.round(val*100)/100)}" placeholder="—" aria-label="${cur==="qty"?"Quantity":"Unit price "+cur}">`:`<span class="${hq(cur).trim()}">${cur==="qty"?(val??"—"):fmtC(val,cur)}</span>`;
     rows+=`<tr class="qrow${newsOf(it)?" newsrow":""}">
-      <td><span class="sw" style="background-image:url(${imgFor(it,80)})" data-open="${it.id}"></span></td>
       <td class="mono strong"><button class="linkbtn mono" data-open="${it.id}">${esc(it.code||"—")}</button></td>
+      <td class="qpic"><span class="sw${hot(it,"photo")}" style="background-image:url(${imgFor(it,160)})" data-open="${it.id}"></span></td>
       <td><div class="qname${hot(it,"name")}">${esc(it.name)}</div><div class="muted qsup${hot(it,"supplier","modelCode")}">${esc([it.supplier,it.modelCode].filter(Boolean).join(" · "))}</div>${qAttach(it)}${newsPill(it)}</td>
-      <td class="mono">${esc(it.unit||"ea")}</td>
-      <td class="n">${inp("qq-"+it.id,q,"qty")}</td>
-      <td class="n">${inp("qc-"+it.id,uc,"CAD",it.priceBase!=="CNY")}</td>
-      <td class="n mono strong">${tot==null?`<span class="tbd">${uc==null?"Price TBD":"Qty TBD"}</span>`:fmtC(tot,"CAD")}</td>
+      <td class="qtxt"><span class="${hot(it,"finishName","upholstery","frameFinish").trim()}">${esc(colourOf(it))||'<span class="muted">—</span>'}</span></td>
+      <td class="qtxt mono"><span class="${hot(it,"dims").trim()}">${esc(it.dims||"")||'<span class="muted">—</span>'}</span></td>
+      <td class="n">${inp("qq-"+it.id,q,"qty")}${it.unit&&it.unit!=="ea"?`<span class="qunit muted mono">${esc(it.unit)}</span>`:""}</td>
       <td class="n">${inp("qn-"+it.id,un,"CNY",it.priceBase==="CNY")}</td>
-      <td class="n mono strong">${tot==null?"—":fmtC(tot*r,"CNY")}</td>${ed?`<td class="n"><input class="qin qduty mono" type="number" step="any" min="0" inputmode="decimal" id="qd-${it.id}" data-q="duty" data-id="${it.id}" value="${num(it.dutyRate)??""}" placeholder="${num(project.quoteDuty)||0}" aria-label="Duty rate %"></td>`:""}</tr>`;
+      <td class="n mono strong">${tot==null?"—":fmtC(tot*r,"CNY")}</td>
+      <td class="n">${inp("qc-"+it.id,uc,"CAD",it.priceBase!=="CNY")}</td>
+      <td class="n mono strong">${tot==null?`<span class="tbd">${uc==null?"Price TBD":"Qty TBD"}</span>`:fmtC(tot,"CAD")}</td>${ed?`<td class="n"><input class="qin qduty mono" type="number" step="any" min="0" inputmode="decimal" id="qd-${it.id}" data-q="duty" data-id="${it.id}" value="${num(it.dutyRate)??""}" placeholder="${num(project.quoteDuty)||0}" aria-label="Duty rate %"></td>`:""}</tr>`;
   });flush();
   const adj=(id,label,val,suffix)=>`<label class="qadj">${label}${ed?`<input class="f mono" type="number" step="any" min="0" id="${id}" data-qp="${id}" value="${val??""}" placeholder="0">`:`<span class="mono">${val||0}</span>`}<span class="mono muted">${suffix}</span></label>`;
-  const line=(label,v,cls="")=>`<tr class="${cls}"><td colspan="6">${label}</td><td class="n mono">${fmtC(v,"CAD")}</td><td></td><td class="n mono">${fmtC(v*r,"CNY")}</td>${dc}</tr>`;
+  const line=(label,v,cls="")=>`<tr class="${cls}"><td colspan="7">${label}</td><td class="n mono">${fmtC(v*r,"CNY")}</td><td></td><td class="n mono">${fmtC(v,"CAD")}</td>${dc}</tr>`;
   const pv=provOf();
   const prov=ed?`<select class="f qprov" id="q-prov" data-qp="q-prov" aria-label="Province">${PROVINCES.map(p=>`<option value="${p[0]}" ${p[0]===pv[0]?"selected":""}>${p[1]} · ${p[2]} ${p[3]}%</option>`).join("")}</select>`:`<span>${pv[1]} · ${pv[2]}</span>`;
   const mixed=list.some(it=>num(it.dutyRate)!=null);
   return`<div class="schedhead"><div><div class="eyebrow">${esc(project.name)} · ${fmtD(new Date(),true)}</div><h2>Quotation</h2></div>
     <div class="row2">${downloads&&!isClient()?`<button class="btn ghost sm" data-a="xlsxquote">Export Excel</button><button class="btn ghost sm" data-a="pkgquote" title="The Excel file plus every piece's drawings and references, one folder per piece">Export Excel + drawings (ZIP)</button>`:""}${downloads?`<button class="btn ghost sm" data-a="csvquote">Export CSV</button>`:""}</div></div>
-  ${xlCanImport()?`<label class="qdrop" id="q-xldrop"><span><b>Drop the sourcing agent's Excel file here</b> to bring in their prices, quantities and notes. You'll see every change before it's saved.</span><span class="btn ghost sm">Choose Excel file<input type="file" accept=".xlsx,.xls,.csv" data-xlimport hidden></span></label>`:""}
+  ${xlCanImport()?`<label class="qdrop" id="q-xldrop"><span><b>Drop an Excel file here</b> to fill the quotation: the agent's edited export, or any price list or supplier quote. You'll check the columns and see the changes before anything is saved.</span><span class="btn ghost sm">Choose Excel file<input type="file" accept=".xlsx,.xls,.csv" data-xlimport hidden></span></label>`:""}
   <div class="sum qsum"><div><span class="eyebrow">Total (CAD)</span><b>${fmtC(T.total,"CAD")}</b></div><div><span class="eyebrow">Total (CNY)</span><b>${fmtC(T.total*r,"CNY")}</b></div><div><span class="eyebrow">Items priced</span><b class="${priced<list.length?"warnnum":""}">${priced} / ${list.length}</b></div>
     <div><span class="eyebrow">Exchange rate</span>${ed?`<span class="fxrow"><span class="mono">1 CAD =</span><input class="f mono" type="number" step="0.0001" min="0" id="q-fx" data-qp="fx" value="${r}"><span class="mono">CNY</span></span>`:`<b>${r}</b>`}<span class="muted fxnote">${project.fxRate?"Set for this project":"Market rate on "+fmtD(parseD(FX_DATE),true)}</span></div></div>
   <p class="muted finnote">Enter a unit price in either currency; the other is converted at the project rate.${noQty?` ${noQty} item${noQty===1?"":"s"} still need a quantity.`:""}</p>
-  <div class="tablewrap"><table class="qtab"><thead><tr><th></th><th>Code</th><th>Item</th><th>Unit</th><th class="n">Qty</th><th class="n">Unit price (CAD)</th><th class="n">Total (CAD)</th><th class="n">Unit price (CNY)</th><th class="n">Total (CNY)</th>${ed?`<th class="n">Duty %</th>`:""}</tr></thead>
+  <div class="tablewrap"><table class="qtab"><thead><tr><th>No.</th><th>Picture</th><th>Product</th><th>Colour</th><th>Size</th><th class="n">Qty</th><th class="n">Unit price ¥</th><th class="n">Total price ¥</th><th class="n">Unit price $</th><th class="n">Total price $</th>${ed?`<th class="n">Duty %</th>`:""}</tr></thead>
     <tbody>${rows||`<tr><td colspan="${ncol}" class="muted">No materials or products yet.</td></tr>`}</tbody>
     <tfoot>
       ${line("Products subtotal",T.sub)}
@@ -1361,8 +1367,8 @@ function quotation(){
       ${line(adj("q-broker","Customs brokerage",project.quoteBroker,"CAD"),T.broker)}
       ${line(adj("q-deliv","Delivery &amp; storage",project.quoteDeliv,"CAD"),T.deliv)}
       ${line("Landed cost",T.landed,"qland")}
-      <tr><td colspan="6"><span class="qadj">Sales tax ${prov}${ed?`<input class="f mono" type="number" step="any" min="0" id="q-tax" data-qp="q-tax" value="${taxRate()}"><span class="mono muted">%</span>`:`<span class="mono">${taxRate()}%</span>`}</span></td><td class="n mono">${fmtC(T.tax,"CAD")}</td><td></td><td class="n mono">${fmtC(T.tax*r,"CNY")}</td>${dc}</tr>
-      <tr class="qgrand"><td colspan="6">Total</td><td class="n mono">${fmtC(T.total,"CAD")}</td><td></td><td class="n mono">${fmtC(T.total*r,"CNY")}</td>${dc}</tr>
+      <tr><td colspan="7"><span class="qadj">Sales tax ${prov}${ed?`<input class="f mono" type="number" step="any" min="0" id="q-tax" data-qp="q-tax" value="${taxRate()}"><span class="mono muted">%</span>`:`<span class="mono">${taxRate()}%</span>`}</span></td><td class="n mono">${fmtC(T.tax*r,"CNY")}</td><td></td><td class="n mono">${fmtC(T.tax,"CAD")}</td>${dc}</tr>
+      <tr class="qgrand"><td colspan="7">Total</td><td class="n mono">${fmtC(T.total*r,"CNY")}</td><td></td><td class="n mono">${fmtC(T.total,"CAD")}</td>${dc}</tr>
     </tfoot></table></div>
   ${ed?`<p class="muted finnote qhelp">Freight benchmark (Oct 2026): a 40 ft high cube from China to Vancouver or Montreal is about US$8,640 to $10,560; shared container (LCL) about US$190 per cubic metre. Get a firm quote at booking.</p>
   <p class="muted finnote qhelp">Duty is charged on the product value. Set a default rate for the project and override it per item in the Duty % column. Confirm rates with a customs broker: upholstered seating from China can carry 188% anti-dumping duty, and some steel and aluminum goods a 25% surtax.</p>`:""}`;
@@ -1388,55 +1394,92 @@ document.addEventListener("keydown",e=>{const t=e.target;if(e.key==="Enter"&&(t.
 async function exportQuoteCSV(){
   const r=fx();const list=filtered().slice().sort((a,b)=>String(a.category||"").localeCompare(String(b.category||""))||String(a.code||"").localeCompare(String(b.code||""),undefined,{numeric:true}));
   const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;const f2=n=>n==null?"":n.toFixed(2);
-  const rows=list.map(it=>{const qt=num(it.qty),uc=unitCAD(it),tot=qt!=null&&uc!=null?qt*uc:null;return[it.category,it.code,it.name,it.supplier,it.modelCode,it.unit||"ea",qt,f2(uc),f2(tot),f2(uc==null?null:unitCNY(it)),f2(tot==null?null:tot*r)].map(q).join(",")});
+  const rows=list.map(it=>{const qt=num(it.qty),uc=unitCAD(it),tot=qt!=null&&uc!=null?qt*uc:null;return[it.category,it.code,it.name,colourOf(it),it.dims,qt,f2(uc==null?null:unitCNY(it)),f2(tot==null?null:tot*r),f2(uc),f2(tot),it.supplier,it.modelCode].map(q).join(",")});
   const T=quoteTotals(list);const blank=["","","","","","",""];
-  const tail=[["Products subtotal",T.sub],[`Sourcing fee ${T.feeP}%`,T.fee],["Ocean freight",T.freight],[`Cargo insurance ${T.insP}%`,T.ins],["Duty",T.duty],["Customs brokerage",T.broker],["Delivery & storage",T.deliv],["Landed cost",T.landed],[`Sales tax (${provOf()[1]} ${provOf()[2]}) ${T.taxP}%`,T.tax],["Total",T.total]].map(([l,v])=>[...blank.slice(0,6),l,"",f2(v),"",f2(v*r)].map(q).join(","));
-  const csv=[["Category","Code","Item","Supplier","Model","Unit","Qty","Unit price CAD","Total CAD","Unit price CNY","Total CNY"].map(q).join(","),...rows,"",...tail,"",q(`Exchange rate: 1 CAD = ${r} CNY`)].join("\n");
+  const tail=[["Products subtotal",T.sub],[`Sourcing fee ${T.feeP}%`,T.fee],["Ocean freight",T.freight],[`Cargo insurance ${T.insP}%`,T.ins],["Duty",T.duty],["Customs brokerage",T.broker],["Delivery & storage",T.deliv],["Landed cost",T.landed],[`Sales tax (${provOf()[1]} ${provOf()[2]}) ${T.taxP}%`,T.tax],["Total",T.total]].map(([l,v])=>[...blank.slice(0,5),l,"",f2(v*r),"",f2(v)].map(q).join(","));
+  const csv=[["Category","No.","Product","Colour","Size","Qty","Unit price CNY","Total CNY","Unit price CAD","Total CAD","Supplier","Model"].map(q).join(","),...rows,"",...tail,"",q(`Exchange rate: 1 CAD = ${r} CNY`)].join("\n");
   try{await downloads.save({filename:(project.name||"project").replace(/\W+/g,"-")+"-quotation.csv",data:new Blob([csv],{type:"text/csv"})})}catch(e){if(e&&e.code!=="cancelled"&&e.code!=="declined")toast("Export didn't complete.")}
 }
 
 /* ---------- Excel round trip with the sourcing agent ----------
-   Export the quotation as .xlsx (bilingual headers, one row per piece, a hidden-in-plain-sight ID column),
-   the agent edits it in Excel, and it's dropped back on this page. Every change is shown before it's saved. */
-const XL_COLS=[["code","Code","编号",10],["name","Item","名称",34],["category","Category","类别",14],["supplier","Supplier","供应商",22],["modelCode","Model","型号",16],["unit","Unit","单位",7],["qty","Qty","数量",8],
-  ["cny","Unit price CNY","单价（人民币）",14],["cad","Unit price CAD","单价（加元）",14],["totcny","Total CNY","合计（人民币）",14],["leadWeeks","Lead time (weeks)","交货期（周）",12],["notes","Notes","备注",36],["files","Drawings & attachments","图纸与附件",34],["chg","Changed by studio","工作室变更",24],["id","ID (do not change)","编号（请勿修改）",24]];
-const XL_EDIT={name:"Name",supplier:"Supplier",modelCode:"Model",unit:"Unit",qty:"Qty",cny:"Unit price (CNY)",cad:"Unit price (CAD)",leadWeeks:"Lead time",notes:"Notes"};
+   The export follows the agent's own quotation sheet: a grey title row per category, then NO. · PIC · PRODUCT · COLOUR · SIZE · QTY ·
+   UNIT PRICE ¥ · TOTAL PRICE ¥ · UNIT PRICE $ · TOTAL PRICE $, with the piece's photo in PIC. A hidden ID column at the far right
+   matches rows when the file comes back; every change is shown before it's saved. */
+const QX=[["code","NO.",9],["pic","PIC",24],["name","PRODUCT",30],["colour","COLOUR",16],["dims","SIZE",18],["qty","QTY",7],
+  ["cny","UNIT PRICE ¥",15],["totcny","TOTAL PRICE ¥",16],["cad","UNIT PRICE $",15],["totcad","TOTAL PRICE $",16],
+  ["supplier","SUPPLIER",20],["modelCode","MODEL",14],["leadWeeks","LEAD TIME (WEEKS)",12],["notes","NOTES",30],["files","DRAWINGS",30],["id","ID (do not change)",22]];
+const XL_EDIT={name:"Name",finishName:"Colour",dims:"Size",supplier:"Supplier",modelCode:"Model",qty:"Qty",cny:"Unit price (CNY)",cad:"Unit price (CAD)",leadWeeks:"Lead time",notes:"Notes"};
+const colourOf=it=>it.finishName||[it.upholstery,it.frameFinish].filter(Boolean).join(" / ");
 const xlCanImport=()=>HOSTED&&canWrite&&!preview&&!!db&&!isClient();
 const xlDropHere=e=>ui.view==="quote"&&xlCanImport()&&!ui.open&&!(e.target.closest&&e.target.closest(".sheet,.xlwrap"));
 const quoteList=()=>filtered().slice().sort((a,b)=>String(a.category||"").localeCompare(String(b.category||""))||String(a.code||"").localeCompare(String(b.code||""),undefined,{numeric:true}));
 const r2=n=>n==null||!isFinite(n)?null:Math.round(n*100)/100;
+let exceljsP=null;
+function loadExcelJS(){if(window.ExcelJS)return Promise.resolve(window.ExcelJS);
+  const one=src=>new Promise((res,rej)=>{const sc=document.createElement("script");sc.src=src;sc.onload=()=>window.ExcelJS?res(window.ExcelJS):rej(new Error("load"));sc.onerror=()=>rej(new Error("load"));document.head.appendChild(sc)});
+  return exceljsP||(exceljsP=one("https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js").catch(()=>one("https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js")).catch(e=>{exceljsP=null;throw e}))}
+// a piece's photo as a small JPEG for the PIC cell
+async function picFor(it){if(!it.photo)return null;
+  try{const res=await fetch("/_blob/"+it.photo);if(!res.ok)return null;const bm=await createImageBitmap(await res.blob());
+    const s=Math.min(1,360/Math.max(bm.width,bm.height)),cv=document.createElement("canvas");cv.width=Math.max(1,Math.round(bm.width*s));cv.height=Math.max(1,Math.round(bm.height*s));
+    const g=cv.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,cv.width,cv.height);g.drawImage(bm,0,0,cv.width,cv.height);
+    return{base64:cv.toDataURL("image/jpeg",.85).split(",")[1],w:cv.width,h:cv.height}}catch(_){return null}}
 async function exportQuoteXLSX(){
-  let X;try{X=await loadXLSX()}catch(_){toast("Couldn't load the Excel tools. Check your connection and try again.");return}
-  const out=quoteWorkbook(X,quoteList(),null);
+  let out;try{out=await quoteWorkbook(quoteList(),null)}catch(e){console.error(e);toast("Couldn't load the Excel tools. Check your connection and try again.");return}
   try{await downloads.save({filename:(project.name||"project").replace(/\W+/g,"-")+"-quotation-"+iso(new Date())+".xlsx",data:new Blob([out],{type:XLSX_TYPE})})}catch(e){if(e&&e.code!=="cancelled"&&e.code!=="declined")toast("Export didn't complete.")}
 }
 const XLSX_TYPE="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const refLabel=r=>[r.kind,r.no,r.title].filter(Boolean).join(" ")||"Attachment";
 // files: null for a plain export, or { itemId: { folder, names } } when the attachments travel with it in a ZIP
-function quoteWorkbook(X,list,files){
-  const r=fx();
-  const studio=it=>{const e=Object.entries(it.chg||{}).filter(([,c])=>c&&c.r==="admin");if(!e.length)return"";if(e.some(x=>x[0]==="_new"))return"NEW 新";
-    const ZHL={Qty:"数量","Unit price":"单价",Supplier:"供应商","Lead time":"交货期","On site":"到场日期",Status:"状态",Name:"名称",Code:"编号",Unit:"单位",Model:"型号",Notes:"备注",Attachments:"附件",Images:"图片",Photo:"照片","3D model":"3D 模型",Description:"描述",Category:"类别",Specification:"规格","Duty %":"关税 %",Details:"详情"};
-    return[...new Set(e.map(([f])=>CHG_LABEL[f]||"Details"))].map(l=>l+" "+(ZHL[l]||"")).join(", ")};
-  const title=[`${project.name||"Project"} · Quotation 报价单 · ${iso(new Date())} · 1 CAD = ${r} CNY`];
-  const help=["Change prices, quantities, supplier, model, lead time and notes, then send the file back. Keep the ID column as it is. 可修改单价、数量、供应商、型号、交货期和备注，然后发回此文件。请勿修改 ID 列。"];
-  const head=XL_COLS.map(c=>c[1]+" "+c[2]);
-  const body=list.map(it=>{const un=unitCNY(it),uc=unitCAD(it);return XL_COLS.map(([k])=>k==="cny"?r2(un):k==="cad"?r2(uc):k==="totcny"?null:k==="chg"?studio(it):k==="files"?(files?(files[it.id]?files[it.id].names.join("\n"):""):attachments(it).map(refLabel).join(", ")):k==="qty"||k==="leadWeeks"?num(it[k]):k==="unit"?(it.unit||"ea"):String(it[k]??""))});
-  const ws=X.utils.aoa_to_sheet([title,help,[],head,...body]);
-  const ci=k=>XL_COLS.findIndex(c=>c[0]===k),A=i=>X.utils.encode_col(i);
-  body.forEach((_,i)=>{const row=i+5,q=A(ci("qty"))+row,p=A(ci("cny"))+row;ws[A(ci("totcny"))+row]={t:"n",f:`IF(AND(ISNUMBER(${q}),ISNUMBER(${p})),${q}*${p},"")`}});
-  // in the ZIP, each piece's attachments cell links to its folder next to the workbook
-  if(files)list.forEach((it,i)=>{const f=files[it.id];if(!f)return;const ref=A(ci("files"))+(i+5);if(ws[ref])ws[ref].l={Target:f.folder+"/",Tooltip:"Open the folder"}});
-  ws["!cols"]=XL_COLS.map(c=>({wch:c[3]}));
-  const wb=X.utils.book_new();X.utils.book_append_sheet(wb,ws,"Quotation 报价单");
-  return X.write(wb,{bookType:"xlsx",type:"array"});
+async function quoteWorkbook(list,files){
+  const E=await loadExcelJS(),r=fx();
+  const cols=QX.filter(c=>files||c[0]!=="files"),ci=k=>cols.findIndex(c=>c[0]===k)+1,L=k=>String.fromCharCode(64+ci(k));
+  const wb=new E.Workbook();const ws=wb.addWorksheet("Quotation 报价单",{pageSetup:{orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0}});
+  ws.columns=cols.map(c=>({key:c[0],width:c[2],hidden:c[0]==="id"}));
+  const thin={style:"thin",color:{argb:"FF9A9A9A"}},box={top:thin,left:thin,bottom:thin,right:thin};
+  const grey={type:"pattern",pattern:"solid",fgColor:{argb:"FFD9D9D9"}},pale={type:"pattern",pattern:"solid",fgColor:{argb:"FFEFEFEF"}},green={type:"pattern",pattern:"solid",fgColor:{argb:"FFE2F0D9"}};
+  const mid={vertical:"middle",horizontal:"center",wrapText:true},core=ci("totcad");
+  ws.getCell("A1").value=`${project.name||"Project"} · Quotation 报价单 · ${iso(new Date())}`;ws.getCell("A1").font={bold:true,size:14};
+  const RC=L("cad")+"1";ws.getCell(L("totcny")+"1").value="1 CAD =";ws.getCell(L("totcny")+"1").alignment={horizontal:"right"};
+  ws.getCell(RC).value=r;ws.getCell(RC).numFmt="0.0000";ws.getCell(RC).font={bold:true};ws.getCell(L("totcad")+"1").value="CNY";
+  const RA="$"+L("cad")+"$1";
+  ws.getCell("A2").value="Fill in QTY and UNIT PRICE ¥ (or $): the totals and the other currency calculate. Keep the hidden ID column at the far right as it is. 填写数量和单价（¥ 或 $），合计和另一币种会自动计算。请勿修改最右侧隐藏的 ID 列。";
+  ws.getCell("A2").font={italic:true,color:{argb:"FF6E6A64"}};
+  const studio=it=>{const s=new Set();Object.entries(it.chg||{}).forEach(([f,c])=>{if(c&&c.r==="admin")s.add(f)});return s};
+  const CHGCOL={name:["name"],finishName:["colour"],upholstery:["colour"],frameFinish:["colour"],dims:["dims"],qty:["qty"],unitCost:["cny","cad"],unitCostCNY:["cny","cad"],priceBase:["cny","cad"],supplier:["supplier"],modelCode:["modelCode"],leadWeeks:["leadWeeks"],notes:["notes"],refs:["files"],photo:["pic"]};
+  const pics=await Promise.all(list.map(picFor));
+  let row=4,grp=null;const first=row;
+  for(let i=0;i<list.length;i++){const it=list[i];
+    const g=it.category||"Other";
+    if(g!==grp){grp=g;if(row>first)row++;
+      ws.mergeCells(row,1,row,core);const t=ws.getCell(row,1);t.value=g+(ZH[g]?"  "+ZH[g]:"");t.font={bold:true,size:16};t.alignment=mid;t.fill=grey;t.border=box;ws.getRow(row).height=34;row++;
+      cols.forEach((c,j)=>{const h=ws.getCell(row,j+1);h.value=c[1];h.font={bold:true,size:11};h.alignment=mid;h.fill=j<core?grey:pale;h.border=box});ws.getRow(row).height=24;row++}
+    const q=num(it.qty),un=r2(unitCNY(it)),uc=r2(unitCAD(it)),cny=it.priceBase==="CNY"&&un!=null,R=row;
+    const v={code:it.code||"",name:it.name||"",colour:colourOf(it),dims:it.dims||"",qty:q,supplier:it.supplier||"",modelCode:it.modelCode||"",leadWeeks:num(it.leadWeeks),notes:it.notes||"",id:it.id,
+      cny:cny?un:uc==null?null:{formula:`IF(ISNUMBER(${L("cad")}${R}),ROUND(${L("cad")}${R}*${RA},2),"")`,result:un},
+      cad:!cny?uc:{formula:`IF(ISNUMBER(${L("cny")}${R}),ROUND(${L("cny")}${R}/${RA},2),"")`,result:uc},
+      totcny:{formula:`IF(AND(ISNUMBER(${L("qty")}${R}),ISNUMBER(${L("cny")}${R})),${L("qty")}${R}*${L("cny")}${R},"")`,result:q!=null&&un!=null?r2(q*un):""},
+      totcad:{formula:`IF(AND(ISNUMBER(${L("qty")}${R}),ISNUMBER(${L("cad")}${R})),${L("qty")}${R}*${L("cad")}${R},"")`,result:q!=null&&uc!=null?r2(q*uc):""}};
+    if(files){const f=files[it.id];v.files=f?{text:f.names.join("\n"),hyperlink:f.folder+"/"}:""}
+    const ch=studio(it),hotc=new Set();ch.forEach(f=>(CHGCOL[f]||[]).forEach(k=>hotc.add(k)));
+    cols.forEach((c,j)=>{const k=c[0],cell=ws.getCell(R,j+1);if(k!=="pic"&&v[k]!=null)cell.value=v[k];cell.border=box;
+      cell.alignment=k==="notes"||k==="files"?{vertical:"middle",horizontal:"left",wrapText:true}:mid;
+      if(k==="cny"||k==="totcny")cell.numFmt='"¥"#,##0.00';if(k==="cad"||k==="totcad")cell.numFmt='"$"#,##0.00';
+      if(ch.has("_new")||hotc.has(k)){cell.fill=green;cell.font={color:{argb:"FF1B7A3A"},bold:hotc.has(k)}}});
+    const p=pics[i];ws.getRow(R).height=p?90:30;
+    if(p){const id=wb.addImage({base64:p.base64,extension:"jpeg"}),W=160,H=110,s=Math.min(W/p.w,H/p.h),w=Math.round(p.w*s),h=Math.round(p.h*s);
+      ws.addImage(id,{tl:{nativeCol:ci("pic")-1,nativeColOff:Math.round((172-w)/2*9525),nativeRow:R-1,nativeRowOff:Math.round((120-h)/2*9525)},ext:{width:w,height:h},editAs:"oneCell"})}
+    row++}
+  if(list.length){row++;const T=ws.getRow(row);T.getCell(ci("name")).value="TOTAL 合计";T.getCell(ci("name")).font={bold:true};
+    [["totcny",'"¥"#,##0.00'],["totcad",'"$"#,##0.00']].forEach(([k,f])=>{const c=T.getCell(ci(k));c.value={formula:`SUM(${L(k)}${first}:${L(k)}${row-1})`,result:r2(list.reduce((s,it)=>{const q=num(it.qty),u=k==="totcny"?unitCNY(it):unitCAD(it);return s+(q!=null&&u!=null?q*u:0)},0))};c.numFmt=f;c.font={bold:true};c.border=box;c.alignment=mid})}
+  return wb.xlsx.writeBuffer();
 }
 // Excel plus every piece's drawings and references, one folder per piece, zipped.
 let qpkgBusy=false;
 async function exportQuotePackage(){
   if(qpkgBusy)return;qpkgBusy=true;
   try{
-    let X;try{X=await loadXLSX()}catch(_){toast("Couldn't load the Excel tools. Check your connection and try again.");return}
+    try{await loadExcelJS()}catch(_){toast("Couldn't load the Excel tools. Check your connection and try again.");return}
     const list=quoteList(),day=iso(new Date()),proj=safeName(project.name||"Sourcebook"),root=tr("Drawings & references");
     const files=[],used=new Set(),map={};let missing=0,done=0;
     const add=(name,blob)=>{let n=name,i=2;while(used.has(n.toLowerCase())){n=name.replace(/(\.[a-z0-9]+)?$/i,m=>` (${i})${m}`);i++}used.add(n.toLowerCase());files.push({name:n,blob});return n};
@@ -1453,7 +1496,7 @@ async function exportQuotePackage(){
       if(links.length){add(`${folder}/${tr("Links")}.txt`,new Blob([links.map(r=>`${refLabel(r)}\r\n${r.url}\r\n`).join("\r\n")],{type:"text/plain"}));names.push(...links.map(r=>refLabel(r)+" ↗"))}
       map[it.id]={folder,names};
     }
-    files.unshift({name:`${proj} - ${tr("Quotation")} ${day}.xlsx`,blob:new Blob([quoteWorkbook(X,list,map)],{type:XLSX_TYPE})});
+    files.unshift({name:`${proj} - ${tr("Quotation")} ${day}.xlsx`,blob:new Blob([await quoteWorkbook(list,map)],{type:XLSX_TYPE})});
     const zip=await makeZip(files);
     await downloads.save({filename:`${proj} - ${tr("Quotation")} ${day}.zip`,data:zip});
     toast(missing?`Package downloaded · ${missing} file${missing===1?"":"s"} couldn't be included`:`Package downloaded · ${files.length} file${files.length===1?"":"s"}`);
@@ -1461,22 +1504,28 @@ async function exportQuotePackage(){
   finally{qpkgBusy=false}
 }
 let xl=null;
+// Any other spreadsheet (a supplier's quote, the agent's own sheet): map its columns, then add or update pieces.
+function openImportWith(file){imp={tab:"file",rows:null,mode:"update",msg:"",fromQuote:true};ui.importOpen=true;ui.editProject=false;renderLayer();readFile(file).then(()=>{if(imp&&imp.rows){imp.mode="update";renderLayer()}})}
 async function importQuoteFile(file){
   let X;try{X=await loadXLSX()}catch(_){toast("Couldn't load the Excel tools. Check your connection and try again.");return}
   let rows;try{const wb=X.read(await file.arrayBuffer(),{type:"array"});rows=X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:""})}catch(_){toast("Couldn't read that file. Save it as .xlsx and try again.");return}
-  const eng=v=>String(v||"").split(/[^\x00-\x7F]/)[0].trim().toLowerCase();
-  const hi=rows.findIndex(rw=>rw.some(v=>/^id \(do not change\)/.test(eng(v)+" ")||eng(v)==="id (do not change)"));
-  if(hi<0){toast("That file doesn't have the ID column from a Sourcebook Excel export.");return}
-  const H=rows[hi].map(eng),at=k=>H.indexOf(XL_COLS.find(c=>c[0]===k)[1].toLowerCase());
-  const col=Object.fromEntries(XL_COLS.map(c=>[c[0],at(c[0])]));
+  const isId=v=>/^id\s*\(?do not change/i.test(String(v).trim());
+  const hi=rows.findIndex(rw=>rw.some(isId));
+  if(hi<0){openImportWith(file);return}
+  // our own export: NO. · PRODUCT · COLOUR · SIZE · QTY · UNIT PRICE ¥ · UNIT PRICE $ … (earlier exports had bilingual headers)
+  const H=rows[hi].map(normH),OLD={code:"code",name:"item",supplier:"supplier",modelCode:"model",unit:"unit",qty:"qty",cny:"unit price cny",cad:"unit price cad",leadWeeks:"lead time weeks",notes:"notes"};
+  const at=(k,lab)=>{let i=H.indexOf(normH(lab));if(i<0&&OLD[k])i=H.findIndex(h=>h.startsWith(OLD[k]+" ")||h===OLD[k]);return i};
+  const col={id:H.findIndex(h=>isId(h)),code:at("code","NO."),name:at("name","PRODUCT"),finishName:at("colour","COLOUR"),dims:at("dims","SIZE"),qty:at("qty","QTY"),cny:at("cny","UNIT PRICE ¥"),cad:at("cad","UNIT PRICE $"),
+    supplier:at("supplier","SUPPLIER"),modelCode:at("modelCode","MODEL"),leadWeeks:at("leadWeeks","LEAD TIME (WEEKS)"),notes:at("notes","NOTES"),unit:H.findIndex(h=>/^unit(?: (?!price)|$)/.test(h))};
   const changes=[];let unmatched=0,matched=0;const r=fx();
   rows.slice(hi+1).forEach(rw=>{
     const cell=k=>col[k]<0?"":rw[col[k]];const id=String(cell("id")).trim(),code=String(cell("code")).trim();
-    if(!id&&!code)return;
+    const filled=rw.filter(v=>String(v).trim()).length;
+    if(isId(cell("id"))||normH(code)==="no.")return;if(!id&&(!code||filled<2))return;
     const it=items.find(i=>i.id===id)||(code?items.find(i=>String(i.code||"").trim().toUpperCase()===code.toUpperCase()):null);
-    if(!it){if(rw.some(v=>String(v).trim()))unmatched++;return}matched++;
+    if(!it){unmatched++;return}matched++;
     const add=(f,was,now,patch)=>changes.push({id:it.id,code:it.code||"",name:it.name||"",f,was,now,patch,on:true});
-    ["name","supplier","modelCode","unit","notes"].forEach(f=>{if(col[f]<0)return;const v=String(cell(f)).trim();if(!v)return;if(v!==String(it[f]??"").trim())add(f,String(it[f]??""),v,{[f]:v})});
+    ["name","finishName","dims","supplier","modelCode","unit","notes"].forEach(f=>{if(col[f]<0)return;const v=String(cell(f)).trim();if(!v)return;const cur=f==="finishName"?colourOf(it):String(it[f]??""),sp=x=>x.replace(/\s+/g," ").trim();if(sp(v)!==sp(cur))add(f,cur,v,{[f]:v})});
     ["qty","leadWeeks"].forEach(f=>{if(col[f]<0)return;const v=toNum(cell(f));if(v==null)return;const c=num(it[f]);if(c==null||Math.abs(c-v)>1e-9)add(f,c==null?"":String(c),String(v),{[f]:v})});
     const cn=col.cny<0?null:toNum(cell("cny")),ca=col.cad<0?null:toNum(cell("cad")),curN=r2(unitCNY(it)),curA=r2(unitCAD(it));
     if(cn!=null&&(curN==null||Math.abs(curN-cn)>0.004))add("cny",curN==null?"":fmtC(curN,"CNY"),fmtC(cn,"CNY"),{unitCostCNY:cn,unitCost:r2(cn/r),priceBase:"CNY"});
@@ -2639,8 +2688,11 @@ async function exportFinishCSV(){
 }
 
 /* ---------- import ---------- */
-const FIELDS=[["","Ignore"],["code","Code"],["name","Name"],["description","Description"],["category","Category"],["zone","Zone / room"],["dims","Dimensions"],["frameFinish","Frame / base finish"],["upholstery","Upholstery"],["materialCategory","Material category"],["product","Product name / line"],["finishName","Colour / finish name"],["modelCode","Item / model code"],["application","Application / notes"],["supplier","Supplier"],["qty","Quantity"],["unit","Unit"],["leadWeeks","Lead time"],["needBy","Required on site"],["unitCost","Unit cost"],["status","Stage"],["ref","Drawing reference"],["notes","Notes"],["spec","Specification line"]];
+const FIELDS=[["","Ignore"],["code","Code"],["name","Name"],["description","Description"],["category","Category"],["zone","Zone / room"],["dims","Dimensions"],["frameFinish","Frame / base finish"],["upholstery","Upholstery"],["materialCategory","Material category"],["product","Product name / line"],["finishName","Colour / finish name"],["modelCode","Item / model code"],["application","Application / notes"],["supplier","Supplier"],["qty","Quantity"],["unit","Unit"],["leadWeeks","Lead time"],["needBy","Required on site"],["unitCost","Unit cost (CAD)"],["unitCostCNY","Unit cost (CNY)"],["status","Stage"],["ref","Drawing reference"],["notes","Notes"],["spec","Specification line"]];
 const SYN=[
+ ["unitCostCNY",/(cny|rmb|yuan|¥|人民币|单价|报价)/],
+ ["name",/^(名称|品名|产品名称|产品|项目名称)$/],["qty",/^(数量|数目)/],["unit",/^(单位)$/],["supplier",/(供应商|厂家|厂商|品牌)/],["modelCode",/(型号|货号|款号)/],
+ ["code",/^(编号|代码)$/],["dims",/(尺寸|规格)/],["leadWeeks",/(交货期|货期|交期)/],["category",/^(类别|分类|类型)/],["description",/^(描述|说明)$/],["notes",/^(备注)$/],
  ["modelCode",/(model|sku|catalog|cat\s*no|style\s*(no|#)|item\s*\/\s*model)/],
  ["code",/^((item|finish|mark)\s*)?(code|tag|mark|key|id|no\.?|#|ref\s*(no\.?|#)?)$/],
  ["materialCategory",/^material\s*(category|type)?$/],
@@ -2671,24 +2723,48 @@ let xlsxP=null;
 function loadXLSX(){if(window.XLSX)return Promise.resolve(window.XLSX);return xlsxP||(xlsxP=new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";sc.onload=()=>res(window.XLSX);sc.onerror=()=>{xlsxP=null;rej(new Error("load"))};document.head.appendChild(sc)}))}
 
 function headerRow(){const h=(imp.rows[imp.header]||[]).slice();while(h.length<imp.width)h.push("");return h}
-function autoMap(headers){const used=new Set();return headers.map(h=>{const n=normH(h);if(!n)return"";for(const [f,re] of SYN){if(!used.has(f)&&re.test(n)){used.add(f);return f}}return"spec"})}
+function autoMap(headers){const used=new Set();return headers.map(h=>{const n=normH(h);if(!n)return"";if(/^(total|sub\s*total|line\s*total|合计|金额|总价|小计)/.test(n))return"";if(/^(序号|no\.?|#|item\s*no\.?|s\/n)$/.test(n))return"";for(const [f,re] of SYN){if(!used.has(f)&&re.test(n)){used.add(f);return f}}return"spec"})}
 function detectHeader(rows){let best=0,bs=0;for(let r=0;r<Math.min(15,rows.length-1);r++){const sc=rows[r].filter(v=>{const n=normH(v);return n&&SYN.some(([,re])=>re.test(n))}).length;if(sc>bs){bs=sc;best=r}}return best}
-function setRows(rows,label){
-  rows=rows.map(r=>(r||[]).map(v=>v==null?"":v)).filter(r=>r.some(v=>String(v).trim()!==""));
+function setRows(rows,label,fmt){
+  rows=rows.map(r=>(r||[]).map(v=>v==null?"":v));const keep=rows.map((r,i)=>r.some(v=>String(v).trim()!=="")?i:-1).filter(i=>i>=0);
+  imp.orig=keep;imp.fmt=fmt?keep.map(i=>fmt[i]||[]):null;rows=keep.map(i=>rows[i]);
   if(rows.length<2){imp.rows=null;imp.msg="There are no rows under a header row. Make sure the copy or file includes the headings and at least one item.";renderLayer();return}
-  imp.rows=rows;imp.width=Math.max(...rows.map(r=>r.length));imp.label=label;imp.header=detectHeader(rows);imp.map=autoMap(headerRow());imp.msg="";
+  imp.rows=rows;imp.width=Math.max(...rows.map(r=>r.length));imp.label=label;imp.header=detectHeader(rows);imp.map=autoMap(headerRow());refineMap();imp.msg="";
   imp.mode=items.length&&(project.sheetUrl||items.some(i=>i.code))?"update":"add";
   renderLayer();
 }
 async function readFile(file){
   imp.msg="";imp.loading="Reading "+file.name+"…";renderLayer();
-  try{const X=await loadXLSX();const wb=X.read(await file.arrayBuffer(),{type:"array"});
-    imp.wb=wb;imp.fname=file.name;imp.sheets=wb.SheetNames;
+  try{const X=await loadXLSX();const buf=await file.arrayBuffer();const wb=X.read(buf,{type:"array"});
+    imp.wb=wb;if(/\.xls[xm]$/i.test(file.name))readPics(buf);imp.fname=file.name;imp.sheets=wb.SheetNames;
     let best=wb.SheetNames[0],bn=0;for(const n of wb.SheetNames){const ref=wb.Sheets[n]["!ref"];if(!ref)continue;const r=X.utils.decode_range(ref);const c=(r.e.r-r.s.r+1)*(r.e.c-r.s.c+1);if(c>bn){bn=c;best=n}}
     imp.sheet=best;imp.loading="";loadSheet();
   }catch(e){imp.loading="";imp.msg=e&&e.message==="load"?"The spreadsheet reader didn't load. Check your connection and try again.":"That file couldn't be read. Save it as .xlsx or .csv and try again.";renderLayer()}
 }
-function loadSheet(){const rows=XLSX.utils.sheet_to_json(imp.wb.Sheets[imp.sheet],{header:1,raw:true,defval:""});setRows(rows,imp.fname+(imp.sheets.length>1?" › "+imp.sheet:""))}
+function loadSheet(){const sh=imp.wb.Sheets[imp.sheet];const rows=XLSX.utils.sheet_to_json(sh,{header:1,raw:true,defval:""}),fmt=XLSX.utils.sheet_to_json(sh,{header:1,raw:false,defval:""});
+  imp.rowOff=sh["!ref"]?XLSX.utils.decode_range(sh["!ref"]).s.r:0;setRows(rows,imp.fname+(imp.sheets.length>1?" › "+imp.sheet:""),fmt)}
+// Pictures placed in the sheet (the agent's PIC column), by sheet and row, read with ExcelJS
+function readPics(buf){const I=imp;I.pics={};
+  loadExcelJS().then(async E=>{const wb=new E.Workbook();await wb.xlsx.load(buf);
+    wb.worksheets.forEach(ws=>{const by={};ws.getImages().forEach(g=>{const tl=g.range&&g.range.tl;if(!tl)return;const m=wb.getImage(+g.imageId)||wb.getImage(g.imageId);if(!m||!m.buffer)return;
+      const row=Math.floor(tl.nativeRow??tl.row),col=Math.floor(tl.nativeCol??tl.col);(by[row]=by[row]||[]).push({col,buffer:m.buffer,ext:String(m.extension||"png").toLowerCase()})});I.pics[ws.name]=by});
+    if(imp===I&&I.rows)renderLayer()}).catch(()=>{})}
+function picOf(p){const by=imp&&imp.pics&&imp.pics[imp.sheet];if(!by||p.row==null)return null;const l=by[p.row];if(!l||!l.length)return null;
+  return l.find(x=>x.col===imp.picCol)||l.slice().sort((a,b)=>a.col-b.col)[0]}
+async function uploadPic(p){const pc=picOf(p);if(!pc||!assets)return null;const type="image/"+(pc.ext==="jpg"?"jpeg":pc.ext);
+  try{return(await assets.upload(new Blob([pc.buffer],{type}),{type})).id}catch(_){return null}}
+// Second look at the columns using the values under them: PIC columns hold pictures, a NO. column of codes is the code,
+// and two "unit price" columns are told apart by their ¥ or $ (the agent's quotation sheet).
+function refineMap(){
+  const h=headerRow(),vals=c=>{const out=[];for(let r=imp.header+1;r<imp.rows.length&&out.length<60;r++){const v=String((imp.fmt&&imp.fmt[r]?imp.fmt[r][c]:imp.rows[r][c])??"").trim();if(v)out.push(v)}return out};
+  imp.picCol=-1;
+  h.forEach((x,c)=>{const n=normH(x);if(!n)return;
+    if(/^(pic|pics|picture|pictures|photo|photos|image|images|img|图片|照片|图像)$/.test(n)){imp.map[c]="";if(imp.picCol<0)imp.picCol=c;return}
+    if(/^(no\.?|#|序号|item\s*no\.?)$/.test(n)&&!imp.map.includes("code")){const v=vals(c);if(v.length&&v.filter(t=>/^[a-z]{1,4}-?\d+[a-z]?$/i.test(t)).length>=v.length*.6)imp.map[c]="code";return}
+    if(/^(total|sub\s*total|合计|金额|总价|小计)/.test(n))return;
+    if(/(price|cost|rate|单价|报价)/.test(n)){const v=vals(c),y=v.filter(t=>/[¥￥元]|rmb|cny/i.test(t)).length,d=v.filter(t=>/\$|cad/i.test(t)).length;
+      const f=y>d?"unitCostCNY":d>y?"unitCost":null;if(f&&imp.map[c]!==f){imp.map=imp.map.map(m=>m===f?"":m);imp.map[c]=f}}});
+}
 function parseDelimited(t){
   const d=t.includes("\t")?"\t":",";const rows=[];let row=[],cell="",q=false;
   for(let i=0;i<t.length;i++){const c=t[i];
@@ -2703,7 +2779,7 @@ function parseDelimited(t){
 function readPaste(txt){if(!txt.trim()){imp.msg="Nothing pasted yet. Copy the rows in Google Sheets first.";renderLayer();return}setRows(parseDelimited(txt),"Pasted rows")}
 
 function toNum(v){if(typeof v==="number")return v;const m=String(v).replace(/[,\s$]/g,"").match(/-?\d*\.?\d+/);return m?parseFloat(m[0]):null}
-function toLead(v){const n=toNum(v);if(n==null)return null;const t=String(v).toLowerCase();return /day/.test(t)?Math.round(n/7*10)/10:/(month|mo\b)/.test(t)?Math.round(n*4.3):n}
+function toLead(v){const n=toNum(v);if(n==null)return null;const t=String(v).toLowerCase();return /(day|天|日)/.test(t)?Math.round(n/7*10)/10:/(month|mo\b|月)/.test(t)?Math.round(n*4.3):n}
 function isoUTC(d){return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0")}
 function toDate(v){
   if(typeof v==="number"){return v>20000&&v<90000?isoUTC(new Date(Date.UTC(1899,11,30)+Math.round(v)*DAY)):null}
@@ -2720,20 +2796,27 @@ function guessMat(t){t=t.toLowerCase();return /terrazzo/.test(t)?"terrazzo":/(ti
 const matchCat=c=>{if(!c)return null;return CATS.find(x=>x.toLowerCase()===String(c).toLowerCase())||String(c).trim()};
 
 function buildPieces(){
-  const rows=imp.rows,h=headerRow(),out=[];let skipped=0;
+  const rows=imp.rows,h=headerRow(),hn=h.map(normH),out=[];let skipped=0,section="";
+  for(let r=imp.header-1;r>=0;r--){const f=rows[r].filter(v=>String(v).trim());if(f.length===1&&typeof f[0]==="string"){section=f[0].trim();break}}
   for(let r=imp.header+1;r<rows.length;r++){
-    const row=rows[r],p={specs:[],refs:[]};
+    const row=rows[r],p={specs:[],refs:[]},full=row.map((v,c)=>String(v).trim()?c:-1).filter(c=>c>=0);
+    // the agent's sheet repeats the header under each section title
+    if(full.filter(c=>hn[c]&&normH(row[c])===hn[c]).length>=Math.min(3,hn.filter(Boolean).length))continue;
+    // a row with a single entry outside the name columns is a section title, e.g. "kitchen vanities storage and furniture"
+    if(full.length===1&&!["name","description","product","finishName"].includes(imp.map[full[0]])&&typeof row[full[0]]==="string"&&/[a-z\u4e00-\u9fff]{2}/i.test(row[full[0]])){section=row[full[0]].trim();continue}
+    p.section=section;p.row=imp.orig?imp.orig[r]+(imp.rowOff||0):null;
     imp.map.forEach((f,c)=>{const raw=row[c]??"";const t=String(raw).trim();if(!f||t==="")return;
       const head=String(h[c]||"Column "+(c+1)).trim();
       switch(f){
         case"qty":case"unitCost":p[f]=toNum(raw);break;
+        case"unitCostCNY":{const v=toNum(raw);if(v!=null){p.unitCostCNY=v;p.priceBase="CNY";p.unitCost=Math.round(v/fx()*100)/100}break}
         case"leadWeeks":p[f]=toLead(raw);break;
         case"needBy":p.needBy=toDate(raw);break;
         case"status":p.status=toStage(raw);break;
         case"unit":p.unit=toUnit(raw);break;
         case"ref":p.refs.push(/^https?:\/\//.test(t)?{kind:"Link",no:"",title:head,url:t,asset:null}:{kind:"Drawing",no:t,title:head,url:null,asset:null});break;
         case"spec":p.specs.push({label:head,value:t});break;
-        default:p[f]=p[f]?p[f]+" · "+t:t}});
+        default:{const u=f==="name"?t.replace(/\s*\n\s*/g," "):t;p[f]=p[f]?p[f]+" · "+u:u}}});
     if(!p.name&&(p.finishName||p.product))p.name=[p.finishName||p.product,p.materialCategory?p.materialCategory.toLowerCase():""].filter(Boolean).join(" ");
     if(!p.name)p.name=p.description||p.code;
     if(!p.name){skipped++;continue}
@@ -2743,16 +2826,20 @@ function buildPieces(){
 }
 function newPieceDoc(p){
   const mat=guessMat([p.category,p.materialCategory,p.name,p.product,p.description].join(" "));const pal=MATCOL[mat];const r=rng(p.code||p.name);
-  const cat=matchCat(p.category)||CATDEF[mat]||"Finishes";let code=p.code||"";
-  if(!code&&imp){imp.taken=imp.taken||items.map(i=>i.code);code=nextStdCode(cat==="Furniture"?furPrefix(p):stdPrefix({...p,category:cat,material:mat}),imp.taken);imp.taken.push(code)}
-  return{code,name:p.name,description:p.description||"",category:matchCat(p.category)||CATDEF[mat]||"Finishes",zone:p.zone||"",supplier:p.supplier||"",
-    qty:p.qty??null,unit:p.unit||"ea",leadWeeks:p.leadWeeks??null,needBy:p.needBy||null,unitCost:p.unitCost??null,status:p.status||"Concept",
+  const lit=/(lamp|light|pendant|sconce|chandelier|luminaire|灯)/i.test([p.name,p.product].join(" "));
+  const secCat=p.section?CATS.concat(items.map(i=>i.category).filter(Boolean)).find(c=>normH(p.section).split(/\s{2,}|\s(?=[\u4e00-\u9fff])/)[0]===c.toLowerCase()):null;
+  const plumb=/(basin|sink|faucet|\btap\b|toilet|shower|bathtub|\btub\b|bidet|洗手盆|台盆|面盆|水龙头|马桶|淋浴|浴缸)/i.test([p.name,p.product].join(" "));
+  const secWord=p.section?(c=>c.length===1?c[0]:null)(CATS.filter(c=>new RegExp("\\b"+c.toLowerCase().replace(/s$/,"")).test(p.section.toLowerCase()))):null;
+  const cat=matchCat(p.category)||secCat||(!p.category&&lit?"Lighting":null)||(!p.category&&plumb?"Plumbing":null)||(!p.category&&furPrefixText([p.name,p.product,p.description].join(" "))?"Furniture":null)||secWord||CATDEF[mat]||"Finishes";let code=p.code||"";
+  if(!code&&imp){imp.taken=imp.taken||items.map(i=>i.code);code=nextStdCode(cat==="Furniture"?furPrefix(p):!FIN_CATS.includes(cat)&&CAT_PREFIX[cat]?CAT_PREFIX[cat]:stdPrefix({...p,category:cat,material:mat}),imp.taken);imp.taken.push(code)}
+  return{code,name:p.name,description:p.description||"",category:cat,zone:p.zone||"",supplier:p.supplier||"",
+    qty:p.qty??null,unit:p.unit||"ea",leadWeeks:p.leadWeeks??null,needBy:p.needBy||null,unitCost:p.unitCost??null,...(p.unitCostCNY!=null?{unitCostCNY:p.unitCostCNY,priceBase:"CNY"}:{}),status:p.status||"Concept",
     material:mat,color:pal[Math.floor(r()*pal.length)],notes:p.notes||"",specs:p.specs,refs:p.refs,photo:null,created:new Date().toISOString(),source:imp.label,
     dims:p.dims||"",frameFinish:p.frameFinish||"",upholstery:p.upholstery||"",materialCategory:p.materialCategory||"",product:p.product||"",finishName:p.finishName||"",modelCode:p.modelCode||"",application:p.application||""};
 }
 function mergePatch(ex,p){
   const patch={};
-  for(const k of["name","description","category","zone","dims","frameFinish","upholstery","materialCategory","product","finishName","modelCode","application","supplier","qty","unit","leadWeeks","needBy","unitCost","status","notes"]){
+  for(const k of["name","description","category","zone","dims","frameFinish","upholstery","materialCategory","product","finishName","modelCode","application","supplier","qty","unit","leadWeeks","needBy","unitCost","unitCostCNY","priceBase","status","notes"]){
     if(p[k]!=null&&p[k]!==""){const v=k==="category"?matchCat(p[k]):p[k];if(v!==ex[k])patch[k]=v}}
   if(p.specs.length){const specs=(ex.specs||[]).map(x=>({...x}));let ch=false;p.specs.forEach(sp=>{const e=specs.find(x=>String(x.label).toLowerCase()===sp.label.toLowerCase());if(e){if(e.value!==sp.value){e.value=sp.value;ch=true}}else{specs.push(sp);ch=true}});if(ch)patch.specs=specs}
   if(p.refs.length){const refs=[...(ex.refs||[])];p.refs.forEach(rf=>{if(!refs.some(x=>(x.no||x.url)===(rf.no||rf.url)))refs.push(rf)});if(refs.length!==(ex.refs||[]).length)patch.refs=refs}
@@ -2767,9 +2854,10 @@ async function runImport(){
     imp.taken=null;
     const byCode=new Map(items.filter(i=>i.code).map(i=>[String(i.code).trim().toLowerCase(),i]));
     for(const p of pieces){
-      const ex=imp.mode==="update"&&p.code?byCode.get(p.code.trim().toLowerCase()):null;
-      if(ex){const patch=mergePatch(ex,p);if(Object.keys(patch).length){Object.assign(ex,patch);if(db)await db.doc("items/"+ex.id).update(patch)}updated++}
-      else{const doc=newPieceDoc(p);const ref=db?db.collection("items").doc():{id:"local"+Math.random().toString(36).slice(2)};if(db)await ref.set(doc);const it=items.find(i=>i.id===ref.id)||{id:ref.id,...doc};if(!items.includes(it))items.push(it);if(p.code)byCode.set(p.code.trim().toLowerCase(),it);added++}
+      const nm=x=>String(x||"").toLowerCase().replace(/\s+/g,"");
+      const ex=imp.mode!=="update"?null:p.code?byCode.get(p.code.trim().toLowerCase()):p.name?items.find(i=>nm(i.name)===nm(p.name)):null;
+      if(ex){if(nm(ex.name)===nm(p.name))p.name=ex.name;const patch=mergePatch(ex,p);if(!ex.photo){const ph=await uploadPic(p);if(ph)patch.photo=ph}if(Object.keys(patch).length){Object.assign(ex,patch);if(db)await db.doc("items/"+ex.id).update(patch)}updated++}
+      else{const doc=newPieceDoc(p);const ph=await uploadPic(p);if(ph)doc.photo=ph;const ref=db?db.collection("items").doc():{id:"local"+Math.random().toString(36).slice(2)};if(db)await ref.set(doc);const it=items.find(i=>i.id===ref.id)||{id:ref.id,...doc};if(!items.includes(it))items.push(it);if(p.code)byCode.set(p.code.trim().toLowerCase(),it);added++}
       imp.done++;const el=$("#imp-prog");if(el)el.textContent=`Saving ${imp.done} of ${imp.total}…`;
     }
     project={...project,lastImport:{source:imp.label,date:new Date().toISOString(),count:pieces.length}};
@@ -2833,7 +2921,7 @@ function importSheet(){
       </tbody></table></div>
       <p class="muted" style="font-size:13px">Columns marked “Specification line” are kept on each piece under their heading, e.g. Finish, Dimensions, Colour.</p>
     </section>
-    <section class="sec"><header><h5>Preview</h5><span class="mono muted">${pieces.length} pieces${skipped?` · ${skipped} rows without a name skipped`:""}</span></header>
+    <section class="sec"><header><h5>Preview</h5><span class="mono muted"><span>${pieces.length} pieces${skipped?` · ${skipped} rows without a name skipped`:""}</span>${(n=>n?` · <span>${n} picture${n===1?"":"s"} from the file</span>`:"")(pieces.filter(picOf).length)}</span></header>
       <div class="tablewrap" style="margin-top:0"><table><thead><tr><th>Code</th><th>Piece</th><th class="n">Qty</th><th>On site</th><th class="n">Lead</th><th>Stage</th><th class="n">Specs</th></tr></thead><tbody>
       ${pieces.slice(0,6).map(p=>`<tr><td class="mono">${esc(p.code||"—")}</td><td>${esc(p.name)}</td><td class="n mono">${p.qty!=null?esc(p.qty)+" "+esc(p.unit||""):"—"}</td><td class="mono">${p.needBy?fmtD(parseD(p.needBy)):"—"}</td><td class="n mono">${p.leadWeeks!=null?esc(p.leadWeeks)+" wk":"—"}</td><td>${esc(p.status||"Concept")}</td><td class="n mono">${p.specs.length}</td></tr>`).join("")}
       ${pieces.length>6?`<tr><td colspan="7" class="muted">and ${pieces.length-6} more</td></tr>`:""}
@@ -2841,7 +2929,7 @@ function importSheet(){
     </section>
     <section class="sec"><header><h5>Add them to the book</h5></header>
       <div class="radios">
-        <label><input type="radio" name="impmode" value="update" ${imp.mode==="update"?"checked":""}><span>Update pieces with matching codes, add the rest<small>${matchN} pieces in the book have codes to match against. Use this each time you pull from the sheet.</small></span></label>
+        <label><input type="radio" name="impmode" value="update" ${imp.mode==="update"?"checked":""}><span>Update pieces with a matching code or name, add the rest<small>${matchN} pieces in the book have codes to match against. Use this each time you pull from the sheet.</small></span></label>
         <label><input type="radio" name="impmode" value="add" ${imp.mode==="add"?"checked":""}><span>Add all as new pieces<small>Nothing already in the book changes.</small></span></label>
         <label><input type="radio" name="impmode" value="replace" ${imp.mode==="replace"?"checked":""}><span>Replace every piece in the book<small>Removes the ${items.length} pieces there now. Logged decisions stay.</small></span></label>
       </div>
@@ -3159,7 +3247,7 @@ document.addEventListener("dragstart",e=>{if(e.target.closest&&e.target.closest(
 
 /* ---------- English / 中文 ---------- */
 const ZH={
-"Model":"型号","Export Excel + drawings (ZIP)":"导出 Excel 和图纸（ZIP）","The Excel file plus every piece's drawings and references, one folder per piece":"Excel 文件及每个项目的图纸和参考资料，每个项目一个文件夹","Open the folder":"打开文件夹","Attachment":"附件","File":"文件","New":"新增","What":"更改内容","Was":"原值","Now":"新值","Details":"详情","Images":"图片","Duty %":"关税 %","✓ Seen":"✓ 已查看","✓ Mark seen":"✓ 标为已查看","Mark as seen":"标为已查看","Mark all seen":"全部标为已查看","Show in order schedule":"在订货计划中查看","Turn on alerts":"开启提醒","Alerts are on for this device while Sourcebook is open.":"此设备在打开选材手册时会收到提醒。","Alerts are off. You can allow them in your browser settings.":"提醒已关闭。可在浏览器设置中允许。","Export Excel":"导出 Excel","Drop the sourcing agent's Excel file here":"将采购代理的 Excel 文件拖放到这里","to bring in their prices, quantities and notes. You'll see every change before it's saved.":"即可导入其价格、数量和备注。保存前会显示每一项更改。","Choose Excel file":"选择 Excel 文件","Changes from Excel":"来自 Excel 的更改","Untick anything you don't want. Blank cells are left as they are.":"取消勾选不需要的更改。空白单元格保持不变。","Nothing in this file differs from the quotation.":"此文件与报价单没有差异。","Apply this change":"应用此更改","Unit price (CNY)":"单价（人民币）","Unit price (CAD)":"单价（加元）","Couldn't load the Excel tools. Check your connection and try again.":"无法加载 Excel 工具，请检查网络后重试。","Couldn't read that file. Save it as .xlsx and try again.":"无法读取该文件，请另存为 .xlsx 后重试。","That file doesn't have the ID column from a Sourcebook Excel export.":"该文件没有选材手册 Excel 导出中的 ID 列。","Drop an Excel file (.xlsx) exported from this quotation.":"请拖入从此报价单导出的 Excel 文件（.xlsx）。",
+"Model":"型号","Unit cost (CAD)":"单价（加元）","No.":"序号","Picture":"图片","Product":"产品","Colour":"颜色","Unit price ¥":"单价 ¥","Total price ¥":"合计 ¥","Unit price $":"单价 $","Total price $":"合计 $","Unit cost (CNY)":"单价（人民币）","Drop an Excel file here":"将 Excel 文件拖放到这里","to fill the quotation: the agent's edited export, or any price list or supplier quote. You'll check the columns and see the changes before anything is saved.":"即可填充报价单：可以是代理修改后的导出文件，也可以是任何价目表或供应商报价。保存前可核对各列并查看更改。","Export Excel + drawings (ZIP)":"导出 Excel 和图纸（ZIP）","The Excel file plus every piece's drawings and references, one folder per piece":"Excel 文件及每个项目的图纸和参考资料，每个项目一个文件夹","Open the folder":"打开文件夹","Attachment":"附件","File":"文件","New":"新增","What":"更改内容","Was":"原值","Now":"新值","Details":"详情","Images":"图片","Duty %":"关税 %","✓ Seen":"✓ 已查看","✓ Mark seen":"✓ 标为已查看","Mark as seen":"标为已查看","Mark all seen":"全部标为已查看","Show in order schedule":"在订货计划中查看","Turn on alerts":"开启提醒","Alerts are on for this device while Sourcebook is open.":"此设备在打开选材手册时会收到提醒。","Alerts are off. You can allow them in your browser settings.":"提醒已关闭。可在浏览器设置中允许。","Export Excel":"导出 Excel","Drop the sourcing agent's Excel file here":"将采购代理的 Excel 文件拖放到这里","to bring in their prices, quantities and notes. You'll see every change before it's saved.":"即可导入其价格、数量和备注。保存前会显示每一项更改。","Choose Excel file":"选择 Excel 文件","Changes from Excel":"来自 Excel 的更改","Untick anything you don't want. Blank cells are left as they are.":"取消勾选不需要的更改。空白单元格保持不变。","Nothing in this file differs from the quotation.":"此文件与报价单没有差异。","Apply this change":"应用此更改","Unit price (CNY)":"单价（人民币）","Unit price (CAD)":"单价（加元）","Couldn't load the Excel tools. Check your connection and try again.":"无法加载 Excel 工具，请检查网络后重试。","Couldn't read that file. Save it as .xlsx and try again.":"无法读取该文件，请另存为 .xlsx 后重试。","That file doesn't have the ID column from a Sourcebook Excel export.":"该文件没有选材手册 Excel 导出中的 ID 列。","Drop an Excel file (.xlsx) exported from this quotation.":"请拖入从此报价单导出的 Excel 文件（.xlsx）。",
 "Download package":"下载资料包","Product sheet PDF with its drawings, spec sheets, photo and 3D model, in one ZIP":"产品资料 PDF 及其图纸、规格书、照片和 3D 模型，打包为一个 ZIP","Preparing the package…":"正在准备资料包…","The package couldn't be made. Try again.":"无法生成资料包，请重试。","Photo":"照片","Links":"链接","Sourcebook":"选材手册","Changes requested":"需修改","Client review":"客户审核","Specification":"规格","Save PDF":"保存 PDF","Download this product sheet as a PDF, ready to print or send":"将此产品资料下载为 PDF，可直接打印或发送","Preparing the PDF…":"正在生成 PDF…","PDF downloaded":"PDF 已下载","The PDF couldn't be made. Try again.":"无法生成 PDF，请重试。","Product sheet":"产品资料","Extended":"小计","Unit price":"单价","Required on site":"现场需用日期","Order by":"下单截止","Drawings & references":"图纸与参考资料","(attached in Sourcebook)":"（附于选材手册中）","Approved":"已批准","Code":"编号","Category":"类别","Status":"状态","Notes":"备注","Find it online":"在线查找","Search again":"重新搜索","Start over":"重新开始","Optional hint: brand, retailer or what to look for":"可选提示：品牌、零售商或查找重点","Claude searches the web for this product, shows you likely matches, and pulls the details of the one you pick. About 10–20¢ of Claude usage per search.":"Claude 会在网上搜索此产品，列出可能的匹配项，并获取您所选产品的详细信息。每次搜索约消耗 0.1–0.2 美元的 Claude 用量。","Find this product online":"在线查找此产品","Searching the web for matches…":"正在网上搜索匹配产品…","This usually takes 30 to 90 seconds. You can close this and keep working; the matches will be waiting here.":"通常需要 30 到 90 秒。您可以关闭此页继续工作，结果会保留在这里。","The search didn't finish":"搜索未完成","Try again":"重试","No confident match found":"未找到可靠的匹配","Add a hint, such as the brand or where you saw it, and search again.":"添加提示（例如品牌或出处）后重新搜索。","✓ Matched":"✓ 已匹配","Use this":"使用此项","Pull again":"重新获取","Pulling details…":"正在获取详情…","Product photo":"产品照片","Replaces the current image":"替换当前图片","Uses the photo from the product page":"使用产品页面的照片","Check prices and lead times with the supplier before ordering; web listings change.":"下单前请向供应商核实价格和交货期；网上信息可能变动。","Dismiss":"关闭","Add products or materials":"添加产品或材料","Drop an image or tap to choose one. Claude finds the product online and fills in its details.":"拖入图片或点击选择。Claude 会在网上查找该产品并填写详情。","or fill in by hand":"或手动填写","Matches ready":"匹配结果已就绪","Searching":"搜索中","Find each piece online":"在线查找每一项","Claude searches the web for every piece you add and lines up matches for you to confirm. About 10–20¢ of Claude usage per piece.":"Claude 会为您添加的每一项在网上搜索，并列出匹配结果供您确认。每项约消耗 0.1–0.2 美元的 Claude 用量。","Adding the piece…":"正在添加…","Add a photo first.":"请先添加照片。","Spec sheet":"规格书","Link":"链接","Listed price":"标价","Unit cost (CAD)":"单价（加元）","Unit cost (CNY)":"单价（人民币）","New piece":"新项目","Drop PDFs or images. Link other files (like .dwg) with the form instead.":"请拖入 PDF 或图片。其他文件（如 .dwg）请通过表单添加链接。","The product photo couldn't be downloaded. Your image was kept.":"无法下载产品照片，已保留您的图片。","A finish, fixture, fitting or piece of furniture, with its image, specification and quantity. Or drop an image here.":"饰面、灯具、配件或家具，以及其图片、规格和数量。也可将图片拖到这里。","3D model":"3D 模型","Add a 3D model":"添加 3D 模型","GLB exported from Rhino, SketchUp or Revit, with its materials. Drop it here or choose a file. Up to 100 MB.":"从 Rhino、SketchUp 或 Revit 导出的含材质 GLB 文件。拖放到此处或选择文件，最大 100 MB。","Drag to turn · pinch or scroll to zoom":"拖动旋转 · 双指或滚轮缩放","Drag to turn · pinch or scroll to zoom · double-tap to reset":"拖动旋转 · 双指或滚轮缩放 · 双击复位","View in your room":"在您的房间中查看","View in 3D":"3D 查看","Replace model":"替换模型","Remove model":"移除模型","3D model added":"已添加 3D 模型","3D model removed":"已移除 3D 模型","USDZ added for iPhone and iPad":"已为 iPhone 和 iPad 添加 USDZ","Add USDZ for iPhone & iPad":"为 iPhone 和 iPad 添加 USDZ","Replace USDZ for iPhone & iPad":"替换 iPhone 和 iPad 的 USDZ","Full screen":"全屏","Upload failed. Try again.":"上传失败，请重试。","Open a product, then drop the model on its 3D model section.":"请先打开产品，再将模型拖到其 3D 模型区域。","Export as glTF Binary (.glb) so the textures travel inside one file.":"请导出为 glTF 二进制（.glb），使贴图包含在同一文件中。","Use a GLB file (or USDZ for iPhone and iPad).":"请使用 GLB 文件（iPhone 和 iPad 可用 USDZ）。","Add the GLB first. The USDZ is an extra for Apple AR.":"请先添加 GLB。USDZ 仅用于苹果 AR。","That isn't a GLB file. Export as glTF Binary (.glb).":"这不是 GLB 文件。请导出为 glTF 二进制（.glb）。","That model is over 100 MB.":"模型超过 100 MB。","The 3D viewer couldn't load. Check your connection.":"3D 查看器无法加载，请检查网络。","Admin":"管理员","Sourcing agent":"采购代理","Client":"客户","Sign out":"退出登录","Signed in":"已登录","Client review":"客户审核","✓ Client approved":"✓ 客户已批准","Changes requested":"需修改","✓ Approved":"✓ 已批准","Let the studio know if this piece works for you.":"请告诉工作室此项目是否合适。","Waiting for the client's review.":"等待客户审核。","Add a note (optional)":"添加备注（可选）","Approve":"批准","Request changes":"要求修改","Clear my review":"撤销我的审核","Comments":"评论","No comments yet.":"暂无评论。","Ask a question or leave a note for the studio":"向工作室提问或留言","Write a comment":"写评论","Post":"发布","Remove comment":"删除评论","Approved. The studio can see it.":"已批准，工作室可以看到。","Sent to the studio.":"已发送给工作室。","Review cleared":"审核已撤销","Your role can't do that.":"您的角色无法执行此操作。","Clients can view, approve and comment.":"客户可以查看、批准和评论。","Only admins can delete projects.":"只有管理员可以删除项目。","Only admins can find products online.":"只有管理员可以在线查找产品。","← Projects":"← 项目",
 "Sourcebook":"选材手册","Sourcing library":"采购图库","Design to construction":"从设计到施工","Untitled":"未命名","project":"项目","Untitled project":"未命名项目",
 "Import":"导入","Add product":"添加产品","Edit project":"编辑项目","Update from sheet":"从表格更新","Linked Google Sheet ↗":"已关联 Google 表格 ↗",
@@ -3207,7 +3295,7 @@ const ZH={
 "Paste rows here":"在此粘贴行","Read pasted rows":"读取粘贴的行","Link sheet":"关联表格","Update link":"更新链接","The sheet stays your working document and the book keeps its address. Anyone opening the book gets a link to it, but they still need access to the sheet in Google.":"表格仍是您的工作文档，手册会保存其地址。打开手册的人都能看到链接，但仍需在 Google 中拥有表格访问权限。",
 "Match columns":"匹配列","Headings on row":"表头所在行","Column in sheet":"表格中的列","Example":"示例","Goes to":"对应字段","Ignore":"忽略","Specification line":"规格行","Drawing reference":"图纸编号","Preview":"预览","Specs":"规格","Add them to the book":"加入手册",
 "Columns marked “Specification line” are kept on each piece under their heading, e.g. Finish, Dimensions, Colour.":"标为“规格行”的列会以其表头名称保存在每个项目中，例如饰面、尺寸、颜色。",
-"Update pieces with matching codes, add the rest":"更新编号相同的项目，其余新增","Add all as new pieces":"全部作为新项目添加","Nothing already in the book changes.":"手册中现有内容不会改变。","Replace every piece in the book":"替换手册中的所有项目","Importing…":"正在导入…",
+"Update pieces with a matching code or name, add the rest":"更新编号或名称相同的项目，其余新增","Add all as new pieces":"全部作为新项目添加","Nothing already in the book changes.":"手册中现有内容不会改变。","Replace every piece in the book":"替换手册中的所有项目","Importing…":"正在导入…",
 "Build the schedule from an image":"从图片生成清单","Review what was found":"查看识别结果","Room or space for these pieces":"这些项目所在的房间或空间","e.g. Primary ensuite (optional)":"例如：主卧卫生间（可选）","Uses your Claude usage. You'll be asked to allow it the first time.":"会使用您的 Claude 用量，首次使用时会请求授权。",
 "Looking at the images…":"正在查看图片…","This usually takes 20 to 60 seconds.":"通常需要 20 到 60 秒。","Stop":"停止","Select all":"全选","Select none":"全不选","Use crop as image":"使用裁剪图作为图片","Detect again":"重新识别","Adding…":"正在添加…","or drop them here":"或拖放到这里",
 "Find the materials in this view":"找出此视图中的材料","Claude reads the image and drafts pieces for the schedule. You review them before anything is added.":"Claude 会读取图片并起草清单项目，添加前由您审核。","Pieces from this view":"来自此视图的项目","None yet.":"暂无。","Remove image":"移除图片","Remove from project":"从项目中移除","Name this view, e.g. Primary ensuite, looking north":"为此视图命名，例如：主卧卫生间，朝北","Notes about this view":"关于此视图的备注","Untitled view":"未命名视图",
@@ -3257,7 +3345,7 @@ const ZH_PAT=[
  [/^Uploading (\d+) images…$/,m=>`正在上传 ${m[1]} 张图片…`],[/^(\d+) images added$/,m=>`已添加 ${m[1]} 张图片`],[/^View (\d+) attachments?$/,m=>`查看 ${m[1]} 个附件`],[/^(\d+) attachments?$/,m=>`${m[1]} 个附件`],
  [/^Open (.+)$/,m=>`打开 ${m[1]}`],[/^Delete all (\d+) pieces and (\d+) decisions\?.*$/,m=>`删除全部 ${m[1]} 个项目和 ${m[2]} 项决策？此操作无法撤销。`],
  [/^Removes the (\d+) pieces there now\..*$/,m=>`将移除现有的 ${m[1]} 个项目，已记录的决策保留。`],[/^(\d+) pieces in the book have codes to match against\..*$/,m=>`手册中有 ${m[1]} 个项目带编号可供匹配。每次从表格拉取时请使用此选项。`],
- [/^(\d+) rows without a name skipped$/,m=>`跳过 ${m[1]} 行无名称的数据`],[/^Delete (.+) and its references\?.*$/,m=>`删除 ${m[1]} 及其参考资料？已记录的决策会保留在记录中。`],[/^Up to (\d+) images at a time$/,m=>`每次最多 ${m[1]} 张图片`],
+ [/^(\d+) rows without a name skipped$/,m=>`跳过 ${m[1]} 行无名称的数据`],[/^(\d+) pictures? from the file$/,m=>`文件中的 ${m[1]} 张图片`],[/^Delete (.+) and its references\?.*$/,m=>`删除 ${m[1]} 及其参考资料？已记录的决策会保留在记录中。`],[/^Up to (\d+) images at a time$/,m=>`每次最多 ${m[1]} 张图片`],
  [/^Remove this image from the project\?.*$/,()=>"从项目中移除此图片？从中识别的项目会保留在手册中。"]
 ];
 let lang="en";try{lang=localStorage.getItem("sb_lang")==="zh"?"zh":"en"}catch(_){}

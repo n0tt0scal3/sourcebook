@@ -319,6 +319,8 @@ function canRead(u, p) { if (isLibPath(p)) return true; if (isSourcingPath(p)) {
 // Internal fields a client never receives.
 const CLIENT_HIDDEN = ["notes", "match", "pendingSetup", "chg"];
 function forUser(u, p, data) {
+  // The sourcing agent never sees which client asked for a TBS item: it comes from the studio.
+  if (u.role === "agent" && data && /^sourcing\/[^/]+$/.test(p) && data.by && data.by.id !== u.id && data.by.role !== "admin") return { ...data, by: { role: "admin" } };
   if (u.role !== "client" || !data || !/^projects\/[^/]+\/items\/[^/]+$/.test(p)) return data;
   const o = { ...data }; CLIENT_HIDDEN.forEach(k => delete o[k]); return o;
 }
@@ -976,7 +978,7 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
     // their QQ address when mail is set up); the agent or an admin marks it "sourced". Old "open" ones count as review.
     // Admins see them all; sourcing agents see the ones sent to them; anyone else sees their own.
     if (p === "/api/sourcing" && req.method === "GET") {
-      const all = Object.entries(store).filter(([k]) => /^sourcing\/[^/]+$/.test(k)).map(([k, v]) => ({ id: k.slice(9), ...v.data })).filter(x => canRead(me, "sourcing/" + x.id));
+      const all = Object.entries(store).filter(([k]) => /^sourcing\/[^/]+$/.test(k)).map(([k, v]) => ({ id: k.slice(9), ...forUser(me, k, v.data) })).filter(x => canRead(me, "sourcing/" + x.id));
       return send(res, 200, { requests: all.sort((x, y) => String(y.at).localeCompare(String(x.at))), role: me.role, me: me.id, ...(isAdmin ? { mail: mailOn(), agentEmail: store["tbscfg/main"]?.data?.agentEmail || people.users.filter(u => u.role === "agent" && u.email && !u.disabled).map(u => u.email)[0] || "" } : {}) });
     }
     if (p === "/api/sourcing/request" && req.method === "POST") {

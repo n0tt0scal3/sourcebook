@@ -1044,6 +1044,38 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       persist(); broadcast({ path: dp, exists: true, data: next });
       return send(res, 200, { ok: true, emailed });
     }
+    if (p === "/api/sourcing/file" && req.method === "POST") {
+      // The studio or the sourcing agent attaches any file (a quote, a PDF, an Excel sheet) to a request:
+      // the raw file is the body, ?id=<request>&name=<file name>. ?id=..&remove=<blob> takes one off.
+      const id = String(url.searchParams.get("id") || ""), dp = "sourcing/" + id, cur = store[dp];
+      if (!/^sourcing\/[0-9a-f]{20}$/.test(dp) || !cur || !canRead(me, dp)) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
+      if (me.role !== "admin" && me.role !== "agent") return deny("Only the studio and the sourcing agent can attach files to a request.");
+      let files;
+      const rm = url.searchParams.get("remove"), buf = rm ? null : await readBody(req, 25 * 1024 * 1024).catch(() => null);
+      if (!rm && !buf) return send(res, 413, { code: "too_large", message: "That file is too big (25 MB at most)." });
+      // Read the list after the upload has arrived, so files sent one after another all stay on it.
+      const fresh = store[dp]; if (!fresh) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
+      const have = Array.isArray(fresh.data.files) ? fresh.data.files : [];
+      if (rm) {
+        if (!have.some(f => f.id === rm)) return send(res, 200, { ok: true, files: have });
+        files = have.filter(f => f.id !== rm);
+        fsp.unlink(path.join(BLOB_DIR, rm)).catch(() => {}); fsp.unlink(path.join(BLOB_DIR, rm + ".json")).catch(() => {});
+      } else {
+        if (have.length >= 10) return send(res, 400, { code: "invalid_argument", message: "Up to 10 files per request." });
+        const name = String(url.searchParams.get("name") || "file").replace(/[\\/\r\n"]+/g, "_").trim().slice(0, 120) || "file";
+        if (!buf.length) return send(res, 400, { code: "invalid_argument", message: "That file is empty." });
+        const blob = crypto.randomBytes(16).toString("hex");
+        await fsp.writeFile(path.join(BLOB_DIR, blob), buf);
+        await fsp.writeFile(path.join(BLOB_DIR, blob + ".json"), JSON.stringify({ contentType: "application/octet-stream", download: name, sizeBytes: buf.length, createdAt: new Date().toISOString(), source: "sourcing reply" }));
+        const latest = store[dp]?.data?.files;
+        files = [...(Array.isArray(latest) ? latest : have), { id: blob, name, size: buf.length, by: me.name || "", at: new Date().toISOString() }];
+      }
+      const now = store[dp]; if (!now) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
+      const next = { ...now.data, files };
+      store[dp] = { data: next, version: now.version + 1, updatedAt: new Date().toISOString() };
+      persist(); broadcast({ path: dp, exists: true, data: next });
+      return send(res, 200, { ok: true, files });
+    }
     if (p === "/api/sourcing/photo" && req.method === "POST") {
       // The studio or the sourcing agent attaches a photo of what they found (shown with the reply). { id, photo } adds; { id, remove } takes one off.
       const b = await readJSON(req, 6 * 1024 * 1024), dp = "sourcing/" + String(b.id || ""), cur = store[dp];
@@ -1062,7 +1094,8 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
         const photo = crypto.randomBytes(16).toString("hex");
         await fsp.writeFile(path.join(BLOB_DIR, photo), buf);
         await fsp.writeFile(path.join(BLOB_DIR, photo + ".json"), JSON.stringify({ contentType: "image/jpeg", sizeBytes: buf.length, createdAt: new Date().toISOString(), source: "sourcing reply" }));
-        found = [...have, photo];
+        const latest = store[dp]?.data?.found;
+        found = [...(Array.isArray(latest) ? latest : have), photo];
       }
       const now = store[dp]; if (!now) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
       const next = { ...now.data, found };
@@ -1078,7 +1111,7 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
         // The person who asked can withdraw it until it's sent to the agent; admins can remove any.
         if (!isAdmin && !(own && inReview)) return deny("Only admins can remove a request.");
         delete store[dp]; persist(); broadcast({ path: dp, exists: false });
-        for (const ph of [cur.data.photo, ...(Array.isArray(cur.data.found) ? cur.data.found : [])]) { fsp.unlink(path.join(BLOB_DIR, ph)).catch(() => {}); fsp.unlink(path.join(BLOB_DIR, ph + ".json")).catch(() => {}); }
+        for (const ph of [cur.data.photo, ...(Array.isArray(cur.data.found) ? cur.data.found : []), ...(Array.isArray(cur.data.files) ? cur.data.files.map(f => f.id) : [])]) { fsp.unlink(path.join(BLOB_DIR, ph)).catch(() => {}); fsp.unlink(path.join(BLOB_DIR, ph + ".json")).catch(() => {}); }
         return send(res, 200, { ok: true });
       }
       if (!staff) return deny("Only the studio and the sourcing agent can update a request.");
@@ -1260,7 +1293,8 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       try { meta = JSON.parse(await fsp.readFile(file + ".json", "utf8")); } catch (_) { meta = { contentType: sniffType(file) }; }
       try {
         const st = await fsp.stat(file);
-        res.writeHead(200, { "Content-Type": meta.contentType || "application/octet-stream", "Content-Length": st.size, "Cache-Control": "private, max-age=31536000, immutable" });
+        res.writeHead(200, { "Content-Type": meta.contentType || "application/octet-stream", "Content-Length": st.size, "Cache-Control": "private, max-age=31536000, immutable",
+          ...(meta.download ? { "Content-Disposition": `attachment; filename="${String(meta.download).replace(/[^\x20-\x7e]|"/g, "_")}"; filename*=UTF-8''${encodeURIComponent(meta.download)}`, "X-Content-Type-Options": "nosniff" } : {}) });
         fs.createReadStream(file).pipe(res);
       } catch (_) { send(res, 404, "Not found"); }
       return;

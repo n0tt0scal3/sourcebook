@@ -8,7 +8,7 @@
   const LIB_LABEL = { "BILLA-Sofa": ["Billa", "Sofas & lounge chairs"], "BILLA-CoffeeTV": ["Billa", "Coffee tables & TV units"], "BILLA-Dining": ["Billa", "Dining"], "BILLA-Outdoor": ["Billa", "Outdoor"], "HALO": ["HALO", "Collection 2026"], "Kaiwuli": ["Kaiwuli", "Catalogue 2026"], "TO-Tearsheet": ["TO Interactive", "Tearsheets 2025"] };
   const LIB_ROOT = "G:\\My Drive\\LMNL\\90 CHINA PRODUCTS\\";
   const ZH = {
-    "Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.": "把图片拖到这里，我们会在图库中搜索相似的产品。如果找不到，我们会为您采购。", "Choose a photo": "选择图片", "What are you looking for? (optional) e.g. the chair, in walnut": "您想找什么？（可选）例如：这把椅子，胡桃木", "Sending it to our sourcing agent…": "正在发送给采购代理…", "Searching our library for something similar…": "正在图库中搜索相似产品…", "We couldn't find anything similar in our library, so we've sent it to our sourcing agent. We'll source it for you.": "图库中没有找到相似的产品，已发送给采购代理，我们会为您采购。", "Sent to our sourcing agent. We'll source it for you.": "已发送给采购代理，我们会为您采购。", "Withdraw the request": "撤回请求", "Search for something else": "搜索其他产品", "None of these? Send it to our sourcing agent": "都不合适？发送给采购代理", "Waiting to be sourced": "等待采购", "We're sourcing it": "正在为您采购", "Sourced": "已采购", "Note for the person who asked (optional)": "给提出请求者的备注（可选）", "Mark as sourced": "标为已采购", "Reopen": "重新打开", "Remove": "移除", "Sourcing requests": "采购请求", "Your sourcing requests": "您的采购请求", "Hide sourced": "隐藏已采购", "Nothing waiting to be sourced.": "没有待采购的请求。", "That isn't a photo.": "这不是图片。", "The search didn't finish. Try again.": "搜索未完成，请重试。", "Couldn't send it. Check your connection and try again.": "无法发送，请检查网络后重试。", "Photo": "图片", "Studio owner": "工作室负责人", "new": "新", "New": "新", "Add photos of what you found": "添加找到的产品照片", "Adding photos…": "正在添加照片…", "Photos of what was found": "找到的产品照片", "Up to 8 photos per request.": "每个请求最多 8 张照片。", "Only the studio and the sourcing agent can add photos to a request.": "只有工作室和采购代理可以为请求添加照片。",
+    "Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.": "把图片拖到这里，我们会在图库中搜索相似的产品。如果找不到，我们会为您采购。", "Choose a photo": "选择图片", "What are you looking for? (optional) e.g. the chair, in walnut": "您想找什么？（可选）例如：这把椅子，胡桃木", "Sending it to our sourcing agent…": "正在发送给采购代理…", "Searching our library for something similar…": "正在图库中搜索相似产品…", "We couldn't find anything similar in our library, so we've sent it to our sourcing agent. We'll source it for you.": "图库中没有找到相似的产品，已发送给采购代理，我们会为您采购。", "Sent to our sourcing agent. We'll source it for you.": "已发送给采购代理，我们会为您采购。", "Withdraw the request": "撤回请求", "Search for something else": "搜索其他产品", "None of these? Send it to our sourcing agent": "都不合适？发送给采购代理", "Waiting to be sourced": "等待采购", "We're sourcing it": "正在为您采购", "Sourced": "已采购", "Note for the person who asked (optional)": "给提出请求者的备注（可选）", "Mark as sourced": "标为已采购", "Reopen": "重新打开", "Remove": "移除", "Sourcing requests": "采购请求", "Your sourcing requests": "您的采购请求", "Hide sourced": "隐藏已采购", "Nothing waiting to be sourced.": "没有待采购的请求。", "That isn't a photo.": "这不是图片。", "The search didn't finish. Try again.": "搜索未完成，请重试。", "Couldn't send it. Check your connection and try again.": "无法发送，请检查网络后重试。", "Photo": "图片", "Studio owner": "工作室负责人", "new": "新", "New": "新", "Add category": "添加类别", "Admins only": "仅限管理员", "New category": "新类别", "Name in English": "英文名称", "Name in Chinese": "中文名称", "e.g. Outdoor furniture": "例如：Outdoor furniture", "e.g. 户外家具": "例如：户外家具", "In a project, its products go under": "加入项目时归入", "Adding…": "正在添加…", "Cancel": "取消", "Give the category a name.": "请填写类别名称。", "There's already a category with that name.": "已有同名类别。", "Choose where its products go in a project.": "请选择加入项目时归入的分类。", "Only admins can add categories.": "只有管理员可以添加类别。", "No more categories can be added.": "无法再添加更多类别。", "Furniture": "家具", "Lighting": "灯具", "Plumbing": "卫浴", "Millwork": "木作", "Stone": "石材", "Finishes": "饰面", "Glazing": "玻璃", "Hardware": "五金", "Add photos of what you found": "添加找到的产品照片", "Adding photos…": "正在添加照片…", "Photos of what was found": "找到的产品照片", "Up to 8 photos per request.": "每个请求最多 8 张照片。", "Only the studio and the sourcing agent can add photos to a request.": "只有工作室和采购代理可以为请求添加照片。",
     "You have 50 open requests. Wait for some to be sourced first.": "您有 50 个未完成的请求，请等部分采购完成后再提交。", "Only admins can remove a request.": "只有管理员可以移除请求。", "Only the studio and the sourcing agent can update a request.": "只有工作室和采购代理可以更新请求。", "Add a photo first.": "请先添加图片。", "Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.": "此服务器尚未设置 Claude。请在 Render 中添加 Anthropic API 密钥（ANTHROPIC_API_KEY）。",
     "Back to all product types": "返回全部产品类型",
     "To be sourced": "待采购", "To review": "待审核", "With the studio": "工作室审核中", "With the sourcing agent": "采购代理处理中", "To find": "待寻找", "Turn on alerts for new requests": "开启新请求提醒", "Photos sent from the Sourcing library that we couldn't match. Review each one, then send it to the sourcing agent; with email set up, it goes to their QQ Mail with the photo attached.": "从采购图库提交、但未找到匹配的图片。逐一审核后发送给采购代理；设置邮件后会附上照片发送到其 QQ 邮箱。", "Items the studio has asked you to find. Mark each one sourced when you've found it, with a note on where.": "工作室请您寻找的产品。找到后请标记为已采购，并备注来源。", "Things you've asked us to find. We review each one and send it to our sourcing agent.": "您请我们寻找的产品。我们会逐一审核并交给采购代理。", "Nothing here.": "这里没有内容。", "Nothing to be sourced yet. Drop a photo in the box on the Sourcing library page.": "还没有待采购的产品。可在采购图库页面的方框中拖入图片。", "Sourcing agent's email (QQ Mail)": "采购代理的邮箱（QQ 邮箱）", "Email isn't set up yet, so this sends it in Sourcebook only. Add the SMTP settings in Render to email the agent's QQ Mail.": "尚未设置邮件，因此仅在选材手册中发送。在 Render 中添加 SMTP 设置后即可发送到代理的 QQ 邮箱。", "Message to the agent (optional)": "给代理的留言（可选）", "e.g. Need 6, walnut, by November": "例如：需要 6 件，胡桃木，11 月前", "Sending…": "正在发送…", "Send to the sourcing agent again": "再次发送给采购代理", "Send to the sourcing agent": "发送给采购代理", "Client": "客户", "Message to the agent": "给代理的留言", "Where it was found, for the person who asked (optional)": "在哪里找到的，告诉提出请求的人（可选）", "Add the sourcing agent's email first.": "请先填写采购代理的邮箱。", "Sent to the sourcing agent by email.": "已通过邮件发送给采购代理。", "Sent to the sourcing agent in Sourcebook.": "已在选材手册中发送给采购代理。", "Adding it to TBS (to be sourced)…": "正在加入待采购 TBS…", "Nothing similar in our library, so it's been added to TBS (to be sourced).": "图库中没有相似产品，已加入待采购 TBS。", "We couldn't find anything similar in our library, so it's been added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "图库中没有找到相似的产品，已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Added to TBS (to be sourced).": "已加入待采购 TBS。", "Added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Open TBS": "打开待采购 TBS", "None of these? Add it to TBS (to be sourced)": "都不合适？加入待采购 TBS", "Email isn't set up on this server yet. Add the SMTP settings in Render, or send it in Sourcebook only.": "此服务器尚未设置邮件。请在 Render 中添加 SMTP 设置，或仅在选材手册中发送。", "The email couldn't be sent. Check the SMTP settings in Render and try again.": "邮件无法发送，请检查 Render 中的 SMTP 设置后重试。", "That email doesn't look right.": "邮箱格式不正确。", "Only admins can send requests to the sourcing agent.": "只有管理员可以将请求发送给采购代理。",
@@ -90,6 +90,11 @@
 .sbl-star{margin-left:auto;flex:none;border:0;background:none;padding:0 2px;font-size:17px;line-height:1;color:var(--muted);cursor:pointer;font-family:inherit}
 .sbl-star[aria-pressed=true]{color:#c8a046}
 .sbl-star:hover{color:var(--ink)}
+.sbl-cat .sbl-addic{font-size:40px;color:var(--ink3,#888);border-style:dashed}
+.sbl-cat .sbl-empty-ic{font-family:var(--display);font-size:40px;color:var(--ink3,#999)}
+.sbl-addtype{gap:8px;padding:12px;background:var(--paper);border:1px solid var(--rule);cursor:default}
+.sbl-addtype label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--ink2)}
+.sbl-addtype input,.sbl-addtype select{font:inherit;font-size:14px;padding:5px 0;border:0;border-bottom:1px solid var(--rule);background:none;color:var(--ink)}
 .sbl-cat .sbl-favic{display:grid;place-items:center;width:100%;aspect-ratio:4/3;background:var(--paper);border:1px solid var(--rule);font-size:44px;color:#c8a046}
 .btn.sbl-favbtn[aria-pressed=true]{color:#a07a20}
 .sbl-cap b{font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis}
@@ -223,10 +228,17 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   let LIB = null, libP = null, on = {}, tov = {}, watching = false, qT = null, full = new Set(), up = null;
   // Product types, independent of the supplier catalogue. Images are sorted into them once (lib/data.json, item[7]);
   // an admin's corrections are stored as librarytypes/<catalogue> = { t: { key: code } }.
-  const TYPES = [["S", "Sofas", "沙发"], ["L", "Lounge chairs", "休闲椅"], ["C", "Dining chairs", "餐椅"], ["T", "Stools & bar stools", "凳子与吧凳"], ["B", "Benches & ottomans", "长凳与脚凳"],
+  const BASE_TYPES = [["S", "Sofas", "沙发"], ["L", "Lounge chairs", "休闲椅"], ["C", "Dining chairs", "餐椅"], ["T", "Stools & bar stools", "凳子与吧凳"], ["B", "Benches & ottomans", "长凳与脚凳"],
     ["K", "Coffee & side tables", "茶几与边几"], ["D", "Dining tables", "餐桌"], ["E", "Desks & consoles", "书桌与玄关桌"], ["G", "Storage & TV units", "储物柜与电视柜"], ["R", "Beds & nightstands", "床与床头柜"],
     ["1", "Office", "办公家具"], ["H", "Lighting", "灯具"], ["P", "Plumbing fixtures", "卫浴洁具"], ["X", "Vanities", "浴室柜"], ["Z", "Mirrors", "镜子"], ["M", "Millwork", "木作"], ["I", "Doors", "门"], ["N", "Stone", "石材"], ["J", "Flooring", "地板"], ["W", "Wall panelling & wood", "墙板与木制品"], ["Q", "Partition systems", "隔断系统"], ["V", "Glass products", "玻璃制品"], ["Y", "Signage", "标识"],
     ["A", "Decor & accessories", "装饰与配饰"], ["O", "Other", "其他"], ["U", "Not sorted yet", "尚未分类"]];
+  // Categories an admin added (librarycats/main): shown before Decor & accessories, each also a catalogue category CUSTOM-<code>.
+  let custom = [], TYPES = BASE_TYPES;
+  function setCustom(list) {
+    custom = (Array.isArray(list) ? list : []).filter(x => x && typeof x.c === "string" && x.c.length === 1 && x.en);
+    const at = BASE_TYPES.findIndex(x => x[0] === "A");
+    TYPES = [...BASE_TYPES.slice(0, at), ...custom.map(x => [x.c, x.en, x.zh || x.en]), ...BASE_TYPES.slice(at)];
+  }
   const typeName = c => { if (c === "F") return t("Favourites"); const x = TYPES.find(y => y[0] === c) || TYPES[TYPES.length - 1]; return zh() ? x[2] : x[1]; };
   // Each person's own starred images (file names), saved on the server for their account.
   let fav = new Set();
@@ -273,7 +285,9 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
   async function fetchTypes() {
     const r = await fetch("/api/db/col?path=librarytypes"); if (!r.ok) return;
-    const j = await r.json(); const next = {}; j.docs.forEach(d => { next[d.id] = (d.data && d.data.t) || {}; }); tov = next; repaint();
+    const j = await r.json(); const next = {}; j.docs.forEach(d => { next[d.id] = (d.data && d.data.t) || {}; }); tov = next;
+    const rc = await fetch("/api/db/col?path=librarycats").catch(() => null); if (rc && rc.ok) { const m = ((await rc.json()).docs || []).find(d => d.id === "main"); setCustom(m && m.data && m.data.types); }
+    repaint();
   }
   async function fetchFull() {
     const r = await fetch("/api/library/full"); if (!r.ok) return;
@@ -284,7 +298,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     fetchOn().catch(() => {}); fetchFull().catch(() => {}); fetchTypes().catch(() => {}); fetchFav().catch(() => {}); fetchReqs().catch(() => {});
     try {
       const es = new EventSource("/api/events");
-      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data && !was && isAdm() && inReview(m.data) && !(m.data.by && m.data.by.id === tbsCfg.me)) tbsAlert({ id, ...m.data }); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "") && JSON.stringify(was.sent || null) === JSON.stringify(m.data.sent || null) && JSON.stringify(was.found || []) === JSON.stringify(m.data.found || [])) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); } catch (_) {} };
+      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data && !was && isAdm() && inReview(m.data) && !(m.data.by && m.data.by.id === tbsCfg.me)) tbsAlert({ id, ...m.data }); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "") && JSON.stringify(was.sent || null) === JSON.stringify(m.data.sent || null) && JSON.stringify(was.found || []) === JSON.stringify(m.data.found || [])) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (m.path === "librarycats/main") { setCustom(m.exists && m.data && m.data.types); repaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); } catch (_) {} };
       es.onopen = () => { fetchOn().catch(() => {}); fetchTypes().catch(() => {}); fetchReqs().catch(() => {}); };
     } catch (_) {}
   }
@@ -344,11 +358,31 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const by = {}; LIB.items.forEach(o => (by[typeOf(o)] = by[typeOf(o)] || []).push(o));
     const favs = LIB.items.filter(o => fav.has(o.file) && vis(o)), fc = favs[0];
     const favTile = `<button class="sbl-cat" data-sbltype="F">${fc ? `<span class="sbl-sw" ${sprite(fc)}></span>` : `<span class="sbl-favic">★</span>`}<span class="sbl-name">★ ${t("Favourites")}</span><span class="sbl-sub">${favs.length ? (zh() ? `${nf(favs.length)} 张图片` : `${nf(favs.length)} image${favs.length === 1 ? "" : "s"}`) : t("Star images to save them here")}</span></button>`;
-    return favTile + tbsTileHTML() + TYPES.filter(([c]) => by[c] && (cur || by[c].some(isOn))).map(([c]) => {
+    return favTile + tbsTileHTML() + TYPES.filter(([c]) => (by[c] && (cur || by[c].some(isOn))) || (cur && custom.some(x => x.c === c))).map(([c]) => {
       // Cover: an approved image if there is one, preferring product photos over tearsheet pages.
-      const arr = by[c], ok = arr.filter(isOn), pool0 = cur && !ok.length ? arr : ok, photos = pool0.filter(o => !/tearsheet/i.test(o.sup)), pool = photos.length ? photos : pool0, cover = pool[Math.min(pool.length - 1, Math.floor(pool.length * .12))];
-      return `<button class="sbl-cat" data-sbltype="${c}">${cover ? `<span class="sbl-sw" ${sprite(cover)}></span>` : ""}<span class="sbl-name">${esc(typeName(c))}</span><span class="sbl-sub">${sub(ok.length, arr.length)}</span>${cur ? `<span class="sbl-bar"><i style="width:${arr.length ? ok.length / arr.length * 100 : 0}%"></i></span>` : ""}</button>`;
-    }).join("");
+      const arr = by[c] || [], ok = arr.filter(isOn), pool0 = cur && !ok.length ? arr : ok, photos = pool0.filter(o => !/tearsheet/i.test(o.sup)), pool = photos.length ? photos : pool0, cover = pool[Math.min(pool.length - 1, Math.floor(pool.length * .12))];
+      return `<button class="sbl-cat" data-sbltype="${c}">${cover ? `<span class="sbl-sw" ${sprite(cover)}></span>` : `<span class="sbl-favic sbl-empty-ic">${esc(typeName(c).slice(0, 1))}</span>`}<span class="sbl-name">${esc(typeName(c))}</span><span class="sbl-sub">${sub(ok.length, arr.length)}</span>${cur ? `<span class="sbl-bar"><i style="width:${arr.length ? ok.length / arr.length * 100 : 0}%"></i></span>` : ""}</button>`;
+    }).join("") + (cur ? addTypeHTML() : "");
+  }
+  // Admins add a category: its name in English and Chinese, and where its products go when added to a project.
+  const SECTIONS = [["Furniture", "家具"], ["Lighting", "灯具"], ["Plumbing", "卫浴"], ["Millwork", "木作"], ["Stone", "石材"], ["Finishes", "饰面"], ["Glazing", "玻璃"], ["Hardware", "五金"]];
+  function addTypeHTML() {
+    if (!ui.addtype) return `<button class="sbl-cat" data-sbl="addtype"><span class="sbl-favic sbl-addic">+</span><span class="sbl-name">${t("Add category")}</span><span class="sbl-sub">${t("Admins only")}</span></button>`;
+    return `<div class="sbl-cat sbl-addtype"><b>${t("New category")}</b>
+      <label>${t("Name in English")}<input id="sbl-nten" maxlength="40" autocomplete="off" placeholder="${esc(t("e.g. Outdoor furniture"))}"></label>
+      <label>${t("Name in Chinese")}<input id="sbl-ntzh" maxlength="20" autocomplete="off" placeholder="${esc(t("e.g. 户外家具"))}"></label>
+      <label>${t("In a project, its products go under")}<select id="sbl-ntsec">${SECTIONS.map(([v, z]) => `<option value="${v}">${zh() ? z : t(v)}</option>`).join("")}</select></label>
+      <span class="sbl-row"><button class="btn sm" data-sbl="addtypego" ${ui.addtype === "busy" ? "disabled" : ""}>${t(ui.addtype === "busy" ? "Adding…" : "Add category")}</button><button class="linkbtn" data-sbl="addtypex">${t("Cancel")}</button></span></div>`;
+  }
+  async function addType() {
+    const en = ($("#sbl-nten") || {}).value || "", zhn = ($("#sbl-ntzh") || {}).value || "", section = ($("#sbl-ntsec") || {}).value || "";
+    if (!en.trim()) { host.toast(t("Give the category a name.")); return; }
+    ui.addtype = "busy"; const keep = { en, zhn, section }; repaint(); const f = $("#sbl-nten"); if (f) { f.value = keep.en; $("#sbl-ntzh").value = keep.zhn; $("#sbl-ntsec").value = keep.section; }
+    try {
+      const j = await api("/api/library/category", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ en, zh: zhn, section }) });
+      setCustom([...custom, { c: j.code, en: en.trim(), zh: zhn.trim(), section }]); ui.addtype = false; repaint();
+      host.toast(zh() ? `已添加类别「${zhn.trim() || en.trim()}」。可用“移至…”把图片移进来，或上传该类别的 PDF 图册。` : `Added ${en.trim()}. Move images into it with "Move selected to…", or add a PDF catalogue in this category.`);
+    } catch (e) { ui.addtype = true; repaint(); const g = $("#sbl-nten"); if (g) { g.value = keep.en; $("#sbl-ntzh").value = keep.zhn; $("#sbl-ntsec").value = keep.section; } host.toast(t(e.message || "Couldn't save. Check your connection and try again.")); }
   }
   function gridHTML() {
     if (!ui.type && !ui.q.trim()) { setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = ""; }, 0); return `<p class="sbl-hint" style="padding-top:18px">${t("Choose a product type to see its images.")}</p>`; }
@@ -533,7 +567,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
         <label><input type="radio" name="sbl-mode" value="pages" ${pdfMode === "pages" ? "checked" : ""}><span>${t("Import page by page")}<small>${t("Each page becomes one image.")}</small></span></label></fieldset>
       <label>${t("Supplier")}<input id="sbl-supplier" autocomplete="off" placeholder="Billa"></label>
       <label>${t("Catalogue name (optional)")}<input id="sbl-product" autocomplete="off" placeholder="Sofa 2026"></label>
-      <label>${t("Category")}<select id="sbl-cat">${CATS.map(c => `<option value="${c}">${catName(c)}</option>`).join("")}</select></label>
+      <label>${t("Category")}<select id="sbl-cat">${CATS.map(c => `<option value="${c}">${catName(c)}</option>`).join("")}${custom.map(x => `<option value="CUSTOM-${x.c}">${esc(zh() ? x.zh || x.en : x.en)}</option>`).join("")}</select></label>
       <label style="grid-column:1/-1">${t("Google Drive link to the PDF (optional)")}<input id="sbl-drive" autocomplete="off" placeholder="https://drive.google.com/file/d/…"></label>
       <p>${t("The PDF is scanned in this browser, so keep this tab open until it finishes. Photos in the PDF become library images named like the others (category_supplier_page_number) and start unapproved. Up to 300 MB and 2,000 pages.")}</p>
       <div class="sbl-row"><button class="btn" data-sbl="scan" id="sbl-go">${t(pdfMode === "pages" ? "Import pages" : "Scan and add")}</button><button class="btn ghost" data-sbl="addcancel">${t("Cancel")}</button></div></div>`;
@@ -960,6 +994,9 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const a = el.dataset.sbl;
     if (a === "close") close();
     else if (a === "addcat" && curating()) { ui.addcat = true; addLine(); }
+    else if (a === "addtype" && curating()) { ui.addtype = true; repaint(); const f = $("#sbl-nten"); if (f) f.focus(); }
+    else if (a === "addtypex") { ui.addtype = false; repaint(); }
+    else if (a === "addtypego" && curating() && ui.addtype !== "busy") addType();
     else if (a === "selall" && curating()) { list().forEach(o => sel.add(o.i)); selPaint(); }
     else if (a === "selnone") { sel.clear(); selPaint(); }
     else if (a === "addcancel") { ui.addcat = false; addLine(); }

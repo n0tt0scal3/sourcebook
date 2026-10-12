@@ -45,7 +45,7 @@ async function libIndex() {
       const c = JSON.parse(await fsp.readFile(path.join(LIB_CATS_DIR, f), "utf8"));
       if (c.status !== "done" || d.sups[c.sup]) continue;
       d.sups[c.sup] = { pdf: c.pdf, drive: c.drive || "", pages: c.pages, cat: c.cat, n: c.items.length, label: [c.supplier, c.product || ""], up: 1, created: c.created };
-      c.items.forEach(x => d.items.push([x[0], c.sup, x[1], x[2] || "", x[3] || "", null, null, x[4] || LIB_CAT_TYPE[c.cat] || ""]));
+      c.items.forEach(x => d.items.push([x[0], c.sup, x[1], x[2] || "", x[3] || "", null, null, x[4] || libCatType(c.cat) || ""]));
     } catch (_) {}
   }
   libCache = { sups: d.sups, byFile: new Map(d.items.map(x => [x[0], x])), json: JSON.stringify(d) };
@@ -55,6 +55,14 @@ async function libIndex() {
 // furniture images added from a PDF are sorted by Claude from their thumbnails when an API key is set.
 const LIB_TYPES = "SLCTBKDEGR1HPXZMINJWQVYAO";
 const LIB_CAT_TYPE = { LIGHTING: "H", PLUMBING: "P", MILLWORK: "M", DOORS: "I", STONE: "N", "WALL PANELLING": "W", "WOOD PRODUCTS": "W", "PARTITION SYSTEMS": "Q", "GLASS PRODUCTS": "V", FLOORING: "J", OFFICE: "1", VANITIES: "X", MIRRORS: "Z", SIGNAGE: "Y" };
+// Categories an admin adds (librarycats/main = { types: [{ c, en, zh, section }] }): each gets a one-character
+// type code (lowercase or 2–9, so it never clashes with the built-in ones) and a catalogue category CUSTOM-<code>.
+const CUSTOM_CODES = "abcdefghijklmnopqrstuvwxyz23456789";
+const customTypes = () => (Array.isArray(store["librarycats/main"]?.data?.types) ? store["librarycats/main"].data.types : []);
+const libTypeOk = c => typeof c === "string" && c.length === 1 && (LIB_TYPES.includes(c) || customTypes().some(x => x.c === c));
+const customOfCat = c => /^CUSTOM-[a-z2-9]$/.test(c || "") ? customTypes().find(x => x.c === c.slice(7)) : null;
+const libCatType = c => LIB_CAT_TYPE[c] || customOfCat(c)?.c || "";
+const libCatSection = c => LIB_CAT[c] || customOfCat(c)?.section || "";
 const LIB_TYPE_PROMPT = `Each image is a product photo from a furniture catalogue. For each image, in order, give ONE letter for the main product shown:
 S sofa/sectional/loveseat · L lounge or arm chair · C dining or office chair · T stool or bar stool · B bench, ottoman or pouf · K coffee or side table · D dining table (a table shown with chairs is D) · E desk, console or dressing table · G cabinet, sideboard, chest, TV unit, shelving or wardrobe · R bed or nightstand · H lamp · Z mirror · A rug, vase, art or other decor · O logo, text, swatch, drawing or no clear product.
 In a room scene, use the most prominent piece. Reply with only the letters, no spaces.`;
@@ -86,7 +94,7 @@ async function classifyPending() {
   if (!ANTHROPIC_API_KEY) return;
   for (const f of (await fsp.readdir(LIB_CATS_DIR).catch(() => [])).filter(f => f.endsWith(".json"))) {
     const c = await libCatRead(f.slice(0, -5));
-    if (c && c.status === "done" && !LIB_CAT_TYPE[c.cat] && c.items.some(x => !x[4])) enqueue(() => classifyCat(c.sup));
+    if (c && c.status === "done" && !libCatType(c.cat) && c.items.some(x => !x[4])) enqueue(() => classifyCat(c.sup));
   }
 }
 async function libCatRead(sup) { try { return JSON.parse(await fsp.readFile(path.join(LIB_CATS_DIR, sup + ".json"), "utf8")); } catch (_) { return null; } }
@@ -312,7 +320,7 @@ function currentUser(req) {
 const projectOf = p => { const m = /^projects\/([^/]+)/.exec(p || ""); return m ? m[1] : null; };
 function canSeeProject(u, id) { return allAccess(u) || (u.projects || []).includes(id); }
 // The sourcing library (library/<catalogue>) is studio-wide: everyone can see what's approved; only admins approve.
-const isLibPath = p => /^library(types)?(\/|$)/.test(p || "");
+const isLibPath = p => /^library(types|cats)?(\/|$)/.test(p || "");
 // Sourcing requests (sourcing/<id>): the studio and sourcing agents see them all; anyone else only their own.
 const isSourcingPath = p => /^sourcing(\/|$)/.test(p || "");
 function canRead(u, p) { if (isLibPath(p)) return true; if (isSourcingPath(p)) { if (u.role === "admin") return true; if (p === "sourcing") return u.role === "agent"; const d = store[p]?.data; return !!d && (d.by?.id === u.id || (u.role === "agent" && !["review", "open"].includes(d.status))); } if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
@@ -846,7 +854,7 @@ const server = http.createServer(async (req, res) => {
         const supplier = String(b.supplier || "").trim().slice(0, 80), product = String(b.product || "").trim().slice(0, 80);
         const s1 = [slug(supplier), slug(product)].filter(Boolean).join("-");
         if (!supplier || !s1) return send(res, 400, { code: "invalid_argument", message: "Enter the supplier's name in English letters or numbers." });
-        if (!LIB_CAT[b.cat]) return send(res, 400, { code: "invalid_argument", message: "Choose a category." });
+        if (!libCatSection(b.cat)) return send(res, 400, { code: "invalid_argument", message: "Choose a category." });
         const pages = Math.floor(Number(b.pages));
         if (!(pages >= 1 && pages <= 2000)) return send(res, 400, { code: "invalid_argument", message: "That PDF has too many pages (2,000 at most)." });
         const lib = await libIndex(), old = await libCatRead(s1);
@@ -882,7 +890,7 @@ const server = http.createServer(async (req, res) => {
         const b = await readJSON(req, 8 * 1024 * 1024);
         const have = new Set(await fsp.readdir(LIB_FULL_DIR).catch(() => []));
         const items = (Array.isArray(b.items) ? b.items : []).filter(x => Array.isArray(x) && typeof x[0] === "string" && x[0].startsWith(prefix) && have.has(x[0]))
-          .map(x => [x[0], Math.floor(Number(x[1])) || 1, String(x[2] || "").slice(0, 200), String(x[3] || "").slice(0, 600), LIB_CAT_TYPE[c.cat] || ""]);
+          .map(x => [x[0], Math.floor(Number(x[1])) || 1, String(x[2] || "").slice(0, 200), String(x[3] || "").slice(0, 600), libCatType(c.cat) || ""]);
         if (!items.length) return send(res, 400, { code: "invalid_argument", message: "No product images were found in that PDF." });
         // Images uploaded but left out of the list (logos repeated on every page) are removed.
         const keep = new Set(items.map(x => x[0]));
@@ -890,8 +898,8 @@ const server = http.createServer(async (req, res) => {
         Object.assign(c, { items, status: "done", finished: new Date().toISOString() });
         await fsp.writeFile(path.join(LIB_CATS_DIR, sup + ".json"), JSON.stringify(c));
         libCache = null; broadcast({ path: "library", index: true });
-        if (!LIB_CAT_TYPE[c.cat]) enqueue(() => classifyCat(sup));
-        return send(res, 200, { ok: true, n: items.length, sorting: !LIB_CAT_TYPE[c.cat] && !!ANTHROPIC_API_KEY });
+        if (!libCatType(c.cat)) enqueue(() => classifyCat(sup));
+        return send(res, 200, { ok: true, n: items.length, sorting: !libCatType(c.cat) && !!ANTHROPIC_API_KEY });
       }
       return send(res, 404, { code: "not_found" });
     }
@@ -1036,6 +1044,38 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       persist(); broadcast({ path: dp, exists: true, data: next });
       return send(res, 200, { ok: true, emailed });
     }
+    if (p === "/api/sourcing/file" && req.method === "POST") {
+      // The studio or the sourcing agent attaches any file (a quote, a PDF, an Excel sheet) to a request:
+      // the raw file is the body, ?id=<request>&name=<file name>. ?id=..&remove=<blob> takes one off.
+      const id = String(url.searchParams.get("id") || ""), dp = "sourcing/" + id, cur = store[dp];
+      if (!/^sourcing\/[0-9a-f]{20}$/.test(dp) || !cur || !canRead(me, dp)) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
+      if (me.role !== "admin" && me.role !== "agent") return deny("Only the studio and the sourcing agent can attach files to a request.");
+      let files;
+      const rm = url.searchParams.get("remove"), buf = rm ? null : await readBody(req, 25 * 1024 * 1024).catch(() => null);
+      if (!rm && !buf) return send(res, 413, { code: "too_large", message: "That file is too big (25 MB at most)." });
+      // Read the list after the upload has arrived, so files sent one after another all stay on it.
+      const fresh = store[dp]; if (!fresh) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
+      const have = Array.isArray(fresh.data.files) ? fresh.data.files : [];
+      if (rm) {
+        if (!have.some(f => f.id === rm)) return send(res, 200, { ok: true, files: have });
+        files = have.filter(f => f.id !== rm);
+        fsp.unlink(path.join(BLOB_DIR, rm)).catch(() => {}); fsp.unlink(path.join(BLOB_DIR, rm + ".json")).catch(() => {});
+      } else {
+        if (have.length >= 10) return send(res, 400, { code: "invalid_argument", message: "Up to 10 files per request." });
+        const name = String(url.searchParams.get("name") || "file").replace(/[\\/\r\n"]+/g, "_").trim().slice(0, 120) || "file";
+        if (!buf.length) return send(res, 400, { code: "invalid_argument", message: "That file is empty." });
+        const blob = crypto.randomBytes(16).toString("hex");
+        await fsp.writeFile(path.join(BLOB_DIR, blob), buf);
+        await fsp.writeFile(path.join(BLOB_DIR, blob + ".json"), JSON.stringify({ contentType: "application/octet-stream", download: name, sizeBytes: buf.length, createdAt: new Date().toISOString(), source: "sourcing reply" }));
+        const latest = store[dp]?.data?.files;
+        files = [...(Array.isArray(latest) ? latest : have), { id: blob, name, size: buf.length, by: me.name || "", at: new Date().toISOString() }];
+      }
+      const now = store[dp]; if (!now) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
+      const next = { ...now.data, files };
+      store[dp] = { data: next, version: now.version + 1, updatedAt: new Date().toISOString() };
+      persist(); broadcast({ path: dp, exists: true, data: next });
+      return send(res, 200, { ok: true, files });
+    }
     if (p === "/api/sourcing/photo" && req.method === "POST") {
       // The studio or the sourcing agent attaches a photo of what they found (shown with the reply). { id, photo } adds; { id, remove } takes one off.
       const b = await readJSON(req, 6 * 1024 * 1024), dp = "sourcing/" + String(b.id || ""), cur = store[dp];
@@ -1054,7 +1094,8 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
         const photo = crypto.randomBytes(16).toString("hex");
         await fsp.writeFile(path.join(BLOB_DIR, photo), buf);
         await fsp.writeFile(path.join(BLOB_DIR, photo + ".json"), JSON.stringify({ contentType: "image/jpeg", sizeBytes: buf.length, createdAt: new Date().toISOString(), source: "sourcing reply" }));
-        found = [...have, photo];
+        const latest = store[dp]?.data?.found;
+        found = [...(Array.isArray(latest) ? latest : have), photo];
       }
       const now = store[dp]; if (!now) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
       const next = { ...now.data, found };
@@ -1070,7 +1111,7 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
         // The person who asked can withdraw it until it's sent to the agent; admins can remove any.
         if (!isAdmin && !(own && inReview)) return deny("Only admins can remove a request.");
         delete store[dp]; persist(); broadcast({ path: dp, exists: false });
-        for (const ph of [cur.data.photo, ...(Array.isArray(cur.data.found) ? cur.data.found : [])]) { fsp.unlink(path.join(BLOB_DIR, ph)).catch(() => {}); fsp.unlink(path.join(BLOB_DIR, ph + ".json")).catch(() => {}); }
+        for (const ph of [cur.data.photo, ...(Array.isArray(cur.data.found) ? cur.data.found : []), ...(Array.isArray(cur.data.files) ? cur.data.files.map(f => f.id) : [])]) { fsp.unlink(path.join(BLOB_DIR, ph)).catch(() => {}); fsp.unlink(path.join(BLOB_DIR, ph + ".json")).catch(() => {}); }
         return send(res, 200, { ok: true });
       }
       if (!staff) return deny("Only the studio and the sourcing agent can update a request.");
@@ -1083,12 +1124,28 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       persist(); broadcast({ path: dp, exists: true, data: next });
       return send(res, 200, { ok: true });
     }
+    if (p === "/api/library/category" && req.method === "POST") {
+      // An admin adds a category to the Sourcing library: { en, zh, section } (section = where its products go in a project).
+      if (!isAdmin) return deny("Only admins can add categories.");
+      const b = await readJSON(req);
+      const en = String(b.en || "").replace(/\s+/g, " ").trim().slice(0, 40), zh = String(b.zh || "").replace(/\s+/g, " ").trim().slice(0, 20), section = String(b.section || "");
+      if (!en) return send(res, 400, { code: "invalid_argument", message: "Give the category a name." });
+      if (!new Set(Object.values(LIB_CAT)).has(section)) return send(res, 400, { code: "invalid_argument", message: "Choose where its products go in a project." });
+      const have = customTypes();
+      if (have.some(x => x.en.toLowerCase() === en.toLowerCase())) return send(res, 409, { code: "exists", message: "There's already a category with that name." });
+      const c = [...CUSTOM_CODES].find(k => !have.some(x => x.c === k));
+      if (!c) return send(res, 400, { code: "invalid_argument", message: "No more categories can be added." });
+      const cur = store["librarycats/main"], data = { types: [...have, { c, en, zh, section, by: me.name || "", at: new Date().toISOString() }] };
+      store["librarycats/main"] = { data, version: (cur?.version || 0) + 1, updatedAt: new Date().toISOString() };
+      persist(); broadcast({ path: "librarycats/main", exists: true, data });
+      return send(res, 200, { ok: true, code: c });
+    }
     if (p === "/api/library/type" && req.method === "POST") {
       // { sup, keys, type } moves images to another product type in librarytypes/<sup>.t
       if (!isAdmin) return deny("Only admins can sort library images.");
       const b = await readJSON(req);
       const dp = "librarytypes/" + b.sup;
-      if (typeof b.sup !== "string" || !validPath(dp, true) || !Array.isArray(b.keys) || b.keys.length > 5000 || typeof b.type !== "string" || b.type.length !== 1 || !LIB_TYPES.includes(b.type)) return send(res, 400, { code: "invalid_argument" });
+      if (typeof b.sup !== "string" || !validPath(dp, true) || !Array.isArray(b.keys) || b.keys.length > 5000 || !libTypeOk(b.type)) return send(res, 400, { code: "invalid_argument" });
       const cur = store[dp], t0 = { ...(cur?.data?.t || {}) };
       b.keys.map(Number).filter(k => Number.isInteger(k) && k >= 0 && k < 1e7).forEach(k => (t0[k] = b.type));
       const next = { t: t0, updated: new Date().toISOString(), by: me.name || "" };
@@ -1129,7 +1186,7 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       const dup = Object.entries(store).find(([k, v]) => k.startsWith(pre) && v.data?.libSource?.file === file);
       if (dup) return send(res, 200, { ok: true, id: dup[0].split("/")[3], code: dup[1].data.code, existing: true });
       const L = LIB_LABEL[sup] || S.label || [sup, ""];
-      const category = LIB_CAT[S.cat] || "Finishes";
+      const category = libCatSection(S.cat) || "Finishes";
       const t0 = String(text || "");
       const zhPrefix = /沙发/.test(t0) ? "SF" : /(休闲椅|躺椅)/.test(t0) ? "LC" : /凳/.test(t0) ? "STL" : /椅/.test(t0) ? "CH" : /(茶几|餐台|餐桌|桌|几)/.test(t0) ? "TB" : /(柜|架)/.test(t0) ? "CR" : /床/.test(t0) ? "BD" : null;
       const prefix = zhPrefix || (/^[A-Z]{1,5}$/.test(b.prefix || "") ? b.prefix : category === "Furniture" ? "F" : "M");
@@ -1236,7 +1293,8 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       try { meta = JSON.parse(await fsp.readFile(file + ".json", "utf8")); } catch (_) { meta = { contentType: sniffType(file) }; }
       try {
         const st = await fsp.stat(file);
-        res.writeHead(200, { "Content-Type": meta.contentType || "application/octet-stream", "Content-Length": st.size, "Cache-Control": "private, max-age=31536000, immutable" });
+        res.writeHead(200, { "Content-Type": meta.contentType || "application/octet-stream", "Content-Length": st.size, "Cache-Control": "private, max-age=31536000, immutable",
+          ...(meta.download ? { "Content-Disposition": `attachment; filename="${String(meta.download).replace(/[^\x20-\x7e]|"/g, "_")}"; filename*=UTF-8''${encodeURIComponent(meta.download)}`, "X-Content-Type-Options": "nosniff" } : {}) });
         fs.createReadStream(file).pipe(res);
       } catch (_) { send(res, 404, "Not found"); }
       return;

@@ -72,6 +72,12 @@
 .sbl-page b{font-family:var(--display);font-style:italic;font-weight:400;font-size:19px}
 .sbl-page span{display:flex;gap:14px}
 .sbl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px 14px;padding-top:18px}
+.sbl-pages{display:flex;flex-wrap:wrap;gap:16px;padding-top:18px}
+.sbl-pg{flex:1 1 calc(max(var(--n) * 128px,210px) + 26px);max-width:min(100%,calc(max(var(--n) * 128px,210px) * 1.6 + 26px));min-width:0;padding:4px 12px 12px;background:var(--paper);border:1px solid var(--rule)}
+.sbl-pg .sbl-page{padding-top:6px;flex-wrap:wrap}
+.sbl-pg .sbl-page b{font-size:17px}
+.sbl-pg .sbl-page span{gap:10px;font-size:12.5px;white-space:nowrap}
+.sbl-pgimgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px 10px;padding-top:10px}
 .sbl-tile{position:relative;display:flex;flex-direction:column;gap:6px;min-width:0;transition:opacity .2s}
 .sbl-tile.off .sbl-sw{opacity:.38;filter:grayscale(1)}
 .sbl-tile.off .sbl-cap{color:var(--muted)}
@@ -227,7 +233,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
 .sbl-pick select{font:inherit;font-size:15px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px}
 .sbl-excerpt{margin:16px 0 0;color:var(--muted);font-size:13px;max-width:65ch}
 @media (max-width:900px){.sbl-sheet,.sbl-sheet.big{grid-template-columns:1fr;grid-template-rows:38vh 1fr}.sbl-sheet.big{grid-template-rows:52vh 1fr}}
-@media (max-width:760px){.sbl-head{grid-template-columns:1fr}.sbl-stat{border-left:0}.sbl-stat div:first-child{padding-left:0}.sbl-tools{position:static}.sbl-cats{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px}.sbl-name{font-size:16px}.sbl-cat .sbl-all{font-size:18px}.sbl-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.sbl-facts{grid-template-columns:1fr 1fr}}
+@media (max-width:760px){.sbl-head{grid-template-columns:1fr}.sbl-stat{border-left:0}.sbl-stat div:first-child{padding-left:0}.sbl-tools{position:static}.sbl-cats{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px}.sbl-name{font-size:16px}.sbl-cat .sbl-all{font-size:18px}.sbl-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.sbl-pages{gap:12px}.sbl-pg{flex-basis:calc(max(var(--n) * 100px,150px) + 26px);padding:4px 10px 10px}.sbl-pgimgs{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}.sbl-facts{grid-template-columns:1fr 1fr}}
 `;
   const style = document.createElement("style"); style.textContent = CSS; document.head.appendChild(style);
 
@@ -398,17 +404,20 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     // Inside a product type, admins tick images and send them to another type in one go.
     const sorting = cur && !!ui.type;
     if (!sorting) sel.clear(); else { const ids = new Set(l.map(o => o.i)); [...sel].forEach(i => ids.has(i) || sel.delete(i)); }
-    let page = null, html = ""; const bySup = !!ui.sup;
-    for (const o of l.slice(0, ui.n)) {
-      if (bySup && o.page !== page) { page = o.page; html += `<div class="sbl-page"><b>${t("Page")} ${o.page}</b>${cur ? `<span><button class="linkbtn" data-sblpage="${o.page}" data-v="on">${t("Approve page")}</button><button class="linkbtn" data-sblpage="${o.page}" data-v="off">${t("Unapprove page")}</button></span>` : ""}</div>`; }
-      const x = isOn(o);
-      html += `<div class="sbl-tile ${cur && !x ? "off" : ""} ${sel.has(o.i) ? "sel" : ""}"><button class="sbl-open" data-sblopen="${o.i}" aria-label="${esc(o.file)}"><span class="sbl-sw" ${sprite(o)}></span></button>
+    const bySup = !!ui.sup, shown = l.slice(0, ui.n);
+    const tile = o => { const x = isOn(o);
+      return `<div class="sbl-tile ${cur && !x ? "off" : ""} ${sel.has(o.i) ? "sel" : ""}"><button class="sbl-open" data-sblopen="${o.i}" aria-label="${esc(o.file)}"><span class="sbl-sw" ${sprite(o)}></span></button>
         ${sorting ? `<label class="sbl-sel" title="${t("Select to move")}"><input type="checkbox" data-sblsel="${o.i}" ${sel.has(o.i) ? "checked" : ""} aria-label="${t("Select to move")} ${esc(o.file)}"></label>` : ""}
         ${cur ? `<label class="sbl-chk" title="${x ? t("Approved. Untick to hide it.") : t("Not approved. Tick to approve.")}"><input type="checkbox" data-sblkeep="${o.i}" ${x ? "checked" : ""} aria-label="${t("Approve")} ${esc(o.file)}"></label>` : ""}
         ${inP.has(o.file) ? `<span class="sbl-inproj">${t("In project")}</span>` : ""}
-        <span class="sbl-cap"><b>${esc(o.codes[0] || label(o.sup)[0])}</b><span>${bySup ? "" : esc(label(o.sup)[0]) + " · "}p${o.page}</span><button class="sbl-star" data-sblfav="${o.i}" aria-pressed="${fav.has(o.file)}" title="${t(fav.has(o.file) ? "Remove from favourites" : "Add to favourites")}">${fav.has(o.file) ? "★" : "☆"}</button></span></div>`;
-    }
-    return `${sorting ? sortBarHTML() : ""}<div class="sbl-grid">${html}</div>${l.length > ui.n ? `<div class="sbl-more"><button class="btn ghost" data-sblmore>${zh() ? `再显示 ${Math.min(120, l.length - ui.n)} 张（还有 ${nf(l.length - ui.n)} 张）` : `Show ${Math.min(120, l.length - ui.n)} more of ${nf(l.length - ui.n)}`}</button></div>` : ""}`;
+        <span class="sbl-cap"><b>${esc(o.codes[0] || label(o.sup)[0])}</b><span>${bySup ? "" : esc(label(o.sup)[0]) + " · "}p${o.page}</span><button class="sbl-star" data-sblfav="${o.i}" aria-pressed="${fav.has(o.file)}" title="${t(fav.has(o.file) ? "Remove from favourites" : "Add to favourites")}">${fav.has(o.file) ? "★" : "☆"}</button></span></div>`; };
+    let html;
+    if (bySup) {
+      // Inside one catalogue, each page is a card and the cards tile across the screen, sized to their number of images.
+      const pages = []; shown.forEach(o => { const g = pages[pages.length - 1]; if (g && g.p === o.page) g.l.push(o); else pages.push({ p: o.page, l: [o] }); });
+      html = `<div class="sbl-pages">${pages.map(g => `<section class="sbl-pg" style="--n:${Math.min(g.l.length, 4)}"><div class="sbl-page"><b>${t("Page")} ${g.p}</b>${cur ? `<span><button class="linkbtn" data-sblpage="${g.p}" data-v="on">${t("Approve page")}</button><button class="linkbtn" data-sblpage="${g.p}" data-v="off">${t("Unapprove page")}</button></span>` : ""}</div><div class="sbl-pgimgs">${g.l.map(tile).join("")}</div></section>`).join("")}</div>`;
+    } else html = `<div class="sbl-grid">${shown.map(tile).join("")}</div>`;
+    return `${sorting ? sortBarHTML() : ""}${html}${l.length > ui.n ? `<div class="sbl-more"><button class="btn ghost" data-sblmore>${zh() ? `再显示 ${Math.min(120, l.length - ui.n)} 张（还有 ${nf(l.length - ui.n)} 张）` : `Show ${Math.min(120, l.length - ui.n)} more of ${nf(l.length - ui.n)}`}</button></div>` : ""}`;
   }
   const sel = new Set();
   function sortBarHTML() {
@@ -869,6 +878,9 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   const isAdm = () => tbsCfg.role === "admin";
   // What needs this person's attention: new items for an admin, sent ones for the sourcing agent.
   const tbsNew = x => inReview(x) && !(x.by && x.by.id === tbsCfg.me);
+  const tbsMine = x => !!(x.by && x.by.id === tbsCfg.me);
+  // Inside a project, a client sees only that project's requests (plus their own asked from the dashboard).
+  const tbsList = () => { const all = [...reqs.values()]; if (staff() || host.ctx !== "project") return all; const pid = host.project(); return all.filter(x => x.project && x.project.id ? x.project.id === pid : tbsMine(x)); };
   const tbsTodo = () => [...reqs.values()].filter(x => isAdm() ? tbsNew(x) : tbsCfg.role === "agent" ? x.status === "sent" : false).length;
   let badgeEl = null;
   function tbsBadge() {
@@ -882,7 +894,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (window.Notification && Notification.permission === "granted" && (document.hidden || !document.hasFocus())) { try { new Notification("Sourcebook · TBS", { body: msg, icon: "/icon-192.png", tag: "sb-tbs-" + x.id }); } catch (_) {} }
   }
   function tbsTileHTML() {
-    const all = [...reqs.values()]; if (!all.length && !staff()) return "";
+    const all = tbsList(); if (!all.length && !staff()) return "";
     const n = tbsTodo(), sub = isAdm() ? (zh() ? `${nf(all.filter(inReview).length)} 项待审核 · ${nf(all.filter(x => x.status === "sent").length)} 项采购中` : `${nf(all.filter(inReview).length)} to review · ${nf(all.filter(x => x.status === "sent").length)} with the agent`)
       : tbsCfg.role === "agent" ? (zh() ? `${nf(n)} 项待寻找` : `${nf(n)} to find`) : (zh() ? `${nf(all.length)} 项请求` : `${nf(all.length)} request${all.length === 1 ? "" : "s"}`);
     const cover = all.find(x => isAdm() ? inReview(x) : true) || all[0];
@@ -890,7 +902,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
   const tbsState = x => inReview(x) ? "review" : x.status;
   function tbsHTML() {
-    const all = [...reqs.values()], st = staff(), adm = isAdm();
+    const all = tbsList(), st = staff(), adm = isAdm();
     const counts = { review: all.filter(inReview).length, sent: all.filter(x => x.status === "sent").length, sourced: all.filter(x => x.status === "sourced").length };
     if (!tbsFilter || (tbsFilter !== "all" && !counts[tbsFilter])) tbsFilter = adm && counts.review ? "review" : tbsCfg.role === "agent" && counts.sent ? "sent" : "all";
     const list = all.filter(x => tbsFilter === "all" || tbsState(x) === tbsFilter);
@@ -920,7 +932,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       ${sendForm}
       ${st && s !== "review" ? `<input class="sbl-fnote" data-sblreply="${esc(x.id)}" value="${esc(x.reply || "")}" maxlength="2000" placeholder="${esc(t("Where it was found, for the person who asked (optional)"))}"><label class="btn ghost sm sbl-addfound"><input type="file" multiple data-sblfound="${esc(x.id)}">${t(tbsUp.has(x.id) ? "Adding…" : "Attach photos or files")}</label>` : ""}
       <span class="sbl-row">${st && s === "sent" ? `<button class="btn sm" data-sbl="rdone" data-id="${esc(x.id)}">${t("Mark as sourced")}</button>` : ""}${st && s === "sourced" ? `<button class="linkbtn" data-sbl="ropen" data-id="${esc(x.id)}">${t("Reopen")}</button>` : ""}
-        ${(!st && s === "review") || adm ? `<button class="linkbtn" data-sbl="rdel" data-id="${esc(x.id)}" style="color:var(--crit)">${t(adm ? "Remove" : "Withdraw the request")}</button>` : ""}</span></div></article>`;
+        ${(!st && s === "review" && tbsMine(x)) || adm ? `<button class="linkbtn" data-sbl="rdel" data-id="${esc(x.id)}" style="color:var(--crit)">${t(adm ? "Remove" : "Withdraw the request")}</button>` : ""}</span></div></article>`;
   }
   async function tbsSend(id) {
     if (tbsSending.has(id)) return;

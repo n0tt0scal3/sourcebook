@@ -216,8 +216,16 @@ function projectSummaries() {
     const fx = Number(main.fxRate) > 0 ? Number(main.fxRate) : 4.73;
     const unitCAD = it => it.priceBase === "CNY" && it.unitCostCNY != null && it.unitCostCNY !== "" ? Number(it.unitCostCNY) / fx : it.unitCost == null || it.unitCost === "" ? null : Number(it.unitCost);
     const sub = items.reduce((s, it) => s + (Number(it.qty) || 0) * (unitCAD(it) || 0), 0);
-    const fee = sub * (Number(main.quoteFee) || 0) / 100, freight = Number(main.quoteFreight) || 0;
-    const total = (sub + fee + freight) * (1 + (Number(main.quoteTax) || 0) / 100);
+    // landed cost = products + freight + insurance + duty + brokerage + delivery; sourcing service is a % of it (same as quoteTotals in the page)
+    const duty = items.reduce((s, it) => s + (Number(it.qty) || 0) * (unitCAD(it) || 0) * (it.dutyRate == null || it.dutyRate === "" ? Number(main.quoteDuty) || 0 : Number(it.dutyRate)) / 100, 0);
+    const landed = sub + (Number(main.quoteFreight) || 0) + sub * (Number(main.quoteIns) || 0) / 100 + duty + (Number(main.quoteBroker) || 0) + (Number(main.quoteDeliv) || 0);
+    // custom pieces use the custom sourcing rate on their share of the landed cost
+    const dutyOf = it => it.dutyRate == null || it.dutyRate === "" ? Number(main.quoteDuty) || 0 : Number(it.dutyRate);
+    const lineOf = it => (Number(it.qty) || 0) * (unitCAD(it) || 0);
+    const spread = (Number(main.quoteFreight) || 0) + (Number(main.quoteBroker) || 0) + (Number(main.quoteDeliv) || 0);
+    const landedC = items.filter(it => it.custom).reduce((s, it) => s + lineOf(it) * (1 + (Number(main.quoteIns) || 0) / 100 + dutyOf(it) / 100) + (sub ? spread * lineOf(it) / sub : 0), 0);
+    const fee = (landed - landedC) * (Number(main.quoteFee) || 0) / 100 + landedC * (Number(main.quoteFeeCustom) || 0) / 100;
+    const total = (landed + fee) * (1 + (main.quoteTax == null || main.quoteTax === "" ? 13 : Number(main.quoteTax)) / 100);
     const stages = Object.fromEntries(STAGES.map(st => [st, items.filter(i => i.status === st).length]));
     let overdue = 0, dueSoon = 0;
     items.forEach(it => {

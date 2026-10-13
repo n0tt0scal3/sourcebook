@@ -869,6 +869,9 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   const isAdm = () => tbsCfg.role === "admin";
   // What needs this person's attention: new items for an admin, sent ones for the sourcing agent.
   const tbsNew = x => inReview(x) && !(x.by && x.by.id === tbsCfg.me);
+  const tbsMine = x => !!(x.by && x.by.id === tbsCfg.me);
+  // Inside a project, a client sees only that project's requests (plus their own asked from the dashboard).
+  const tbsList = () => { const all = [...reqs.values()]; if (staff() || host.ctx !== "project") return all; const pid = host.project(); return all.filter(x => x.project && x.project.id ? x.project.id === pid : tbsMine(x)); };
   const tbsTodo = () => [...reqs.values()].filter(x => isAdm() ? tbsNew(x) : tbsCfg.role === "agent" ? x.status === "sent" : false).length;
   let badgeEl = null;
   function tbsBadge() {
@@ -882,7 +885,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (window.Notification && Notification.permission === "granted" && (document.hidden || !document.hasFocus())) { try { new Notification("Sourcebook · TBS", { body: msg, icon: "/icon-192.png", tag: "sb-tbs-" + x.id }); } catch (_) {} }
   }
   function tbsTileHTML() {
-    const all = [...reqs.values()]; if (!all.length && !staff()) return "";
+    const all = tbsList(); if (!all.length && !staff()) return "";
     const n = tbsTodo(), sub = isAdm() ? (zh() ? `${nf(all.filter(inReview).length)} 项待审核 · ${nf(all.filter(x => x.status === "sent").length)} 项采购中` : `${nf(all.filter(inReview).length)} to review · ${nf(all.filter(x => x.status === "sent").length)} with the agent`)
       : tbsCfg.role === "agent" ? (zh() ? `${nf(n)} 项待寻找` : `${nf(n)} to find`) : (zh() ? `${nf(all.length)} 项请求` : `${nf(all.length)} request${all.length === 1 ? "" : "s"}`);
     const cover = all.find(x => isAdm() ? inReview(x) : true) || all[0];
@@ -890,7 +893,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
   const tbsState = x => inReview(x) ? "review" : x.status;
   function tbsHTML() {
-    const all = [...reqs.values()], st = staff(), adm = isAdm();
+    const all = tbsList(), st = staff(), adm = isAdm();
     const counts = { review: all.filter(inReview).length, sent: all.filter(x => x.status === "sent").length, sourced: all.filter(x => x.status === "sourced").length };
     if (!tbsFilter || (tbsFilter !== "all" && !counts[tbsFilter])) tbsFilter = adm && counts.review ? "review" : tbsCfg.role === "agent" && counts.sent ? "sent" : "all";
     const list = all.filter(x => tbsFilter === "all" || tbsState(x) === tbsFilter);
@@ -920,7 +923,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       ${sendForm}
       ${st && s !== "review" ? `<input class="sbl-fnote" data-sblreply="${esc(x.id)}" value="${esc(x.reply || "")}" maxlength="2000" placeholder="${esc(t("Where it was found, for the person who asked (optional)"))}"><label class="btn ghost sm sbl-addfound"><input type="file" multiple data-sblfound="${esc(x.id)}">${t(tbsUp.has(x.id) ? "Adding…" : "Attach photos or files")}</label>` : ""}
       <span class="sbl-row">${st && s === "sent" ? `<button class="btn sm" data-sbl="rdone" data-id="${esc(x.id)}">${t("Mark as sourced")}</button>` : ""}${st && s === "sourced" ? `<button class="linkbtn" data-sbl="ropen" data-id="${esc(x.id)}">${t("Reopen")}</button>` : ""}
-        ${(!st && s === "review") || adm ? `<button class="linkbtn" data-sbl="rdel" data-id="${esc(x.id)}" style="color:var(--crit)">${t(adm ? "Remove" : "Withdraw the request")}</button>` : ""}</span></div></article>`;
+        ${(!st && s === "review" && tbsMine(x)) || adm ? `<button class="linkbtn" data-sbl="rdel" data-id="${esc(x.id)}" style="color:var(--crit)">${t(adm ? "Remove" : "Withdraw the request")}</button>` : ""}</span></div></article>`;
   }
   async function tbsSend(id) {
     if (tbsSending.has(id)) return;

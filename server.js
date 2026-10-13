@@ -321,9 +321,15 @@ const projectOf = p => { const m = /^projects\/([^/]+)/.exec(p || ""); return m 
 function canSeeProject(u, id) { return allAccess(u) || (u.projects || []).includes(id); }
 // The sourcing library (library/<catalogue>) is studio-wide: everyone can see what's approved; only admins approve.
 const isLibPath = p => /^library(types|cats)?(\/|$)/.test(p || "");
-// Sourcing requests (sourcing/<id>): the studio and sourcing agents see them all; anyone else only their own.
+// Sourcing requests (sourcing/<id>): admins see them all; sourcing agents the ones sent to them; anyone else their own
+// and the ones asked from a project they're on, never another project's.
 const isSourcingPath = p => /^sourcing(\/|$)/.test(p || "");
-function canRead(u, p) { if (isLibPath(p)) return true; if (isSourcingPath(p)) { if (u.role === "admin") return true; if (p === "sourcing") return u.role === "agent"; const d = store[p]?.data; return !!d && (d.by?.id === u.id || (u.role === "agent" && !["review", "open"].includes(d.status))); } if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
+function canSeeRequest(u, d) {
+  if (!d) return false; if (u.role === "admin" || d.by?.id === u.id) return true;
+  if (u.role === "agent") return !["review", "open"].includes(d.status);
+  return !!d.project?.id && (u.projects || []).includes(d.project.id);
+}
+function canRead(u, p) { if (isLibPath(p)) return true; if (isSourcingPath(p)) { if (u.role === "admin") return true; if (p === "sourcing") return u.role === "agent"; return canSeeRequest(u, store[p]?.data); } if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
 // Internal fields a client never receives.
 const CLIENT_HIDDEN = ["notes", "match", "pendingSetup", "chg"];
 function forUser(u, p, data) {
@@ -984,7 +990,7 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
     // TBS (to be sourced): a photo someone wants that the library doesn't have. Stored as sourcing/<id>.
     // It lands as "review" for an admin to look at; the admin sends it to the sourcing agent ("sent", emailed to
     // their QQ address when mail is set up); the agent or an admin marks it "sourced". Old "open" ones count as review.
-    // Admins see them all; sourcing agents see the ones sent to them; anyone else sees their own.
+    // Admins see them all; sourcing agents see the ones sent to them; anyone else their own and their projects' (canSeeRequest).
     if (p === "/api/sourcing" && req.method === "GET") {
       const all = Object.entries(store).filter(([k]) => /^sourcing\/[^/]+$/.test(k)).map(([k, v]) => ({ id: k.slice(9), ...forUser(me, k, v.data) })).filter(x => canRead(me, "sourcing/" + x.id));
       return send(res, 200, { requests: all.sort((x, y) => String(y.at).localeCompare(String(x.at))), role: me.role, me: me.id, ...(isAdmin ? { mail: mailOn(), agentEmail: store["tbscfg/main"]?.data?.agentEmail || people.users.filter(u => u.role === "agent" && u.email && !u.disabled).map(u => u.email)[0] || "" } : {}) });

@@ -30,6 +30,8 @@ const LIB_THUMB_DIR = path.join(DATA_DIR, "lib-thumbs");
 // The library index, read once and kept in memory for building pieces on the server.
 const LIB_LABEL = { "BILLA-Sofa": ["Billa", "Sofas & lounge chairs"], "BILLA-CoffeeTV": ["Billa", "Coffee tables & TV units"], "BILLA-Dining": ["Billa", "Dining"], "BILLA-Outdoor": ["Billa", "Outdoor"], "HALO": ["HALO", "Collection 2026"], "Kaiwuli": ["Kaiwuli", "Catalogue 2026"], "TO-Tearsheet": ["TO Interactive", "Tearsheets 2025"] };
 const LIB_CAT = { FURNITURE: "Furniture", LIGHTING: "Lighting", PLUMBING: "Plumbing", MILLWORK: "Millwork", DOORS: "Millwork", STONE: "Stone", "WALL PANELLING": "Finishes", "WOOD PRODUCTS": "Finishes", "PARTITION SYSTEMS": "Glazing", "GLASS PRODUCTS": "Glazing", FLOORING: "Finishes", OFFICE: "Furniture", VANITIES: "Plumbing", MIRRORS: "Glazing", SIGNAGE: "Hardware" };
+// Code prefix for a library piece outside furniture, the same as CAT_PREFIX in the book.
+const LIB_CODE = { Stone: "ST", Tile: "CT", Textiles: "FAB", Glazing: "GL", Millwork: "MW", Lighting: "LT", Hardware: "HW", Plumbing: "P", Finishes: "FIN" };
 const libCatFile = c => String(c).replace(/ /g, "-");
 let libCache = null;
 // The scanned catalogues in lib/ plus the finished ones added from PDFs; uploaded catalogues carry label and up: 1.
@@ -1203,7 +1205,8 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       const category = libCatSection(S.cat) || "Finishes";
       const t0 = String(text || "");
       const zhPrefix = /沙发/.test(t0) ? "SF" : /(休闲椅|躺椅)/.test(t0) ? "LC" : /凳/.test(t0) ? "STL" : /椅/.test(t0) ? "CH" : /(茶几|餐台|餐桌|桌|几)/.test(t0) ? "TB" : /(柜|架)/.test(t0) ? "CR" : /床/.test(t0) ? "BD" : null;
-      const prefix = zhPrefix || (/^[A-Z]{1,5}$/.test(b.prefix || "") ? b.prefix : category === "Furniture" ? "F" : "M");
+      // Furniture is tagged by what it is (SF, CH, TB…); everything else by its category, like pieces added in the book (LT for lighting).
+      const prefix = category === "Furniture" ? zhPrefix || (/^[A-Z]{1,5}$/.test(b.prefix || "") ? b.prefix : "F") : LIB_CODE[category] || "FIN";
       const used = new Set(items.map(x => String(x.code || "").toUpperCase().match(/^([A-Z]+)-?(\d+)/)).filter(x => x && x[1] === prefix).map(x => Number(x[2])));
       let n = 1; while (used.has(n)) n++;
       const code = `${prefix}-${n}`;

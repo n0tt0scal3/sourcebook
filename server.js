@@ -144,6 +144,31 @@ function sniffType(file) {
   return "application/octet-stream";
 }
 
+// A one-page PDF holding a JPEG (a catalogue page rendered in the browser). w and h are the page size in points.
+function jpegToPdf(jpg, w, h) {
+  let i = 2, px = 0, py = 0, comps = 3;
+  while (i + 9 < jpg.length && jpg[i] === 0xff) {
+    const m = jpg[i + 1], len = jpg.readUInt16BE(i + 2);
+    if (m >= 0xc0 && m <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(m)) { py = jpg.readUInt16BE(i + 5); px = jpg.readUInt16BE(i + 7); comps = jpg[i + 9]; break; }
+    i += 2 + len;
+  }
+  if (!px || !py) return null;
+  if (!(w > 0 && h > 0 && w < 20000 && h < 20000)) { w = px * 0.5; h = py * 0.5; }
+  const W = w.toFixed(2), H = h.toFixed(2), cs = comps === 1 ? "/DeviceGray" : comps === 4 ? "/DeviceCMYK" : "/DeviceRGB";
+  const draw = `q ${W} 0 0 ${H} 0 0 cm /Im0 Do Q`;
+  const parts = [], offs = []; let pos = 0;
+  const put = x => { const b = Buffer.isBuffer(x) ? x : Buffer.from(x, "latin1"); parts.push(b); pos += b.length; };
+  const obj = (n, body) => { offs[n] = pos; put(`${n} 0 obj\n`); body(); put("\nendobj\n"); };
+  put("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+  obj(1, () => put("<< /Type /Catalog /Pages 2 0 R >>"));
+  obj(2, () => put("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"));
+  obj(3, () => put(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>`));
+  obj(4, () => put(`<< /Length ${draw.length} >>\nstream\n${draw}\nendstream`));
+  obj(5, () => { put(`<< /Type /XObject /Subtype /Image /Width ${px} /Height ${py} /ColorSpace ${cs} /BitsPerComponent 8 /Filter /DCTDecode${comps === 4 ? " /Decode [1 0 1 0 1 0 1 0]" : ""} /Length ${jpg.length} >>\nstream\n`); put(jpg); put("\nendstream"); });
+  const xref = pos;
+  put(`xref\n0 6\n0000000000 65535 f \n${[1, 2, 3, 4, 5].map(n => String(offs[n]).padStart(10, "0") + " 00000 n \n").join("")}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return Buffer.concat(parts);
+}
 function sniffBuf(b) {
   if (b[0] === 0xff && b[1] === 0xd8) return "image/jpeg";
   if (b.slice(0, 4).toString("hex") === "89504e47") return "image/png";
@@ -850,7 +875,15 @@ const server = http.createServer(async (req, res) => {
       try {
         const st = await fsp.stat(fp);
         const pdf = fp.endsWith(".pdf");
-        res.writeHead(200, { "Content-Type": pdf ? "application/pdf" : "image/jpeg", "Content-Length": st.size, "Cache-Control": "private, max-age=86400", ...(pdf ? { "Content-Disposition": "inline" } : {}) });
+        // Byte ranges, so the browser can read one page of a large catalogue without downloading all of it.
+        const rg = pdf && /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || "");
+        if (rg && (rg[1] || rg[2])) {
+          let a = rg[1] ? Number(rg[1]) : Math.max(0, st.size - Number(rg[2])), b = rg[1] && rg[2] ? Math.min(Number(rg[2]), st.size - 1) : st.size - 1;
+          if (a > b || a >= st.size) { res.writeHead(416, { "Content-Range": `bytes */${st.size}` }); return res.end(); }
+          res.writeHead(206, { "Content-Type": "application/pdf", "Content-Length": b - a + 1, "Content-Range": `bytes ${a}-${b}/${st.size}`, "Accept-Ranges": "bytes", "Cache-Control": "private, max-age=86400", "Content-Disposition": "inline" });
+          return fs.createReadStream(fp, { start: a, end: b }).pipe(res);
+        }
+        res.writeHead(200, { "Content-Type": pdf ? "application/pdf" : "image/jpeg", "Content-Length": st.size, "Cache-Control": "private, max-age=86400", ...(pdf ? { "Content-Disposition": "inline", "Accept-Ranges": "bytes" } : {}) });
         return fs.createReadStream(fp).pipe(res);
       } catch (_) { return send(res, 404, "Not found"); }
     }
@@ -1187,7 +1220,7 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
     if (p === "/api/library/add" && req.method === "POST") {
       // { project, file, photo?: base64 JPEG, prefix?: "SF" } adds an approved library image to a project as a piece.
       // Built here from the catalogue index so clients (who can't otherwise create pieces) can add them too.
-      const b = await readJSON(req, 4 * 1024 * 1024);
+      const b = await readJSON(req, 9 * 1024 * 1024);
       const pid = String(b.project || "");
       if (!validPath("projects/" + pid, true) || !store["projects/" + pid]) return send(res, 404, { code: "not_found", message: "That project no longer exists." });
       if (!canSeeProject(me, pid)) return deny("You can't add to that project.");
@@ -1221,10 +1254,24 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       }
       const codes = String(codesStr || "").split(" ").filter(Boolean);
       const drive = S.drive ? `https://drive.google.com/file/d/${S.drive}/view` : S.up ? `/lib/pdf/${sup}.pdf` : null;
-      const doc = { specs: [], photo, photoFit: "contain", name: codes[0] ? `${codes[0]} · ${L[0]}` : `${L[0]} ${L[1]} · p${page}`.trim(), description: L[1] ? `${L[0]} ${L[1]}` : "",
+      // The catalogue page the image is on goes in the Specification as a one-page PDF (the browser renders the page;
+      // catalogues kept on Google Drive can't be read here, so those get a link instead). Drawings & references stay for the project's own drawings.
+      const catSpec = { label: "Catalogue page", value: `${S.pdf || L[0]} · p.${page}` };
+      if (typeof b.page === "string" && b.page.length < 6e6) {
+        const jpg = Buffer.from(b.page, "base64");
+        const pdf = jpg.length && sniffBuf(jpg) === "image/jpeg" ? jpegToPdf(jpg, Number(b.pageW), Number(b.pageH)) : null;
+        if (pdf) {
+          const id = crypto.randomBytes(16).toString("hex");
+          await fsp.writeFile(path.join(BLOB_DIR, id), pdf);
+          await fsp.writeFile(path.join(BLOB_DIR, id + ".json"), JSON.stringify({ contentType: "application/pdf", sizeBytes: pdf.length, createdAt: new Date().toISOString(), source: `library:${file} p.${page}` }));
+          Object.assign(catSpec, { asset: id, mime: "application/pdf" });
+        }
+      }
+      if (!catSpec.asset && drive) catSpec.url = S.up && !S.drive ? `${drive}#page=${page}` : drive;
+      const doc = { specs: [catSpec], photo, photoFit: "contain", name: codes[0] ? `${codes[0]} · ${L[0]}` : `${L[0]} ${L[1]} · p${page}`.trim(), description: L[1] ? `${L[0]} ${L[1]}` : "",
         category, supplier: L[0], product: L[1] || "", modelCode: codes[0] || "", zone: "", ...(category === "Furniture" ? { furnType: prefix } : {}),
         code, qty: null, unit: "ea", leadWeeks: null, needBy: null, unitCost: null, status: "Concept", material: "wood", color: "#C9C3B8",
-        notes: `From the sourcing library: ${file}`, refs: [{ kind: "Spec sheet", no: "p." + page, title: S.pdf || "", url: drive, asset: null }],
+        notes: `From the sourcing library: ${file}`, refs: [],
         libSource: { file, sup, page, pdf: S.pdf || "", drive: S.drive || "" }, created: new Date().toISOString(), source: "Sourcing library", addedBy: { id: me.id, name: me.name || "", role: me.role } };
       const id = crypto.randomBytes(10).toString("hex");
       const dp = pre + id, tracked = trackChanges(me, null, doc);

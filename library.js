@@ -545,6 +545,21 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(b, 0, 0, cv.width, cv.height);
     return cv.toDataURL("image/jpeg", .86).split(",")[1];
   }
+  // The catalogue page the image is on, rendered from the PDF kept on the server (catalogues added from a PDF),
+  // for the piece's Specification. Only that page's bytes are read. Returns null for catalogues kept on Google Drive.
+  async function pagePic(o) {
+    const S = LIB.sups[o.sup]; if (!S || !S.up) return null;
+    const lib = await pdfjs();
+    const doc = await lib.getDocument({ url: `/lib/pdf/${encodeURIComponent(o.sup)}.pdf`, disableAutoFetch: true, disableStream: true, rangeChunkSize: 262144 }).promise;
+    try {
+      const pg = await doc.getPage(Math.max(1, Math.min(doc.numPages, Number(o.page) || 1)));
+      const v1 = pg.getViewport({ scale: 1 }), sc = Math.min(3, 2200 / Math.max(v1.width, v1.height)), vp = pg.getViewport({ scale: sc });
+      const cv = document.createElement("canvas"); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+      const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height);
+      await pg.render({ canvasContext: g, viewport: vp }).promise;
+      return { data: cv.toDataURL("image/jpeg", .85).split(",")[1], w: v1.width, h: v1.height };
+    } finally { doc.destroy(); }
+  }
   // The server builds the piece from the catalogue index, so clients can add pieces too.
   async function add() {
     const o = LIB && LIB.items[ui.open]; if (!o || ui.adding) return;
@@ -555,7 +570,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       if (full.has(o.file)) try { photo = await bigPhoto(o); } catch (_) {}
       if (!photo) try { photo = await crop(o); } catch (_) {}
       const prefix = host.prefix ? host.prefix(o, label(o.sup)[1]) : null;
-      const r = await fetch("/api/library/add", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ project, file: o.file, photo, prefix }) });
+      let pg = null; try { pg = await pagePic(o); } catch (_) {}
+      const r = await fetch("/api/library/add", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ project, file: o.file, photo, prefix, ...(pg ? { page: pg.data, pageW: pg.w, pageH: pg.h } : {}) }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw Object.assign(new Error(j.message || "add"), { code: j.code });
       const pname = host.ctx === "project" ? host.projectName() : (host.projects().find(p => p.id === project) || {}).name || project;

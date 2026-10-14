@@ -64,7 +64,12 @@
       path: cp,
       doc(id) { return docRef(cp + "/" + (id || rid())); },
       async add(data) { const r = docRef(cp + "/" + rid()); await r.set(data); return r; },
-      async get() { const j = await api("/api/db/col?path=" + encodeURIComponent(NS + cp)); const list = j.docs.map(d => snapDoc(d.id, d.data)); return { docs: list, size: list.length, empty: !list.length, docChanges: () => [], metadata: {} }; },
+      async get() {
+        const j = await api("/api/db/col?path=" + encodeURIComponent(NS + cp)); const list = j.docs.map(d => snapDoc(d.id, d.data));
+        // A fresh read also updates anyone listening, in case a live update was missed.
+        if (colSubs.has(cp)) { const m = new Map(); j.docs.forEach(d => m.set(d.id, d.data)); cols.set(cp, m); emitCol(cp); }
+        return { docs: list, size: list.length, empty: !list.length, docChanges: () => [], metadata: {} };
+      },
       onSnapshot(next, error) { connect(); if (!colSubs.has(cp)) colSubs.set(cp, new Set()); colSubs.get(cp).add(next); refreshCol(cp).catch(e => error && error(e)); return () => colSubs.get(cp)?.delete(next); },
       where() { return this; }, orderBy() { return this; }, limit() { return this; },
     };

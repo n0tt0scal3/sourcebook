@@ -11,6 +11,9 @@
     "Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.": "把图片拖到这里，我们会在图库中搜索相似的产品。如果找不到，我们会为您采购。", "Choose a photo": "选择图片", "What are you looking for? (optional) e.g. the chair, in walnut": "您想找什么？（可选）例如：这把椅子，胡桃木", "Sending it to our sourcing agent…": "正在发送给采购代理…", "Searching our library for something similar…": "正在图库中搜索相似产品…", "We couldn't find anything similar in our library, so we've sent it to our sourcing agent. We'll source it for you.": "图库中没有找到相似的产品，已发送给采购代理，我们会为您采购。", "Sent to our sourcing agent. We'll source it for you.": "已发送给采购代理，我们会为您采购。", "Withdraw the request": "撤回请求", "Search for something else": "搜索其他产品", "None of these? Send it to our sourcing agent": "都不合适？发送给采购代理", "Waiting to be sourced": "等待采购", "We're sourcing it": "正在为您采购", "Sourced": "已采购", "Note for the person who asked (optional)": "给提出请求者的备注（可选）", "Mark as sourced": "标为已采购", "Reopen": "重新打开", "Remove": "移除", "Sourcing requests": "采购请求", "Your sourcing requests": "您的采购请求", "Hide sourced": "隐藏已采购", "Nothing waiting to be sourced.": "没有待采购的请求。", "That isn't a photo.": "这不是图片。", "The search didn't finish. Try again.": "搜索未完成，请重试。", "Couldn't send it. Check your connection and try again.": "无法发送，请检查网络后重试。", "Photo": "图片", "Studio owner": "工作室负责人", "new": "新", "New": "新", "Add category": "添加类别", "Admins only": "仅限管理员", "New category": "新类别", "Name in English": "英文名称", "Name in Chinese": "中文名称", "e.g. Outdoor furniture": "例如：Outdoor furniture", "e.g. 户外家具": "例如：户外家具", "In a project, its products go under": "加入项目时归入", "Adding…": "正在添加…", "Cancel": "取消", "Give the category a name.": "请填写类别名称。", "There's already a category with that name.": "已有同名类别。", "Choose where its products go in a project.": "请选择加入项目时归入的分类。", "Only admins can add categories.": "只有管理员可以添加类别。", "No more categories can be added.": "无法再添加更多类别。", "Furniture": "家具", "Lighting": "灯具", "Plumbing": "卫浴", "Millwork": "木作", "Stone": "石材", "Finishes": "饰面", "Glazing": "玻璃", "Hardware": "五金", "Add photos of what you found": "添加找到的产品照片", "Attach photos or files": "添加照片或文件", "Up to 10 files per request.": "每个请求最多 10 个文件。", "That file is too big (25 MB at most).": "文件太大（最大 25 MB）。", "That file is empty.": "文件是空的。", "Only the studio and the sourcing agent can attach files to a request.": "只有工作室和采购代理可以为请求添加文件。", "Adding photos…": "正在添加照片…", "Photos of what was found": "找到的产品照片", "Up to 8 photos per request.": "每个请求最多 8 张照片。", "Only the studio and the sourcing agent can add photos to a request.": "只有工作室和采购代理可以为请求添加照片。",
     "You have 50 open requests. Wait for some to be sourced first.": "您有 50 个未完成的请求，请等部分采购完成后再提交。", "Only admins can remove a request.": "只有管理员可以移除请求。", "Only the studio and the sourcing agent can update a request.": "只有工作室和采购代理可以更新请求。", "Add a photo first.": "请先添加图片。", "Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.": "此服务器尚未设置 Claude。请在 Render 中添加 Anthropic API 密钥（ANTHROPIC_API_KEY）。",
     "Back to all product types": "返回全部产品类型",
+    "Catalogues clients see": "客户可见的图册", "Specifier / designer": "设计师", "Hidden from clients": "对客户隐藏", "Show all to clients": "全部对客户显示", "Hide all from clients": "全部对客户隐藏",
+    "Clients only see the approved images in the catalogues ticked here, in the library and in photo searches. Specifiers and designers see every approved catalogue.": "客户只能看到这里勾选的图册中已批准的图片（包括图库和以图搜图）。设计师可以看到所有已批准的图册。",
+    "Only admins choose what clients see.": "只有管理员可以设置客户可见内容。",
     "To be sourced": "待采购", "To review": "待审核", "With the studio": "工作室审核中", "With the sourcing agent": "采购代理处理中", "To find": "待寻找", "Turn on alerts for new requests": "开启新请求提醒", "Photos sent from the Sourcing library that we couldn't match. Review each one, then send it to the sourcing agent; with email set up, it goes to their QQ Mail with the photo attached.": "从采购图库提交、但未找到匹配的图片。逐一审核后发送给采购代理；设置邮件后会附上照片发送到其 QQ 邮箱。", "Items the studio has asked you to find. Mark each one sourced when you've found it, with a note on where.": "工作室请您寻找的产品。找到后请标记为已采购，并备注来源。", "Things you've asked us to find. We review each one and send it to our sourcing agent.": "您请我们寻找的产品。我们会逐一审核并交给采购代理。", "Nothing here.": "这里没有内容。", "Nothing to be sourced yet. Drop a photo in the box on the Sourcing library page.": "还没有待采购的产品。可在采购图库页面的方框中拖入图片。", "Sourcing agent's email (QQ Mail)": "采购代理的邮箱（QQ 邮箱）", "Email isn't set up yet, so this sends it in Sourcebook only. Add the SMTP settings in Render to email the agent's QQ Mail.": "尚未设置邮件，因此仅在选材手册中发送。在 Render 中添加 SMTP 设置后即可发送到代理的 QQ 邮箱。", "Message to the agent (optional)": "给代理的留言（可选）", "e.g. Need 6, walnut, by November": "例如：需要 6 件，胡桃木，11 月前", "Sending…": "正在发送…", "Send to the sourcing agent again": "再次发送给采购代理", "Send to the sourcing agent": "发送给采购代理", "Client": "客户", "Message to the agent": "给代理的留言", "Where it was found, for the person who asked (optional)": "在哪里找到的，告诉提出请求的人（可选）", "Add the sourcing agent's email first.": "请先填写采购代理的邮箱。", "Sent to the sourcing agent by email.": "已通过邮件发送给采购代理。", "Sent to the sourcing agent in Sourcebook.": "已在选材手册中发送给采购代理。", "Adding it to TBS (to be sourced)…": "正在加入待采购 TBS…", "Nothing similar in our library, so it's been added to TBS (to be sourced).": "图库中没有相似产品，已加入待采购 TBS。", "We couldn't find anything similar in our library, so it's been added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "图库中没有找到相似的产品，已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Added to TBS (to be sourced).": "已加入待采购 TBS。", "Added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Open TBS": "打开待采购 TBS", "None of these? Add it to TBS (to be sourced)": "都不合适？加入待采购 TBS", "Email isn't set up on this server yet. Add the SMTP settings in Render, or send it in Sourcebook only.": "此服务器尚未设置邮件。请在 Render 中添加 SMTP 设置，或仅在选材手册中发送。", "The email couldn't be sent. Check the SMTP settings in Render and try again.": "邮件无法发送，请检查 Render 中的 SMTP 设置后重试。", "That email doesn't look right.": "邮箱格式不正确。", "Only admins can send requests to the sourcing agent.": "只有管理员可以将请求发送给采购代理。",
     "Sourcing library": "采购图库", "Approved": "已批准", "Not approved": "未批准", "All": "全部", "Scanned": "已扫描", "In this project": "本项目中", "All catalogues": "全部图册",
     "Approve all shown": "批准全部显示项", "Move selected to…": "将所选移至…", "Select all shown": "全选显示项", "Clear selection": "清除选择", "Select images first.": "请先选择图片。", "Select to move": "选择以移动", "Unapprove all shown": "取消批准全部显示项", "Approve page": "批准本页", "Unapprove page": "取消批准本页", "In project": "已在项目中",
@@ -133,6 +136,10 @@
 .sbl-zoomview img{max-width:100%;max-height:100%;object-fit:contain}
 .sbl-full{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;grid-column:1/-1;font-size:13px;color:var(--ink2)}
 .sbl-full .mono{font-size:12px;color:var(--muted)}
+.sbl-cli{font-size:13px;color:var(--ink2)}.sbl-cli.open{border-top:1px solid var(--rule);padding-top:12px}.sbl-cli .sbl-hint{margin:8px 0}
+.sbl-clilist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 18px;margin-top:8px}
+.sbl-clirow{display:flex!important;flex-direction:row!important;gap:10px;font-size:13px!important;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--rule);cursor:pointer}.sbl-clirow input{margin-top:3px}.sbl-clirow b{display:block;font-weight:500;color:var(--ink)}.sbl-clirow .sbl-sub{display:block;font-size:12px;color:var(--muted)}
+.sbl-hid{color:var(--muted)}
 .sbl-find{margin-top:22px;padding:18px;background:var(--paper);border:1.5px dashed var(--ink2);transition:background .2s,border-color .2s}
 .sbl-find.busy{border-style:solid;border-color:var(--rule)}
 .sbl-find.over{border-color:var(--ink);background:var(--ground)}
@@ -237,7 +244,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
 `;
   const style = document.createElement("style"); style.textContent = CSS; document.head.appendChild(style);
 
-  let LIB = null, libP = null, on = {}, tov = {}, watching = false, qT = null, full = new Set(), up = null;
+  let LIB = null, libP = null, on = {}, tov = {}, hideCli = new Set(), watching = false, qT = null, full = new Set(), up = null;
   // Product types, independent of the supplier catalogue. Images are sorted into them once (lib/data.json, item[7]);
   // an admin's corrections are stored as librarytypes/<catalogue> = { t: { key: code } }.
   const BASE_TYPES = [["S", "Sofas", "沙发"], ["L", "Lounge chairs", "休闲椅"], ["C", "Dining chairs", "餐椅"], ["T", "Stools & bar stools", "凳子与吧凳"], ["B", "Benches & ottomans", "长凳与脚凳"],
@@ -298,6 +305,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   async function fetchTypes() {
     const r = await fetch("/api/db/col?path=librarytypes"); if (!r.ok) return;
     const j = await r.json(); const next = {}; j.docs.forEach(d => { next[d.id] = (d.data && d.data.t) || {}; }); tov = next;
+    const rs = await fetch("/api/db/doc?path=libraryshow/main").catch(() => null); if (rs && rs.ok) { const d = await rs.json(); hideCli = new Set((d.exists && d.data && d.data.hide) || []); }
     const rc = await fetch("/api/db/col?path=librarycats").catch(() => null); if (rc && rc.ok) { const m = ((await rc.json()).docs || []).find(d => d.id === "main"); setCustom(m && m.data && m.data.types); }
     repaint();
   }
@@ -310,7 +318,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     fetchOn().catch(() => {}); fetchFull().catch(() => {}); fetchTypes().catch(() => {}); fetchFav().catch(() => {}); fetchReqs().catch(() => {});
     try {
       const es = new EventSource("/api/events");
-      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data && !was && isAdm() && inReview(m.data) && !(m.data.by && m.data.by.id === tbsCfg.me)) tbsAlert({ id, ...m.data }); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "") && JSON.stringify(was.sent || null) === JSON.stringify(m.data.sent || null) && JSON.stringify(was.found || []) === JSON.stringify(m.data.found || []) && JSON.stringify(was.files || []) === JSON.stringify(m.data.files || [])) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (m.path === "librarycats/main") { setCustom(m.exists && m.data && m.data.types); repaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); } catch (_) {} };
+      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data && !was && isAdm() && inReview(m.data) && !(m.data.by && m.data.by.id === tbsCfg.me)) tbsAlert({ id, ...m.data }); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "") && JSON.stringify(was.sent || null) === JSON.stringify(m.data.sent || null) && JSON.stringify(was.found || []) === JSON.stringify(m.data.found || []) && JSON.stringify(was.files || []) === JSON.stringify(m.data.files || [])) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (m.path === "libraryshow/main") { hideCli = new Set((m.exists && m.data && m.data.hide) || []); const w = $("#sbl-cliwrap"); if (w) w.innerHTML = cliHTML(); repaint(); return; } if (m.path === "librarycats/main") { setCustom(m.exists && m.data && m.data.types); repaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); } catch (_) {} };
       es.onopen = () => { fetchOn().catch(() => {}); fetchTypes().catch(() => {}); fetchReqs().catch(() => {}); };
     } catch (_) {}
   }
@@ -347,7 +355,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       ${host.ctx === "project" ? `<h2>${t("Sourcing library")}</h2>` : ""}
       <p>${t(lede)}</p></div>
       <div class="sbl-stat"><div><span class="eyebrow">${t("Approved")}</span><b id="sbl-kept">${nf(a)}</b></div>${cur ? `<div><span class="eyebrow">${t("Scanned")}</span><b>${nf(tot)}</b></div>` : ""}${host.ctx === "project" ? `<div><span class="eyebrow">${t("In this project")}</span><b>${host.inProject().size}</b></div>` : ""}</div>
-      ${cur ? `<div class="sbl-full" id="sbl-full">${fullHTML()}</div><div id="sbl-addwrap" style="grid-column:1/-1">${addCatHTML()}</div>` : ""}</section>
+      ${cur ? `<div class="sbl-full" id="sbl-full">${fullHTML()}</div><div id="sbl-addwrap" style="grid-column:1/-1">${addCatHTML()}</div><div id="sbl-cliwrap" style="grid-column:1/-1">${cliHTML()}</div>` : ""}</section>
     ${ui.type === "TBS" ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All product types")}</button><h3>TBS · ${t("To be sourced")}</h3></div><div id="sbl-tbs">${tbsHTML()}</div><div class="sbl-tools"><button class="btn ghost sm sbl-back" data-sbltype="" data-sbltop>‹ ${t("Back to all product types")}</button></div>`
       : ""}${ui.type === "TBS" ? "" : `${ui.type ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All product types")}</button><h3>${esc(typeName(ui.type))}</h3></div><div class="sbl-chips" id="sbl-cats">${catsHTML()}</div>`
       : `<div id="sbl-findwrap">${findHTML()}</div><div class="sbl-cats" id="sbl-cats">${catsHTML()}</div>`}
@@ -364,7 +372,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (ui.type) {
       const mine = LIB.items.filter(o => inType(o) && vis(o)); const n = {}; mine.forEach(o => (n[o.sup] = (n[o.sup] || 0) + 1));
       return `<button class="chip" data-sblsup="" aria-pressed="${!ui.sup}">${t("All catalogues")} · ${nf(mine.length)}</button>` +
-        Object.keys(n).map(s => { const L = label(s); return `<button class="chip" data-sblsup="${esc(s)}" aria-pressed="${ui.sup === s}">${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""} · ${nf(n[s])}</button>`; }).join("");
+        Object.keys(n).map(s => { const L = label(s); return `<button class="chip" data-sblsup="${esc(s)}" aria-pressed="${ui.sup === s}">${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""} · ${nf(n[s])}${cur && hideCli.has(s) ? ` <span class="sbl-hid">· ${t("Hidden from clients")}</span>` : ""}</button>`; }).join("");
     }
     const sub = (n, of) => cur ? `${nf(n)} / ${nf(of)} ${t("Approved").toLowerCase()}` : zh() ? `${nf(n)} 张图片` : `${nf(n)} image${n === 1 ? "" : "s"}`;
     const by = {}; LIB.items.forEach(o => (by[typeOf(o)] = by[typeOf(o)] || []).push(o));
@@ -375,6 +383,25 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       const arr = by[c] || [], ok = arr.filter(isOn), pool0 = cur && !ok.length ? arr : ok, photos = pool0.filter(o => !/tearsheet/i.test(o.sup)), pool = photos.length ? photos : pool0, cover = pool[Math.min(pool.length - 1, Math.floor(pool.length * .12))];
       return `<button class="sbl-cat" data-sbltype="${c}">${cover ? `<span class="sbl-sw" ${sprite(cover)}></span>` : `<span class="sbl-favic sbl-empty-ic">${esc(typeName(c).slice(0, 1))}</span>`}<span class="sbl-name">${esc(typeName(c))}</span><span class="sbl-sub">${sub(ok.length, arr.length)}</span>${cur ? `<span class="sbl-bar"><i style="width:${arr.length ? ok.length / arr.length * 100 : 0}%"></i></span>` : ""}</button>`;
     }).join("") + (cur ? addTypeHTML() : "");
+  }
+  // Which catalogues clients see. Specifiers, agents and admins see every approved catalogue; clients only the ones ticked here.
+  function cliHTML() {
+    const all = Object.keys(LIB.sups), shown = all.filter(s => !hideCli.has(s)).length;
+    const head = `<button class="linkbtn" data-sbl="clitog" aria-expanded="${!!ui.cli}">${t("Catalogues clients see")} · ${zh() ? `${nf(shown)} / ${nf(all.length)}` : `${nf(shown)} of ${nf(all.length)}`} ${ui.cli ? "▴" : "▾"}</button>`;
+    if (!ui.cli) return `<div class="sbl-cli">${head}</div>`;
+    const cat = c => { const x = String(c || ""); return x.startsWith("CUSTOM-") ? (custom.find(y => "CUSTOM-" + y.c === x) || {}).en || x : x[0] + x.slice(1).toLowerCase(); };
+    const rows = all.slice().sort((a, b) => cat(LIB.sups[a].cat).localeCompare(cat(LIB.sups[b].cat)) || label(a).join(" ").localeCompare(label(b).join(" "))).map(s => {
+      const L = label(s), n = approved(LIB.bySup[s]);
+      return `<label class="sbl-clirow"><input type="checkbox" data-sblcli="${esc(s)}" ${hideCli.has(s) ? "" : "checked"}><span><b>${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""}</b><span class="sbl-sub">${esc(zh() ? ({ Furniture: "家具", Office: "办公家具", Lighting: "灯具", Doors: "门", Millwork: "木作", Stone: "石材", Flooring: "地板", Signage: "标识", Plumbing: "卫浴", Vanities: "浴室柜", Mirrors: "镜子", "Wall panelling": "墙板", "Wood products": "木制品", "Partition systems": "隔断系统", "Glass products": "玻璃制品" })[cat(LIB.sups[s].cat)] || cat(LIB.sups[s].cat) : cat(LIB.sups[s].cat))} · ${zh() ? `已批准 ${nf(n)} 张` : `${nf(n)} approved`}</span></span></label>`;
+    }).join("");
+    return `<div class="sbl-cli open">${head}<p class="sbl-hint">${t("Clients only see the approved images in the catalogues ticked here, in the library and in photo searches. Specifiers and designers see every approved catalogue.")}</p>
+      <div class="sbl-row"><button class="linkbtn" data-sbl="cliall">${t("Show all to clients")}</button><button class="linkbtn" data-sbl="clinone">${t("Hide all from clients")}</button></div><div class="sbl-clilist">${rows}</div></div>`;
+  }
+  async function setCli(sups, show) {
+    const prev = new Set(hideCli); sups.forEach(s => show ? hideCli.delete(s) : hideCli.add(s));
+    const w = $("#sbl-cliwrap"); if (w) w.innerHTML = cliHTML(); const c = $("#sbl-cats"); if (c) c.innerHTML = catsHTML();
+    try { for (const s of sups) await api("/api/library/show", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ sup: s, clients: show }) }); }
+    catch (e) { hideCli = prev; const w2 = $("#sbl-cliwrap"); if (w2) w2.innerHTML = cliHTML(); host.toast(t(e.message || "Couldn't save. Check your connection and try again.")); }
   }
   // Admins add a category: its name in English and Chinese, and where its products go when added to a project.
   const SECTIONS = [["Furniture", "家具"], ["Lighting", "灯具"], ["Plumbing", "卫浴"], ["Millwork", "木作"], ["Stone", "石材"], ["Finishes", "饰面"], ["Glazing", "玻璃"], ["Hardware", "五金"]];
@@ -923,7 +950,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
         <span class="sbl-row"><button class="btn sm" data-sbl="tbssend" data-id="${esc(x.id)}" ${sending ? "disabled" : ""}>${t(sending ? "Sending…" : s === "sent" ? "Send to the sourcing agent again" : "Send to the sourcing agent")}</button></span></div>` : "";
     return `<article class="sbl-req${s === "sourced" ? " done" : ""}${tbsFocus === x.id ? " focus" : ""}" id="sbl-req-${esc(x.id)}"><a href="/_blob/${esc(x.photo)}" target="_blank" rel="noopener"><img src="/_blob/${esc(x.photo)}" alt="" loading="lazy"></a><div>
       ${adm && tbsNew(x) ? `<span class="sbl-newtag">● ${t("New")}</span>` : ""}<b>${esc((zh() ? x.zh : x.what) || x.what || t("Photo"))}</b>${x.note ? `<p>“${esc(x.note)}”</p>` : ""}
-      <span class="sbl-sub">${st ? esc(x.by && x.by.name || t("Studio owner")) + (x.by && x.by.role === "client" ? " · " + t("Client") : "") + " · " : ""}${esc(ago(x.at))}${x.project && x.project.name ? " · " + esc(x.project.name) : ""}</span>
+      <span class="sbl-sub">${st ? esc(x.by && x.by.name || t("Studio owner")) + (x.by && x.by.role === "client" ? " · " + t("Client") : x.by && x.by.role === "specifier" ? " · " + t("Specifier / designer") : "") + " · " : ""}${esc(ago(x.at))}${x.project && x.project.name ? " · " + esc(x.project.name) : ""}</span>
       ${chip}
       ${x.sent && x.sent.message && st ? `<p class="sbl-rmsg">${t("Message to the agent")}: ${esc(x.sent.message)}</p>` : ""}
       ${x.reply && !st ? `<p class="sbl-rreply">${esc(x.reply)}</p>` : ""}
@@ -1019,6 +1046,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (el.dataset.sblpage) { const p = +el.dataset.sblpage; bulk(list().filter(o => o.page === p), el.dataset.v === "on"); return; }
     const a = el.dataset.sbl;
     if (a === "close") close();
+    else if (a === "clitog" && curating()) { ui.cli = !ui.cli; const w = $("#sbl-cliwrap"); if (w) w.innerHTML = cliHTML(); }
+    else if ((a === "cliall" || a === "clinone") && curating()) setCli(Object.keys(LIB.sups).filter(s => hideCli.has(s) === (a === "cliall")), a === "cliall");
     else if (a === "addcat" && curating()) { ui.addcat = true; addLine(); }
     else if (a === "addtype" && curating()) { ui.addtype = true; repaint(); const f = $("#sbl-nten"); if (f) f.focus(); }
     else if (a === "addtypex") { ui.addtype = false; repaint(); }
@@ -1056,6 +1085,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (el.id === "sbl-target") { ui.target = el.value; host.layer(); return; }
     if (el.id === "sbl-type" && curating()) { const o = LIB && LIB.items[ui.open]; if (o) { setType([o], el.value); host.toast(zh() ? `已移至「${typeName(el.value)}」` : `Moved to ${typeName(el.value)}`); } return; }
     if (el.id === "sbl-pdf") { pdfName(); return; }
+    if (el.dataset && el.dataset.sblcli !== undefined) { if (curating()) setCli([el.dataset.sblcli], el.checked); return; }
     if (el.dataset && el.dataset.sblsel !== undefined) { const i = +el.dataset.sblsel; el.checked ? sel.add(i) : sel.delete(i); selPaint(); return; }
     if (el.id === "sbl-moveto" && curating()) {
       const code = el.value; if (!code) return;

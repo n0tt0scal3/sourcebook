@@ -1106,3 +1106,57 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     t,
   });
 })();
+
+// Back to top: a round button on the right that appears once a page (or an open panel) has
+// been scrolled about a screen down. It follows whatever was scrolled last, so it works on the
+// book, the dashboard and the piece/library sheets alike. Loaded by index.html and dashboard.html.
+(function () {
+  "use strict";
+  const label = () => { try { return localStorage.getItem("sb_lang") === "zh" ? "回到顶部" : "Back to top"; } catch (_) { return "Back to top"; } };
+  let btn = null, box = null, raf = 0;
+  const isWin = el => !el || el === document || el === document.documentElement || el === document.body;
+  const top = el => isWin(el) ? (window.scrollY || document.documentElement.scrollTop || 0) : el.scrollTop;
+  function update() {
+    raf = 0;
+    if (!btn) return;
+    if (box && !isWin(box) && !box.isConnected) box = null;
+    const locked = isWin(box) && document.body.style.overflow === "hidden";
+    const show = !locked && top(box) > window.innerHeight * 0.9 && !document.querySelector("#viewer,#mvfull,.xlwrap,.sbl-zoomview");
+    btn.classList.toggle("on", show);
+    const tray = document.getElementById("famtray");
+    btn.style.bottom = tray ? `calc(${tray.offsetHeight}px + 16px)` : "";
+    const l = label();
+    if (btn.title !== l) { btn.title = l; btn.setAttribute("aria-label", l); }
+  }
+  const queue = () => { if (!raf) raf = requestAnimationFrame(update); };
+  function init() {
+    const st = document.createElement("style");
+    st.textContent = `.sb-top{position:fixed;right:calc(env(safe-area-inset-right,0px) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + 24px);z-index:50;width:44px;height:44px;border-radius:50%;border:1px solid var(--ink,#1a1a18);background:var(--paper,#fff);color:var(--ink,#1a1a18);display:grid;place-items:center;padding:0;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.14);opacity:0;visibility:hidden;transform:translateY(8px);transition:opacity .2s,transform .2s,visibility .2s}
+.sb-top.on{opacity:1;visibility:visible;transform:none}
+.sb-top:hover{background:var(--ink,#1a1a18);color:var(--paper,#fff)}
+.sb-top:focus-visible{outline:2px solid var(--ink,#1a1a18);outline-offset:3px}
+.sb-top svg{width:18px;height:18px}
+@media (max-width:560px){.sb-top{right:calc(env(safe-area-inset-right,0px) + 14px);bottom:calc(env(safe-area-inset-bottom,0px) + 18px)}}
+@media print{.sb-top{display:none}}`;
+    document.head.appendChild(st);
+    btn = document.createElement("button");
+    btn.type = "button"; btn.className = "sb-top";
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+    btn.addEventListener("click", () => {
+      const smooth = !matchMedia("(prefers-reduced-motion: reduce)").matches ? "smooth" : "auto";
+      (isWin(box) ? window : box).scrollTo({ top: 0, behavior: smooth });
+    });
+    document.body.appendChild(btn);
+    // Capture so scrolls inside panels (which don't bubble) are seen too.
+    document.addEventListener("scroll", e => {
+      const el = e.target;
+      if (isWin(el)) box = null;
+      else if (el.scrollHeight > el.clientHeight + 40 && el.clientHeight > window.innerHeight * 0.5) box = el;
+      queue();
+    }, { capture: true, passive: true });
+    window.addEventListener("resize", queue);
+    new MutationObserver(queue).observe(document.body, { childList: true });
+    update();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();

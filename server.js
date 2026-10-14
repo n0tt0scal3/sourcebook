@@ -273,6 +273,84 @@ function projectSummaries() {
   }).sort((a, b) => String(b.updated || "").localeCompare(String(a.updated || "")));
 }
 
+/* ---------------- new catalogues on Google Drive ---------------- */
+// With a Google service account (GOOGLE_SERVICE_ACCOUNT: its JSON key, raw or base64) that can read the catalogue folder
+// (DRIVE_CATALOGUE_FOLDER: the folder id of 90 CHINA PRODUCTS), the server lists the PDFs in its category folders every
+// 15 minutes. PDFs that aren't a catalogue yet are offered to admins in the Sourcing library to add or ignore.
+// Ignored ones are kept in librarydrive/main = { ignored: [file ids] }.
+const DRIVE_FOLDER = String(process.env.DRIVE_CATALOGUE_FOLDER || "").trim().replace(/^.*folders\//, "").replace(/[?#].*$/, "");
+let driveKey = null;
+try {
+  const raw = String(process.env.GOOGLE_SERVICE_ACCOUNT || "").trim();
+  if (raw) driveKey = JSON.parse(raw.startsWith("{") ? raw : Buffer.from(raw, "base64").toString("utf8"));
+} catch (_) { console.error("GOOGLE_SERVICE_ACCOUNT isn't a valid JSON key"); }
+const drive = { files: [], checked: null, error: driveKey || !process.env.GOOGLE_SERVICE_ACCOUNT ? "" : "The Google key in Render (GOOGLE_SERVICE_ACCOUNT) couldn't be read.", busy: false, token: null, exp: 0 };
+const driveOn = () => !!(driveKey && driveKey.client_email && driveKey.private_key && DRIVE_FOLDER);
+async function driveToken() {
+  if (drive.token && Date.now() < drive.exp - 60000) return drive.token;
+  const b64 = o => Buffer.from(JSON.stringify(o)).toString("base64url"), now = Math.floor(Date.now() / 1000);
+  const head = b64({ alg: "RS256", typ: "JWT" }) + "." + b64({ iss: driveKey.client_email, scope: "https://www.googleapis.com/auth/drive.readonly", aud: "https://oauth2.googleapis.com/token", iat: now, exp: now + 3600 });
+  const sig = crypto.createSign("RSA-SHA256").update(head).sign(driveKey.private_key, "base64url");
+  const r = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion: head + "." + sig }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.access_token) throw new Error("Google didn't accept the key (" + (j.error_description || j.error || r.status) + ").");
+  drive.token = j.access_token; drive.exp = Date.now() + (j.expires_in || 3600) * 1000; return drive.token;
+}
+async function driveList(q) {
+  const out = []; let page = "";
+  do {
+    const u = new URL("https://www.googleapis.com/drive/v3/files");
+    Object.entries({ q, fields: "nextPageToken,files(id,name,mimeType,size,modifiedTime)", pageSize: "1000", supportsAllDrives: "true", includeItemsFromAllDrives: "true", ...(page ? { pageToken: page } : {}) }).forEach(([k, v]) => u.searchParams.set(k, v));
+    const r = await fetch(u, { headers: { authorization: "Bearer " + (await driveToken()) } });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(r.status === 404 ? "The catalogue folder isn't shared with Sourcebook's Google account." : "Google Drive said: " + (j.error?.message || r.status));
+    out.push(...(j.files || [])); page = j.nextPageToken || "";
+  } while (page);
+  return out;
+}
+// The catalogue category for a Drive folder name: the built-in ones (FURNITURE, LIGHTING…, "Plumbing fixtures & …" is PLUMBING), then admins' own.
+function driveCat(name) {
+  const n = String(name || "").trim().toUpperCase();
+  if (LIB_CAT[n]) return n;
+  if (n.startsWith("PLUMBING")) return "PLUMBING";
+  if (n.startsWith("GLASS")) return "GLASS PRODUCTS";
+  const c = customTypes().find(x => String(x.en || "").trim().toUpperCase() === n);
+  return c ? "CUSTOM-" + c.c : "";
+}
+async function driveCheck() {
+  if (!driveOn() || drive.busy) return;
+  drive.busy = true;
+  try {
+    const files = [], esc = id => id.replace(/'/g, "\\'");
+    // Each category folder, and folders inside it (two levels), skipping the image library.
+    let level = (await driveList(`'${esc(DRIVE_FOLDER)}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`))
+      .filter(f => !/IMAGE LIBRARY/i.test(f.name)).map(f => ({ id: f.id, cat: driveCat(f.name), folder: f.name }));
+    for (let depth = 0; depth < 3 && level.length; depth++) {
+      const next = [];
+      for (const d of level) {
+        for (const f of await driveList(`'${esc(d.id)}' in parents and trashed=false`)) {
+          if (f.mimeType === "application/vnd.google-apps.folder") { if (depth < 2) next.push({ id: f.id, cat: d.cat, folder: d.folder + " / " + f.name }); }
+          else if (f.mimeType === "application/pdf" || /\.pdf$/i.test(f.name)) files.push({ id: f.id, name: f.name, size: Number(f.size) || 0, modified: f.modifiedTime || "", cat: d.cat, folder: d.folder });
+        }
+      }
+      level = next;
+    }
+    drive.files = files; drive.error = ""; drive.checked = new Date().toISOString();
+  } catch (e) { drive.error = e.message || "Google Drive couldn't be reached."; drive.checked = new Date().toISOString(); }
+  finally { drive.busy = false; }
+}
+// PDFs on Drive that aren't a catalogue in the library yet (by Drive file id, or same file name) and weren't ignored.
+async function drivePending() {
+  const lib = await libIndex(), ids = new Set(), names = new Set();
+  Object.values(lib.sups).forEach(S => { if (S.drive) ids.add(S.drive); if (S.pdf) names.add(String(S.pdf).toLowerCase()); });
+  for (const f of (await fsp.readdir(LIB_CATS_DIR).catch(() => [])).filter(f => f.endsWith(".json"))) {
+    const c = await libCatRead(f.slice(0, -5)); if (c && c.status === "done" && c.drive) ids.add(c.drive);
+  }
+  const ign = new Set(store["librarydrive/main"]?.data?.ignored || []);
+  return drive.files.filter(f => !ids.has(f.id) && !names.has(f.name.toLowerCase()) && !ign.has(f.id));
+}
+if (driveOn()) { setTimeout(() => driveCheck(), 5000); setInterval(() => driveCheck(), 15 * 60 * 1000); }
+
 /* ---------------- live updates (server-sent events) ---------------- */
 const clients = new Set();
 function liveUser(c) { return c.user.id === "owner" ? OWNER : people.users.find(x => x.id === c.user.id && !x.disabled) || null; }
@@ -1172,6 +1250,33 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       store[dp] = { data: next, version: cur.version + 1, updatedAt: new Date().toISOString() };
       persist(); broadcast({ path: dp, exists: true, data: next });
       return send(res, 200, { ok: true });
+    }
+    if (p === "/api/library/drive" && req.method === "GET") {
+      // { on, pending: [{id, name, size, cat, folder}], checked, error } for the Sourcing library (admins)
+      if (!isAdmin) return deny("Only admins can add catalogues.");
+      if (!driveOn()) return send(res, 200, { on: false, error: drive.error, pending: [] });
+      if (!drive.checked || (url.searchParams.get("check") && !drive.busy && Date.now() - Date.parse(drive.checked) > 60000)) await driveCheck();
+      return send(res, 200, { on: true, checked: drive.checked, error: drive.error, pending: drive.error ? [] : await drivePending() });
+    }
+    if (p === "/api/library/drive/ignore" && req.method === "POST") {
+      if (!isAdmin) return deny("Only admins can add catalogues.");
+      const b = await readJSON(req); const id = String(b.id || "");
+      if (!/^[A-Za-z0-9_-]{10,}$/.test(id)) return send(res, 400, { code: "invalid_argument" });
+      const cur = store["librarydrive/main"], ign = new Set(cur?.data?.ignored || []); b.undo ? ign.delete(id) : ign.add(id);
+      store["librarydrive/main"] = { data: { ignored: [...ign] }, version: (cur?.version || 0) + 1, updatedAt: new Date().toISOString() };
+      persist(); return send(res, 200, { ok: true });
+    }
+    const dpm = p.match(/^\/api\/library\/drive\/pdf\/([A-Za-z0-9_-]{10,})$/);
+    if (dpm && req.method === "GET") {
+      // The PDF itself, passed through from Drive so the browser can scan it like a dropped file.
+      if (!isAdmin) return deny("Only admins can add catalogues.");
+      if (!driveOn() || !drive.files.some(f => f.id === dpm[1])) return send(res, 404, { code: "not_found", message: "That PDF isn't in the catalogue folder any more." });
+      try {
+        const r = await fetch(`https://www.googleapis.com/drive/v3/files/${dpm[1]}?alt=media&supportsAllDrives=true`, { headers: { authorization: "Bearer " + (await driveToken()) } });
+        if (!r.ok || !r.body) return send(res, 502, { code: "upstream_error", message: "Google Drive didn't send the PDF. Try again." });
+        res.writeHead(200, { "Content-Type": "application/pdf", ...(r.headers.get("content-length") ? { "Content-Length": r.headers.get("content-length") } : {}), "Cache-Control": "no-store" });
+        const { Readable } = require("stream"); Readable.fromWeb(r.body).on("error", () => res.destroy()).pipe(res); return;
+      } catch (e) { return send(res, 502, { code: "upstream_error", message: e.message }); }
     }
     if (p === "/api/library/category" && req.method === "POST") {
       // An admin adds a category to the Sourcing library: { en, zh, section } (section = where its products go in a project).

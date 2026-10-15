@@ -201,7 +201,9 @@ if (!Object.keys(store).length && fs.existsSync(path.join(SEED_DIR, "db.json")))
 }
 
 let saveTimer = null, saving = Promise.resolve();
+let storeRev = 0;
 function persist() {
+  storeRev++;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     saving = saving.then(async () => {
@@ -360,7 +362,12 @@ function broadcast(msg) {
     const u = liveUser(c); if (!u) continue;
     try {
       if (allAccess(u) && !isSourcingPath(msg.path)) c.res.write(line);
-      else if (canRead(u, msg.path)) c.res.write(`data: ${JSON.stringify(msg.exists ? { ...msg, data: forUser(u, msg.path, msg.data) } : msg)}\n\n`);
+      else if (canRead(u, msg.path)) {
+        c.res.write(`data: ${JSON.stringify(msg.exists ? { ...msg, data: forUser(u, msg.path, msg.data) } : msg)}\n\n`);
+        // A client's prices depend on every piece and on the project's shipping and fees, so any change re-sends their pieces.
+        const pid = u.role === "client" && (ITEM_DOC.test(msg.path) || /^projects\/[^/]+\/project\/main$/.test(msg.path)) ? projectOf(msg.path) : null;
+        if (pid) for (const [k, v] of Object.entries(store)) if (k !== msg.path && k.startsWith(`projects/${pid}/items/`) && ITEM_DOC.test(k)) c.res.write(`data: ${JSON.stringify({ path: k, exists: true, data: forUser(u, k, v.data) })}\n\n`);
+      }
     } catch (_) {}
   }
 }
@@ -445,11 +452,43 @@ function canSeeRequest(u, d) {
 function canRead(u, p) { if (isLibPath(p)) return true; if (isSourcingPath(p)) { if (u.role === "admin") return true; if (p === "sourcing") return u.role === "agent"; return canSeeRequest(u, store[p]?.data); } if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
 // Internal fields a client never receives.
 const CLIENT_HIDDEN = ["notes", "match", "pendingSetup", "chg"];
+// Costs a client never receives: the supplier price (¥ and $), duty, and the project's freight, insurance, brokerage,
+// delivery, sourcing service rates and exchange rate. A client's piece carries its all-in price instead (unitCost, CAD,
+// before sales tax): the supplier price plus its share of shipping, duty and delivery, plus the sourcing service.
+const CLIENT_COST_ITEM = ["unitCostCNY", "priceBase", "dutyRate"];
+const CLIENT_COST_PROJECT = ["fxRate", "quoteFee", "quoteFeeCustom", "quoteFreight", "quoteIns", "quoteDuty", "quoteBroker", "quoteDeliv"];
+const clientPriceCache = new Map();
+function clientPrices(id) {
+  const hit = clientPriceCache.get(id); if (hit && hit.rev === storeRev) return hit.prices;
+  const pre = `projects/${id}/items/`, main = store[`projects/${id}/project/main`]?.data || {};
+  const items = Object.entries(store).filter(([k]) => k.startsWith(pre) && ITEM_DOC.test(k)).map(([k, v]) => ({ id: k.slice(pre.length), ...v.data }));
+  const n = v => v == null || v === "" || !isFinite(Number(v)) ? null : Number(v);
+  const fx = n(main.fxRate) > 0 ? n(main.fxRate) : 4.73;
+  const unitCAD = it => it.priceBase === "CNY" && n(it.unitCostCNY) != null ? n(it.unitCostCNY) / fx : n(it.unitCost);
+  const sub = items.reduce((s, it) => s + (n(it.qty) || 0) * (unitCAD(it) || 0), 0);
+  const insP = n(main.quoteIns) || 0, spread = (n(main.quoteFreight) || 0) + (n(main.quoteBroker) || 0) + (n(main.quoteDeliv) || 0);
+  // the same split as quoteTotals in the page: each piece carries its own duty and insurance, plus freight, brokerage and delivery by value
+  const prices = new Map(items.map(it => {
+    const u = unitCAD(it); if (u == null) return [it.id, null];
+    const landed = u * (1 + insP / 100 + (n(it.dutyRate) ?? (n(main.quoteDuty) || 0)) / 100) + (sub ? spread * u / sub : 0);
+    const fee = (it.custom ? n(main.quoteFeeCustom) : n(main.quoteFee)) || 0;
+    return [it.id, landed * (1 + fee / 100)];
+  }));
+  clientPriceCache.set(id, { rev: storeRev, prices });
+  return prices;
+}
 function forUser(u, p, data) {
   // The sourcing agent never sees which client asked for a TBS item: it comes from the studio.
   if (u.role === "agent" && data && /^sourcing\/[^/]+$/.test(p) && data.by && data.by.id !== u.id && data.by.role !== "admin") return { ...data, by: { role: "admin" } };
-  if (u.role !== "client" || !data || !/^projects\/[^/]+\/items\/[^/]+$/.test(p)) return data;
-  const o = { ...data }; CLIENT_HIDDEN.forEach(k => delete o[k]); return o;
+  if (u.role !== "client" || !data) return data;
+  if (/^projects\/[^/]+\/project\/main$/.test(p)) { const o = { ...data }; CLIENT_COST_PROJECT.forEach(k => delete o[k]); return o; }
+  if (!ITEM_DOC.test(p)) return data;
+  const o = { ...data }; CLIENT_HIDDEN.forEach(k => delete o[k]); CLIENT_COST_ITEM.forEach(k => delete o[k]);
+  const price = clientPrices(projectOf(p)).get(p.split("/")[3]);
+  o.unitCost = price ?? null;
+  // supplier quotes attached to a piece stay with the studio
+  if (Array.isArray(o.refs)) o.refs = o.refs.filter(r => r?.kind !== "Quote");
+  return o;
 }
 /* ---------------- what's changed between the studio and the sourcing agent ---------------- */
 // Each piece keeps chg = { field: { r: role, n: name, at } } for fields an admin or agent changed
@@ -833,7 +872,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     // projects
-    if (p === "/api/projects" && req.method === "GET") return send(res, 200, { projects: projectSummaries().filter(x => canSeeProject(me, x.id)).map(x => ({ ...x, news: newsCount(me, x.id) })) });
+    if (p === "/api/projects" && req.method === "GET") return send(res, 200, { projects: projectSummaries().filter(x => canSeeProject(me, x.id)).map(x => ({ ...x, news: newsCount(me, x.id), ...(isClient ? { quote: { cad: x.quote.cad } } : {}) })) });
     // mark changes from the other side as seen: { project, items: [ids] } (all pieces in the project when items is left out)
     if (p === "/api/changes/seen" && req.method === "POST") {
       const side = sideOf(me); if (!side) return deny();

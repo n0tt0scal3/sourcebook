@@ -8,6 +8,10 @@
   const LIB_LABEL = { "BILLA-Sofa": ["Billa", "Sofas & lounge chairs"], "BILLA-CoffeeTV": ["Billa", "Coffee tables & TV units"], "BILLA-Dining": ["Billa", "Dining"], "BILLA-Outdoor": ["Billa", "Outdoor"], "HALO": ["HALO", "Collection 2026"], "Kaiwuli": ["Kaiwuli", "Catalogue 2026"], "TO-Tearsheet": ["TO Interactive", "Tearsheets 2025"] };
   const LIB_ROOT = "G:\\My Drive\\LMNL\\90 CHINA PRODUCTS\\";
   const ZH = {
+    "Sourcebook can't check Google Drive for new catalogues:": "选材手册无法检查 Google 云盘上的新目录：", "Check again": "重新检查", "No new catalogues on Google Drive.": "Google 云盘上没有新目录。", "Check now": "立即检查",
+    "Ignore": "忽略", "Couldn't get the PDF from Google Drive. Try again.": "无法从 Google 云盘获取 PDF，请重试。", "Checking Google Drive…": "正在检查 Google 云盘…", "Google Drive couldn't be reached.": "无法连接 Google 云盘。",
+    "The catalogue folder isn't shared with Sourcebook's Google account.": "目录文件夹尚未共享给选材手册的 Google 账号。", "That PDF isn't in the catalogue folder any more.": "该 PDF 已不在目录文件夹中。",
+    "The Google key in Render (GOOGLE_SERVICE_ACCOUNT) couldn't be read.": "无法读取 Render 中的 Google 密钥（GOOGLE_SERVICE_ACCOUNT）。",
     "Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.": "把图片拖到这里，我们会在图库中搜索相似的产品。如果找不到，我们会为您采购。", "Choose a photo": "选择图片", "What are you looking for? (optional) e.g. the chair, in walnut": "您想找什么？（可选）例如：这把椅子，胡桃木", "Sending it to our sourcing agent…": "正在发送给采购代理…", "Searching our library for something similar…": "正在图库中搜索相似产品…", "We couldn't find anything similar in our library, so we've sent it to our sourcing agent. We'll source it for you.": "图库中没有找到相似的产品，已发送给采购代理，我们会为您采购。", "Sent to our sourcing agent. We'll source it for you.": "已发送给采购代理，我们会为您采购。", "Withdraw the request": "撤回请求", "Search for something else": "搜索其他产品", "None of these? Send it to our sourcing agent": "都不合适？发送给采购代理", "Waiting to be sourced": "等待采购", "We're sourcing it": "正在为您采购", "Sourced": "已采购", "Note for the person who asked (optional)": "给提出请求者的备注（可选）", "Mark as sourced": "标为已采购", "Reopen": "重新打开", "Remove": "移除", "Sourcing requests": "采购请求", "Your sourcing requests": "您的采购请求", "Hide sourced": "隐藏已采购", "Nothing waiting to be sourced.": "没有待采购的请求。", "That isn't a photo.": "这不是图片。", "The search didn't finish. Try again.": "搜索未完成，请重试。", "Couldn't send it. Check your connection and try again.": "无法发送，请检查网络后重试。", "Photo": "图片", "Studio owner": "工作室负责人", "new": "新", "New": "新", "Add category": "添加类别", "Admins only": "仅限管理员", "New category": "新类别", "Name in English": "英文名称", "Name in Chinese": "中文名称", "e.g. Outdoor furniture": "例如：Outdoor furniture", "e.g. 户外家具": "例如：户外家具", "In a project, its products go under": "加入项目时归入", "Adding…": "正在添加…", "Cancel": "取消", "Give the category a name.": "请填写类别名称。", "There's already a category with that name.": "已有同名类别。", "Choose where its products go in a project.": "请选择加入项目时归入的分类。", "Only admins can add categories.": "只有管理员可以添加类别。", "No more categories can be added.": "无法再添加更多类别。", "Furniture": "家具", "Lighting": "灯具", "Plumbing": "卫浴", "Millwork": "木作", "Stone": "石材", "Finishes": "饰面", "Glazing": "玻璃", "Hardware": "五金", "Add photos of what you found": "添加找到的产品照片", "Attach photos or files": "添加照片或文件", "Up to 10 files per request.": "每个请求最多 10 个文件。", "That file is too big (25 MB at most).": "文件太大（最大 25 MB）。", "That file is empty.": "文件是空的。", "Only the studio and the sourcing agent can attach files to a request.": "只有工作室和采购代理可以为请求添加文件。", "Adding photos…": "正在添加照片…", "Photos of what was found": "找到的产品照片", "Up to 8 photos per request.": "每个请求最多 8 张照片。", "Only the studio and the sourcing agent can add photos to a request.": "只有工作室和采购代理可以为请求添加照片。",
     "You have 50 open requests. Wait for some to be sourced first.": "您有 50 个未完成的请求，请等部分采购完成后再提交。", "Only admins can remove a request.": "只有管理员可以移除请求。", "Only the studio and the sourcing agent can update a request.": "只有工作室和采购代理可以更新请求。", "Add a photo first.": "请先添加图片。", "Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.": "此服务器尚未设置 Claude。请在 Render 中添加 Anthropic API 密钥（ANTHROPIC_API_KEY）。",
     "Back to all product types": "返回全部产品类型",
@@ -192,6 +196,12 @@
 .sbl-fext{flex:none;font-family:var(--mono);font-size:10px;letter-spacing:.06em;padding:2px 5px;background:var(--ink);color:var(--paper)}
 .sbl-addfound{align-self:flex-start;cursor:pointer}
 .sbl-addfound input{display:none}
+.sbl-drive{grid-column:1/-1;margin:0 0 14px;padding:14px 16px;background:var(--paper);border:1px solid var(--rule);font-size:14px;color:var(--ink)}
+.sbl-drive h5{margin:0 0 8px;font-family:var(--display);font-weight:400;font-size:18px}
+.sbl-drive.quiet{padding:0;background:none;border:0;color:var(--muted);font-size:13px}
+.sbl-drive.err{border-color:var(--crit);color:var(--crit)}
+.sbl-driverow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--rule2,var(--rule))}
+.sbl-driverow span{display:flex;flex-direction:column;min-width:0}.sbl-driverow b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sbl-driverow small{color:var(--muted);font-size:12px}
 .sbl-addcat{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:14px 18px;align-items:end;padding:16px;background:var(--paper);border:1px solid var(--rule)}
 .sbl-addcat label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
 .sbl-addcat input:not([type=file]),.sbl-addcat select{font:inherit;font-size:15px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px;min-width:0}
@@ -545,6 +555,21 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(b, 0, 0, cv.width, cv.height);
     return cv.toDataURL("image/jpeg", .86).split(",")[1];
   }
+  // The catalogue page the image is on, rendered from the PDF kept on the server (catalogues added from a PDF),
+  // for the piece's Specification. Only that page's bytes are read. Returns null for catalogues kept on Google Drive.
+  async function pagePic(o) {
+    const S = LIB.sups[o.sup]; if (!S || !S.up) return null;
+    const lib = await pdfjs();
+    const doc = await lib.getDocument({ url: `/lib/pdf/${encodeURIComponent(o.sup)}.pdf`, disableAutoFetch: true, disableStream: true, rangeChunkSize: 262144 }).promise;
+    try {
+      const pg = await doc.getPage(Math.max(1, Math.min(doc.numPages, Number(o.page) || 1)));
+      const v1 = pg.getViewport({ scale: 1 }), sc = Math.min(3, 2200 / Math.max(v1.width, v1.height)), vp = pg.getViewport({ scale: sc });
+      const cv = document.createElement("canvas"); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+      const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height);
+      await pg.render({ canvasContext: g, viewport: vp }).promise;
+      return { data: cv.toDataURL("image/jpeg", .85).split(",")[1], w: v1.width, h: v1.height };
+    } finally { doc.destroy(); }
+  }
   // The server builds the piece from the catalogue index, so clients can add pieces too.
   async function add() {
     const o = LIB && LIB.items[ui.open]; if (!o || ui.adding) return;
@@ -555,7 +580,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       if (full.has(o.file)) try { photo = await bigPhoto(o); } catch (_) {}
       if (!photo) try { photo = await crop(o); } catch (_) {}
       const prefix = host.prefix ? host.prefix(o, label(o.sup)[1]) : null;
-      const r = await fetch("/api/library/add", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ project, file: o.file, photo, prefix }) });
+      let pg = null; try { pg = await pagePic(o); } catch (_) {}
+      const r = await fetch("/api/library/add", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ project, file: o.file, photo, prefix, ...(pg ? { page: pg.data, pageW: pg.w, pageH: pg.h } : {}) }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw Object.assign(new Error(j.message || "add"), { code: j.code });
       const pname = host.ctx === "project" ? host.projectName() : (host.projects().find(p => p.id === project) || {}).name || project;
@@ -574,7 +600,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   let scan = null, scanErr = "", pdfMode = "scan"; // progress text while a PDF is being scanned; why the last one stopped
   function addCatHTML() {
     if (scan) return `<div class="sbl-addcat"><p style="color:var(--ink);font-size:14px">${esc(scan)}</p></div>`;
-    if (!ui.addcat) return `<button class="linkbtn" data-sbl="addcat">${t("Add a catalogue from a PDF")}</button>`;
+    if (!ui.addcat) return driveHTML() + `<button class="linkbtn" data-sbl="addcat">${t("Add a catalogue from a PDF")}</button>`;
     return `<div class="sbl-addcat">${scanErr ? `<p style="color:var(--crit);font-size:14px">${esc(scanErr)}</p>` : ""}
       <label class="sbl-drop">${t("PDF catalogue")}<span>${t("Drop the PDF here, or click to choose it")}</span><b id="sbl-pdfname"></b><input type="file" id="sbl-pdf" accept="application/pdf,.pdf"></label>
       <fieldset class="sbl-mode" id="sbl-mode" hidden><legend>${t("How to add it")}</legend>
@@ -588,6 +614,48 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       <div class="sbl-row"><button class="btn" data-sbl="scan" id="sbl-go">${t(pdfMode === "pages" ? "Import pages" : "Scan and add")}</button><button class="btn ghost" data-sbl="addcancel">${t("Cancel")}</button></div></div>`;
   }
   function addLine() { const el = $("#sbl-addwrap"); if (el) el.innerHTML = addCatHTML(); }
+  // New catalogues on Google Drive: PDFs in the catalogue folder that aren't in the library yet. Add opens the form
+  // with the PDF, category and Drive link filled in; Ignore hides that PDF for good.
+  let driveSt = null, driveBusy = "";
+  async function loadDrive(check) {
+    try { const r = await fetch("/api/library/drive" + (check ? "?check=1" : "")); driveSt = r.ok ? await r.json() : { on: false, pending: [] }; } catch (_) { driveSt = driveSt || { on: false, pending: [] }; }
+    if (!ui.addcat && !scan) addLine();
+  }
+  function driveHTML() {
+    if (!curating()) return "";
+    if (!driveSt) { loadDrive(); return ""; }
+    if (!driveSt.on) return driveSt.error ? `<p class="sbl-drive err">${esc(t(driveSt.error))}</p>` : "";
+    if (driveSt.error) return `<div class="sbl-drive err"><p>${t("Sourcebook can't check Google Drive for new catalogues:")} ${esc(t(driveSt.error))}</p><button class="linkbtn" data-sbl="drivecheck">${t("Check again")}</button></div>`;
+    if (driveBusy) return `<div class="sbl-drive"><p>${esc(driveBusy)}</p></div>`;
+    const P = driveSt.pending || [];
+    if (!P.length) return `<p class="sbl-drive quiet">${t("No new catalogues on Google Drive.")} <button class="linkbtn" data-sbl="drivecheck">${t("Check now")}</button></p>`;
+    const mb = n => n ? ` · ${(n / 1048576).toFixed(n < 10485760 ? 1 : 0)} MB` : "";
+    return `<div class="sbl-drive"><h5>${zh() ? `Google 云盘上有 ${P.length} 份新目录` : `${P.length} new catalogue${P.length === 1 ? "" : "s"} on Google Drive`}</h5>
+      ${P.slice(0, ui.driveAll ? 500 : 6).map(f => `<div class="sbl-driverow"><span><b>${esc(f.name)}</b><small>${esc(f.cat ? catLabel(f.cat) : f.folder)}${mb(f.size)}</small></span><button class="btn sm" data-sbl="driveadd" data-id="${esc(f.id)}">${t("Add")}</button><button class="btn ghost sm" data-sbl="driveignore" data-id="${esc(f.id)}">${t("Ignore")}</button></div>`).join("")}
+      ${P.length > 6 && !ui.driveAll ? `<button class="linkbtn" data-sbl="driveall">${zh() ? `显示全部 ${P.length} 份` : `Show all ${P.length}`}</button>` : ""}</div>`;
+  }
+  const catLabel = c => c.startsWith("CUSTOM-") ? (x => x ? (zh() ? x.zh || x.en : x.en) : c)(custom.find(x => x.c === c.slice(7))) : catName(c);
+  async function driveAdd(id) {
+    const f = driveSt && (driveSt.pending || []).find(x => x.id === id); if (!f || driveBusy) return;
+    driveBusy = zh() ? `正在从 Google 云盘获取 ${f.name}…` : `Getting ${f.name} from Google Drive…`; addLine();
+    try {
+      const r = await fetch(`/api/library/drive/pdf/${encodeURIComponent(id)}`);
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).message || "drive");
+      const file = new File([await r.blob()], f.name, { type: "application/pdf" });
+      driveBusy = ""; ui.addcat = true; addLine();
+      const inp = $("#sbl-pdf"); if (inp) { const dt = new DataTransfer(); dt.items.add(file); inp.files = dt.files; pdfName(); }
+      const sel = $("#sbl-cat"); if (sel && f.cat && [...sel.options].some(o => o.value === f.cat)) sel.value = f.cat;
+      const dv = $("#sbl-drive"); if (dv) dv.value = `https://drive.google.com/file/d/${id}/view`;
+      const sp = $("#sbl-supplier"); if (sp) { sp.value = f.name.replace(/\.pdf$/i, "").replace(/^\d{4}\s*/, "").replace(/[^A-Za-z0-9 &-]+/g, " ").trim().split(/\s+/)[0] || ""; sp.focus(); sp.select(); }
+    } catch (e) { driveBusy = ""; addLine(); host.toast(e.message && e.message !== "drive" ? e.message : t("Couldn't get the PDF from Google Drive. Try again.")); }
+  }
+  async function driveIgnore(id) {
+    if (!driveSt) return; const f = (driveSt.pending || []).find(x => x.id === id);
+    driveSt.pending = (driveSt.pending || []).filter(x => x.id !== id); addLine();
+    try { await api("/api/library/drive/ignore", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id }) });
+      host.toastUndo(zh() ? `已忽略 ${f ? f.name : ""}` : `Ignored ${f ? f.name : ""}`, async () => { await api("/api/library/drive/ignore", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, undo: true }) }).catch(() => {}); loadDrive(); });
+    } catch (_) { host.toast(t("Couldn't save. Check your connection and try again.")); loadDrive(); }
+  }
   let PDFJS = null;
   async function pdfjs() {
     if (!PDFJS) { PDFJS = await import("/pdfjs/pdf.min.mjs"); PDFJS.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs"; }
@@ -696,7 +764,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       const done = await api(`/api/library/catalogue/${sup}/done`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ items: keep }) });
       scan = null; ui.addcat = false; ui.sup = sup; ui.show = "all";
       host.toast(zh() ? `已添加 ${nf(done.n)} 张图片，尚未批准` : `${nf(done.n)} images added. None are approved yet`);
-      reloadIndex();
+      reloadIndex(); if (driveSt && driveSt.on) loadDrive();
     } catch (e) {
       scan = null;
       scanErr = e.code ? e.message : e.name === "InvalidPDFException" || e.name === "PasswordException" ? t("Couldn't read that PDF.") : (zh() ? "扫描中断，请重试。" : "The scan stopped part way. Try again.") + (e.message ? " (" + e.message + ")" : "");
@@ -1037,6 +1105,10 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     else if (a === "rdel") updReq(el.dataset.id, { remove: true });
 
     else if (a === "scan" && curating() && !scan) scanPDF();
+    else if (a === "driveadd" && curating()) driveAdd(el.dataset.id);
+    else if (a === "driveignore" && curating()) driveIgnore(el.dataset.id);
+    else if (a === "driveall") { ui.driveAll = true; addLine(); }
+    else if (a === "drivecheck" && curating()) { driveBusy = t("Checking Google Drive…"); addLine(); driveBusy = ""; loadDrive(true); }
     else if (a === "delcat" && curating() && ui.sup) deleteCat(ui.sup);
     else if (a === "prev" || a === "next") { e.stopPropagation(); step(a === "next" ? 1 : -1); }
     else if (a === "zoom") { ui.zoom = true; host.layer(); }

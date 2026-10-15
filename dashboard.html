@@ -193,7 +193,7 @@ function render(){
     <div><span class="eyebrow">${t("Pieces in sourcing")}</span><b>${sum(p=>p.counts.items-p.stages.Delivered)}</b></div>
     <div><span class="eyebrow">${t("Orders overdue")}</span><b class="${sum(p=>p.overdue)?"crit":""}">${sum(p=>p.overdue)}</b></div>
     <div><span class="eyebrow">${t("Due in 3 weeks")}</span><b>${sum(p=>p.dueSoon)}</b></div>
-    <div><span class="eyebrow">${t("Quoted value")}</span><b>${money(cad,"CAD")}</b><small class="mono">${money(cny,"CNY")} · ${t("across all projects")}</small></div>
+    <div><span class="eyebrow">${t("Quoted value")}</span><b>${money(cad,"CAD")}</b><small class="mono">${isClient()?"":money(cny,"CNY")+" · "}${t("across all projects")}</small></div>
   </section>
   <div class="bar"><div class="chips">${["active","archived","all"].map(f=>`<button class="chip" data-f="${f}" aria-pressed="${state.filter===f}">${t(f[0].toUpperCase()+f.slice(1))}</button>`).join("")}</div>
     <input class="search" id="q" type="search" placeholder="${t("Search projects")}" value="${esc(state.q)}"></div>
@@ -216,7 +216,7 @@ function card(p){
       <div class="stagebar" aria-hidden="true">${n?STAGES.map((s,i)=>p.stages[s]?`<i style="width:${p.stages[s]/n*100}%;background:${colors[i]}"></i>`:"").join(""):""}</div>
       <div class="legend">${STAGES.map((s,i)=>p.stages[s]?`<span style="--c:${colors[i]}">${t(s)} ${p.stages[s]}</span>`:"").join("")}</div>
       <div class="meta"><div><b>${n}</b><span>${t("pieces")}</span></div><div><b>${p.counts.drawings}</b><span>${t("drawings")}</span></div><div><b>${money(p.quote.cad,"CAD")}</b><span>${t("quoted (CAD)")}</span></div></div>
-      <div class="foot"><span>${t("Updated")} ${esc(ago(p.updated))}</span><span class="mono">${money(p.quote.cny,"CNY")}</span></div>
+      <div class="foot"><span>${t("Updated")} ${esc(ago(p.updated))}</span><span class="mono">${isClient()?"":money(p.quote.cny,"CNY")}</span></div>
     </a>
     ${isClient()?"":`<button class="more" data-menu="${esc(p.id)}" aria-label="${t("Project options")}" aria-expanded="${menu}">⋯</button>
     ${menu?`<div class="menu" role="menu">${conf?`<p>${t("Delete this project, its pieces, drawings and images? This can't be undone.")}</p><div class="row"><button class="btn danger sm" data-del="${esc(p.id)}">${t("Delete")}</button><button class="btn ghost sm" data-a="noconf">${t("Cancel")}</button></div>`

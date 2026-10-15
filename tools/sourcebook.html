@@ -153,6 +153,7 @@ tr.row:hover td{background:var(--paper)}
 .kv{display:grid;grid-template-columns:minmax(110px,34%) 1fr auto;gap:0 16px}
 .kv > *{padding:10px 0;border-bottom:1px solid var(--rule2)}
 .kv .k{color:var(--muted);font-size:13px}
+.kv a{color:inherit;text-decoration:underline;text-underline-offset:3px}.kv .readbtn.dl{margin-left:8px}
 .x{background:none;border:0;color:var(--muted);padding:10px 0 10px 8px;font-size:15px;line-height:1}
 .x:hover{color:var(--crit)}
 .refs{display:flex;flex-direction:column}
@@ -1206,6 +1207,10 @@ function stepDrawing(dir){if(viewer.ximgItem){const ims=ximgList(viewer.ximgItem
 document.addEventListener("click",e=>{
   const vr=e.target.closest&&e.target.closest("[data-viewref]");
   if(vr){e.preventDefault();e.stopPropagation();const [id,i]=vr.dataset.viewref.split(":");openViewer(id,+i);return}
+  const vs=e.target.closest&&e.target.closest("[data-viewspec]");
+  if(vs){e.preventDefault();e.stopPropagation();const [id,i]=vs.dataset.viewspec.split(":");const it=items.find(x=>x.id===id),sp=it&&(it.specs||[])[+i];if(sp&&sp.asset)openAsset({asset:sp.asset,title:sp.value||sp.label,eyebrow:[it.code,sp.label].filter(Boolean).join(" · ")});return}
+  const ds=e.target.closest&&e.target.closest(".sheet [data-dlspec]");
+  if(ds&&ui.open){e.preventDefault();e.stopPropagation();downloadSpec(ui.open,+ds.dataset.dlspec);return}
   const dl=e.target.closest&&e.target.closest(".sheet [data-dlref]");
   if(dl&&ui.open){e.preventDefault();e.stopPropagation();downloadRef(ui.open,+dl.dataset.dlref);return}
   const vx=e.target.closest&&e.target.closest("[data-viewximg]");
@@ -1520,9 +1525,10 @@ async function exportQuotePackage(){
     const list=quoteList(),day=iso(new Date()),proj=safeName(project.name||"Sourcebook"),root=tr("Drawings & references");
     const files=[],used=new Set(),map={};let missing=0,done=0;
     const add=(name,blob)=>{let n=name,i=2;while(used.has(n.toLowerCase())){n=name.replace(/(\.[a-z0-9]+)?$/i,m=>` (${i})${m}`);i++}used.add(n.toLowerCase());files.push({name:n,blob});return n};
-    const total=list.reduce((s,it)=>s+(it.refs||[]).filter(r=>r.asset).length,0);
+    // The catalogue page on a library piece's Specification goes in too, so the agent still gets it.
+    const total=list.reduce((s,it)=>s+(it.refs||[]).filter(r=>r.asset).length+specFiles(it).length,0);
     for(const it of list){
-      const refs=attachments(it);if(!refs.length)continue;
+      const refs=[...attachments(it),...specFiles(it)];if(!refs.length)continue;
       const folder=`${root}/${safeName([it.code,it.name].filter(Boolean).join(" "))}`;const names=[];
       for(const r of refs.filter(r=>r.asset)){
         toast(`Collecting drawings · ${++done} of ${total}`);
@@ -2102,6 +2108,15 @@ async function makeZip(files){
   const e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cenLen,true);e.setUint32(16,off,true);
   return new Blob([...out,...cen,e.buffer],{type:"application/zip"});
 }
+// Files kept on a specification line (the catalogue page of a sourcing-library piece).
+const specFiles=it=>(it.specs||[]).filter(s=>s.asset).map(s=>({asset:s.asset,mime:s.mime,kind:s.label,title:s.value}));
+async function downloadSpec(itemId,i){
+  const it=items.find(x=>x.id===itemId);const s=it&&(it.specs||[])[i];if(!s||!s.asset)return;
+  try{const res=await fetch("/_blob/"+s.asset);if(!res.ok)throw new Error("fetch");const b=await res.blob();
+    const fn=`${safeName([it.code,s.label,s.value].filter(Boolean).join(" "))}.${EXT[b.type]||EXT[s.mime]||"bin"}`;
+    if(downloads)await downloads.save({filename:fn,data:b});else{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=fn;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
+  }catch(_){toast("The file couldn't be downloaded. Try again.")}
+}
 async function downloadRef(itemId,i){
   const it=items.find(x=>x.id===itemId);const r=it&&(it.refs||[])[i];if(!r||!r.asset)return;
   try{const res=await fetch("/_blob/"+r.asset);if(!res.ok)throw new Error("fetch");const b=await res.blob();
@@ -2123,6 +2138,7 @@ async function downloadPackage(it){
     let missing=0;
     for(const r of (it.refs||[]).filter(r=>r.asset)){try{const b=await fetchBlob(r.asset);const ext=EXT[b.type]||EXT[r.mime]||"bin";
       add(`${tr("Drawings & references")}/${safeName([r.kind,r.no,r.title].filter(Boolean).join(" "))}.${ext}`,b)}catch(_){missing++}}
+    for(const r of specFiles(it)){try{const b=await fetchBlob(r.asset);add(`${tr("Specification")}/${safeName([r.kind,r.title].filter(Boolean).join(" "))}.${EXT[b.type]||EXT[r.mime]||"bin"}`,b)}catch(_){missing++}}
     if(it.model&&it.model.asset){try{add(`3D/${safeName(it.model.name||base+".glb").replace(/\.glb$/i,"")}.glb`,await fetchBlob(it.model.asset))}catch(_){missing++}}
     if(it.modelUsdz&&it.modelUsdz.asset){try{add(`3D/${safeName(it.modelUsdz.name||base+".usdz").replace(/\.usdz$/i,"")}.usdz`,await fetchBlob(it.modelUsdz.asset))}catch(_){missing++}}
     const links=(it.refs||[]).filter(r=>r.url);
@@ -2406,7 +2422,7 @@ function renderLayer(passive){
       ${inFurniture(it)?furSection(it,ed):finSection(it,ed)}
       ${!inFurniture(it)&&!inFinish(it)&&ed?`<p class="muted listhint">Add to the <button class="linkbtn" data-a="listfin">finish schedule</button> or the <button class="linkbtn" data-a="listfur">furniture schedule</button>.</p>`:""}
       <section class="sec"><header><h5>Specification</h5><span class="mono muted">${(it.specs||[]).length}</span></header>
-        <div class="kv">${(it.specs||[]).map((s,i)=>`<div class="k">${esc(s.label)}</div><div>${esc(s.value)}</div>${ed?`<button class="x" data-delspec="${i}" aria-label="Remove">×</button>`:"<span></span>"}`).join("")}</div>
+        <div class="kv">${(it.specs||[]).map((s,i)=>`<div class="k">${esc(s.label)}</div><div>${s.asset?`<a href="/_blob/${esc(s.asset)}" data-viewspec="${it.id}:${i}">${esc(s.value)}</a> <button class="readbtn dl" data-dlspec="${i}" title="Download this file">Download</button>`:s.url?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.value)} ↗</a>`:esc(s.value)}</div>${ed?`<button class="x" data-delspec="${i}" aria-label="Remove">×</button>`:"<span></span>"}`).join("")}</div>
         ${ed?`<form class="mini" data-form="spec"><input class="f" id="sl" name="label" placeholder="Attribute" required><input class="f" id="sv" name="value" placeholder="Value" required><button class="btn sm">Add</button></form>`:""}
       </section>
 
@@ -3318,7 +3334,7 @@ const ZH={
 "No furniture yet.":"暂无家具。","No finishes yet.":"暂无饰面。","No furniture yet. Pieces in the Furniture category appear here automatically, and any piece can be added from its page.":"暂无家具。家具类别中的项目会自动显示在这里，任何项目也可以从其页面加入。",
 "Decision log":"决策记录","Every call, who made it, and why":"每一项决定、由谁做出以及原因","Decision, e.g. Switch to honed finish":"决策，例如：改为哑光面","Why, and what it affects (cost, lead time, drawings)":"原因及影响（成本、交货期、图纸）","Made by":"决策人","Proposed":"提议","Rejected":"已否决","Log decision":"记录决策","No decisions logged yet.":"暂无决策记录。","No decisions logged for this piece.":"此项目暂无决策记录。","Decision logged":"已记录决策",
 "Edit":"编辑","Close":"关闭","Quantity":"数量","Lead time":"交货期","Required on site":"到场日期","Unit cost":"单价","Specification":"规格","Attribute":"属性","Value":"数值","Add":"添加",
-"Drawings & references":"图纸与参考资料","No drawings or spec sheets linked yet.":"尚未关联图纸或规格书。","Drawing":"图纸","Spec sheet":"规格书","Shop dwg":"深化图","Sample":"样板","Quote":"报价","Link":"链接","Ref no. e.g. A-501":"编号，例如 A-501","Title":"标题","Link (Drive, Dropbox, supplier page…)":"链接（云盘、Dropbox、供应商页面…）","Attach file":"附加文件","Add reference":"添加参考","Read":"读取","Read details":"读取信息","View":"查看",
+"Catalogue page":"目录页","Drawings & references":"图纸与参考资料","No drawings or spec sheets linked yet.":"尚未关联图纸或规格书。","Drawing":"图纸","Spec sheet":"规格书","Shop dwg":"深化图","Sample":"样板","Quote":"报价","Link":"链接","Ref no. e.g. A-501":"编号，例如 A-501","Title":"标题","Link (Drive, Dropbox, supplier page…)":"链接（云盘、Dropbox、供应商页面…）","Attach file":"附加文件","Add reference":"添加参考","Read":"读取","Read details":"读取信息","View":"查看",
 "Notes":"备注","Seen in":"出现在","Detected from this view":"从此视图识别","From this view":"来自此视图","Add photo":"添加照片","Replace image":"替换图片","Use material plate":"使用材料样板",
 "Finish schedule ":"饰面表","Material category ":"材料类别","Save finish details":"保存饰面信息","Not listed on the finish schedule.":"未列入饰面表。","Save furniture details":"保存家具信息","Not listed on the furniture schedule.":"未列入家具表。",
 "Collection / product":"系列 / 产品","Model / SKU":"型号 / SKU","Frame / base finish":"框架 / 底座饰面","Upholstery":"软包","Location / room":"位置 / 房间","Add to the":"加入","or the":"或","finish schedule":"饰面表","furniture schedule":"家具表",
@@ -3444,7 +3460,7 @@ function libInProj(){const m=new Map();items.forEach(it=>{if(it.libSource&&it.li
 // Furniture tag for a library image; the server prefers its own reading of the Chinese text and picks the next free number.
 function libPrefix(o,product){return furPrefixText(o.text)||furPrefixText(product)||null}
 if(window.SBLibrary)SBLibrary.configure({ctx:"project",internal:isStaff,canEdit:()=>false,canAdd:()=>!preview&&!!db,project:()=>window.SOURCEBOOK_PROJECT,projectName:()=>project.name,inProject:libInProj,prefix:libPrefix,
-  added:(j,name)=>toast(j.existing?`Already in ${name} as ${j.code}`:`Added to ${name} as ${j.code}`),
+  added:(j,name)=>{toast(j.existing?`Already in ${name} as ${j.code}`:`Added to ${name} as ${j.code}`);if(db)db.collection("items").get().catch(()=>{})},
   openPiece:id=>{ui.img=null;ui.open=id;ui.mode="view";renderLayer()},layer:()=>renderLayer(),toast,toastUndo});
 function useSample(){if(db)return;preview=true;project=SAMPLE.project;items=SAMPLE.items.map(i=>({specs:[],refs:[],...i}));decisions=[];render()}
 boot();

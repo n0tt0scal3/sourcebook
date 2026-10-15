@@ -158,6 +158,8 @@ Your data lives on the Render disk and the app's code lives in GitHub. An update
 | `ANTHROPIC_API_KEY` | Enables image detection and drawing reading. |
 | `ANTHROPIC_MODEL` | Claude model used for reading images and drawings. Default `claude-sonnet-5`. |
 | `DATA_DIR` | Where data is stored. Must stay on the disk's mount path. |
+| `GOOGLE_SERVICE_ACCOUNT` | JSON key of a Google service account (paste the whole file, or it base64-encoded). With `DRIVE_CATALOGUE_FOLDER`, Sourcebook checks Google Drive for new catalogue PDFs every 15 minutes and offers them to admins in the Sourcing library. |
+| `DRIVE_CATALOGUE_FOLDER` | The catalogue folder (90 CHINA PRODUCTS): its Drive link or folder id. Share the folder with the service account's email as Viewer. Category comes from the subfolder name. |
 
 ## Limits
 

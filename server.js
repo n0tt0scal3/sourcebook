@@ -30,6 +30,8 @@ const LIB_THUMB_DIR = path.join(DATA_DIR, "lib-thumbs");
 // The library index, read once and kept in memory for building pieces on the server.
 const LIB_LABEL = { "BILLA-Sofa": ["Billa", "Sofas & lounge chairs"], "BILLA-CoffeeTV": ["Billa", "Coffee tables & TV units"], "BILLA-Dining": ["Billa", "Dining"], "BILLA-Outdoor": ["Billa", "Outdoor"], "HALO": ["HALO", "Collection 2026"], "Kaiwuli": ["Kaiwuli", "Catalogue 2026"], "TO-Tearsheet": ["TO Interactive", "Tearsheets 2025"] };
 const LIB_CAT = { FURNITURE: "Furniture", LIGHTING: "Lighting", PLUMBING: "Plumbing", MILLWORK: "Millwork", DOORS: "Millwork", STONE: "Stone", "WALL PANELLING": "Finishes", "WOOD PRODUCTS": "Finishes", "PARTITION SYSTEMS": "Glazing", "GLASS PRODUCTS": "Glazing", FLOORING: "Finishes", OFFICE: "Furniture", VANITIES: "Plumbing", MIRRORS: "Glazing", SIGNAGE: "Hardware" };
+// Code prefix for a library piece outside furniture, the same as CAT_PREFIX in the book.
+const LIB_CODE = { Stone: "ST", Tile: "CT", Textiles: "FAB", Glazing: "GL", Millwork: "MW", Lighting: "LT", Hardware: "HW", Plumbing: "P", Finishes: "FIN" };
 const libCatFile = c => String(c).replace(/ /g, "-");
 let libCache = null;
 // The scanned catalogues in lib/ plus the finished ones added from PDFs; uploaded catalogues carry label and up: 1.
@@ -142,6 +144,31 @@ function sniffType(file) {
   return "application/octet-stream";
 }
 
+// A one-page PDF holding a JPEG (a catalogue page rendered in the browser). w and h are the page size in points.
+function jpegToPdf(jpg, w, h) {
+  let i = 2, px = 0, py = 0, comps = 3;
+  while (i + 9 < jpg.length && jpg[i] === 0xff) {
+    const m = jpg[i + 1], len = jpg.readUInt16BE(i + 2);
+    if (m >= 0xc0 && m <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(m)) { py = jpg.readUInt16BE(i + 5); px = jpg.readUInt16BE(i + 7); comps = jpg[i + 9]; break; }
+    i += 2 + len;
+  }
+  if (!px || !py) return null;
+  if (!(w > 0 && h > 0 && w < 20000 && h < 20000)) { w = px * 0.5; h = py * 0.5; }
+  const W = w.toFixed(2), H = h.toFixed(2), cs = comps === 1 ? "/DeviceGray" : comps === 4 ? "/DeviceCMYK" : "/DeviceRGB";
+  const draw = `q ${W} 0 0 ${H} 0 0 cm /Im0 Do Q`;
+  const parts = [], offs = []; let pos = 0;
+  const put = x => { const b = Buffer.isBuffer(x) ? x : Buffer.from(x, "latin1"); parts.push(b); pos += b.length; };
+  const obj = (n, body) => { offs[n] = pos; put(`${n} 0 obj\n`); body(); put("\nendobj\n"); };
+  put("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+  obj(1, () => put("<< /Type /Catalog /Pages 2 0 R >>"));
+  obj(2, () => put("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"));
+  obj(3, () => put(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>`));
+  obj(4, () => put(`<< /Length ${draw.length} >>\nstream\n${draw}\nendstream`));
+  obj(5, () => { put(`<< /Type /XObject /Subtype /Image /Width ${px} /Height ${py} /ColorSpace ${cs} /BitsPerComponent 8 /Filter /DCTDecode${comps === 4 ? " /Decode [1 0 1 0 1 0 1 0]" : ""} /Length ${jpg.length} >>\nstream\n`); put(jpg); put("\nendstream"); });
+  const xref = pos;
+  put(`xref\n0 6\n0000000000 65535 f \n${[1, 2, 3, 4, 5].map(n => String(offs[n]).padStart(10, "0") + " 00000 n \n").join("")}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return Buffer.concat(parts);
+}
 function sniffBuf(b) {
   if (b[0] === 0xff && b[1] === 0xd8) return "image/jpeg";
   if (b.slice(0, 4).toString("hex") === "89504e47") return "image/png";
@@ -245,6 +272,84 @@ function projectSummaries() {
       stages, overdue, dueSoon, quote: { cad: total, cny: total * fx, fx } };
   }).sort((a, b) => String(b.updated || "").localeCompare(String(a.updated || "")));
 }
+
+/* ---------------- new catalogues on Google Drive ---------------- */
+// With a Google service account (GOOGLE_SERVICE_ACCOUNT: its JSON key, raw or base64) that can read the catalogue folder
+// (DRIVE_CATALOGUE_FOLDER: the folder id of 90 CHINA PRODUCTS), the server lists the PDFs in its category folders every
+// 15 minutes. PDFs that aren't a catalogue yet are offered to admins in the Sourcing library to add or ignore.
+// Ignored ones are kept in librarydrive/main = { ignored: [file ids] }.
+const DRIVE_FOLDER = String(process.env.DRIVE_CATALOGUE_FOLDER || "").trim().replace(/^.*folders\//, "").replace(/[?#].*$/, "");
+let driveKey = null;
+try {
+  const raw = String(process.env.GOOGLE_SERVICE_ACCOUNT || "").trim();
+  if (raw) driveKey = JSON.parse(raw.startsWith("{") ? raw : Buffer.from(raw, "base64").toString("utf8"));
+} catch (_) { console.error("GOOGLE_SERVICE_ACCOUNT isn't a valid JSON key"); }
+const drive = { files: [], checked: null, error: driveKey || !process.env.GOOGLE_SERVICE_ACCOUNT ? "" : "The Google key in Render (GOOGLE_SERVICE_ACCOUNT) couldn't be read.", busy: false, token: null, exp: 0 };
+const driveOn = () => !!(driveKey && driveKey.client_email && driveKey.private_key && DRIVE_FOLDER);
+async function driveToken() {
+  if (drive.token && Date.now() < drive.exp - 60000) return drive.token;
+  const b64 = o => Buffer.from(JSON.stringify(o)).toString("base64url"), now = Math.floor(Date.now() / 1000);
+  const head = b64({ alg: "RS256", typ: "JWT" }) + "." + b64({ iss: driveKey.client_email, scope: "https://www.googleapis.com/auth/drive.readonly", aud: "https://oauth2.googleapis.com/token", iat: now, exp: now + 3600 });
+  const sig = crypto.createSign("RSA-SHA256").update(head).sign(driveKey.private_key, "base64url");
+  const r = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion: head + "." + sig }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.access_token) throw new Error("Google didn't accept the key (" + (j.error_description || j.error || r.status) + ").");
+  drive.token = j.access_token; drive.exp = Date.now() + (j.expires_in || 3600) * 1000; return drive.token;
+}
+async function driveList(q) {
+  const out = []; let page = "";
+  do {
+    const u = new URL("https://www.googleapis.com/drive/v3/files");
+    Object.entries({ q, fields: "nextPageToken,files(id,name,mimeType,size,modifiedTime)", pageSize: "1000", supportsAllDrives: "true", includeItemsFromAllDrives: "true", ...(page ? { pageToken: page } : {}) }).forEach(([k, v]) => u.searchParams.set(k, v));
+    const r = await fetch(u, { headers: { authorization: "Bearer " + (await driveToken()) } });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(r.status === 404 ? "The catalogue folder isn't shared with Sourcebook's Google account." : "Google Drive said: " + (j.error?.message || r.status));
+    out.push(...(j.files || [])); page = j.nextPageToken || "";
+  } while (page);
+  return out;
+}
+// The catalogue category for a Drive folder name: the built-in ones (FURNITURE, LIGHTING…, "Plumbing fixtures & …" is PLUMBING), then admins' own.
+function driveCat(name) {
+  const n = String(name || "").trim().toUpperCase();
+  if (LIB_CAT[n]) return n;
+  if (n.startsWith("PLUMBING")) return "PLUMBING";
+  if (n.startsWith("GLASS")) return "GLASS PRODUCTS";
+  const c = customTypes().find(x => String(x.en || "").trim().toUpperCase() === n);
+  return c ? "CUSTOM-" + c.c : "";
+}
+async function driveCheck() {
+  if (!driveOn() || drive.busy) return;
+  drive.busy = true;
+  try {
+    const files = [], esc = id => id.replace(/'/g, "\\'");
+    // Each category folder, and folders inside it (two levels), skipping the image library.
+    let level = (await driveList(`'${esc(DRIVE_FOLDER)}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`))
+      .filter(f => !/IMAGE LIBRARY/i.test(f.name)).map(f => ({ id: f.id, cat: driveCat(f.name), folder: f.name }));
+    for (let depth = 0; depth < 3 && level.length; depth++) {
+      const next = [];
+      for (const d of level) {
+        for (const f of await driveList(`'${esc(d.id)}' in parents and trashed=false`)) {
+          if (f.mimeType === "application/vnd.google-apps.folder") { if (depth < 2) next.push({ id: f.id, cat: d.cat, folder: d.folder + " / " + f.name }); }
+          else if (f.mimeType === "application/pdf" || /\.pdf$/i.test(f.name)) files.push({ id: f.id, name: f.name, size: Number(f.size) || 0, modified: f.modifiedTime || "", cat: d.cat, folder: d.folder });
+        }
+      }
+      level = next;
+    }
+    drive.files = files; drive.error = ""; drive.checked = new Date().toISOString();
+  } catch (e) { drive.error = e.message || "Google Drive couldn't be reached."; drive.checked = new Date().toISOString(); }
+  finally { drive.busy = false; }
+}
+// PDFs on Drive that aren't a catalogue in the library yet (by Drive file id, or same file name) and weren't ignored.
+async function drivePending() {
+  const lib = await libIndex(), ids = new Set(), names = new Set();
+  Object.values(lib.sups).forEach(S => { if (S.drive) ids.add(S.drive); if (S.pdf) names.add(String(S.pdf).toLowerCase()); });
+  for (const f of (await fsp.readdir(LIB_CATS_DIR).catch(() => [])).filter(f => f.endsWith(".json"))) {
+    const c = await libCatRead(f.slice(0, -5)); if (c && c.status === "done" && c.drive) ids.add(c.drive);
+  }
+  const ign = new Set(store["librarydrive/main"]?.data?.ignored || []);
+  return drive.files.filter(f => !ids.has(f.id) && !names.has(f.name.toLowerCase()) && !ign.has(f.id));
+}
+if (driveOn()) { setTimeout(() => driveCheck(), 5000); setInterval(() => driveCheck(), 15 * 60 * 1000); }
 
 /* ---------------- live updates (server-sent events) ---------------- */
 const clients = new Set();
@@ -871,7 +976,15 @@ const server = http.createServer(async (req, res) => {
       try {
         const st = await fsp.stat(fp);
         const pdf = fp.endsWith(".pdf");
-        res.writeHead(200, { "Content-Type": pdf ? "application/pdf" : "image/jpeg", "Content-Length": st.size, "Cache-Control": "private, max-age=86400", ...(pdf ? { "Content-Disposition": "inline" } : {}) });
+        // Byte ranges, so the browser can read one page of a large catalogue without downloading all of it.
+        const rg = pdf && /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || "");
+        if (rg && (rg[1] || rg[2])) {
+          let a = rg[1] ? Number(rg[1]) : Math.max(0, st.size - Number(rg[2])), b = rg[1] && rg[2] ? Math.min(Number(rg[2]), st.size - 1) : st.size - 1;
+          if (a > b || a >= st.size) { res.writeHead(416, { "Content-Range": `bytes */${st.size}` }); return res.end(); }
+          res.writeHead(206, { "Content-Type": "application/pdf", "Content-Length": b - a + 1, "Content-Range": `bytes ${a}-${b}/${st.size}`, "Accept-Ranges": "bytes", "Cache-Control": "private, max-age=86400", "Content-Disposition": "inline" });
+          return fs.createReadStream(fp, { start: a, end: b }).pipe(res);
+        }
+        res.writeHead(200, { "Content-Type": pdf ? "application/pdf" : "image/jpeg", "Content-Length": st.size, "Cache-Control": "private, max-age=86400", ...(pdf ? { "Content-Disposition": "inline", "Accept-Ranges": "bytes" } : {}) });
         return fs.createReadStream(fp).pipe(res);
       } catch (_) { return send(res, 404, "Not found"); }
     }
@@ -1161,6 +1274,33 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       persist(); broadcast({ path: dp, exists: true, data: next });
       return send(res, 200, { ok: true });
     }
+    if (p === "/api/library/drive" && req.method === "GET") {
+      // { on, pending: [{id, name, size, cat, folder}], checked, error } for the Sourcing library (admins)
+      if (!isAdmin) return deny("Only admins can add catalogues.");
+      if (!driveOn()) return send(res, 200, { on: false, error: drive.error, pending: [] });
+      if (!drive.checked || (url.searchParams.get("check") && !drive.busy && Date.now() - Date.parse(drive.checked) > 60000)) await driveCheck();
+      return send(res, 200, { on: true, checked: drive.checked, error: drive.error, pending: drive.error ? [] : await drivePending() });
+    }
+    if (p === "/api/library/drive/ignore" && req.method === "POST") {
+      if (!isAdmin) return deny("Only admins can add catalogues.");
+      const b = await readJSON(req); const id = String(b.id || "");
+      if (!/^[A-Za-z0-9_-]{10,}$/.test(id)) return send(res, 400, { code: "invalid_argument" });
+      const cur = store["librarydrive/main"], ign = new Set(cur?.data?.ignored || []); b.undo ? ign.delete(id) : ign.add(id);
+      store["librarydrive/main"] = { data: { ignored: [...ign] }, version: (cur?.version || 0) + 1, updatedAt: new Date().toISOString() };
+      persist(); return send(res, 200, { ok: true });
+    }
+    const dpm = p.match(/^\/api\/library\/drive\/pdf\/([A-Za-z0-9_-]{10,})$/);
+    if (dpm && req.method === "GET") {
+      // The PDF itself, passed through from Drive so the browser can scan it like a dropped file.
+      if (!isAdmin) return deny("Only admins can add catalogues.");
+      if (!driveOn() || !drive.files.some(f => f.id === dpm[1])) return send(res, 404, { code: "not_found", message: "That PDF isn't in the catalogue folder any more." });
+      try {
+        const r = await fetch(`https://www.googleapis.com/drive/v3/files/${dpm[1]}?alt=media&supportsAllDrives=true`, { headers: { authorization: "Bearer " + (await driveToken()) } });
+        if (!r.ok || !r.body) return send(res, 502, { code: "upstream_error", message: "Google Drive didn't send the PDF. Try again." });
+        res.writeHead(200, { "Content-Type": "application/pdf", ...(r.headers.get("content-length") ? { "Content-Length": r.headers.get("content-length") } : {}), "Cache-Control": "no-store" });
+        const { Readable } = require("stream"); Readable.fromWeb(r.body).on("error", () => res.destroy()).pipe(res); return;
+      } catch (e) { return send(res, 502, { code: "upstream_error", message: e.message }); }
+    }
     if (p === "/api/library/category" && req.method === "POST") {
       // An admin adds a category to the Sourcing library: { en, zh, section } (section = where its products go in a project).
       if (!isAdmin) return deny("Only admins can add categories.");
@@ -1220,7 +1360,7 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
     if (p === "/api/library/add" && req.method === "POST") {
       // { project, file, photo?: base64 JPEG, prefix?: "SF" } adds an approved library image to a project as a piece.
       // Built here from the catalogue index so clients (who can't otherwise create pieces) can add them too.
-      const b = await readJSON(req, 4 * 1024 * 1024);
+      const b = await readJSON(req, 9 * 1024 * 1024);
       const pid = String(b.project || "");
       if (!validPath("projects/" + pid, true) || !store["projects/" + pid]) return send(res, 404, { code: "not_found", message: "That project no longer exists." });
       if (!canSeeProject(me, pid)) return deny("You can't add to that project.");
@@ -1239,7 +1379,8 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       const category = libCatSection(S.cat) || "Finishes";
       const t0 = String(text || "");
       const zhPrefix = /沙发/.test(t0) ? "SF" : /(休闲椅|躺椅)/.test(t0) ? "LC" : /凳/.test(t0) ? "STL" : /椅/.test(t0) ? "CH" : /(茶几|餐台|餐桌|桌|几)/.test(t0) ? "TB" : /(柜|架)/.test(t0) ? "CR" : /床/.test(t0) ? "BD" : null;
-      const prefix = zhPrefix || (/^[A-Z]{1,5}$/.test(b.prefix || "") ? b.prefix : category === "Furniture" ? "F" : "M");
+      // Furniture is tagged by what it is (SF, CH, TB…); everything else by its category, like pieces added in the book (LT for lighting).
+      const prefix = category === "Furniture" ? zhPrefix || (/^[A-Z]{1,5}$/.test(b.prefix || "") ? b.prefix : "F") : LIB_CODE[category] || "FIN";
       const used = new Set(items.map(x => String(x.code || "").toUpperCase().match(/^([A-Z]+)-?(\d+)/)).filter(x => x && x[1] === prefix).map(x => Number(x[2])));
       let n = 1; while (used.has(n)) n++;
       const code = `${prefix}-${n}`;
@@ -1254,10 +1395,24 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       }
       const codes = String(codesStr || "").split(" ").filter(Boolean);
       const drive = S.drive ? `https://drive.google.com/file/d/${S.drive}/view` : S.up ? `/lib/pdf/${sup}.pdf` : null;
-      const doc = { specs: [], photo, photoFit: "contain", name: codes[0] ? `${codes[0]} · ${L[0]}` : `${L[0]} ${L[1]} · p${page}`.trim(), description: L[1] ? `${L[0]} ${L[1]}` : "",
+      // The catalogue page the image is on goes in the Specification as a one-page PDF (the browser renders the page;
+      // catalogues kept on Google Drive can't be read here, so those get a link instead). Drawings & references stay for the project's own drawings.
+      const catSpec = { label: "Catalogue page", value: `${S.pdf || L[0]} · p.${page}` };
+      if (typeof b.page === "string" && b.page.length < 6e6) {
+        const jpg = Buffer.from(b.page, "base64");
+        const pdf = jpg.length && sniffBuf(jpg) === "image/jpeg" ? jpegToPdf(jpg, Number(b.pageW), Number(b.pageH)) : null;
+        if (pdf) {
+          const id = crypto.randomBytes(16).toString("hex");
+          await fsp.writeFile(path.join(BLOB_DIR, id), pdf);
+          await fsp.writeFile(path.join(BLOB_DIR, id + ".json"), JSON.stringify({ contentType: "application/pdf", sizeBytes: pdf.length, createdAt: new Date().toISOString(), source: `library:${file} p.${page}` }));
+          Object.assign(catSpec, { asset: id, mime: "application/pdf" });
+        }
+      }
+      if (!catSpec.asset && drive) catSpec.url = S.up && !S.drive ? `${drive}#page=${page}` : drive;
+      const doc = { specs: [catSpec], photo, photoFit: "contain", name: codes[0] ? `${codes[0]} · ${L[0]}` : `${L[0]} ${L[1]} · p${page}`.trim(), description: L[1] ? `${L[0]} ${L[1]}` : "",
         category, supplier: L[0], product: L[1] || "", modelCode: codes[0] || "", zone: "", ...(category === "Furniture" ? { furnType: prefix } : {}),
         code, qty: null, unit: "ea", leadWeeks: null, needBy: null, unitCost: null, status: "Concept", material: "wood", color: "#C9C3B8",
-        notes: `From the sourcing library: ${file}`, refs: [{ kind: "Spec sheet", no: "p." + page, title: S.pdf || "", url: drive, asset: null }],
+        notes: `From the sourcing library: ${file}`, refs: [],
         libSource: { file, sup, page, pdf: S.pdf || "", drive: S.drive || "" }, created: new Date().toISOString(), source: "Sourcing library", addedBy: { id: me.id, name: me.name || "", role: me.role } };
       const id = crypto.randomBytes(10).toString("hex");
       const dp = pre + id, tracked = trackChanges(me, null, doc);

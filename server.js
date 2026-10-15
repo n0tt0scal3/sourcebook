@@ -37,7 +37,7 @@ let libCache = null;
 // The scanned catalogues in lib/ plus the finished ones added from PDFs; uploaded catalogues carry label and up: 1.
 async function libIndex() {
   if (libCache) return libCache;
-  let d, types = {};
+  let d, types = {}; const added = {};
   try { d = JSON.parse(await fsp.readFile(path.join(LIB_DIR, "data.json"), "utf8")); } catch (_) { d = { sups: {}, items: [], cell: 280, grid: 8 }; }
   // Product type of each scanned image (lib/types.json, { file: code }), added as item[7].
   try { types = JSON.parse(await fsp.readFile(path.join(LIB_DIR, "types.json"), "utf8")); } catch (_) {}
@@ -47,12 +47,16 @@ async function libIndex() {
       const c = JSON.parse(await fsp.readFile(path.join(LIB_CATS_DIR, f), "utf8"));
       if (c.status !== "done" || d.sups[c.sup]) continue;
       d.sups[c.sup] = { pdf: c.pdf, drive: c.drive || "", pages: c.pages, cat: c.cat, n: c.items.length, label: [c.supplier, c.product || ""], up: 1, created: c.created };
+      added[c.sup] = { at: Date.parse(c.finished || c.created) || 0, by: c.byId || "" };
       c.items.forEach(x => d.items.push([x[0], c.sup, x[1], x[2] || "", x[3] || "", null, null, x[4] || libCatType(c.cat) || ""]));
     } catch (_) {}
   }
-  libCache = { sups: d.sups, byFile: new Map(d.items.map(x => [x[0], x])), json: JSON.stringify(d) };
+  // added: when each catalogue added from a PDF was finished and by whom (server only, for "new" badges).
+  libCache = { sups: d.sups, byFile: new Map(d.items.map(x => [x[0], x])), json: JSON.stringify(d), added, byKey: libByKey(d.items) };
   return libCache;
 }
+// "<catalogue>|<key>" -> file name, where key = page*100 + image number (as stored in library/<catalogue>.on).
+const libByKey = items => new Map(items.map(x => { const m = String(x[0]).match(/_p(\d+)_(\d+)\.jpg$/); return m ? [x[1] + "|" + ((+m[1]) * 100 + (+m[2])), x[0]] : null; }).filter(Boolean));
 // Product types (see TYPES in library.js). Catalogues outside furniture take their category's type;
 // furniture images added from a PDF are sorted by Claude from their thumbnails when an API key is set.
 const LIB_TYPES = "SLCTBKDEGR1HPXZMINJWQVYAO";
@@ -986,7 +990,7 @@ const server = http.createServer(async (req, res) => {
         if (!(pages >= 1 && pages <= 2000)) return send(res, 400, { code: "invalid_argument", message: "That PDF has too many pages (2,000 at most)." });
         const lib = await libIndex(), old = await libCatRead(s1);
         if (lib.sups[s1] || (old && old.status === "done")) return send(res, 409, { code: "exists", message: `There's already a catalogue called ${s1}. Use a different catalogue name.` });
-        const c = { sup: s1, supplier, product, cat: b.cat, pdf: String(b.pdf || "").slice(0, 200), pages, drive: /^[A-Za-z0-9_-]{10,}$/.test(b.drive || "") ? b.drive : "", status: "scanning", created: new Date().toISOString(), by: me.name || "", items: [] };
+        const c = { sup: s1, supplier, product, cat: b.cat, pdf: String(b.pdf || "").slice(0, 200), pages, drive: /^[A-Za-z0-9_-]{10,}$/.test(b.drive || "") ? b.drive : "", status: "scanning", created: new Date().toISOString(), by: me.name || "", byId: me.id, items: [] };
         await fsp.writeFile(path.join(LIB_CATS_DIR, s1 + ".json"), JSON.stringify(c));
         return send(res, 200, { ok: true, sup: s1, prefix: `${libCatFile(b.cat)}_${s1}` });
       }
@@ -1068,6 +1072,34 @@ const server = http.createServer(async (req, res) => {
       const next = { f: [...f], updated: new Date().toISOString() };
       store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
       persist(); return send(res, 200, { ok: true, files: next.f });
+    }
+    // New in the Sourcing library, per person: libraryseen/<user id> = { base: ms, f: [file names seen since] }.
+    // New for an admin: images from a catalogue another admin added since base. For everyone else: images approved
+    // since base. The first time someone asks, base is now, so what's already there never counts as new.
+    //   GET  /api/library/seen                 -> { files: [new file names] }
+    //   POST /api/library/seen { files: [...] } marks them seen -> { files }
+    if (p === "/api/library/seen") {
+      const dp = "libraryseen/" + me.id, cur = store[dp], idx = await libIndex();
+      let base = cur?.data?.base, seen = new Set(cur?.data?.f || []);
+      const save = () => { const next = { base, f: [...seen], updated: new Date().toISOString() }; store[dp] = { data: next, version: (store[dp]?.version || 0) + 1, updatedAt: next.updated }; persist(); };
+      const fresh = () => {
+        const out = [];
+        if (isAdmin) { for (const [sup, a] of Object.entries(idx.added)) if (a.at > base && a.by !== me.id) for (const [f, x] of idx.byFile) if (x[1] === sup && !seen.has(f)) out.push(f); return out; }
+        for (const [k, v] of Object.entries(store)) {
+          if (!k.startsWith("library/") || !v?.data?.at) continue; const sup = k.slice(8);
+          for (const [key, t0] of Object.entries(v.data.at)) if (t0 > base) { const f = idx.byKey.get(sup + "|" + key); if (f && !seen.has(f)) out.push(f); }
+        }
+        return out;
+      };
+      if (typeof base !== "number") { base = Date.now(); seen = new Set(); save(); }
+      if (req.method === "GET") return send(res, 200, { files: fresh() });
+      if (req.method !== "POST") return send(res, 405, { code: "method_not_allowed" });
+      const b = await readJSON(req, 2 * 1024 * 1024);
+      if (!Array.isArray(b.files) || b.files.length > 20000) return send(res, 400, { code: "invalid_argument" });
+      b.files.forEach(f => { if (typeof f === "string" && idx.byFile.has(f)) seen.add(f); });
+      // Nothing new left: start again from now, so the list of seen images doesn't keep growing.
+      const left = fresh(); if (!left.length) { base = Date.now(); seen = new Set(); }
+      save(); return send(res, 200, { files: left });
     }
     // "Have something you want?": find similar products in the library from a photo, step by step.
     // type: Claude says which product types to look in. match: the browser sends numbered contact sheets of the
@@ -1315,9 +1347,11 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       if (typeof b.sup !== "string" || !validPath(dp, true) || !Array.isArray(b.keys) || b.keys.length > 5000) return send(res, 400, { code: "invalid_argument" });
       const keys = b.keys.map(Number).filter(k => Number.isInteger(k) && k >= 0 && k < 1e7);
       const cur = store[dp];
-      const set = new Set((cur?.data?.on || []).map(Number));
-      keys.forEach(k => (b.on ? set.add(k) : set.delete(k)));
-      const next = { on: [...set].sort((x, y) => x - y), updated: new Date().toISOString(), by: me.name || "" };
+      const set = new Set((cur?.data?.on || []).map(Number)), at = { ...(cur?.data?.at || {}) }, now = Date.now();
+      // at = { key: when it was approved }, so each person can be shown what's new since they last looked.
+      // Images approved before this was kept have no time and never count as new.
+      keys.forEach(k => { if (b.on) { if (!set.has(k)) at[k] = now; set.add(k); } else { set.delete(k); delete at[k]; } });
+      const next = { on: [...set].sort((x, y) => x - y), at, updated: new Date().toISOString(), by: me.name || "" };
       store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
       persist(); broadcast({ path: dp, exists: true, data: next });
       return send(res, 200, { ok: true, on: next.on.length });

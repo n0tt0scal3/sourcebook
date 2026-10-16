@@ -178,7 +178,7 @@ function render(){
   const lib=state.view==="library"&&libOn();
   const active=projects.filter(p=>!p.archived);
   const sum=k=>active.reduce((s,p)=>s+k(p),0);
-  const cad=sum(p=>p.quote.cad),cny=sum(p=>p.quote.cny);
+  const cad=sum(p=>p.quote?p.quote.cad:0),cny=sum(p=>p.quote?p.quote.cny:0),priced=projects.some(p=>p.quote);
   const list=projects.filter(p=>state.filter==="all"||(state.filter==="archived"?p.archived:!p.archived)).filter(p=>!state.q||[p.name,p.client,p.location,p.phase].join(" ").toLowerCase().includes(state.q.toLowerCase()));
   document.getElementById("app").innerHTML=`
   <header class="mast"><div><div class="eyebrow">${t("Sourcebook · Studio")}</div><h1>${lib?(lang==="zh"?"采购图库":"Sourcing <em>library</em>"):lang==="zh"?"项目":"<em>Projects</em>"}</h1></div>
@@ -193,7 +193,7 @@ function render(){
     <div><span class="eyebrow">${t("Pieces in sourcing")}</span><b>${sum(p=>p.counts.items-p.stages.Delivered)}</b></div>
     <div><span class="eyebrow">${t("Orders overdue")}</span><b class="${sum(p=>p.overdue)?"crit":""}">${sum(p=>p.overdue)}</b></div>
     <div><span class="eyebrow">${t("Due in 3 weeks")}</span><b>${sum(p=>p.dueSoon)}</b></div>
-    <div><span class="eyebrow">${t("Quoted value")}</span><b>${money(cad,"CAD")}</b><small class="mono">${isClient()?"":money(cny,"CNY")+" · "}${t("across all projects")}</small></div>
+    ${priced?`<div><span class="eyebrow">${t("Quoted value")}</span><b>${money(cad,"CAD")}</b><small class="mono">${isClient()?"":money(cny,"CNY")+" · "}${t("across all projects")}</small></div>`:""}
   </section>
   <div class="bar"><div class="chips">${["active","archived","all"].map(f=>`<button class="chip" data-f="${f}" aria-pressed="${state.filter===f}">${t(f[0].toUpperCase()+f.slice(1))}</button>`).join("")}</div>
     <input class="search" id="q" type="search" placeholder="${t("Search projects")}" value="${esc(state.q)}"></div>
@@ -215,7 +215,7 @@ function card(p){
       <div><div class="phase">${esc(p.phase||"")}</div><h2>${esc(p.name)}</h2><div class="where">${esc([p.client,p.location].filter(Boolean).join(" · "))}</div>${p.by&&p.by.id!==me.id&&!isClient()?`<div class="where">${t("Started by")} ${esc(p.by.name)} · ${t("Specifier / designer")}</div>`:""}</div>
       <div class="stagebar" aria-hidden="true">${n?STAGES.map((s,i)=>p.stages[s]?`<i style="width:${p.stages[s]/n*100}%;background:${colors[i]}"></i>`:"").join(""):""}</div>
       <div class="legend">${STAGES.map((s,i)=>p.stages[s]?`<span style="--c:${colors[i]}">${t(s)} ${p.stages[s]}</span>`:"").join("")}</div>
-      <div class="meta"><div><b>${n}</b><span>${t("pieces")}</span></div><div><b>${p.counts.drawings}</b><span>${t("drawings")}</span></div><div><b>${money(p.quote.cad,"CAD")}</b><span>${t("quoted (CAD)")}</span></div></div>
+      <div class="meta"><div><b>${n}</b><span>${t("pieces")}</span></div><div><b>${p.counts.drawings}</b><span>${t("drawings")}</span></div>${p.quote?`<div><b>${money(p.quote.cad,"CAD")}</b><span>${t("quoted (CAD)")}</span></div>`:""}</div>
       <div class="foot"><span>${t("Updated")} ${esc(ago(p.updated))}</span><span class="mono">${isClient()?"":money(p.quote.cny,"CNY")}</span></div>
     </a>
     ${isClient()?"":`<button class="more" data-menu="${esc(p.id)}" aria-label="${t("Project options")}" aria-expanded="${menu}">⋯</button>

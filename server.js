@@ -6,7 +6,6 @@ const fs = require("fs");
 const fsp = fs.promises;
 const path = require("path");
 const crypto = require("crypto");
-const dns = require("dns").promises;
 const net = require("net");
 const tls = require("tls");
 
@@ -37,7 +36,7 @@ let libCache = null;
 // The scanned catalogues in lib/ plus the finished ones added from PDFs; uploaded catalogues carry label and up: 1.
 async function libIndex() {
   if (libCache) return libCache;
-  let d, types = {};
+  let d, types = {}; const added = {};
   try { d = JSON.parse(await fsp.readFile(path.join(LIB_DIR, "data.json"), "utf8")); } catch (_) { d = { sups: {}, items: [], cell: 280, grid: 8 }; }
   // Product type of each scanned image (lib/types.json, { file: code }), added as item[7].
   try { types = JSON.parse(await fsp.readFile(path.join(LIB_DIR, "types.json"), "utf8")); } catch (_) {}
@@ -47,12 +46,16 @@ async function libIndex() {
       const c = JSON.parse(await fsp.readFile(path.join(LIB_CATS_DIR, f), "utf8"));
       if (c.status !== "done" || d.sups[c.sup]) continue;
       d.sups[c.sup] = { pdf: c.pdf, drive: c.drive || "", pages: c.pages, cat: c.cat, n: c.items.length, label: [c.supplier, c.product || ""], up: 1, created: c.created };
+      added[c.sup] = { at: Date.parse(c.finished || c.created) || 0, by: c.byId || "" };
       c.items.forEach(x => d.items.push([x[0], c.sup, x[1], x[2] || "", x[3] || "", null, null, x[4] || libCatType(c.cat) || ""]));
     } catch (_) {}
   }
-  libCache = { sups: d.sups, byFile: new Map(d.items.map(x => [x[0], x])), json: JSON.stringify(d) };
+  // added: when each catalogue added from a PDF was finished and by whom (server only, for "new" badges).
+  libCache = { sups: d.sups, byFile: new Map(d.items.map(x => [x[0], x])), json: JSON.stringify(d), added, byKey: libByKey(d.items) };
   return libCache;
 }
+// "<catalogue>|<key>" -> file name, where key = page*100 + image number (as stored in library/<catalogue>.on).
+const libByKey = items => new Map(items.map(x => { const m = String(x[0]).match(/_p(\d+)_(\d+)\.jpg$/); return m ? [x[1] + "|" + ((+m[1]) * 100 + (+m[2])), x[0]] : null; }).filter(Boolean));
 // Product types (see TYPES in library.js). Catalogues outside furniture take their category's type;
 // furniture images added from a PDF are sorted by Claude from their thumbnails when an API key is set.
 const LIB_TYPES = "SLCTBKDEGR1HPXZMINJWQVYAO";
@@ -271,7 +274,7 @@ function projectSummaries() {
     return { id, name: main.name || "Untitled project", client: main.client || "", location: main.location || "", phase: main.phase || "",
       created: reg?.data?.created, archived: !!reg?.data?.archived, by: reg?.data?.by?.name ? { id: reg.data.by.id, name: reg.data.by.name } : null, updated, cover, thumbs,
       counts: { items: items.length, images: images.length, drawings: drawings.length, decisions: decisions.length, priced: items.filter(i => unitCAD(i) != null).length },
-      stages, overdue, dueSoon, quote: { cad: total, cny: total * fx, fx } };
+      stages, overdue, dueSoon, quote: { cad: total, cny: total * fx, fx }, landedTax: landed * (1 + (main.quoteTax == null || main.quoteTax === "" ? 13 : Number(main.quoteTax)) / 100) };
   }).sort((a, b) => String(b.updated || "").localeCompare(String(a.updated || "")));
 }
 
@@ -473,6 +476,8 @@ const CLIENT_HIDDEN = ["notes", "match", "pendingSetup", "chg"];
 // before sales tax): the supplier price plus its share of shipping, duty and delivery, plus the sourcing service.
 const CLIENT_COST_ITEM = ["unitCostCNY", "priceBase", "dutyRate"];
 const CLIENT_COST_PROJECT = ["fxRate", "quoteFee", "quoteFeeCustom", "quoteFreight", "quoteIns", "quoteDuty", "quoteBroker", "quoteDeliv"];
+// Clients see no prices at all unless SHOW_CLIENT_PRICES is set in Render (1 / on); with it on they see their all-in prices.
+const CLIENT_PRICES = /^(1|on|true|yes)$/i.test(String(process.env.SHOW_CLIENT_PRICES || "").trim());
 const clientPriceCache = new Map();
 function clientPrices(id) {
   const hit = clientPriceCache.get(id); if (hit && hit.rev === storeRev) return hit.prices;
@@ -496,12 +501,13 @@ function clientPrices(id) {
 function forUser(u, p, data) {
   // The sourcing agent never sees which client asked for a TBS item: it comes from the studio.
   if (u.role === "agent" && data && /^sourcing\/[^/]+$/.test(p) && data.by && data.by.id !== u.id && data.by.role !== "admin") return { ...data, by: { role: "admin" } };
+  // Specifiers never receive the studio's sourcing service rates.
+  if (u.role === "specifier" && data && /^projects\/[^/]+\/project\/main$/.test(p)) { const o = { ...data }; delete o.quoteFee; delete o.quoteFeeCustom; return o; }
   if (u.role !== "client" || !data) return data;
   if (/^projects\/[^/]+\/project\/main$/.test(p)) { const o = { ...data }; CLIENT_COST_PROJECT.forEach(k => delete o[k]); return o; }
   if (!ITEM_DOC.test(p)) return data;
   const o = { ...data }; CLIENT_HIDDEN.forEach(k => delete o[k]); CLIENT_COST_ITEM.forEach(k => delete o[k]);
-  const price = clientPrices(projectOf(p)).get(p.split("/")[3]);
-  o.unitCost = price ?? null;
+  if (CLIENT_PRICES) o.unitCost = clientPrices(projectOf(p)).get(p.split("/")[3]) ?? null; else delete o.unitCost;
   // supplier quotes attached to a piece stay with the studio
   if (Array.isArray(o.refs)) o.refs = o.refs.filter(r => r?.kind !== "Quote");
   return o;
@@ -615,33 +621,8 @@ async function askClaude({ input, images = [], modelTier = "default" }) {
   return { text, truncated: j.stop_reason === "max_tokens", modelTierApplied: modelTier };
 }
 
-/* ---------------- find products online ---------------- */
-// Claude searches the web for the product in a photo (web search tool), then reads the
-// chosen product page (web fetch tool). Jobs run on the server and write into the item,
-// so they finish even if the page that started them is closed.
+/* ---------------- background jobs ---------------- */
 const API_URL = process.env.ANTHROPIC_API_URL || "https://api.anthropic.com/v1/messages";
-async function claudeTurns({ messages, tools, max_tokens = 6000, model }) {
-  if (!ANTHROPIC_API_KEY) throw Object.assign(new Error("Claude isn't set up on this server. Add ANTHROPIC_API_KEY in Render."), { code: "sampling_disabled" });
-  const convo = messages.slice();
-  for (let i = 0; i < 6; i++) {
-    const r = await fetch(API_URL, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: model || MODELS.default, max_tokens, messages: convo, tools }),
-    });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) {
-      const msg = j?.error?.message || `Claude API error ${r.status}`;
-      const code = /usage limits|spend limit|credit balance/i.test(msg) || j?.error?.error_code === "enforced_spend_limit_reached" ? "limit" : /web search|web_search|web fetch/i.test(msg) ? "web_disabled" : r.status === 429 ? "rate_limited" : "upstream_error";
-      throw Object.assign(new Error(msg), { code });
-    }
-    if (j.stop_reason === "pause_turn") { convo.push({ role: "assistant", content: j.content }); continue; }
-    const text = (j.content || []).filter(c => c.type === "text").map(c => c.text).join("");
-    const searched = (j.content || []).filter(c => c.type === "web_search_tool_result" && Array.isArray(c.content)).flatMap(c => c.content.map(x => x.url)).filter(Boolean);
-    return { text, searched, stop: j.stop_reason };
-  }
-  throw Object.assign(new Error("Claude took too long."), { code: "upstream_error" });
-}
 function parseJSON(text) {
   const tries = [text.trim()];
   const m = text.match(/```(?:json)?\s*([\s\S]*?)```/); if (m) tries.push(m[1].trim());
@@ -649,114 +630,9 @@ function parseJSON(text) {
   for (const t of tries) { try { return JSON.parse(t); } catch (_) {} }
   return null;
 }
-// Fetch a public web page or image, refusing private addresses.
-function privateIP(ip) {
-  if (net.isIPv4(ip)) { const [a, b] = ip.split(".").map(Number); return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224; }
-  const x = ip.toLowerCase(); return x === "::1" || x === "::" || x.startsWith("fc") || x.startsWith("fd") || x.startsWith("fe80") || x.startsWith("::ffff:") && privateIP(x.slice(7));
-}
-async function safeFetch(url, { maxBytes = 2e6, timeout = 12000, accept = "*/*" } = {}) {
-  let u = new URL(url);
-  for (let hop = 0; hop < 5; hop++) {
-    if (!/^https?:$/.test(u.protocol) || u.username || u.password) throw new Error("bad url");
-    const addrs = net.isIP(u.hostname) ? [{ address: u.hostname }] : await dns.lookup(u.hostname, { all: true });
-    if (!addrs.length || addrs.some(a => privateIP(a.address))) throw new Error("blocked host");
-    const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), timeout);
-    let r;
-    try { r = await fetch(u, { redirect: "manual", signal: ctl.signal, headers: { accept, "user-agent": "Mozilla/5.0 (compatible; Sourcebook/1.0; product lookup)", "accept-language": "en-CA,en;q=0.9" } }); }
-    finally { clearTimeout(tm); }
-    if (r.status >= 300 && r.status < 400 && r.headers.get("location")) { u = new URL(r.headers.get("location"), u); continue; }
-    if (!r.ok) throw new Error("status " + r.status);
-    const chunks = []; let size = 0;
-    for await (const c of r.body) { size += c.length; if (size > maxBytes) throw new Error("too large"); chunks.push(c); }
-    return { url: u.href, type: String(r.headers.get("content-type") || "").split(";")[0].trim().toLowerCase(), body: Buffer.concat(chunks) };
-  }
-  throw new Error("too many redirects");
-}
-async function pageImage(url) {
-  try {
-    const { body, type, url: final } = await safeFetch(url, { maxBytes: 1.5e6, timeout: 9000, accept: "text/html" });
-    if (!/html/.test(type)) return null;
-    const html = body.toString("utf8");
-    const pick = re => { const m = html.match(re); return m ? m[1] : null; };
-    const raw = pick(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i) || pick(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)
-      || pick(/<meta[^>]+name=["']twitter:image(?::src)?["'][^>]+content=["']([^"']+)["']/i) || pick(/<link[^>]+rel=["']image_src["'][^>]+href=["']([^"']+)["']/i);
-    if (!raw) return null;
-    const abs = new URL(raw.replace(/&amp;/g, "&"), final).href;
-    return /^https?:/.test(abs) ? abs : null;
-  } catch (_) { return null; }
-}
-function patchItem(dp, patch) {
-  const cur = store[dp]; if (!cur) return null;
-  const next = stripUndefined({ ...cur.data, ...patch });
-  store[dp] = { data: next, version: (cur.version || 0) + 1, updatedAt: new Date().toISOString() };
-  persist(); broadcast({ path: dp, exists: true, data: next });
-  return next;
-}
 const jobQueue = []; let jobsRunning = 0;
 function enqueue(fn) { jobQueue.push(fn); pump(); }
 function pump() { while (jobsRunning < 2 && jobQueue.length) { const fn = jobQueue.shift(); jobsRunning++; Promise.resolve().then(fn).catch(e => console.error("job", e.message)).finally(() => { jobsRunning--; pump(); }); } }
-const LOC = { type: "approximate", city: "Toronto", region: "Ontario", country: "CA", timezone: "America/Toronto" };
-const CATS = ["Stone", "Finishes", "Millwork", "Lighting", "Hardware", "Plumbing", "Textiles", "Furniture", "Tile", "Glazing"];
-const matchError = e => e.code === "limit" ? "The Claude spending limit or credit for this account has been reached. Check Billing in the Anthropic Console."
-  : e.code === "web_disabled" ? "Web search is turned off for this Anthropic account. Turn it on in the Anthropic Console under Settings → Capabilities (or ask whoever manages the account)."
-  : e.code === "sampling_disabled" ? e.message : e.code === "rate_limited" ? "Claude is busy right now. Try again in a minute." : "The search didn't finish. Try again.";
-async function runIdentify(dp, image, hint, lang) {
-  const it = store[dp]?.data; if (!it) return;
-  const known = [["Name", it.pendingSetup ? "" : it.name], ["Description", it.description], ["Category", it.category], ["Manufacturer", it.supplier], ["Product", it.product], ["Model", it.modelCode], ["Dimensions", it.dims], ["Finish", it.finishName]].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("; ");
-  const prompt = `You are a sourcing agent for an interior design studio in Toronto. ${image ? "The photo shows a product (furniture, lighting, a fixture, a finish or a material)" : "Find this product"}${it.pendingSetup ? "" : ` filed as "${it.name}"`}.${known ? "\nWhat we already know: " + known + "." : ""}${hint ? "\nHint from the studio: " + hint : ""}
-1. Identify the specific commercial product: designer, manufacturer, collection and model if you can. If the photo shows a room, focus on ${it.pendingSetup ? "the most prominent product" : `the ${it.name}`}.
-2. Use web search to find the actual product: the manufacturer's page first, then reputable retailers or distributors (Canadian ones where possible, to see CAD prices). Search with distinctive features, likely brand and product names. Run several searches if needed.
-3. Return up to 4 candidates ranked by how well they match the photo. Only include products you found a real page for, using the URL from the search results. Do not invent URLs, prices or model numbers.
-Reply with only a JSON object:
-{"identified": one sentence describing what is in the photo,
- "piece": {"name": short trade name a supplier would recognise, "category": one of ${JSON.stringify(CATS)}, "description": one sentence, "isFurniture": boolean},
- "candidates": [{"brand": string, "name": product name, "model": model or SKU|null, "designer": string|null, "url": page URL, "source": site name, "price": number|null, "currency": "CAD"|"USD"|"EUR"|"GBP"|"CNY"|null, "confidence": "high"|"medium"|"low", "why": one short line on why it matches or how it differs}]}
-Use an empty candidates list if nothing credible turns up.${lang === "zh" ? "\nWrite identified, description and why in Simplified Chinese; keep brand, product and model names as published." : ""}`;
-  const content = [];
-  if (image) content.push({ type: "image", source: { type: "base64", media_type: image.media_type, data: image.data } });
-  content.push({ type: "text", text: prompt });
-  try {
-    const { text } = await claudeTurns({ messages: [{ role: "user", content }], tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 6, user_location: LOC }], max_tokens: 4000 });
-    const out = parseJSON(text) || {};
-    let cands = (Array.isArray(out.candidates) ? out.candidates : []).filter(c => c && c.url && /^https?:\/\//.test(c.url) && c.name).slice(0, 4)
-      .map(c => ({ brand: String(c.brand || "").slice(0, 120), name: String(c.name).slice(0, 200), model: c.model ? String(c.model).slice(0, 120) : null, designer: c.designer ? String(c.designer).slice(0, 120) : null,
-        url: String(c.url), source: String(c.source || (() => { try { return new URL(c.url).hostname.replace(/^www\./, ""); } catch (_) { return ""; } })()).slice(0, 80),
-        price: Number.isFinite(Number(c.price)) && c.price !== null && c.price !== "" ? Number(c.price) : null, currency: c.currency || null,
-        confidence: ["high", "medium", "low"].includes(c.confidence) ? c.confidence : "low", why: String(c.why || "").slice(0, 300) }));
-    const imgs = await Promise.all(cands.map(c => pageImage(c.url)));
-    cands = cands.map((c, i) => ({ ...c, image: imgs[i] }));
-    const piece = out.piece && typeof out.piece === "object" ? { name: String(out.piece.name || "").slice(0, 200), category: CATS.includes(out.piece.category) ? out.piece.category : null, description: String(out.piece.description || "").slice(0, 400), isFurniture: !!out.piece.isFurniture } : null;
-    patchItem(dp, { match: { ...(store[dp]?.data?.match || {}), status: cands.length ? "found" : "none", identified: String(out.identified || "").slice(0, 400), piece, candidates: cands, finished: new Date().toISOString() } });
-  } catch (e) {
-    console.error("identify", e.message);
-    patchItem(dp, { match: { ...(store[dp]?.data?.match || {}), status: "error", message: matchError(e), finished: new Date().toISOString() } });
-  }
-}
-async function runDetails(dp, index, lang) {
-  const it = store[dp]?.data; const m = it?.match; const c = m?.candidates?.[index]; if (!c) return;
-  const prompt = `You are a sourcing agent for an interior design studio in Toronto. We've chosen this product:
-${c.brand} ${c.name}${c.model ? " (" + c.model + ")" : ""}: ${c.url}
-Read that page with web fetch. If it doesn't give dimensions, materials or a spec sheet, you may search once or twice for the manufacturer's spec sheet or product page.
-Extract only what the sources state. Leave anything not stated as null. Do not guess.
-Reply with only a JSON object:
-{"fields": {"name": product name as a schedule line, "description": one or two sentences, "supplier": manufacturer or brand, "product": collection or product name, "modelCode": model / SKU|null, "materialCategory": e.g. "Upholstered seating", "Porcelain tile", "Pendant light"|null, "finishName": finish or colour name|null, "dims": dimensions with units, e.g. "W 2400 × D 1000 × H 700 mm"|null, "frameFinish": frame or base finish|null, "upholstery": fabric or leather|null, "leadWeeks": number|null},
- "price": {"amount": number|null, "currency": "CAD"|"USD"|"EUR"|"GBP"|"CNY"|null, "note": e.g. "from", "per m²", "list price"|null},
- "specs": [{"label": string, "value": string}] (up to 10 more lines: materials, weight, certifications, options, care, warranty, origin),
- "specSheetUrl": URL of a PDF spec sheet or technical page if found|null,
- "imageUrl": main product image URL if the page states it|null,
- "summary": one sentence}${lang === "zh" ? "\nWrite description, summary and spec values in Simplified Chinese where they are prose; keep names, codes and units as published." : ""}`;
-  try {
-    const { text } = await claudeTurns({ messages: [{ role: "user", content: prompt }], tools: [{ type: "web_fetch_20250910", name: "web_fetch", max_uses: 3, max_content_tokens: 30000 }, { type: "web_search_20250305", name: "web_search", max_uses: 2, user_location: LOC }], max_tokens: 4000 });
-    const out = parseJSON(text);
-    if (!out || !out.fields) throw Object.assign(new Error("no details"), { code: "empty" });
-    const details = { fields: out.fields, price: out.price || null, specs: Array.isArray(out.specs) ? out.specs.filter(x => x && x.label && x.value).slice(0, 10).map(x => ({ label: String(x.label).slice(0, 80), value: String(x.value).slice(0, 300) })) : [],
-      specSheetUrl: /^https?:\/\//.test(out.specSheetUrl || "") ? out.specSheetUrl : null, imageUrl: (/^https?:\/\//.test(out.imageUrl || "") ? out.imageUrl : null) || c.image || null, summary: String(out.summary || "").slice(0, 400), at: new Date().toISOString() };
-    patchItem(dp, { match: { ...(store[dp]?.data?.match || {}), status: "ready", chosen: index, details } });
-  } catch (e) {
-    console.error("details", e.message);
-    patchItem(dp, { match: { ...(store[dp]?.data?.match || {}), status: "found", chosen: index, message: e.code === "empty" ? "Couldn't read that product page. Try another match or open the page to check it." : matchError(e) } });
-  }
-}
 
 /* ---------------- server ---------------- */
 const server = http.createServer(async (req, res) => {
@@ -802,7 +678,7 @@ const server = http.createServer(async (req, res) => {
     const isAdmin = me.role === "admin", isClient = me.role === "client";
 
     // who's signed in
-    if (p === "/api/me" && req.method === "GET") return send(res, 200, publicUser(me));
+    if (p === "/api/me" && req.method === "GET") return send(res, 200, { ...publicUser(me), ...(me.role === "client" ? { prices: CLIENT_PRICES } : {}) });
     if (p === "/api/me/password" && req.method === "POST") {
       const { current, next } = await readJSON(req);
       if (me.id === "owner") return send(res, 400, { code: "invalid_argument", message: "The studio password is changed in Render (APP_PASSWORD)." });
@@ -888,7 +764,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     // projects
-    if (p === "/api/projects" && req.method === "GET") return send(res, 200, { projects: projectSummaries().filter(x => canSeeProject(me, x.id)).map(x => ({ ...x, news: newsCount(me, x.id), ...(isClient ? { quote: { cad: x.quote.cad } } : {}) })) });
+    if (p === "/api/projects" && req.method === "GET") return send(res, 200, { projects: projectSummaries().filter(x => canSeeProject(me, x.id)).map(x => ({ ...x, news: newsCount(me, x.id), ...(isClient ? { quote: CLIENT_PRICES ? { cad: x.quote.cad } : null } : me.role === "specifier" ? { quote: { cad: x.landedTax, cny: x.landedTax * x.quote.fx, fx: x.quote.fx } } : {}), landedTax: undefined })) });
     // mark changes from the other side as seen: { project, items: [ids] } (all pieces in the project when items is left out)
     if (p === "/api/changes/seen" && req.method === "POST") {
       const side = sideOf(me); if (!side) return deny();
@@ -1048,7 +924,7 @@ const server = http.createServer(async (req, res) => {
         if (!(pages >= 1 && pages <= 2000)) return send(res, 400, { code: "invalid_argument", message: "That PDF has too many pages (2,000 at most)." });
         const lib = await libIndex(), old = await libCatRead(s1);
         if (lib.sups[s1] || (old && old.status === "done")) return send(res, 409, { code: "exists", message: `There's already a catalogue called ${s1}. Use a different catalogue name.` });
-        const c = { sup: s1, supplier, product, cat: b.cat, pdf: String(b.pdf || "").slice(0, 200), pages, drive: /^[A-Za-z0-9_-]{10,}$/.test(b.drive || "") ? b.drive : "", status: "scanning", created: new Date().toISOString(), by: me.name || "", items: [] };
+        const c = { sup: s1, supplier, product, cat: b.cat, pdf: String(b.pdf || "").slice(0, 200), pages, drive: /^[A-Za-z0-9_-]{10,}$/.test(b.drive || "") ? b.drive : "", status: "scanning", created: new Date().toISOString(), by: me.name || "", byId: me.id, items: [] };
         await fsp.writeFile(path.join(LIB_CATS_DIR, s1 + ".json"), JSON.stringify(c));
         return send(res, 200, { ok: true, sup: s1, prefix: `${libCatFile(b.cat)}_${s1}` });
       }
@@ -1130,6 +1006,34 @@ const server = http.createServer(async (req, res) => {
       const next = { f: [...f], updated: new Date().toISOString() };
       store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
       persist(); return send(res, 200, { ok: true, files: next.f });
+    }
+    // New in the Sourcing library, per person: libraryseen/<user id> = { base: ms, f: [file names seen since] }.
+    // New for an admin: images from a catalogue another admin added since base. For everyone else: images approved
+    // since base. The first time someone asks, base is now, so what's already there never counts as new.
+    //   GET  /api/library/seen                 -> { files: [new file names] }
+    //   POST /api/library/seen { files: [...] } marks them seen -> { files }
+    if (p === "/api/library/seen") {
+      const dp = "libraryseen/" + me.id, cur = store[dp], idx = await libIndex();
+      let base = cur?.data?.base, seen = new Set(cur?.data?.f || []);
+      const save = () => { const next = { base, f: [...seen], updated: new Date().toISOString() }; store[dp] = { data: next, version: (store[dp]?.version || 0) + 1, updatedAt: next.updated }; persist(); };
+      const fresh = () => {
+        const out = [];
+        if (isAdmin) { for (const [sup, a] of Object.entries(idx.added)) if (a.at > base && a.by !== me.id) for (const [f, x] of idx.byFile) if (x[1] === sup && !seen.has(f)) out.push(f); return out; }
+        for (const [k, v] of Object.entries(store)) {
+          if (!k.startsWith("library/") || !v?.data?.at) continue; const sup = k.slice(8); if (libHiddenFor(me, sup)) continue;
+          for (const [key, t0] of Object.entries(v.data.at)) if (t0 > base) { const f = idx.byKey.get(sup + "|" + key); if (f && !seen.has(f)) out.push(f); }
+        }
+        return out;
+      };
+      if (typeof base !== "number") { base = Date.now(); seen = new Set(); save(); }
+      if (req.method === "GET") return send(res, 200, { files: fresh() });
+      if (req.method !== "POST") return send(res, 405, { code: "method_not_allowed" });
+      const b = await readJSON(req, 2 * 1024 * 1024);
+      if (!Array.isArray(b.files) || b.files.length > 20000) return send(res, 400, { code: "invalid_argument" });
+      b.files.forEach(f => { if (typeof f === "string" && idx.byFile.has(f)) seen.add(f); });
+      // Nothing new left: start again from now, so the list of seen images doesn't keep growing.
+      const left = fresh(); if (!left.length) { base = Date.now(); seen = new Set(); }
+      save(); return send(res, 200, { files: left });
     }
     // "Have something you want?": find similar products in the library from a photo, step by step.
     // type: Claude says which product types to look in. match: the browser sends numbered contact sheets of the
@@ -1389,9 +1293,11 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       if (typeof b.sup !== "string" || !validPath(dp, true) || !Array.isArray(b.keys) || b.keys.length > 5000) return send(res, 400, { code: "invalid_argument" });
       const keys = b.keys.map(Number).filter(k => Number.isInteger(k) && k >= 0 && k < 1e7);
       const cur = store[dp];
-      const set = new Set((cur?.data?.on || []).map(Number));
-      keys.forEach(k => (b.on ? set.add(k) : set.delete(k)));
-      const next = { on: [...set].sort((x, y) => x - y), updated: new Date().toISOString(), by: me.name || "" };
+      const set = new Set((cur?.data?.on || []).map(Number)), at = { ...(cur?.data?.at || {}) }, now = Date.now();
+      // at = { key: when it was approved }, so each person can be shown what's new since they last looked.
+      // Images approved before this was kept have no time and never count as new.
+      keys.forEach(k => { if (b.on) { if (!set.has(k)) at[k] = now; set.add(k); } else { set.delete(k); delete at[k]; } });
+      const next = { on: [...set].sort((x, y) => x - y), at, updated: new Date().toISOString(), by: me.name || "" };
       store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
       persist(); broadcast({ path: dp, exists: true, data: next });
       return send(res, 200, { ok: true, on: next.on.length });
@@ -1458,46 +1364,6 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       store[dp] = { data: tracked, version: 1, updatedAt: doc.created };
       persist(); broadcast({ path: dp, exists: true, data: tracked });
       return send(res, 200, { ok: true, id, code });
-    }
-
-    // find products online
-    if (p.startsWith("/api/match/") && req.method === "POST") {
-      if (!isAdmin) return deny("Only admins can find products online.");
-      const b = await readJSON(req, 12 * 1024 * 1024);
-      const dp = `projects/${b.project}/items/${b.item}`;
-      if (!validPath(dp, true) || !canRead(me, dp)) return deny();
-      const it = store[dp]?.data; if (!it) return send(res, 404, { code: "not_found", message: "That piece no longer exists." });
-      if (p === "/api/match/start") {
-        if (!ANTHROPIC_API_KEY) return send(res, 503, { code: "sampling_disabled", message: "Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render." });
-        const img = b.image && /^image\/(jpeg|png|webp|gif)$/.test(b.image.media_type) && typeof b.image.data === "string" && b.image.data.length < 7e6 ? b.image : null;
-        if (!img && !it.name) return send(res, 400, { code: "invalid_argument", message: "Add a photo or a name first." });
-        if (it.match?.status === "searching" || it.match?.status === "pulling") return send(res, 200, { ok: true, already: true });
-        const hint = String(b.hint || "").trim().slice(0, 300);
-        patchItem(dp, { match: { status: "searching", started: new Date().toISOString(), by: me.name || "", hint, candidates: [] } });
-        enqueue(() => runIdentify(dp, img, hint, b.lang));
-        return send(res, 200, { ok: true });
-      }
-      if (p === "/api/match/details") {
-        const i = Number(b.index); const c = it.match?.candidates?.[i];
-        if (!c) return send(res, 400, { code: "invalid_argument", message: "Pick a match first." });
-        if (!ANTHROPIC_API_KEY) return send(res, 503, { code: "sampling_disabled", message: "Claude isn't set up on this server yet." });
-        patchItem(dp, { match: { ...it.match, status: "pulling", chosen: i, message: null } });
-        enqueue(() => runDetails(dp, i, b.lang));
-        return send(res, 200, { ok: true });
-      }
-      if (p === "/api/match/photo") {
-        // Save the product photo from the web into the project's files.
-        try {
-          const { body, type } = await safeFetch(String(b.url || ""), { maxBytes: 15e6, timeout: 15000, accept: "image/*" });
-          const ct = /^image\/(jpeg|png|webp|gif)$/.test(type) ? type : sniffBuf(body);
-          if (!ct) return send(res, 415, { code: "unsupported_type", message: "That image couldn't be used." });
-          const id = crypto.randomBytes(16).toString("hex");
-          await fsp.writeFile(path.join(BLOB_DIR, id), body);
-          await fsp.writeFile(path.join(BLOB_DIR, id + ".json"), JSON.stringify({ contentType: ct, sizeBytes: body.length, createdAt: new Date().toISOString(), source: String(b.url).slice(0, 500) }));
-          return send(res, 200, { id });
-        } catch (e) { return send(res, 502, { code: "upstream_error", message: "Couldn't download that photo from the site." }); }
-      }
-      return send(res, 404, { code: "not_found" });
     }
 
     // files

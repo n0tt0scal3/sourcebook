@@ -274,7 +274,7 @@ function projectSummaries() {
     return { id, name: main.name || "Untitled project", client: main.client || "", location: main.location || "", phase: main.phase || "",
       created: reg?.data?.created, archived: !!reg?.data?.archived, by: reg?.data?.by?.name ? { id: reg.data.by.id, name: reg.data.by.name } : null, updated, cover, thumbs,
       counts: { items: items.length, images: images.length, drawings: drawings.length, decisions: decisions.length, priced: items.filter(i => unitCAD(i) != null).length },
-      stages, overdue, dueSoon, quote: { cad: total, cny: total * fx, fx } };
+      stages, overdue, dueSoon, quote: { cad: total, cny: total * fx, fx }, landedTax: landed * (1 + (main.quoteTax == null || main.quoteTax === "" ? 13 : Number(main.quoteTax)) / 100) };
   }).sort((a, b) => String(b.updated || "").localeCompare(String(a.updated || "")));
 }
 
@@ -476,6 +476,8 @@ const CLIENT_HIDDEN = ["notes", "match", "pendingSetup", "chg"];
 // before sales tax): the supplier price plus its share of shipping, duty and delivery, plus the sourcing service.
 const CLIENT_COST_ITEM = ["unitCostCNY", "priceBase", "dutyRate"];
 const CLIENT_COST_PROJECT = ["fxRate", "quoteFee", "quoteFeeCustom", "quoteFreight", "quoteIns", "quoteDuty", "quoteBroker", "quoteDeliv"];
+// Clients see no prices at all unless SHOW_CLIENT_PRICES is set in Render (1 / on); with it on they see their all-in prices.
+const CLIENT_PRICES = /^(1|on|true|yes)$/i.test(String(process.env.SHOW_CLIENT_PRICES || "").trim());
 const clientPriceCache = new Map();
 function clientPrices(id) {
   const hit = clientPriceCache.get(id); if (hit && hit.rev === storeRev) return hit.prices;
@@ -499,12 +501,13 @@ function clientPrices(id) {
 function forUser(u, p, data) {
   // The sourcing agent never sees which client asked for a TBS item: it comes from the studio.
   if (u.role === "agent" && data && /^sourcing\/[^/]+$/.test(p) && data.by && data.by.id !== u.id && data.by.role !== "admin") return { ...data, by: { role: "admin" } };
+  // Specifiers never receive the studio's sourcing service rates.
+  if (u.role === "specifier" && data && /^projects\/[^/]+\/project\/main$/.test(p)) { const o = { ...data }; delete o.quoteFee; delete o.quoteFeeCustom; return o; }
   if (u.role !== "client" || !data) return data;
   if (/^projects\/[^/]+\/project\/main$/.test(p)) { const o = { ...data }; CLIENT_COST_PROJECT.forEach(k => delete o[k]); return o; }
   if (!ITEM_DOC.test(p)) return data;
   const o = { ...data }; CLIENT_HIDDEN.forEach(k => delete o[k]); CLIENT_COST_ITEM.forEach(k => delete o[k]);
-  const price = clientPrices(projectOf(p)).get(p.split("/")[3]);
-  o.unitCost = price ?? null;
+  if (CLIENT_PRICES) o.unitCost = clientPrices(projectOf(p)).get(p.split("/")[3]) ?? null; else delete o.unitCost;
   // supplier quotes attached to a piece stay with the studio
   if (Array.isArray(o.refs)) o.refs = o.refs.filter(r => r?.kind !== "Quote");
   return o;
@@ -675,7 +678,7 @@ const server = http.createServer(async (req, res) => {
     const isAdmin = me.role === "admin", isClient = me.role === "client";
 
     // who's signed in
-    if (p === "/api/me" && req.method === "GET") return send(res, 200, publicUser(me));
+    if (p === "/api/me" && req.method === "GET") return send(res, 200, { ...publicUser(me), ...(me.role === "client" ? { prices: CLIENT_PRICES } : {}) });
     if (p === "/api/me/password" && req.method === "POST") {
       const { current, next } = await readJSON(req);
       if (me.id === "owner") return send(res, 400, { code: "invalid_argument", message: "The studio password is changed in Render (APP_PASSWORD)." });
@@ -761,7 +764,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     // projects
-    if (p === "/api/projects" && req.method === "GET") return send(res, 200, { projects: projectSummaries().filter(x => canSeeProject(me, x.id)).map(x => ({ ...x, news: newsCount(me, x.id), ...(isClient ? { quote: { cad: x.quote.cad } } : {}) })) });
+    if (p === "/api/projects" && req.method === "GET") return send(res, 200, { projects: projectSummaries().filter(x => canSeeProject(me, x.id)).map(x => ({ ...x, news: newsCount(me, x.id), ...(isClient ? { quote: CLIENT_PRICES ? { cad: x.quote.cad } : null } : me.role === "specifier" ? { quote: { cad: x.landedTax, cny: x.landedTax * x.quote.fx, fx: x.quote.fx } } : {}), landedTax: undefined })) });
     // mark changes from the other side as seen: { project, items: [ids] } (all pieces in the project when items is left out)
     if (p === "/api/changes/seen" && req.method === "POST") {
       const side = sideOf(me); if (!side) return deny();

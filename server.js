@@ -205,7 +205,9 @@ if (!Object.keys(store).length && fs.existsSync(path.join(SEED_DIR, "db.json")))
 }
 
 let saveTimer = null, saving = Promise.resolve();
+let storeRev = 0;
 function persist() {
+  storeRev++;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     saving = saving.then(async () => {
@@ -271,7 +273,7 @@ function projectSummaries() {
     const thumbs = items.filter(i => i.photo).slice(0, 4).map(i => i.photo);
     const updated = [reg?.updatedAt, ...Object.entries(store).filter(([k]) => k.startsWith(pre)).map(([, v]) => v.updatedAt)].filter(Boolean).sort().pop();
     return { id, name: main.name || "Untitled project", client: main.client || "", location: main.location || "", phase: main.phase || "",
-      created: reg?.data?.created, archived: !!reg?.data?.archived, updated, cover, thumbs,
+      created: reg?.data?.created, archived: !!reg?.data?.archived, by: reg?.data?.by?.name ? { id: reg.data.by.id, name: reg.data.by.name } : null, updated, cover, thumbs,
       counts: { items: items.length, images: images.length, drawings: drawings.length, decisions: decisions.length, priced: items.filter(i => unitCAD(i) != null).length },
       stages, overdue, dueSoon, quote: { cad: total, cny: total * fx, fx } };
   }).sort((a, b) => String(b.updated || "").localeCompare(String(a.updated || "")));
@@ -364,7 +366,12 @@ function broadcast(msg) {
     const u = liveUser(c); if (!u) continue;
     try {
       if (allAccess(u) && !isSourcingPath(msg.path)) c.res.write(line);
-      else if (canRead(u, msg.path)) c.res.write(`data: ${JSON.stringify(msg.exists ? { ...msg, data: forUser(u, msg.path, msg.data) } : msg)}\n\n`);
+      else if (canRead(u, msg.path)) {
+        c.res.write(`data: ${JSON.stringify(msg.exists ? { ...msg, data: forUser(u, msg.path, msg.data) } : msg)}\n\n`);
+        // A client's prices depend on every piece and on the project's shipping and fees, so any change re-sends their pieces.
+        const pid = u.role === "client" && (ITEM_DOC.test(msg.path) || /^projects\/[^/]+\/project\/main$/.test(msg.path)) ? projectOf(msg.path) : null;
+        if (pid) for (const [k, v] of Object.entries(store)) if (k !== msg.path && k.startsWith(`projects/${pid}/items/`) && ITEM_DOC.test(k)) c.res.write(`data: ${JSON.stringify({ path: k, exists: true, data: forUser(u, k, v.data) })}\n\n`);
+      }
     } catch (_) {}
   }
 }
@@ -396,8 +403,10 @@ function samePass(given) {
 
 /* ---------------- people and roles ---------------- */
 // admin: everything · agent: everything except managing people and deleting projects
-// client: only assigned projects, read-only apart from approvals and comments
-const ROLES = ["admin", "agent", "client"];
+// specifier (designer): creates their own projects, which only they and the studio see; edits those like the studio,
+//   except the sourcing service rates; sees every approved catalogue in the library
+// client: only assigned projects, read-only apart from approvals and comments; only catalogues shown to clients
+const ROLES = ["admin", "agent", "specifier", "client"];
 const USERS_FILE = path.join(DATA_DIR, "users.json");
 let people = { secret: "", users: [] };
 try { people = JSON.parse(fs.readFileSync(USERS_FILE, "utf8")); } catch (_) {}
@@ -437,7 +446,21 @@ function currentUser(req) {
 const projectOf = p => { const m = /^projects\/([^/]+)/.exec(p || ""); return m ? m[1] : null; };
 function canSeeProject(u, id) { return allAccess(u) || (u.projects || []).includes(id); }
 // The sourcing library (library/<catalogue>) is studio-wide: everyone can see what's approved; only admins approve.
-const isLibPath = p => /^library(types|cats)?(\/|$)/.test(p || "");
+const isLibPath = p => /^library(types|cats|show)?(\/|$)/.test(p || "");
+// Catalogues an admin has hidden from clients: libraryshow/main = { hide: [catalogue ids] }. Everyone else sees them all.
+const libHidden = () => new Set(Array.isArray(store["libraryshow/main"]?.data?.hide) ? store["libraryshow/main"].data.hide : []);
+const libHiddenFor = (u, sup) => u.role === "client" && libHidden().has(sup);
+let libClientJSON = null; // { key, json }: the catalogue index without the hidden catalogues, for clients
+async function libJSONFor(u) {
+  const lib = await libIndex(), hide = libHidden();
+  if (u.role !== "client" || !hide.size) return lib.json;
+  const key = [...hide].sort().join(",");
+  if (libClientJSON && libClientJSON.key === key && libClientJSON.lib === lib) return libClientJSON.json;
+  const d = JSON.parse(lib.json);
+  hide.forEach(s => delete d.sups[s]); d.items = d.items.filter(x => !hide.has(x[1]));
+  libClientJSON = { key, lib, json: JSON.stringify(d) };
+  return libClientJSON.json;
+}
 // Sourcing requests (sourcing/<id>): admins see them all; sourcing agents the ones sent to them; anyone else their own
 // and the ones asked from a project they're on, never another project's.
 const isSourcingPath = p => /^sourcing(\/|$)/.test(p || "");
@@ -449,11 +472,43 @@ function canSeeRequest(u, d) {
 function canRead(u, p) { if (isLibPath(p)) return true; if (isSourcingPath(p)) { if (u.role === "admin") return true; if (p === "sourcing") return u.role === "agent"; return canSeeRequest(u, store[p]?.data); } if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
 // Internal fields a client never receives.
 const CLIENT_HIDDEN = ["notes", "match", "pendingSetup", "chg"];
+// Costs a client never receives: the supplier price (¥ and $), duty, and the project's freight, insurance, brokerage,
+// delivery, sourcing service rates and exchange rate. A client's piece carries its all-in price instead (unitCost, CAD,
+// before sales tax): the supplier price plus its share of shipping, duty and delivery, plus the sourcing service.
+const CLIENT_COST_ITEM = ["unitCostCNY", "priceBase", "dutyRate"];
+const CLIENT_COST_PROJECT = ["fxRate", "quoteFee", "quoteFeeCustom", "quoteFreight", "quoteIns", "quoteDuty", "quoteBroker", "quoteDeliv"];
+const clientPriceCache = new Map();
+function clientPrices(id) {
+  const hit = clientPriceCache.get(id); if (hit && hit.rev === storeRev) return hit.prices;
+  const pre = `projects/${id}/items/`, main = store[`projects/${id}/project/main`]?.data || {};
+  const items = Object.entries(store).filter(([k]) => k.startsWith(pre) && ITEM_DOC.test(k)).map(([k, v]) => ({ id: k.slice(pre.length), ...v.data }));
+  const n = v => v == null || v === "" || !isFinite(Number(v)) ? null : Number(v);
+  const fx = n(main.fxRate) > 0 ? n(main.fxRate) : 4.73;
+  const unitCAD = it => it.priceBase === "CNY" && n(it.unitCostCNY) != null ? n(it.unitCostCNY) / fx : n(it.unitCost);
+  const sub = items.reduce((s, it) => s + (n(it.qty) || 0) * (unitCAD(it) || 0), 0);
+  const insP = n(main.quoteIns) || 0, spread = (n(main.quoteFreight) || 0) + (n(main.quoteBroker) || 0) + (n(main.quoteDeliv) || 0);
+  // the same split as quoteTotals in the page: each piece carries its own duty and insurance, plus freight, brokerage and delivery by value
+  const prices = new Map(items.map(it => {
+    const u = unitCAD(it); if (u == null) return [it.id, null];
+    const landed = u * (1 + insP / 100 + (n(it.dutyRate) ?? (n(main.quoteDuty) || 0)) / 100) + (sub ? spread * u / sub : 0);
+    const fee = (it.custom ? n(main.quoteFeeCustom) : n(main.quoteFee)) || 0;
+    return [it.id, landed * (1 + fee / 100)];
+  }));
+  clientPriceCache.set(id, { rev: storeRev, prices });
+  return prices;
+}
 function forUser(u, p, data) {
   // The sourcing agent never sees which client asked for a TBS item: it comes from the studio.
   if (u.role === "agent" && data && /^sourcing\/[^/]+$/.test(p) && data.by && data.by.id !== u.id && data.by.role !== "admin") return { ...data, by: { role: "admin" } };
-  if (u.role !== "client" || !data || !/^projects\/[^/]+\/items\/[^/]+$/.test(p)) return data;
-  const o = { ...data }; CLIENT_HIDDEN.forEach(k => delete o[k]); return o;
+  if (u.role !== "client" || !data) return data;
+  if (/^projects\/[^/]+\/project\/main$/.test(p)) { const o = { ...data }; CLIENT_COST_PROJECT.forEach(k => delete o[k]); return o; }
+  if (!ITEM_DOC.test(p)) return data;
+  const o = { ...data }; CLIENT_HIDDEN.forEach(k => delete o[k]); CLIENT_COST_ITEM.forEach(k => delete o[k]);
+  const price = clientPrices(projectOf(p)).get(p.split("/")[3]);
+  o.unitCost = price ?? null;
+  // supplier quotes attached to a piece stay with the studio
+  if (Array.isArray(o.refs)) o.refs = o.refs.filter(r => r?.kind !== "Quote");
+  return o;
 }
 /* ---------------- what's changed between the studio and the sourcing agent ---------------- */
 // Each piece keeps chg = { field: { r: role, n: name, at } } for fields an admin or agent changed
@@ -837,7 +892,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     // projects
-    if (p === "/api/projects" && req.method === "GET") return send(res, 200, { projects: projectSummaries().filter(x => canSeeProject(me, x.id)).map(x => ({ ...x, news: newsCount(me, x.id) })) });
+    if (p === "/api/projects" && req.method === "GET") return send(res, 200, { projects: projectSummaries().filter(x => canSeeProject(me, x.id)).map(x => ({ ...x, news: newsCount(me, x.id), ...(isClient ? { quote: { cad: x.quote.cad } } : {}) })) });
     // mark changes from the other side as seen: { project, items: [ids] } (all pieces in the project when items is left out)
     if (p === "/api/changes/seen" && req.method === "POST") {
       const side = sideOf(me); if (!side) return deny();
@@ -893,7 +948,11 @@ const server = http.createServer(async (req, res) => {
         persist(); broadcast({ path: dp, exists: true, data: next });
         return send(res, 200, { ok: true, version: store[dp].version });
       };
-      if (!cur && op === "set" && /^projects\/[^/]+$/.test(dp) && me.role === "agent" && !allAccess(me)) { me.projects = [...new Set([...(me.projects || []), projectOf(dp)])]; savePeople(); }
+      // A limited agent or a specifier who starts a project gets it on their own list; a specifier's project stays theirs
+      // (only they, admins and agents set to all projects see it), and remembers who started it.
+      const newProject = !cur && op === "set" && /^projects\/[^/]+$/.test(dp);
+      if (newProject && ((me.role === "agent" && !allAccess(me)) || me.role === "specifier")) { me.projects = [...new Set([...(me.projects || []), projectOf(dp)])]; savePeople(); }
+      if (newProject && me.role === "specifier" && data && typeof data === "object") data.by = { id: me.id, name: me.name || "", role: me.role };
       // Comments: anyone who can see the project may post; the author is always the signed-in person.
       if (/^projects\/[^/]+\/comments\/[^/]+$/.test(dp)) {
         if (!canRead(me, dp)) return deny();
@@ -932,6 +991,9 @@ const server = http.createServer(async (req, res) => {
         if (!data || typeof data !== "object" || Array.isArray(data)) return send(res, 400, { code: "invalid_argument" });
         if (op === "update" && !cur) return send(res, 400, { code: "invalid_argument", message: "document does not exist" });
         let next = stripUndefined(op === "set" ? data : mergeDeep(cur.data, data));
+        // Specifiers can't change the studio's sourcing service rates on their projects.
+        if (me.role === "specifier" && /^projects\/[^/]+\/project\/main$/.test(dp)) for (const k of ["quoteFee", "quoteFeeCustom"]) { if (cur?.data?.[k] != null) next[k] = cur.data[k]; else delete next[k]; }
+        if (me.role === "specifier" && /^projects\/[^/]+$/.test(dp)) { if (cur?.data?.by) next.by = cur.data.by; else if (cur) delete next.by; }
         if (ITEM_DOC.test(dp)) { if (op === "update") next.chg = cur.data.chg; next = trackChanges(me, cur?.data, next); }
         if (Buffer.byteLength(JSON.stringify(next)) > 256 * 1024) return send(res, 400, { code: "invalid_argument", message: "document too large" });
         store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: new Date().toISOString() };
@@ -947,13 +1009,13 @@ const server = http.createServer(async (req, res) => {
 
     // sourcing library: catalogue index, thumbnail sheets, approvals and adding a piece
     if (p === "/lib/data.json" && req.method === "GET") {
-      const lib = await libIndex();
-      return send(res, 200, lib.json, { "Content-Type": "application/json", "Cache-Control": "no-cache" });
+      return send(res, 200, await libJSONFor(me), { "Content-Type": "application/json", "Cache-Control": "no-cache" });
     }
     const tm = p.match(/^\/lib\/(thumb\/[A-Za-z0-9_.-]+\.jpg|pdf\/[A-Za-z0-9-]+\.pdf)$/);
     if (tm && req.method === "GET") {
       // Thumbnails and source PDFs of catalogues added from a PDF (any signed-in user)
       const fp = tm[1].startsWith("thumb/") ? path.join(LIB_THUMB_DIR, tm[1].slice(6)) : path.join(LIB_CATS_DIR, tm[1].slice(4));
+      if (me.role === "client") { const lib = await libIndex(), sup = tm[1].startsWith("thumb/") ? lib.byFile.get(tm[1].slice(6))?.[1] : tm[1].slice(4, -4); if (sup && libHiddenFor(me, sup)) return send(res, 404, "Not found"); }
       try {
         const st = await fsp.stat(fp);
         const pdf = fp.endsWith(".pdf");
@@ -1041,7 +1103,7 @@ const server = http.createServer(async (req, res) => {
     const fm = p.match(/^\/(?:lib|api\/library)\/full\/([A-Za-z0-9_.-]+\.jpg)$/);
     if (fm) {
       // GET /lib/full/<file>: the full-size image (any signed-in user). PUT /api/library/full/<file>: an admin uploads one.
-      const lib = await libIndex(); if (!lib || !lib.byFile.has(fm[1])) return send(res, 404, "Not found");
+      const lib = await libIndex(); if (!lib || !lib.byFile.has(fm[1]) || libHiddenFor(me, lib.byFile.get(fm[1])[1])) return send(res, 404, "Not found");
       const fp = path.join(LIB_FULL_DIR, fm[1]);
       if (req.method === "GET" && p.startsWith("/lib/")) {
         try { return send(res, 200, await fsp.readFile(fp), { "Content-Type": "image/jpeg", "Cache-Control": "private, max-age=604800" }); } catch (_) { return send(res, 404, "Not found"); }
@@ -1086,7 +1148,7 @@ const server = http.createServer(async (req, res) => {
         const out = [];
         if (isAdmin) { for (const [sup, a] of Object.entries(idx.added)) if (a.at > base && a.by !== me.id) for (const [f, x] of idx.byFile) if (x[1] === sup && !seen.has(f)) out.push(f); return out; }
         for (const [k, v] of Object.entries(store)) {
-          if (!k.startsWith("library/") || !v?.data?.at) continue; const sup = k.slice(8);
+          if (!k.startsWith("library/") || !v?.data?.at) continue; const sup = k.slice(8); if (libHiddenFor(me, sup)) continue;
           for (const [key, t0] of Object.entries(v.data.at)) if (t0 > base) { const f = idx.byKey.get(sup + "|" + key); if (f && !seen.has(f)) out.push(f); }
         }
         return out;
@@ -1339,6 +1401,18 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       persist(); broadcast({ path: dp, exists: true, data: next });
       return send(res, 200, { ok: true });
     }
+    if (p === "/api/library/show" && req.method === "POST") {
+      // { sup, clients: true|false } shows or hides a whole catalogue from clients (libraryshow/main.hide)
+      if (!isAdmin) return deny("Only admins choose what clients see.");
+      const b = await readJSON(req), lib = await libIndex();
+      if (typeof b.sup !== "string" || !lib.sups[b.sup] || typeof b.clients !== "boolean") return send(res, 400, { code: "invalid_argument" });
+      const dp = "libraryshow/main", cur = store[dp], hide = libHidden();
+      b.clients ? hide.delete(b.sup) : hide.add(b.sup);
+      const next = { hide: [...hide].sort(), updated: new Date().toISOString(), by: me.name || "" };
+      store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
+      persist(); broadcast({ path: dp, exists: true, data: next }); broadcast({ path: "library", index: true });
+      return send(res, 200, { ok: true, hide: next.hide });
+    }
     if (p === "/api/library/set" && req.method === "POST") {
       // { sup, keys: [page*100 + image number], on: true|false } approves or unapproves images in library/<sup>.on
       if (!isAdmin) return deny("Only admins can approve library images.");
@@ -1369,6 +1443,7 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       const [file, sup, page, codesStr, text] = it; const S = lib.sups[sup] || {};
       const m = file.match(/_p(\d+)_(\d+)\.jpg$/); const key = m ? Number(m[1]) * 100 + Number(m[2]) : -1;
       if (!isAdmin && !(store["library/" + sup]?.data?.on || []).includes(key)) return deny("That image hasn't been approved yet.");
+      if (libHiddenFor(me, sup)) return send(res, 400, { code: "invalid_argument", message: "That image isn't in the library." });
       const pre = `projects/${pid}/items/`;
       const items = Object.entries(store).filter(([k]) => k.startsWith(pre) && k.split("/").length === 4).map(([, v]) => v.data);
       const dup = Object.entries(store).find(([k, v]) => k.startsWith(pre) && v.data?.libSource?.file === file);

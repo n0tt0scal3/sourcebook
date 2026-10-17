@@ -250,6 +250,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
 .sbl-note code{font-family:var(--mono);font-size:12px;overflow-wrap:anywhere;color:var(--ink)}
 .sbl-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
 .sbl-hint{color:var(--muted);font-size:13px;margin:10px 0 0}
+.sbl-added{flex-basis:100%;margin:2px 0 0;color:var(--ok);font-size:13.5px;font-weight:600}
 .sbl-pick{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted);min-width:min(100%,260px)}
 .sbl-pick select{font:inherit;font-size:15px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px}
 .sbl-excerpt{margin:16px 0 0;color:var(--muted);font-size:13px;max-width:65ch}
@@ -297,6 +298,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   const isNew = o => fresh.has(o.file) && (curating() || isOn(o));
   const newBadge = n => n ? `<i class="sbl-newb">● ${nf(n)} ${t("new")}</i>` : "";
   const ui = { type: null, sup: null, q: "", show: null, n: 120, open: null, adding: false, target: "", zoom: false, seq: [] };
+  const done = new Map(); // file -> [{project, pname, code, id, existing}] added from the card this visit, shown on the card
   // host.ctx: "studio" (dashboard) or "project". canEdit: may approve (admins, on the dashboard).
   // project(): this project's id (project ctx). projects(): [{id, name}] to add to (studio ctx).
   let host = { ctx: "studio", internal: () => true, canEdit: () => false, canAdd: () => false, project: () => null, projectName: () => "", projects: () => [], inProject: () => new Map(), prefix: null, added: null, openPiece: () => {}, layer: () => {}, toast: m => console.log(m), toastUndo: m => console.log(m) };
@@ -526,18 +528,24 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
 
   function sourceNote(o) { const S = LIB.sups[o.sup]; return `${o.file}\nSource: ${S.pdf}, page ${o.page} of ${S.pages} (${S.cat})\nPDF: ${S.up && !S.drive ? location.origin : ""}${pdfURL(S)}` + (S.up ? "" : `\nImage: ${LIB_ROOT}_IMAGE LIBRARY\\${S.cat}\\${o.sup}\\${o.file}`); }
+  // After an add the card stays open on the same product and says where it went, so you can carry on with ‹ ›.
+  function addedHTML(o) {
+    const d = done.get(o.file); if (!d || !d.length) return "";
+    return `<p class="sbl-added">${d.map(x => "✓ " + (zh() ? `${x.existing ? "已在" : "已添加到"} ${esc(x.pname)}，编号 ${esc(x.code)}` : `${x.existing ? "Already in" : "Added to"} ${esc(x.pname)} as ${esc(x.code)}`)).join("<br>")}</p>`;
+  }
   function addControls(o) {
     if (!host.canAdd() || (!isOn(o) && !host.canEdit())) return "";
     if (host.ctx === "project") {
-      const inId = host.inProject().get(o.file);
-      return inId ? `<button class="btn" data-sbl="piece" data-id="${esc(inId)}">${t("Open the piece in this project")}</button>`
-        : `<button class="btn" data-sbl="add" ${ui.adding ? "disabled" : ""}>${ui.adding ? t("Adding…") : (zh() ? "添加到 " : "Add to ") + esc(host.projectName())}</button>`;
+      const mine = (done.get(o.file) || []).find(x => x.project === host.project());
+      const inId = host.inProject().get(o.file) || (mine && mine.id);
+      return (inId ? `<button class="btn" data-sbl="piece" data-id="${esc(inId)}">${t("Open the piece in this project")}</button>`
+        : `<button class="btn" data-sbl="add" ${ui.adding ? "disabled" : ""}>${ui.adding ? t("Adding…") : (zh() ? "添加到 " : "Add to ") + esc(host.projectName())}</button>`) + addedHTML(o);
     }
     const ps = host.projects();
     if (!ps.length) return `<span class="sbl-hint" style="margin:0">${t("No projects to add to yet.")}</span>`;
     if (!ps.some(p => p.id === ui.target)) ui.target = ps.length === 1 ? ps[0].id : "";
     return `<label class="sbl-pick">${t("Add to project")}<select id="sbl-target"><option value="">${t("Choose a project")}</option>${ps.map(p => `<option value="${esc(p.id)}" ${p.id === ui.target ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select></label>
-      <button class="btn" data-sbl="add" ${ui.adding || !ui.target ? "disabled" : ""}>${ui.adding ? t("Adding…") : t("Add")}</button>`;
+      <button class="btn" data-sbl="add" ${ui.adding || !ui.target ? "disabled" : ""}>${ui.adding ? t("Adding…") : t("Add")}</button>${addedHTML(o)}`;
   }
   // Next / previous move through the images that were listed when the card was opened,
   // so approving one while showing "Not approved" doesn't skip the next.
@@ -634,7 +642,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw Object.assign(new Error(j.message || "add"), { code: j.code });
       const pname = host.ctx === "project" ? host.projectName() : (host.projects().find(p => p.id === project) || {}).name || project;
-      ui.adding = false; ui.open = null; document.body.style.overflow = ""; host.layer();
+      const d = (done.get(o.file) || []).filter(x => x.project !== project); d.push({ project, pname, code: j.code, id: j.id, existing: !!j.existing }); done.set(o.file, d);
+      ui.adding = false; host.layer();
       if (host.added) host.added(j, pname); else host.toast(zh() ? `已添加到 ${pname}，编号 ${j.code}` : `Added to ${pname} as ${j.code}`);
       rerender();
     } catch (e) { ui.adding = false; host.layer(); host.toast(e.code === "forbidden" || e.code === "invalid_argument" ? e.message : t("Couldn't add it. Try again.")); }

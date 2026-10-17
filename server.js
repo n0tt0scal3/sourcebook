@@ -445,7 +445,7 @@ function currentUser(req) {
 const projectOf = p => { const m = /^projects\/([^/]+)/.exec(p || ""); return m ? m[1] : null; };
 function canSeeProject(u, id) { return allAccess(u) || (u.projects || []).includes(id); }
 // The sourcing library (library/<catalogue>) is studio-wide: everyone can see what's approved; only admins approve.
-const isLibPath = p => /^library(types|cats|show)?(\/|$)/.test(p || "");
+const isLibPath = p => /^library(types|cats|show|feat)?(\/|$)/.test(p || "");
 // Catalogues an admin has hidden from clients: libraryshow/main = { hide: [catalogue ids] }. Everyone else sees them all.
 const libHidden = () => new Set(Array.isArray(store["libraryshow/main"]?.data?.hide) ? store["libraryshow/main"].data.hide : []);
 const libHiddenFor = (u, sup) => u.role === "client" && libHidden().has(sup);
@@ -504,6 +504,8 @@ function forUser(u, p, data) {
   // Specifiers never receive the studio's sourcing service rates.
   if (u.role === "specifier" && data && /^projects\/[^/]+\/project\/main$/.test(p)) { const o = { ...data }; delete o.quoteFee; delete o.quoteFeeCustom; return o; }
   if (u.role !== "client" || !data) return data;
+  // Featured images from catalogues hidden from clients aren't sent to them.
+  if (p === "libraryfeat/main" && libCache) return { ...data, f: (data.f || []).filter(f => { const it = libCache.byFile.get(f); return it && !libHiddenFor(u, it[1]); }) };
   if (/^projects\/[^/]+\/project\/main$/.test(p)) { const o = { ...data }; CLIENT_COST_PROJECT.forEach(k => delete o[k]); return o; }
   if (!ITEM_DOC.test(p)) return data;
   const o = { ...data }; CLIENT_HIDDEN.forEach(k => delete o[k]); CLIENT_COST_ITEM.forEach(k => delete o[k]);
@@ -1006,6 +1008,21 @@ const server = http.createServer(async (req, res) => {
       const next = { f: [...f], updated: new Date().toISOString() };
       store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
       persist(); return send(res, 200, { ok: true, files: next.f });
+    }
+    // Featured products: the studio's picks, shown to everyone when the Sourcing library opens.
+    // libraryfeat/main = { f: [file names, oldest first], at: { file: ms featured } }. Only admins pick, and only approved images.
+    if (p === "/api/library/featured" && req.method === "POST") {
+      if (!isAdmin) return deny("Only admins choose featured products.");
+      const b = await readJSON(req), idx = await libIndex(), it = typeof b.file === "string" && idx.byFile.get(b.file);
+      if (!it || typeof b.on !== "boolean") return send(res, 400, { code: "invalid_argument" });
+      const m = b.file.match(/_p(\d+)_(\d+)\.jpg$/), key = m ? (+m[1]) * 100 + (+m[2]) : -1;
+      if (b.on && !(store["library/" + it[1]]?.data?.on || []).map(Number).includes(key)) return send(res, 400, { code: "invalid_argument", message: "Approve the image before featuring it." });
+      const dp = "libraryfeat/main", cur = store[dp], f = (cur?.data?.f || []).filter(x => x !== b.file), at = { ...(cur?.data?.at || {}) };
+      if (b.on) { if (f.length >= 1000) return send(res, 400, { code: "invalid_argument", message: "Featured is full (1,000 images)." }); f.push(b.file); at[b.file] = Date.now(); } else delete at[b.file];
+      const next = { f, at, updated: new Date().toISOString(), by: me.name || "" };
+      store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
+      persist(); broadcast({ path: dp, exists: true, data: next });
+      return send(res, 200, { ok: true, files: f });
     }
     // New in the Sourcing library, per person: libraryseen/<user id> = { base: ms, f: [file names seen since] }.
     // New for an admin: images from a catalogue another admin added since base. For everyone else: images approved

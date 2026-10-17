@@ -39,6 +39,10 @@
     "Choose a PDF and enter the supplier.": "请选择 PDF 并填写供应商。", "Couldn't read that PDF.": "无法读取该 PDF。",
     "The PDF is scanned in this browser, so keep this tab open until it finishes. Photos in the PDF become library images named like the others (category_supplier_page_number) and start unapproved. Up to 300 MB and 2,000 pages.": "PDF 在此浏览器中扫描，请保持此标签页打开直到完成。PDF 中的照片会按与其他图片相同的方式命名（类别_供应商_页码_编号）成为图库图片，默认未批准。最大 300 MB、2000 页。",
     "All product types": "全部产品类型", "Favourites": "收藏", "Favourite": "收藏", "Add to favourites": "加入收藏", "Remove from favourites": "取消收藏", "No favourites yet. Tap the star on any image to save it here.": "还没有收藏。点击任意图片上的星标即可收藏到这里。", "Star images to save them here": "点星标即可收藏到这里", "Product type": "产品类型", "Not sorted yet": "尚未分类", "Choose a product type to see its images.": "选择一个产品类型以查看图片。",
+    "Featured products": "精选产品", "Featured": "精选", "Feature": "设为精选", "Feature on the landing page": "设为首页精选", "Remove from featured": "取消精选", "The studio's picks": "工作室精选",
+    "See all featured products": "查看全部精选产品", "Pause": "暂停", "Play": "播放", "Open this product": "打开此产品",
+    "No featured products yet. Open an approved product and press Feature.": "还没有精选产品。打开已批准的产品，点“设为精选”。",
+    "Approve the image before featuring it.": "请先批准该图片，再设为精选。", "Featured products show here, large, for everyone who opens the library. Open an approved product and press Feature.": "精选产品会以大图显示在这里，所有打开图库的人都能看到。打开已批准的产品，点“设为精选”。",
     "Full-size images": "高清大图", "Upload zips": "上传压缩包", "Uploading…": "正在上传…", "Click to see it full screen": "点击全屏查看",
     "Choose the catalogue zips from Google Drive (or the JPEGs inside them). Images are matched to the library by file name.": "选择 Google 云端硬盘中的图册压缩包（或其中的 JPEG 图片）。图片按文件名与图库匹配。",
   };
@@ -167,6 +171,30 @@
 .sbl-cat .sbl-sw{position:relative}
 .sbl-sw .sbl-newb{position:absolute;top:8px;right:8px;min-width:26px;padding:3px 8px;background:#1E7A3C;color:#fff;font-style:normal;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;text-align:center}
 .sbl-newc{font-weight:500;color:#1E7A3C;font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.sbl-hero-f{position:relative;margin-top:22px;border:1px solid var(--rule);background:var(--paper);overflow:hidden}
+.sbl-hero-f .sbl-fslide{display:grid;grid-template-columns:minmax(0,1fr) 300px;min-height:min(58vh,540px);animation:sbl-fade .9s ease}
+@keyframes sbl-fade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.sbl-hero-f .sbl-fslide{animation:none}}
+.sbl-fpic{position:relative;display:grid;place-items:center;width:100%;height:100%;border:0;padding:18px;margin:0;background:#fff;cursor:zoom-in;min-width:0}
+.sbl-fpic img{max-width:100%;max-height:min(54vh,500px);object-fit:contain;display:block}
+.sbl-fpic .sbl-sw{display:block;width:min(100%,460px);aspect-ratio:1;border:0}
+.sbl-finfo{display:flex;flex-direction:column;gap:10px;padding:26px 24px;border-left:1px solid var(--rule)}
+.sbl-finfo h3{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(26px,2.6vw,34px);line-height:1.1;word-break:break-word}
+.sbl-finfo p{margin:0;color:var(--muted);font-size:13px}
+.sbl-finfo .sbl-fctl{margin-top:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sbl-fdots{display:flex;gap:6px;flex-wrap:wrap;max-width:100%}
+.sbl-fdots button{width:8px;height:8px;border-radius:50%;border:0;padding:0;background:var(--rule);cursor:pointer}
+.sbl-fdots button[aria-current=true]{background:var(--ink)}
+.sbl-fbar{position:absolute;left:0;bottom:0;height:2px;background:#c8a046;width:0}
+.sbl-hero-f.run .sbl-fbar{animation:sbl-bar var(--dur) linear forwards}
+@keyframes sbl-bar{from{width:0}to{width:100%}}
+.sbl-fnav{border:1px solid var(--rule);background:var(--paper);width:34px;height:34px;cursor:pointer;font-size:18px;line-height:1;color:var(--ink)}
+.sbl-ftag{position:absolute;right:6px;bottom:34px;background:#c8a046;color:#fff;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;pointer-events:none}
+.sbl-feat{margin-left:auto;flex:none;border:0;background:none;padding:0 2px;font-size:14px;line-height:1;color:var(--muted);cursor:pointer;font-family:inherit}
+.sbl-feat[aria-pressed=true]{color:#c8a046}
+.sbl-feat+.sbl-star{margin-left:0}
+.btn.sbl-featbtn[aria-pressed=true]{color:#a07a20}
+@media (max-width:760px){.sbl-hero-f .sbl-fslide{grid-template-columns:1fr;min-height:0}.sbl-fpic img{max-height:52vh}.sbl-finfo{border-left:0;border-top:1px solid var(--rule);padding:16px}}
 .sbl-newt{position:absolute;left:6px;bottom:34px;background:#1E7A3C;color:#fff;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;pointer-events:none}
 .sbl-cat .sbl-tbsic{position:relative;background-size:cover;background-position:center}
 .sbl-tbsic i{position:absolute;top:8px;right:8px;min-width:26px;padding:3px 8px;background:#1E7A3C;color:#fff;font-style:normal;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;text-align:center}
@@ -250,6 +278,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
 .sbl-note code{font-family:var(--mono);font-size:12px;overflow-wrap:anywhere;color:var(--ink)}
 .sbl-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
 .sbl-hint{color:var(--muted);font-size:13px;margin:10px 0 0}
+.sbl-added{flex-basis:100%;margin:2px 0 0;color:var(--ok);font-size:13.5px;font-weight:600}
 .sbl-pick{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted);min-width:min(100%,260px)}
 .sbl-pick select{font:inherit;font-size:15px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px}
 .sbl-excerpt{margin:16px 0 0;color:var(--muted);font-size:13px;max-width:65ch}
@@ -272,10 +301,23 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const at = BASE_TYPES.findIndex(x => x[0] === "A");
     TYPES = [...BASE_TYPES.slice(0, at), ...custom.map(x => [x.c, x.en, x.zh || x.en]), ...BASE_TYPES.slice(at)];
   }
-  const typeName = c => { if (c === "F") return t("Favourites"); const x = TYPES.find(y => y[0] === c) || TYPES[TYPES.length - 1]; return zh() ? x[2] : x[1]; };
+  const typeName = c => { if (c === "F") return t("Favourites"); if (c === "FT") return t("Featured products"); const x = TYPES.find(y => y[0] === c) || TYPES[TYPES.length - 1]; return zh() ? x[2] : x[1]; };
   // Each person's own starred images (file names), saved on the server for their account.
   let fav = new Set();
-  const inType = o => ui.type === "F" ? fav.has(o.file) : typeOf(o) === ui.type;
+  const inType = o => ui.type === "F" ? fav.has(o.file) : ui.type === "FT" ? feat.has(o.file) : typeOf(o) === ui.type;
+  // Featured products: the studio's picks (libraryfeat/main, file names oldest first), chosen by admins from approved
+  // images. They cycle, large, at the top of the library, and all of them are listed under the Featured tile.
+  let feat = new Map();
+  const setFeat = d => { feat = new Map(((d && d.f) || []).map((f, i) => [f, i])); };
+  async function fetchFeat() { const r = await fetch("/api/db/doc?path=libraryfeat/main"); if (!r.ok) return; const d = await r.json(); setFeat(d.exists && d.data); repaint(); }
+  function toggleFeat(o) {
+    const x = !feat.has(o.file); if (x) feat.set(o.file, Date.now()); else feat.delete(o.file);
+    api("/api/library/featured", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ file: o.file, on: x }) })
+      .catch(e => { host.toast(t(e.message || "Couldn't save. Check your connection and try again.")); fetchFeat().catch(() => {}); });
+    return x;
+  }
+  // Newest picks first. Only approved ones, except for an admin curating on the dashboard.
+  const featPool = () => LIB.items.filter(o => feat.has(o.file) && (curating() || isOn(o))).sort((a, b) => feat.get(b.file) - feat.get(a.file));
   async function fetchFav() { const r = await fetch("/api/library/fav"); if (!r.ok) return; fav = new Set((await r.json()).files || []); repaint(); }
   function toggleFav(o) {
     const x = !fav.has(o.file); x ? fav.add(o.file) : fav.delete(o.file);
@@ -297,6 +339,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   const isNew = o => fresh.has(o.file) && (curating() || isOn(o));
   const newBadge = n => n ? `<i class="sbl-newb">● ${nf(n)} ${t("new")}</i>` : "";
   const ui = { type: null, sup: null, q: "", show: null, n: 120, open: null, adding: false, target: "", zoom: false, seq: [] };
+  const done = new Map(); // file -> [{project, pname, code, id, existing}] added from the card this visit, shown on the card
   // host.ctx: "studio" (dashboard) or "project". canEdit: may approve (admins, on the dashboard).
   // project(): this project's id (project ctx). projects(): [{id, name}] to add to (studio ctx).
   let host = { ctx: "studio", internal: () => true, canEdit: () => false, canAdd: () => false, project: () => null, projectName: () => "", projects: () => [], inProject: () => new Map(), prefix: null, added: null, openPiece: () => {}, layer: () => {}, toast: m => console.log(m), toastUndo: m => console.log(m) };
@@ -338,15 +381,15 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
   async function fetchFull() {
     const r = await fetch("/api/library/full"); if (!r.ok) return;
-    full = new Set((await r.json()).files || []); fullLine(); if (ui.open != null) host.layer();
+    full = new Set((await r.json()).files || []); fullLine(); fPaint(); if (ui.open != null) host.layer();
   }
   function watch() {
     if (watching) return; watching = true;
-    fetchOn().catch(() => {}); fetchFull().catch(() => {}); fetchTypes().catch(() => {}); fetchFav().catch(() => {}); fetchReqs().catch(() => {});
+    fetchOn().catch(() => {}); fetchFull().catch(() => {}); fetchTypes().catch(() => {}); fetchFav().catch(() => {}); fetchFeat().catch(() => {}); fetchReqs().catch(() => {});
     try {
       const es = new EventSource("/api/events");
-      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); fetchSeenSoon(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data && !was && isAdm() && inReview(m.data) && !(m.data.by && m.data.by.id === tbsCfg.me)) tbsAlert({ id, ...m.data }); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "") && JSON.stringify(was.sent || null) === JSON.stringify(m.data.sent || null) && JSON.stringify(was.found || []) === JSON.stringify(m.data.found || []) && JSON.stringify(was.files || []) === JSON.stringify(m.data.files || [])) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (m.path === "libraryshow/main") { hideCli = new Set((m.exists && m.data && m.data.hide) || []); const w = $("#sbl-cliwrap"); if (w) w.innerHTML = cliHTML(); repaint(); return; } if (m.path === "librarycats/main") { setCustom(m.exists && m.data && m.data.types); repaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); fetchSeenSoon(); } catch (_) {} };
-      es.onopen = () => { fetchSeen().catch(() => {}); fetchOn().catch(() => {}); fetchTypes().catch(() => {}); fetchReqs().catch(() => {}); };
+      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); fetchSeenSoon(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data && !was && isAdm() && inReview(m.data) && !(m.data.by && m.data.by.id === tbsCfg.me)) tbsAlert({ id, ...m.data }); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "") && JSON.stringify(was.sent || null) === JSON.stringify(m.data.sent || null) && JSON.stringify(was.found || []) === JSON.stringify(m.data.found || []) && JSON.stringify(was.files || []) === JSON.stringify(m.data.files || [])) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (m.path === "libraryshow/main") { hideCli = new Set((m.exists && m.data && m.data.hide) || []); const w = $("#sbl-cliwrap"); if (w) w.innerHTML = cliHTML(); repaint(); return; } if (m.path === "libraryfeat/main") { setFeat(m.exists && m.data); repaint(); return; } if (m.path === "librarycats/main") { setCustom(m.exists && m.data && m.data.types); repaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); fetchSeenSoon(); } catch (_) {} };
+      es.onopen = () => { fetchSeen().catch(() => {}); fetchFeat().catch(() => {}); fetchOn().catch(() => {}); fetchTypes().catch(() => {}); fetchReqs().catch(() => {}); };
     } catch (_) {}
   }
 
@@ -367,7 +410,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
   // As shown in the grid: outside a single catalogue, images new to this person come first.
   const markedNew = o => justSeen.has(o.file) || fresh.has(o.file);
-  function ordered() { const l = list(); if (!ui.sup && l.some(markedNew)) l.sort((a, b) => markedNew(b) - markedNew(a)); return l; }
+  function ordered() { const l = list(); if (ui.type === "FT") return l.sort((a, b) => feat.get(b.file) - feat.get(a.file)); if (!ui.sup && l.some(markedNew)) l.sort((a, b) => markedNew(b) - markedNew(a)); return l; }
   const sups = () => Object.keys(LIB.sups).filter(s => curating() || approved(LIB.bySup[s]));
 
   function view() {
@@ -388,7 +431,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       ${cur ? `<div class="sbl-full" id="sbl-full">${fullHTML()}</div><div id="sbl-addwrap" style="grid-column:1/-1">${addCatHTML()}</div><div id="sbl-cliwrap" style="grid-column:1/-1">${cliHTML()}</div>` : ""}</section>
     ${ui.type === "TBS" ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All product types")}</button><h3>TBS · ${t("To be sourced")}</h3></div><div id="sbl-tbs">${tbsHTML()}</div><div class="sbl-tools"><button class="btn ghost sm sbl-back" data-sbltype="" data-sbltop>‹ ${t("Back to all product types")}</button></div>`
       : ""}${ui.type === "TBS" ? "" : `${ui.type ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All product types")}</button><h3>${esc(typeName(ui.type))}</h3></div><div class="sbl-chips" id="sbl-cats">${catsHTML()}</div>`
-      : `<div id="sbl-findwrap">${findHTML()}</div><div class="sbl-cats" id="sbl-cats">${catsHTML()}</div>`}
+      : `<div id="sbl-featwrap">${featHTML()}</div><div id="sbl-findwrap">${findHTML()}</div><div class="sbl-cats" id="sbl-cats">${catsHTML()}</div>`}
     <div class="sbl-tools"><input class="sbl-q" type="search" id="sbl-q" value="${esc(ui.q)}" placeholder="${esc(t("Search a code, product or page, e.g. AA01, Ampleforth, p44"))}" autocomplete="off" aria-label="${esc(t("Sourcing library"))}">
       ${cur ? `<span class="sbl-seg" role="group" aria-label="${t("Show")}">${[["on", "Approved"], ["off", "Not approved"], ["all", "All"]].map(([v, l]) => `<button class="chip" data-sblshow="${v}" aria-pressed="${show === v}">${t(l)}</button>`).join("")}</span>` : ""}
       <span class="sbl-count" id="sbl-count"></span>
@@ -397,6 +440,42 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       ${cur && (ui.sup || ui.type) ? `<span class="sbl-bulk"><button class="linkbtn" data-sblbulk="on">${t("Approve all shown")}</button><button class="linkbtn" data-sblbulk="off">${t("Unapprove all shown")}</button></span>` : ""}</div>
     <div id="sbl-grid">${gridHTML()}</div>`}</div>`;
   }
+  // The landing slideshow: one featured product at a time, large, changing every few seconds. It pauses while the
+  // pointer is over it, after a touch, while a product card is open, in a hidden tab, or when the viewer asked for less motion.
+  const F_MS = 6000;
+  let fIdx = 0, fT = null, fSig = "", fHover = false, fUser = true, fTouch = 0;
+  const featBtn = o => `<button class="sbl-feat" data-sblfeat="${o.i}" aria-pressed="${feat.has(o.file)}" title="${t(feat.has(o.file) ? "Remove from featured" : "Feature on the landing page")}">${feat.has(o.file) ? "◆" : "◇"}</button>`;
+  const fReduce = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_) { return false; } };
+  const fRunning = () => fUser && !fHover && Date.now() > fTouch && ui.open == null && !document.hidden && !fReduce() && featPool().length > 1;
+  function featHTML() {
+    const pool = featPool(); fSig = pool.map(o => o.file).join("|");
+    if (!pool.length) return curating() ? `<p class="sbl-hint" style="padding-top:18px">◆ ${t("Featured products show here, large, for everyone who opens the library. Open an approved product and press Feature.")}</p>` : "";
+    fIdx = ((fIdx % pool.length) + pool.length) % pool.length;
+    const o = pool[fIdx], L = label(o.sup), nx = pool[(fIdx + 1) % pool.length];
+    if (nx && full.has(nx.file)) new Image().src = `/lib/full/${nx.file}`;
+    return `<section class="sbl-hero-f${fRunning() ? " run" : ""}" id="sbl-hero-f" style="--dur:${F_MS}ms" aria-roledescription="carousel" aria-label="${esc(t("Featured products"))}">
+      <div class="sbl-fslide" data-k="${esc(o.file)}">
+        <button class="sbl-fpic" data-sbl="fopen" aria-label="${esc(t("Open this product"))}: ${esc(name(o))}">${full.has(o.file) ? `<img src="/lib/full/${esc(o.file)}" alt="${esc(name(o))}">` : `<span class="sbl-sw" ${sprite(o)}></span>`}</button>
+        <div class="sbl-finfo"><span class="eyebrow">◆ ${t("Featured products")} · ${nf(fIdx + 1)} / ${nf(pool.length)}</span>
+          <h3>${esc(name(o))}</h3><p>${esc(typeName(typeOf(o)))} · ${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""}</p>
+          <span class="sbl-row" style="margin-top:6px"><button class="btn sm" data-sbl="fopen">${t("Open this product")}</button></span>
+          <div class="sbl-fctl">${pool.length > 1 ? `<button class="sbl-fnav" data-sbl="fprev" aria-label="${t("Previous")}">‹</button><button class="sbl-fnav" data-sbl="fnext" aria-label="${t("Next")}">›</button><button class="linkbtn" data-sbl="fplay">${t(fUser ? "Pause" : "Play")}</button>` : ""}
+            <button class="linkbtn" data-sbltype="FT">${t("See all featured products")} ›</button></div>
+          ${pool.length > 1 && pool.length <= 40 ? `<div class="sbl-fdots">${pool.map((_, i) => `<button data-sblfslide="${i}" aria-label="${i + 1}" aria-current="${i === fIdx}"></button>`).join("")}</div>` : ""}
+        </div></div><span class="sbl-fbar"></span></section>${(setTimeout(fArm, 0), "")}`;
+  }
+  function fArm() { clearTimeout(fT); if ($("#sbl-hero-f") && fRunning()) fT = setTimeout(() => fGo(fIdx + 1), F_MS); }
+  function fPaint() { clearTimeout(fT); const w = $("#sbl-featwrap"); if (w) w.innerHTML = featHTML(); }
+  function fGo(i) { fIdx = i; fPaint(); }
+  // Resume after a pause without redrawing the picture: restart the progress line and the timer.
+  function fResume() { const h = $("#sbl-hero-f"); if (!h) return; h.classList.remove("run"); void h.offsetWidth; h.classList.toggle("run", fRunning()); const b = h.querySelector("[data-sbl=fplay]"); if (b) b.textContent = t(fUser ? "Pause" : "Play"); fArm(); }
+  function fHold() { clearTimeout(fT); $("#sbl-hero-f")?.classList.remove("run"); }
+  // Only redraw the slideshow when the pool of picks changes, so it isn't restarted by every other repaint.
+  function fRefresh() { const pool = featPool(), sig = pool.map(o => o.file).join("|"); if (sig !== fSig) fPaint(); }
+  document.addEventListener("pointerover", e => { if (e.pointerType === "touch") return; const h = !!(e.target.closest && e.target.closest("#sbl-hero-f")); if (h !== fHover) { fHover = h; h ? fHold() : fResume(); } });
+  document.addEventListener("touchstart", e => { if (e.target.closest && e.target.closest("#sbl-hero-f")) { fTouch = Date.now() + 15000; fHold(); clearTimeout(fTouchT); fTouchT = setTimeout(fResume, 15100); } }, { passive: true });
+  let fTouchT = null;
+  document.addEventListener("visibilitychange", () => { document.hidden ? fHold() : fResume(); });
   function catsHTML() {
     const cur = curating(), vis = o => cur || isOn(o);
     if (ui.type) {
@@ -408,7 +487,9 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const by = {}; LIB.items.forEach(o => (by[typeOf(o)] = by[typeOf(o)] || []).push(o));
     const favs = LIB.items.filter(o => fav.has(o.file) && vis(o)), fc = favs[0];
     const favTile = `<button class="sbl-cat" data-sbltype="F">${fc ? `<span class="sbl-sw" ${sprite(fc)}></span>` : `<span class="sbl-favic">★</span>`}<span class="sbl-name">★ ${t("Favourites")}</span><span class="sbl-sub">${favs.length ? (zh() ? `${nf(favs.length)} 张图片` : `${nf(favs.length)} image${favs.length === 1 ? "" : "s"}`) : t("Star images to save them here")}</span></button>`;
-    return favTile + tbsTileHTML() + TYPES.filter(([c]) => (by[c] && (cur || by[c].some(isOn))) || (cur && custom.some(x => x.c === c))).map(([c]) => {
+    const fp = featPool(), ftc = fp[0];
+    const featTile = fp.length || cur ? `<button class="sbl-cat" data-sbltype="FT">${ftc ? `<span class="sbl-sw" ${sprite(ftc)}></span>` : `<span class="sbl-favic">◆</span>`}<span class="sbl-name">◆ ${t("Featured products")}</span><span class="sbl-sub">${fp.length ? (zh() ? `${nf(fp.length)} 张图片` : `${nf(fp.length)} image${fp.length === 1 ? "" : "s"}`) : t("The studio's picks")}</span></button>` : "";
+    return featTile + favTile + tbsTileHTML() + TYPES.filter(([c]) => (by[c] && (cur || by[c].some(isOn))) || (cur && custom.some(x => x.c === c))).map(([c]) => {
       // Cover: an approved image if there is one, preferring product photos over tearsheet pages.
       const arr = by[c] || [], ok = arr.filter(isOn), pool0 = cur && !ok.length ? arr : ok, photos = pool0.filter(o => !/tearsheet/i.test(o.sup)), pool = photos.length ? photos : pool0, cover = pool[Math.min(pool.length - 1, Math.floor(pool.length * .12))];
       const nn = arr.filter(isNew).length;
@@ -458,7 +539,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (!ui.type && !ui.q.trim()) { setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = ""; }, 0); return `<p class="sbl-hint" style="padding-top:18px">${t("Choose a product type to see its images.")}</p>`; }
     const l = ordered(), cur = curating(), inP = host.ctx === "project" ? host.inProject() : new Map();
     setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = zh() ? `${nf(l.length)} 张图片` : `${nf(l.length)} image${l.length === 1 ? "" : "s"}`; autoMore(); }, 0);
-    if (!l.length) return `<div class="sbl-grid"><p class="sbl-empty">${ui.type === "F" && !ui.q ? t("No favourites yet. Tap the star on any image to save it here.") : ui.q ? t("Nothing matches that search.") : showMode() === "off" ? t("Nothing is waiting for approval here.") : t("Nothing has been approved yet.")}</p></div>`;
+    if (!l.length) return `<div class="sbl-grid"><p class="sbl-empty">${ui.type === "F" && !ui.q ? t("No favourites yet. Tap the star on any image to save it here.") : ui.type === "FT" && !ui.q ? t("No featured products yet. Open an approved product and press Feature.") : ui.q ? t("Nothing matches that search.") : showMode() === "off" ? t("Nothing is waiting for approval here.") : t("Nothing has been approved yet.")}</p></div>`;
     // Inside a product type, admins tick images and send them to another type in one go.
     const sorting = cur && !!ui.type;
     if (!sorting) sel.clear(); else { const ids = new Set(l.map(o => o.i)); [...sel].forEach(i => ids.has(i) || sel.delete(i)); }
@@ -467,8 +548,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       return `<div class="sbl-tile ${cur && !x ? "off" : ""} ${sel.has(o.i) ? "sel" : ""}"><button class="sbl-open" data-sblopen="${o.i}" aria-label="${esc(o.file)}"><span class="sbl-sw" ${sprite(o)}></span></button>
         ${sorting ? `<label class="sbl-sel" title="${t("Select to move")}"><input type="checkbox" data-sblsel="${o.i}" ${sel.has(o.i) ? "checked" : ""} aria-label="${t("Select to move")} ${esc(o.file)}"></label>` : ""}
         ${cur ? `<label class="sbl-chk" title="${x ? t("Approved. Untick to hide it.") : t("Not approved. Tick to approve.")}"><input type="checkbox" data-sblkeep="${o.i}" ${x ? "checked" : ""} aria-label="${t("Approve")} ${esc(o.file)}"></label>` : ""}
-        ${inP.has(o.file) ? `<span class="sbl-inproj">${t("In project")}</span>` : ""}${markedNew(o) ? `<span class="sbl-newt">● ${t("New")}</span>` : ""}
-        <span class="sbl-cap"><b>${esc(o.codes[0] || label(o.sup)[0])}</b><span>${bySup ? "" : esc(label(o.sup)[0]) + " · "}p${o.page}</span><button class="sbl-star" data-sblfav="${o.i}" aria-pressed="${fav.has(o.file)}" title="${t(fav.has(o.file) ? "Remove from favourites" : "Add to favourites")}">${fav.has(o.file) ? "★" : "☆"}</button></span></div>`; };
+        ${inP.has(o.file) ? `<span class="sbl-inproj">${t("In project")}</span>` : ""}${markedNew(o) ? `<span class="sbl-newt">● ${t("New")}</span>` : ""}${feat.has(o.file) && ui.type !== "FT" ? `<span class="sbl-ftag">◆ ${t("Featured")}</span>` : ""}
+        <span class="sbl-cap"><b>${esc(o.codes[0] || label(o.sup)[0])}</b><span>${bySup ? "" : esc(label(o.sup)[0]) + " · "}p${o.page}</span>${isAdm() && x ? featBtn(o) : ""}<button class="sbl-star" data-sblfav="${o.i}" aria-pressed="${fav.has(o.file)}" title="${t(fav.has(o.file) ? "Remove from favourites" : "Add to favourites")}">${fav.has(o.file) ? "★" : "☆"}</button></span></div>`; };
     let html;
     if (bySup) {
       // Inside one catalogue, each page is a card and the cards tile across the screen, sized to their number of images.
@@ -491,7 +572,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     // Switch between the empty state and the grid when the first approval arrives or the last one goes.
     if (r && !curating() && !!$("#sbl-cats") !== !!approved()) { r.outerHTML = view(); if (ui.open != null) host.layer(); return; }
     const g = $("#sbl-grid"), c = $("#sbl-cats"), k = $("#sbl-kept");
-    if (g && c) g.innerHTML = gridHTML(); if (c) c.innerHTML = catsHTML(); if (k) k.textContent = nf(approved());
+    if (g && c) g.innerHTML = gridHTML(); if (c) c.innerHTML = catsHTML(); if (k) k.textContent = nf(approved()); fRefresh();
     if (ui.open != null) host.layer();
   }
   function rerender() { const r = $("#sblib"); if (r) r.outerHTML = view(); }
@@ -526,18 +607,24 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
 
   function sourceNote(o) { const S = LIB.sups[o.sup]; return `${o.file}\nSource: ${S.pdf}, page ${o.page} of ${S.pages} (${S.cat})\nPDF: ${S.up && !S.drive ? location.origin : ""}${pdfURL(S)}` + (S.up ? "" : `\nImage: ${LIB_ROOT}_IMAGE LIBRARY\\${S.cat}\\${o.sup}\\${o.file}`); }
+  // After an add the card stays open on the same product and says where it went, so you can carry on with ‹ ›.
+  function addedHTML(o) {
+    const d = done.get(o.file); if (!d || !d.length) return "";
+    return `<p class="sbl-added">${d.map(x => "✓ " + (zh() ? `${x.existing ? "已在" : "已添加到"} ${esc(x.pname)}，编号 ${esc(x.code)}` : `${x.existing ? "Already in" : "Added to"} ${esc(x.pname)} as ${esc(x.code)}`)).join("<br>")}</p>`;
+  }
   function addControls(o) {
     if (!host.canAdd() || (!isOn(o) && !host.canEdit())) return "";
     if (host.ctx === "project") {
-      const inId = host.inProject().get(o.file);
-      return inId ? `<button class="btn" data-sbl="piece" data-id="${esc(inId)}">${t("Open the piece in this project")}</button>`
-        : `<button class="btn" data-sbl="add" ${ui.adding ? "disabled" : ""}>${ui.adding ? t("Adding…") : (zh() ? "添加到 " : "Add to ") + esc(host.projectName())}</button>`;
+      const mine = (done.get(o.file) || []).find(x => x.project === host.project());
+      const inId = host.inProject().get(o.file) || (mine && mine.id);
+      return (inId ? `<button class="btn" data-sbl="piece" data-id="${esc(inId)}">${t("Open the piece in this project")}</button>`
+        : `<button class="btn" data-sbl="add" ${ui.adding ? "disabled" : ""}>${ui.adding ? t("Adding…") : (zh() ? "添加到 " : "Add to ") + esc(host.projectName())}</button>`) + addedHTML(o);
     }
     const ps = host.projects();
     if (!ps.length) return `<span class="sbl-hint" style="margin:0">${t("No projects to add to yet.")}</span>`;
     if (!ps.some(p => p.id === ui.target)) ui.target = ps.length === 1 ? ps[0].id : "";
     return `<label class="sbl-pick">${t("Add to project")}<select id="sbl-target"><option value="">${t("Choose a project")}</option>${ps.map(p => `<option value="${esc(p.id)}" ${p.id === ui.target ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select></label>
-      <button class="btn" data-sbl="add" ${ui.adding || !ui.target ? "disabled" : ""}>${ui.adding ? t("Adding…") : t("Add")}</button>`;
+      <button class="btn" data-sbl="add" ${ui.adding || !ui.target ? "disabled" : ""}>${ui.adding ? t("Adding…") : t("Add")}</button>${addedHTML(o)}`;
   }
   // Next / previous move through the images that were listed when the card was opened,
   // so approving one while showing "Not approved" doesn't skip the next.
@@ -561,7 +648,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       ${full.has(o.file) ? `<div class="sbl-hero big"><button class="sbl-zoom" data-sbl="zoom" title="${t("Click to see it full screen")}"><span class="sbl-sw" ${sprite(o)}></span><img class="sbl-big" src="/lib/full/${esc(o.file)}" alt="${esc(o.file)}"></button>${navHTML()}</div>`
         : `<div class="sbl-hero"><span class="sbl-sw" ${sprite(o)}></span>${navHTML()}</div>`}
       <div class="sbl-body">
-        <div class="sbl-top"><span class="eyebrow">${esc(typeName(typeOf(o)))} · ${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""}</span><span class="sbl-topr"><button class="btn sm ghost sbl-favbtn" data-sbl="fav" aria-pressed="${fav.has(o.file)}">${fav.has(o.file) ? "★ " + t("Favourite") : "☆ " + t("Add to favourites")}</button>${cur ? `<button class="btn sm sbl-appr ${x ? "on" : ""}" data-sbl="toggle" aria-pressed="${x}">${x ? "✓ " + t("Approved") : t("Approve")}</button>` : ""}<button class="sbl-x" data-sbl="close" aria-label="${t("Close")}">×</button></span></div>
+        <div class="sbl-top"><span class="eyebrow">${esc(typeName(typeOf(o)))} · ${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""}</span><span class="sbl-topr"><button class="btn sm ghost sbl-favbtn" data-sbl="fav" aria-pressed="${fav.has(o.file)}">${fav.has(o.file) ? "★ " + t("Favourite") : "☆ " + t("Add to favourites")}</button>${isAdm() && (x || feat.has(o.file)) ? `<button class="btn sm ghost sbl-featbtn" data-sbl="feat" aria-pressed="${feat.has(o.file)}" title="${t(feat.has(o.file) ? "Remove from featured" : "Feature on the landing page")}">${feat.has(o.file) ? "◆ " + t("Featured") : "◇ " + t("Feature")}</button>` : ""}${cur ? `<button class="btn sm sbl-appr ${x ? "on" : ""}" data-sbl="toggle" aria-pressed="${x}">${x ? "✓ " + t("Approved") : t("Approve")}</button>` : ""}<button class="sbl-x" data-sbl="close" aria-label="${t("Close")}">×</button></span></div>
         ${ui.seq.length > 1 || cur ? `<p class="sbl-hint" style="margin-top:6px">${t(ui.seq.length > 1 ? (cur ? "← → to move between products · Space to approve" : "← → to move between products") : "Space to approve")}</p>` : ""}
         <h2>${esc(name(o))}</h2>
         <p class="sbl-file">${esc(o.file)}</p>
@@ -587,7 +674,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       </div></section>
     ${ui.zoom && full.has(o.file) ? `<div class="sbl-zoomview" data-sbl="unzoom" role="dialog" aria-label="${esc(o.file)}"><img src="/lib/full/${esc(o.file)}" alt="${esc(o.file)}">${navHTML()}</div>` : ""}`;
   }
-  function close() { if (ui.open == null) return; ui.open = null; ui.adding = false; ui.zoom = false; ui.seq = []; document.body.style.overflow = ""; host.layer(); }
+  function close() { if (ui.open == null) return; ui.open = null; ui.adding = false; ui.zoom = false; ui.seq = []; document.body.style.overflow = ""; host.layer(); fResume(); }
 
   // Cut one image out of its thumbnail sheet, for the piece's photo (JPEG, base64).
   async function crop(o) {
@@ -634,7 +721,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw Object.assign(new Error(j.message || "add"), { code: j.code });
       const pname = host.ctx === "project" ? host.projectName() : (host.projects().find(p => p.id === project) || {}).name || project;
-      ui.adding = false; ui.open = null; document.body.style.overflow = ""; host.layer();
+      const d = (done.get(o.file) || []).filter(x => x.project !== project); d.push({ project, pname, code: j.code, id: j.id, existing: !!j.existing }); done.set(o.file, d);
+      ui.adding = false; host.layer();
       if (host.added) host.added(j, pname); else host.toast(zh() ? `已添加到 ${pname}，编号 ${j.code}` : `Added to ${pname} as ${j.code}`);
       rerender();
     } catch (e) { ui.adding = false; host.layer(); host.toast(e.code === "forbidden" || e.code === "invalid_argument" ? e.message : t("Couldn't add it. Try again.")); }
@@ -1120,8 +1208,12 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   document.addEventListener("error", e => { const el = e.target; if (el.classList && el.classList.contains("sbl-big")) { const h = el.closest(".sbl-hero"); if (h) { h.classList.remove("big"); el.remove(); } } }, true);
 
   document.addEventListener("click", async e => {
-    const el = e.target.closest && e.target.closest("[data-sbltype],[data-sblsup],[data-sblshow],[data-sblmore],[data-sblopen],[data-sblbulk],[data-sblpage],[data-sblfav],[data-sbltbsf],[data-sbl]"); if (!el || !LIB) return;
+    const el = e.target.closest && e.target.closest("[data-sbltype],[data-sblsup],[data-sblshow],[data-sblmore],[data-sblopen],[data-sblbulk],[data-sblpage],[data-sblfav],[data-sblfeat],[data-sblfslide],[data-sbltbsf],[data-sbl]"); if (!el || !LIB) return;
     if (el.dataset.sbltbsf) { tbsFilter = el.dataset.sbltbsf; tbsPaint(); return; }
+    if (el.dataset.sblfeat !== undefined) {
+      const o = LIB.items[+el.dataset.sblfeat]; if (!o || !isAdm()) return; toggleFeat(o); repaint(); return;
+    }
+    if (el.dataset.sblfslide !== undefined) { fGo(+el.dataset.sblfslide); return; }
     if (el.dataset.sblfav !== undefined) {
       const o = LIB.items[+el.dataset.sblfav]; if (!o) return; const x = toggleFav(o);
       if (ui.type === "F") { repaint(); return; }
@@ -1165,6 +1257,10 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     else if (a === "prev" || a === "next") { e.stopPropagation(); step(a === "next" ? 1 : -1); }
     else if (a === "zoom") { ui.zoom = true; host.layer(); }
     else if (a === "unzoom" && !e.target.closest(".sbl-nav")) { ui.zoom = false; host.layer(); }
+    else if (a === "feat" && isAdm()) { const o = LIB.items[ui.open]; if (o) { toggleFeat(o); host.layer(); repaint(); } }
+    else if (a === "fprev" || a === "fnext") fGo(fIdx + (a === "fnext" ? 1 : -1));
+    else if (a === "fplay") { fUser = !fUser; fResume(); }
+    else if (a === "fopen") { const pool = featPool(), o = pool[fIdx]; if (o) { ui.open = o.i; ui.seq = pool.map(x => x.i); host.layer(); } }
     else if (a === "fav") { const o = LIB.items[ui.open]; if (o) { toggleFav(o); host.layer(); if (ui.type === "F") repaint(); } }
     else if (a === "toggle" && curating()) { const o = LIB.items[ui.open]; if (o) { setOn(o.sup, [o.key], !isOn(o)); repaint(); host.layer(); } }
     else if (a === "add") add();

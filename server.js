@@ -1002,6 +1002,15 @@ const server = http.createServer(async (req, res) => {
       const files = (await fsp.readdir(LIB_FULL_DIR).catch(() => [])).filter(f => lib && lib.byFile.has(f));
       return send(res, 200, { files });
     }
+    // Admins, inside a project: what that project's clients and designers (specifiers) starred -> { clients: [{ name, files }] }.
+    if (p === "/api/library/fav/clients" && req.method === "GET") {
+      if (!isAdmin) return deny("Only admins can see other people's favourites.");
+      const pid = url.searchParams.get("project") || "";
+      if (!SEG.test(pid)) return send(res, 400, { code: "invalid_argument" });
+      const clients = people.users.filter(u => !u.disabled && ["client", "specifier"].includes(u.role) && (u.projects || []).includes(pid))
+        .map(u => ({ name: u.name || u.email || u.wechat || "Client", files: store["libraryfav/" + u.id]?.data?.f || [] })).filter(c => c.files.length);
+      return send(res, 200, { clients });
+    }
     // Favourites: each person's own starred library images, in libraryfav/<user id> = { f: [file names] }.
     if (p === "/api/library/fav") {
       const dp = "libraryfav/" + me.id;

@@ -14,7 +14,7 @@
     "The Google key in Render (GOOGLE_SERVICE_ACCOUNT) couldn't be read.": "无法读取 Render 中的 Google 密钥（GOOGLE_SERVICE_ACCOUNT）。",
     "Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.": "把图片拖到这里，我们会在图库中搜索相似的产品。如果找不到，我们会为您采购。", "Choose a photo": "选择图片", "What are you looking for? (optional) e.g. the chair, in walnut": "您想找什么？（可选）例如：这把椅子，胡桃木", "Sending it to our sourcing agent…": "正在发送给采购代理…", "Searching our library for something similar…": "正在图库中搜索相似产品…", "We couldn't find anything similar in our library, so we've sent it to our sourcing agent. We'll source it for you.": "图库中没有找到相似的产品，已发送给采购代理，我们会为您采购。", "Sent to our sourcing agent. We'll source it for you.": "已发送给采购代理，我们会为您采购。", "Withdraw the request": "撤回请求", "Search for something else": "搜索其他产品", "None of these? Send it to our sourcing agent": "都不合适？发送给采购代理", "Waiting to be sourced": "等待采购", "We're sourcing it": "正在为您采购", "Sourced": "已采购", "Note for the person who asked (optional)": "给提出请求者的备注（可选）", "Mark as sourced": "标为已采购", "Reopen": "重新打开", "Remove": "移除", "Sourcing requests": "采购请求", "Your sourcing requests": "您的采购请求", "Hide sourced": "隐藏已采购", "Nothing waiting to be sourced.": "没有待采购的请求。", "That isn't a photo.": "这不是图片。", "The search didn't finish. Try again.": "搜索未完成，请重试。", "Couldn't send it. Check your connection and try again.": "无法发送，请检查网络后重试。", "Photo": "图片", "Studio owner": "工作室负责人", "new": "新", "New": "新", "Add category": "添加类别", "Admins only": "仅限管理员", "New category": "新类别", "Name in English": "英文名称", "Name in Chinese": "中文名称", "e.g. Outdoor furniture": "例如：Outdoor furniture", "e.g. 户外家具": "例如：户外家具", "In a project, its products go under": "加入项目时归入", "Adding…": "正在添加…", "Cancel": "取消", "Give the category a name.": "请填写类别名称。", "There's already a category with that name.": "已有同名类别。", "Choose where its products go in a project.": "请选择加入项目时归入的分类。", "Only admins can add categories.": "只有管理员可以添加类别。", "No more categories can be added.": "无法再添加更多类别。", "Furniture": "家具", "Lighting": "灯具", "Plumbing": "卫浴", "Millwork": "木作", "Stone": "石材", "Finishes": "饰面", "Glazing": "玻璃", "Hardware": "五金", "Add photos of what you found": "添加找到的产品照片", "Attach photos or files": "添加照片或文件", "Up to 10 files per request.": "每个请求最多 10 个文件。", "That file is too big (25 MB at most).": "文件太大（最大 25 MB）。", "That file is empty.": "文件是空的。", "Only the studio and the sourcing agent can attach files to a request.": "只有工作室和采购代理可以为请求添加文件。", "Adding photos…": "正在添加照片…", "Photos of what was found": "找到的产品照片", "Up to 8 photos per request.": "每个请求最多 8 张照片。", "Only the studio and the sourcing agent can add photos to a request.": "只有工作室和采购代理可以为请求添加照片。",
     "You have 50 open requests. Wait for some to be sourced first.": "您有 50 个未完成的请求，请等部分采购完成后再提交。", "Only admins can remove a request.": "只有管理员可以移除请求。", "Only the studio and the sourcing agent can update a request.": "只有工作室和采购代理可以更新请求。", "Add a photo first.": "请先添加图片。", "Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.": "此服务器尚未设置 Claude。请在 Render 中添加 Anthropic API 密钥（ANTHROPIC_API_KEY）。",
-    "Back to all product types": "返回全部产品类型",
+    "Back to all product types": "返回全部产品类型", "Product types": "产品类型",
     "Catalogues clients see": "客户可见的图册", "Specifier / designer": "设计师", "Hidden from clients": "对客户隐藏", "Show all to clients": "全部对客户显示", "Hide all from clients": "全部对客户隐藏",
     "Clients only see the approved images in the catalogues ticked here, in the library and in photo searches. Specifiers and designers see every approved catalogue.": "客户只能看到这里勾选的图册中已批准的图片（包括图库和以图搜图）。设计师可以看到所有已批准的图册。",
     "Only admins choose what clients see.": "只有管理员可以设置客户可见内容。",
@@ -282,6 +282,19 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
 .sbl-pick{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted);min-width:min(100%,260px)}
 .sbl-pick select{font:inherit;font-size:15px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px}
 .sbl-excerpt{margin:16px 0 0;color:var(--muted);font-size:13px;max-width:65ch}
+.sbl-split{display:grid;grid-template-columns:minmax(170px,210px) minmax(0,1fr);gap:0 34px;align-items:start}
+.sbl-main{min-width:0}
+.sbl-side{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow:auto;padding-top:28px;scrollbar-width:thin}
+.sbl-side summary{display:none}
+.sbl-side nav{display:flex;flex-direction:column}
+.sbl-sidei{display:flex;align-items:baseline;gap:8px;width:100%;background:none;border:0;border-left:2px solid transparent;padding:6px 4px 6px 10px;text-align:left;font:inherit;font-size:13.5px;line-height:1.3;color:var(--ink2);cursor:pointer}
+.sbl-sidei span{flex:1;min-width:0;overflow-wrap:anywhere}
+.sbl-sidei em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sbl-sidei .sbl-newc{font-size:10px}
+.sbl-sidei:hover{color:var(--ink);background:var(--rule2)}
+.sbl-sidei[aria-current="true"]{color:var(--ink);font-weight:600;border-left-color:var(--ink);background:var(--rule2)}
+.sbl-siderule{display:block;height:1px;background:var(--rule);margin:8px 0}
+@media (max-width:760px){.sbl-split{grid-template-columns:1fr}.sbl-side{position:static;max-height:none;overflow:visible;padding-top:16px}.sbl-side summary{display:flex;align-items:baseline;gap:10px;cursor:pointer;list-style:none;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--rule);padding:10px 12px}.sbl-side summary::-webkit-details-marker{display:none}.sbl-side summary span{font-family:inherit;text-transform:none;letter-spacing:0;font-size:14px;color:var(--ink);flex:1}.sbl-side summary::after{content:"▾";color:var(--ink)}.sbl-side[open] summary::after{content:"▴"}.sbl-side nav{border:1px solid var(--rule);border-top:0;padding:6px 0;max-height:60vh;overflow:auto}}
 @media (max-width:900px){.sbl-sheet,.sbl-sheet.big{grid-template-columns:1fr;grid-template-rows:38vh 1fr}.sbl-sheet.big{grid-template-rows:52vh 1fr}}
 @media (max-width:760px){.sbl-head{grid-template-columns:1fr}.sbl-stat{border-left:0}.sbl-stat div:first-child{padding-left:0}.sbl-tools{position:static}.sbl-cats{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px}.sbl-name{font-size:16px}.sbl-cat .sbl-all{font-size:18px}.sbl-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.sbl-pages{gap:12px}.sbl-pg{flex-basis:calc(max(var(--n) * 100px,150px) + 26px);padding:4px 10px 10px}.sbl-pgimgs{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}.sbl-facts{grid-template-columns:1fr 1fr}}
 `;
@@ -428,7 +441,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       ${host.ctx === "project" ? `<h2>${t("Sourcing library")}</h2>` : ""}
       <p>${t(lede)}</p></div>
       <div class="sbl-stat"><div><span class="eyebrow">${t("Approved")}</span><b id="sbl-kept">${nf(a)}</b></div>${cur ? `<div><span class="eyebrow">${t("Scanned")}</span><b>${nf(tot)}</b></div>` : ""}${host.ctx === "project" ? `<div><span class="eyebrow">${t("In this project")}</span><b>${host.inProject().size}</b></div>` : ""}</div>
-      ${cur ? `<div class="sbl-full" id="sbl-full">${fullHTML()}</div><div id="sbl-addwrap" style="grid-column:1/-1">${addCatHTML()}</div><div id="sbl-cliwrap" style="grid-column:1/-1">${cliHTML()}</div>` : ""}</section>
+      ${cur ? `<div class="sbl-full" id="sbl-full">${fullHTML()}</div><div id="sbl-addwrap" style="grid-column:1/-1">${addCatHTML()}</div><div id="sbl-cliwrap" style="grid-column:1/-1">${cliHTML()}</div>` : ""}</section>${splitHTML(`
     ${ui.type === "TBS" ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All product types")}</button><h3>TBS · ${t("To be sourced")}</h3></div><div id="sbl-tbs">${tbsHTML()}</div><div class="sbl-tools"><button class="btn ghost sm sbl-back" data-sbltype="" data-sbltop>‹ ${t("Back to all product types")}</button></div>`
       : ""}${ui.type === "TBS" ? "" : `${ui.type ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All product types")}</button><h3>${esc(typeName(ui.type))}</h3></div><div class="sbl-chips" id="sbl-cats">${catsHTML()}</div>`
       : `<div id="sbl-featwrap">${featHTML()}</div><div id="sbl-findwrap">${findHTML()}</div><div class="sbl-cats" id="sbl-cats">${catsHTML()}</div>`}
@@ -438,7 +451,24 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       ${ui.type || ui.q.trim() ? `<button class="btn ghost sm sbl-back" data-sbltype="" data-sbltop>‹ ${t("Back to all product types")}</button>` : ""}
       ${cur && ui.sup && LIB.sups[ui.sup] && LIB.sups[ui.sup].up ? `<button class="linkbtn" data-sbl="delcat" style="color:var(--crit)">${t("Delete this catalogue")}</button>` : ""}
       ${cur && (ui.sup || ui.type) ? `<span class="sbl-bulk"><button class="linkbtn" data-sblbulk="on">${t("Approve all shown")}</button><button class="linkbtn" data-sblbulk="off">${t("Unapprove all shown")}</button></span>` : ""}</div>
-    <div id="sbl-grid">${gridHTML()}</div>`}</div>`;
+    <div id="sbl-grid">${gridHTML()}</div>`}`)}</div>`;
+  }
+  // Inside a product type, every category is listed down the left beside the grid so you can jump straight to another.
+  // On phones the list folds into a "Product types" toggle above the grid.
+  function splitHTML(body) {
+    if (!ui.type) return body;
+    const narrow = (() => { try { return matchMedia("(max-width:760px)").matches; } catch (_) { return false; } })();
+    return `<div class="sbl-split"><details class="sbl-side" ${narrow ? "" : "open"}><summary>${t("Product types")}<span>${esc(ui.type === "TBS" ? "TBS · " + t("To be sourced") : typeName(ui.type))}</span></summary><nav id="sbl-side" aria-label="${esc(t("Product types"))}">${sideHTML()}</nav></details><div class="sbl-main">${body}</div></div>`;
+  }
+  function sideHTML() {
+    const cur = curating(), vis = o => cur || isOn(o), by = {}, nw = {};
+    LIB.items.forEach(o => { if (!vis(o)) return; const c = typeOf(o); by[c] = (by[c] || 0) + 1; if (isNew(o)) nw[c] = (nw[c] || 0) + 1; });
+    const row = (c, name, n, k) => `<button class="sbl-sidei" data-sbltype="${c}" aria-current="${ui.type === c ? "true" : "false"}"><span>${name}</span>${k ? `<b class="sbl-newc">● ${nf(k)}</b>` : ""}${n != null ? `<em>${nf(n)}</em>` : ""}</button>`;
+    const fp = featPool().length, fv = LIB.items.filter(o => fav.has(o.file) && vis(o)).length, tb = tbsList(), tn = tbsTodo();
+    return (fp || cur ? row("FT", "◆ " + esc(t("Featured products")), fp) : "") + row("F", "★ " + esc(t("Favourites")), fv)
+      + (tb.length || staff() ? row("TBS", "TBS · " + esc(t("To be sourced")), tb.length, tn) : "")
+      + `<span class="sbl-siderule"></span>`
+      + TYPES.filter(([c]) => by[c] || (cur && custom.some(x => x.c === c))).map(([c]) => row(c, esc(typeName(c)), by[c] || 0, nw[c])).join("");
   }
   // The landing slideshow: one featured product at a time, large, changing every few seconds. It pauses while the
   // pointer is over it, after a touch, while a product card is open, in a hidden tab, or when the viewer asked for less motion.
@@ -572,7 +602,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     // Switch between the empty state and the grid when the first approval arrives or the last one goes.
     if (r && !curating() && !!$("#sbl-cats") !== !!approved()) { r.outerHTML = view(); if (ui.open != null) host.layer(); return; }
     const g = $("#sbl-grid"), c = $("#sbl-cats"), k = $("#sbl-kept");
-    if (g && c) g.innerHTML = gridHTML(); if (c) c.innerHTML = catsHTML(); if (k) k.textContent = nf(approved()); fRefresh();
+    if (g && c) g.innerHTML = gridHTML(); if (c) c.innerHTML = catsHTML(); const sd = $("#sbl-side"); if (sd) sd.innerHTML = sideHTML(); if (k) k.textContent = nf(approved()); fRefresh();
     if (ui.open != null) host.layer();
   }
   function rerender() { const r = $("#sblib"); if (r) r.outerHTML = view(); }

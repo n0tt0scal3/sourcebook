@@ -364,7 +364,7 @@ function broadcast(msg) {
   for (const c of clients) {
     const u = liveUser(c); if (!u) continue;
     try {
-      if (allAccess(u) && !isSourcingPath(msg.path)) c.res.write(line);
+      if (allAccess(u) && !isSourcingPath(msg.path) && !isOwnPath(msg.path)) c.res.write(line);
       else if (canRead(u, msg.path)) {
         c.res.write(`data: ${JSON.stringify(msg.exists ? { ...msg, data: forUser(u, msg.path, msg.data) } : msg)}\n\n`);
         // A client's prices depend on every piece and on the project's shipping and fees, so any change re-sends their pieces.
@@ -446,6 +446,10 @@ const projectOf = p => { const m = /^projects\/([^/]+)/.exec(p || ""); return m 
 function canSeeProject(u, id) { return allAccess(u) || (u.projects || []).includes(id); }
 // The sourcing library (library/<catalogue>) is studio-wide: everyone can see what's approved; only admins approve.
 const isLibPath = p => /^library(types|cats|show|feat)?(\/|$)/.test(p || "");
+// Each person's own library lists (libraryfav/<user id> favourites, libraryseen/<user id> what's new): only that person,
+// admins included, and never as a whole collection. They are read and changed through /api/library/fav and /seen.
+const isOwnPath = p => /^library(fav|seen)(\/|$)/.test(p || "");
+const ownPath = (u, p) => p === p.split("/")[0] + "/" + u.id;
 // Catalogues an admin has hidden from clients: libraryshow/main = { hide: [catalogue ids] }. Everyone else sees them all.
 const libHidden = () => new Set(Array.isArray(store["libraryshow/main"]?.data?.hide) ? store["libraryshow/main"].data.hide : []);
 const libHiddenFor = (u, sup) => u.role === "client" && libHidden().has(sup);
@@ -468,7 +472,7 @@ function canSeeRequest(u, d) {
   if (u.role === "agent") return !["review", "open"].includes(d.status);
   return !!d.project?.id && (u.projects || []).includes(d.project.id);
 }
-function canRead(u, p) { if (isLibPath(p)) return true; if (isSourcingPath(p)) { if (u.role === "admin") return true; if (p === "sourcing") return u.role === "agent"; return canSeeRequest(u, store[p]?.data); } if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
+function canRead(u, p) { if (isOwnPath(p)) return ownPath(u, p); if (isLibPath(p)) return true; if (isSourcingPath(p)) { if (u.role === "admin") return true; if (p === "sourcing") return u.role === "agent"; return canSeeRequest(u, store[p]?.data); } if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
 // Internal fields a client never receives.
 const CLIENT_HIDDEN = ["notes", "match", "pendingSetup", "chg"];
 // Costs a client never receives: the supplier price (¥ and $), duty, and the project's freight, insurance, brokerage,
@@ -815,7 +819,7 @@ const server = http.createServer(async (req, res) => {
       const { path: dp, data } = await readJSON(req);
       if (!validPath(dp, true)) return send(res, 400, { code: "invalid_argument", message: "bad path" });
       if (isLibPath(dp) && !isAdmin) return deny("Only admins can approve library images.");
-      if (isSourcingPath(dp)) return deny();
+      if (isSourcingPath(dp) || isOwnPath(dp)) return deny();
       const cur = store[dp];
       const commit = (next) => {
         store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: new Date().toISOString() };

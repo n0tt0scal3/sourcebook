@@ -762,7 +762,7 @@ document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest
 let project={name:"Untitled project",client:"",location:"",phase:""};
 let items=[], decisions=[];
 let ui={view:"look",cat:"All",stage:null,open:null,mode:"view",confirmDel:false,editProject:false};
-try{const t=localStorage.getItem("sb_view");if(t)ui.view=t;ui.cardSize=localStorage.getItem("sb_csize")||"m";ui.imgFit=localStorage.getItem("sb_cfit")||"cover";const fv=localStorage.getItem("sb_furview");if(fv)ui.furView=fv;const f=localStorage.getItem("sb_finview");if(f)ui.finView=f}catch(e){}
+try{const t=localStorage.getItem("sb_view");if(t)ui.view=t==="finish"||t==="furn"?"sched":t;ui.schedSort=localStorage.getItem("sb_schedsort")||"date";ui.cardSize=localStorage.getItem("sb_csize")||"m";ui.imgFit=localStorage.getItem("sb_cfit")||"cover";const fv=localStorage.getItem("sb_furview");if(fv)ui.furView=fv;const f=localStorage.getItem("sb_finview");if(f)ui.finView=f}catch(e){}
 
 /* ---------- material plates (canvas) ---------- */
 function rng(seed){let h=2166136261;for(const c of String(seed))h=Math.imul(h^c.charCodeAt(0),16777619);return()=>{h+=0x6D2B79F5;let t=h;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
@@ -2123,11 +2123,11 @@ function render(){
     ${ui.view!=="dec"&&ui.view!=="look"&&ui.view!=="lib"?`<div class="tools">${cats.map(c=>`<button class="chip" data-cat="${esc(c)}" aria-pressed="${ui.cat===c}">${esc(c)}</button>`).join("")}</div>`:""}
   </div>
   ${ui.view!=="lib"?newsBar():""}
-  <main id="main">${ui.view==="lib"&&window.SBLibrary?SBLibrary.view():!items.length&&loaded&&canWrite&&!preview?startPanel():ui.view==="look"?spacesStrip()+drawingsSection()+lookJump():ui.view==="mat"?lookbook():ui.view==="sched"?schedule():ui.view==="finish"?finishSchedule():ui.view==="furn"?furnitureSchedule():ui.view==="quote"?quotation():decisionLog()}</main>`;
+  <main id="main">${ui.view==="lib"&&window.SBLibrary?SBLibrary.view():!items.length&&loaded&&canWrite&&!preview?startPanel():ui.view==="look"?spacesStrip()+drawingsSection()+lookJump():ui.view==="mat"?lookbook():ui.view==="sched"?schedule():ui.view==="quote"?quotation():decisionLog()}</main>`;
   renderLayer(true);
 }
 const HOSTED=typeof window.SOURCEBOOK_PROJECT==="string";
-function tabsHTML(){return(HOSTED?`<a class="tab tabproj tabhome" href="/">← Projects</a>`:"")+[...(HOSTED?[]:[["proj","Projects"]]),["look","Lookbook"],...(!window.SBLibrary?[]:[["lib","Sourcing library"]]),["mat","Materials & products"],...(isClient()?[]:[["sched","Order schedule"]]),["finish","Finish schedule"],["furn","Furniture schedule"],["quote","Quotation"],["dec","Decisions"]].map(([k,l])=>`<button class="tab ${k==="proj"?"tabproj":""}" role="tab" data-view="${k}" aria-selected="${ui.view===k}">${l}</button>`).join("")}
+function tabsHTML(){return(HOSTED?`<a class="tab tabproj tabhome" href="/">← Projects</a>`:"")+[...(HOSTED?[]:[["proj","Projects"]]),["look","Lookbook"],...(!window.SBLibrary?[]:[["lib","Sourcing library"]]),["mat","Materials & products"],...(isClient()?[]:[["sched","Order schedule"]]),["quote","Quotation"],["dec","Decisions"]].map(([k,l])=>`<button class="tab ${k==="proj"?"tabproj":""}" role="tab" data-view="${k}" aria-selected="${ui.view===k}">${l}</button>`).join("")}
 function fitOf(it){return it.photo?(it.photoFit||ui.imgFit||"cover"):"cover"}
 function filtered(){return items.filter(i=>(ui.cat==="All"||i.category===ui.cat)&&(!ui.stage||i.status===ui.stage))}
 function lookJump(){
@@ -2184,15 +2184,27 @@ function lookbook(){
       <div class="sub"><span><i class="dot s-${esc(it.status)}"></i>${esc(it.status)}</span><span>${esc(it.category||"")}</span>${it.supplier?`<span>${esc(it.supplier)}</span>`:""}${reviewChip(it)}${(()=>{const n=commentsFor(it.id).length;return n?`<span class="ccount">${n} comment${n===1?"":"s"}</span>`:""})()}</div></div>
     </button>`}).join("")}${addTile}</div>`;
 }
+const SCHED_SORTS=[["date","Order-by date"],["category","Category"],["code","Code"],["supplier","Supplier"],["status","Status"]];
 function schedule(){
-  const list=filtered().slice().sort((a,b)=>(orderBy(a)||new Date(8e15))-(orderBy(b)||new Date(8e15)));
+  const sortBy=SCHED_SORTS.some(x=>x[0]===ui.schedSort)?ui.schedSort:"date";
+  const byDate=(a,b)=>(orderBy(a)||new Date(8e15))-(orderBy(b)||new Date(8e15));
+  const catRank=c=>{const i=CATS.indexOf(c);return i<0?(c?CATS.length:CATS.length+1):i};
+  const txt=(x,y)=>(x?0:1)-(y?0:1)||String(x||"").localeCompare(String(y||""),undefined,{numeric:true,sensitivity:"base"});
+  const cmp={date:byDate,
+    category:(a,b)=>catRank(a.category)-catRank(b.category)||txt(a.category,b.category)||codeSort(a,b),
+    code:codeSort,
+    supplier:(a,b)=>txt(a.supplier,b.supplier)||byDate(a,b),
+    status:(a,b)=>STAGES.indexOf(a.status)-STAGES.indexOf(b.status)||byDate(a,b)}[sortBy];
+  const groupOf={date:it=>{const ob=orderBy(it);return ob?ob.toLocaleDateString(lang==="zh"?"zh-CN":"en-CA",{month:"long",year:"numeric"}):"No site date"},
+    category:it=>it.category||"No category",supplier:it=>it.supplier||"No supplier",status:it=>it.status||"No status",code:()=>""}[sortBy];
+  const list=filtered().slice().sort(cmp);
   const open=list.filter(i=>STAGES.indexOf(i.status)<3);
   const overdue=open.filter(i=>{const o=orderBy(i);return o&&o<today()}).length;
   const soon=open.filter(i=>{const o=orderBy(i);return o&&o>=today()&&o-today()<=30*DAY}).length;
   const placed=list.filter(i=>STAGES.indexOf(i.status)>=3).length;
   let month="";
-  const rows=list.map(it=>{const ob=orderBy(it);const m=ob?ob.toLocaleDateString(lang==="zh"?"zh-CN":"en-CA",{month:"long",year:"numeric"}):"No site date";const u=urgency(it);
-    const head=m!==month?(month=m,`<tr class="month"><td colspan="9">${esc(m)}</td></tr>`):"";
+  const rows=list.map(it=>{const ob=orderBy(it);const m=groupOf(it);const u=urgency(it);
+    const head=m&&m!==month?(month=m,`<tr class="month"><td colspan="9">${esc(m)}</td></tr>`):"";
     return head+`<tr class="row${newsOf(it)?" newsrow":""}" data-open="${it.id}">
       <td><span class="sw" style="background-image:url(${imgFor(it,80)})"></span></td>
       <td class="mono${hot(it,"needBy","leadWeeks")}">${fmtD(ob)}</td>
@@ -2212,7 +2224,8 @@ function schedule(){
     <div><span class="eyebrow">Ordered or on site</span><b>${placed}</b></div>
   </div>
   <div class="schedhead"><div><div class="eyebrow">Order-by date = required on site − lead time</div><h2>Ordering schedule</h2></div>
-    ${downloads?`<button class="btn ghost sm" data-a="csv">Export CSV</button>`:""}</div>
+    <div class="row2"><label class="mono muted inclabel">Sort by <select class="f famsel" id="sched-sort">${SCHED_SORTS.map(([k,l])=>`<option value="${k}" ${sortBy===k?"selected":""}>${l}</option>`).join("")}</select></label>
+    ${downloads?`<button class="btn ghost sm" data-a="csv">Export CSV</button>`:""}</div></div>
   <div class="tablewrap"><table>
     <thead><tr><th></th><th>Order by</th><th>Piece</th><th class="n">Qty</th><th>Unit</th><th>Supplier</th><th class="n">Lead</th><th>On site</th><th>Status</th></tr></thead>
     <tbody>${rows||`<tr><td colspan="9" class="muted">No pieces yet.</td></tr>`}</tbody>
@@ -2297,7 +2310,6 @@ function renderLayer(passive){
       </section>
       ${isClient()?"":rfiSection(it,ed&&!!assets)}
       ${inFurniture(it)?furSection(it,ed):finSection(it,ed)}
-      ${!inFurniture(it)&&!inFinish(it)&&ed?`<p class="muted listhint">Add to the <button class="linkbtn" data-a="listfin">finish schedule</button> or the <button class="linkbtn" data-a="listfur">furniture schedule</button>.</p>`:""}
       <section class="sec"><header><h5>Specification</h5><span class="mono muted">${(it.specs||[]).length}</span></header>
         <div class="kv">${(it.specs||[]).map((s,i)=>`<div class="k">${esc(s.label)}</div><div>${s.asset?`<a href="/_blob/${esc(s.asset)}" data-viewspec="${it.id}:${i}">${esc(s.value)}</a> <button class="readbtn dl" data-dlspec="${i}" title="Download this file">Download</button>`:s.url?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.value)} ↗</a>`:esc(s.value)}</div>${ed?`<button class="x" data-delspec="${i}" aria-label="Remove">×</button>`:"<span></span>"}`).join("")}</div>
         ${ed?`<form class="mini" data-form="spec"><input class="f" id="sl" name="label" placeholder="Attribute" required><input class="f" id="sv" name="value" placeholder="Value" required><button class="btn sm">Add</button></form>`:""}
@@ -2521,6 +2533,7 @@ document.addEventListener("change",async e=>{
   if(t.dataset.scanp!==undefined){ui.scan.props[+t.dataset.scanp].on=t.checked;renderLayer();return}
   if(t.dataset.scans!==undefined){ui.scan.specs[+t.dataset.scans].on=t.checked;renderLayer();return}
   if(t.id==="fur-fam"&&t.value){const it=items.find(i=>i.id===ui.open);if(it)moveToFurType(it,t.value);renderLayer();return}
+  if(t.id==="sched-sort"){ui.schedSort=t.value;try{localStorage.setItem("sb_schedsort",t.value)}catch(_){}render();return}
   if(t.id==="fur-on"){setItem(ui.open,{furnitureSchedule:t.checked});renderLayer();return}
   if(t.id==="fin-fam"&&t.value){const it=items.find(i=>i.id===ui.open);if(it)moveToFamily(it,t.value);renderLayer();return}
   if(t.id==="fin-on"){setItem(ui.open,{finishSchedule:t.checked});renderLayer();return}
@@ -3215,7 +3228,7 @@ const ZH={
 "Import Excel or CSV":"导入 Excel 或 CSV","Upload .xlsx, .xls or .csv. Columns are matched for you.":"上传 .xlsx、.xls 或 .csv，系统会自动匹配列。","Paste from Google Sheets":"从 Google 表格粘贴","Copy the rows in Sheets, including the header, and paste them in.":"在表格中复制包含表头的行，然后粘贴进来。",
 "Link a Google Sheet":"关联 Google 表格","Keep the sheet as the working source and pull updates by item code.":"以表格作为工作源，按项目编号拉取更新。","Add pieces by hand":"手动添加项目","Start with a blank book and build it as the design develops.":"从空白手册开始，随设计推进逐步完善。",
 "Order by":"下单截止","Piece":"项目","Qty":"数量","Unit":"单位","Supplier":"供应商","Lead":"交货期","Status":"状态","Overdue to order":"逾期未下单","Order within 30 days":"30 天内需下单","Still to order":"待下单","Ordered or on site":"已下单或已到场",
-"Order-by date = required on site − lead time":"下单日期 = 到场日期 − 交货期","Ordering schedule":"订货计划","Export CSV":"导出 CSV","No site date":"无到场日期","No pieces yet.":"暂无项目。",
+"Order-by date = required on site − lead time":"下单日期 = 到场日期 − 交货期","Ordering schedule":"订货计划","Export CSV":"导出 CSV","No site date":"无到场日期","Sort by":"排序","Order-by date":"下单日期","No category":"未分类","No supplier":"无供应商","No status":"无状态","No pieces yet.":"暂无项目。",
 "Standard finish codes · as keyed on drawings and elevations":"标准饰面编号 · 与图纸和立面标注一致","Sheet":"图册","Table":"表格","Layout":"布局","Add finish":"添加饰面",
 "Finish code":"饰面编号","Material category":"材料类别","Manufacturer / vendor":"制造商 / 供应商","Product name / line":"产品名称 / 系列","Colour / finish name":"颜色 / 饰面名称","Item / model code":"型号 / 编号","Application / notes":"应用部位 / 备注",
 "TBD":"待定","MODEL # TBD":"型号待定","Other finishes":"其他饰面","Review standard codes":"查看标准编号","Apply codes":"应用编号","Cancel":"取消","Update any drawings that already use the old codes.":"请同步更新已使用旧编号的图纸。",

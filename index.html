@@ -54,6 +54,15 @@ button{cursor:pointer}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 
 /* masthead */
+.pcov{position:relative;display:block;margin-top:18px;height:clamp(150px,24vw,320px);overflow:hidden;background:var(--paper);border:1px solid var(--rule)}
+.pcov img{width:100%;height:100%;object-fit:cover;display:block}
+.pcov.empty{height:auto;padding:22px 16px;display:grid;place-items:center;gap:4px;text-align:center;border-style:dashed;color:var(--ink2);font-size:13px;cursor:pointer}
+.pcov.empty b{font-weight:500;color:var(--ink)}
+.pcov.over{outline:2px solid var(--accent);outline-offset:-2px}
+.pcov.empty.over>*{visibility:hidden}
+.pcov.over::after{content:attr(data-drop);position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.35);color:#fff;font-size:15px}
+.pcov .pcovtools{position:absolute;right:10px;bottom:10px;display:flex;gap:8px}
+.pcov .pcovtools .btn{background:var(--paper);color:var(--ink);border-color:var(--ink)}
 .mast{display:grid;grid-template-columns:1fr auto;gap:12px 24px;align-items:end;padding-block:28px 18px;border-bottom:1px solid var(--ink)}
 .mast h1{font-family:var(--display);font-weight:400;font-size:clamp(40px,7vw,88px);line-height:.95;letter-spacing:-.02em;margin:6px 0 0;text-wrap:balance}
 .mast h1 em{font-style:italic}
@@ -1785,7 +1794,7 @@ function hl(el){if(dropHL===el)return;dropHL?.classList.remove("imgdrop");dropHL
 const hasFiles=e=>e.dataTransfer&&[...e.dataTransfer.types].includes("Files");
 document.addEventListener("dragover",e=>{
   if(!hasFiles(e))return;
-  if(e.target.closest&&e.target.closest("#drawsec,#gal-drop,#start-drop,.pick.add,#imp-drop"))return;
+  if(e.target.closest&&e.target.closest("#drawsec,#gal-drop,#start-drop,.pick.add,#imp-drop,#pcov"))return;
   if(xlDropHere(e)){e.preventDefault();e.dataTransfer.dropEffect="copy";hl(null);document.body.classList.add("xlover");return}
   document.body.classList.remove("xlover");
   const z=dropZone(e.target);e.preventDefault();e.dataTransfer.dropEffect=z?"copy":"none";hl(z?z.el:null);
@@ -1793,7 +1802,7 @@ document.addEventListener("dragover",e=>{
 document.addEventListener("dragleave",e=>{if(!e.relatedTarget||!document.contains(e.relatedTarget)){hl(null);document.body.classList.remove("xlover")}});
 document.addEventListener("drop",e=>{
   if(!hasFiles(e))return;
-  if(e.target.closest&&e.target.closest("#drawsec,#gal-drop,#start-drop,.pick.add,#imp-drop"))return;
+  if(e.target.closest&&e.target.closest("#drawsec,#gal-drop,#start-drop,.pick.add,#imp-drop,#pcov"))return;
   e.preventDefault();hl(null);
   if(xlDropHere(e)){document.body.classList.remove("xlover");const f=[...e.dataTransfer.files].find(x=>/\.(xlsx|xls|csv)$/i.test(x.name));if(f)importQuoteFile(f);else toast("Drop an Excel file (.xlsx) exported from this quotation.");return}
   const z=dropZone(e.target);if(!z)return;
@@ -2105,6 +2114,7 @@ function render(){try{document.title=(project.name&&project.name!=="Untitled pro
   const counts=Object.fromEntries(STAGES.map(s=>[s,items.filter(i=>i.status===s).length]));
   const cats=["All",...[...new Set(items.map(i=>i.category).filter(Boolean))].sort()];
   app.innerHTML=ui.view==="proj"?`${projMast()}<div class="bar"><div class="tabs" role="tablist">${tabsHTML()}</div></div><main id="main">${projectsView()}</main>`:`
+  ${coverBand()}
   <header class="mast">
     <div>
       <div class="eyebrow">${HOSTED?`<a class="backlink linkbtn" href="/">← All projects</a> · `:rawdb?`<button class="backlink linkbtn" data-view="proj">← All projects</button> · `:""}Sourcebook · ${esc(project.phase||"Design to construction")}</div>
@@ -2463,6 +2473,7 @@ document.addEventListener("click",async e=>{
   else if(a==="nodel"){ui.confirmDel=false;renderLayer();}
   else if(a==="del"){const id=ui.open;items=items.filter(i=>i.id!==id);ui.open=null;ui.mode="view";ui.confirmDel=false;render();if(db)write(id,()=>db.doc("items/"+id).delete());toast("Piece deleted")}
   else if(a==="unphoto"){setItem(ui.open,{photo:null})}
+  else if(a==="uncover"){if(!canCover())return;const{cover,...rest}=project;project=rest;write("project",()=>db.doc("project/main").set(project));force=true;render();force=false}
   else if(a==="csv"){exportCSV()}
   else if(a==="csvfin"){exportFinishCSV()}
   else if(a==="csvfur"){exportFurnitureCSV()}
@@ -2531,6 +2542,7 @@ document.addEventListener("change",async e=>{
   if(t.id==="fin-on"){setItem(ui.open,{finishSchedule:t.checked});renderLayer();return}
   if(t.id==="fi-photo"&&t.files[0]){draftSw.photoUrl=URL.createObjectURL(t.files[0]);const n=$("#fi-photo-name");if(n)n.textContent=t.files[0].name;updatePrev();return}
   if(t.id==="fi-mat"){draftSw.material=t.value;updatePrev();return}
+  if(t.dataset.up==="cover"&&t.files[0]){const f=t.files[0];t.value="";setCover(f);return}
   if(t.dataset.up==="photo"&&t.files[0]){
     const it=items.find(i=>i.id===ui.open);toast("Uploading image…");
     try{const r=await assets.upload(t.files[0]);setItem(it.id,{photo:r.id});toast("Image added")}catch(err){toast(uploadMsg(err))}
@@ -2539,6 +2551,25 @@ document.addEventListener("change",async e=>{
   if(t.hasAttribute("data-rfifile")&&t.files.length&&ui.open){const f=[...t.files];t.value="";addRfiImages(ui.open,f);return}
   if(t.hasAttribute("data-reffile")){const n=t.closest("form").querySelector("[data-fname]");if(n)n.textContent=t.files[0]?t.files[0].name:"";const ti=t.closest("form").querySelector("[name=title]");if(ti&&!ti.value&&t.files[0])ti.value=t.files[0].name.replace(/\.[^.]+$/,"")}
 });
+/* Project cover: a band above the project name. Only admins choose it (project.cover = blob id); everyone sees it. */
+const canCover=()=>(!ME||ME.role==="admin")&&canWrite&&!preview&&!!assets;
+function coverBand(){
+  const adm=canCover();if(!project.cover&&!adm)return"";
+  if(!project.cover)return`<label class="pcov empty" id="pcov" data-drop="${esc(tr("Drop to use as the cover"))}"><input type="file" accept="image/*" data-up="cover" hidden><b>+ Add a cover image</b><span>Choose an image or drop one here. Only admins can change it.</span></label>`;
+  return`<div class="pcov" id="pcov" data-drop="${esc(tr("Drop to use as the cover"))}"><img alt="" src="/_blob/${esc(project.cover)}">${adm?`<div class="pcovtools"><label class="btn sm">Change cover<input type="file" accept="image/*" data-up="cover" hidden></label><button class="btn sm" data-a="uncover">Remove cover</button></div>`:""}</div>`;
+}
+async function setCover(f){
+  if(!canCover())return;if(!f||!/^image\//.test(f.type)){toast("Use a JPG, PNG, WebP or GIF image.");return}
+  toast("Uploading image…");
+  try{const r=await assets.upload(f);project={...project,cover:r.id};write("project",()=>db.doc("project/main").set(project));force=true;render();force=false;toast("Cover image added")}catch(err){toast(uploadMsg(err))}
+}
+["dragover","dragleave","drop"].forEach(ev=>document.addEventListener(ev,e=>{
+  const z=e.target.closest&&e.target.closest("#pcov");if(!z||!canCover())return;
+  if(ev!=="dragleave"&&e.dataTransfer&&![...e.dataTransfer.types].includes("Files"))return;
+  e.preventDefault();e.stopPropagation();
+  if(ev==="dragover")z.classList.add("over");else z.classList.remove("over");
+  if(ev==="drop"&&e.dataTransfer.files.length)setCover([...e.dataTransfer.files].find(x=>/^image\//.test(x.type))||e.dataTransfer.files[0]);
+}));
 function uploadMsg(err){const c=err&&err.code;return c==="too_large"?"That file is over 20 MB. Compress it and try again.":c==="unsupported_type"?"Use a PDF, JPG, PNG or WebP file.":c==="quota_or_state"?"Project file storage is full.":"Upload failed. Try again."}
 function updatePrev(){const p=$("#fprev");if(p&&draftSw.photoUrl){p.src=draftSw.photoUrl;return}if(p)p.src=plate(draftSw.material,draftSw.color,ui.open||"new",900,1125)}
 document.addEventListener("submit",async e=>{
@@ -3181,6 +3212,7 @@ document.addEventListener("dragstart",e=>{if(e.target.closest&&e.target.closest(
 const ZH={
 "Model":"型号","Unit cost (CAD)":"单价（加元）","No.":"序号","Picture":"图片","Product":"产品","Colour":"颜色","Unit price ¥":"单价 ¥","Total price ¥":"合计 ¥","Unit price $":"单价 $","Total price $":"合计 $","Unit cost (CNY)":"单价（人民币）","Drop an Excel file here":"将 Excel 文件拖放到这里","to fill the quotation: the agent's edited export, or any price list or supplier quote. You'll check the columns and see the changes before anything is saved.":"即可填充报价单：可以是代理修改后的导出文件，也可以是任何价目表或供应商报价。保存前可核对各列并查看更改。","Export Excel + drawings (ZIP)":"导出 Excel 和图纸（ZIP）","The Excel file plus every piece's drawings and references, one folder per piece":"Excel 文件及每个项目的图纸和参考资料，每个项目一个文件夹","Open the folder":"打开文件夹","Attachment":"附件","File":"文件","New":"新增","What":"更改内容","Was":"原值","Now":"新值","Details":"详情","Images":"图片","Duty %":"关税 %","✓ Seen":"✓ 已查看","✓ Mark seen":"✓ 标为已查看","Mark as seen":"标为已查看","Mark all seen":"全部标为已查看","Show in order schedule":"在订货计划中查看","Turn on alerts":"开启提醒","Alerts are on for this device while Sourcebook is open.":"此设备在打开选材手册时会收到提醒。","Alerts are off. You can allow them in your browser settings.":"提醒已关闭。可在浏览器设置中允许。","Export Excel":"导出 Excel","Drop the sourcing agent's Excel file here":"将采购代理的 Excel 文件拖放到这里","to bring in their prices, quantities and notes. You'll see every change before it's saved.":"即可导入其价格、数量和备注。保存前会显示每一项更改。","Choose Excel file":"选择 Excel 文件","Changes from Excel":"来自 Excel 的更改","Untick anything you don't want. Blank cells are left as they are.":"取消勾选不需要的更改。空白单元格保持不变。","Nothing in this file differs from the quotation.":"此文件与报价单没有差异。","Apply this change":"应用此更改","Unit price (CNY)":"单价（人民币）","Unit price (CAD)":"单价（加元）","Couldn't load the Excel tools. Check your connection and try again.":"无法加载 Excel 工具，请检查网络后重试。","Couldn't read that file. Save it as .xlsx and try again.":"无法读取该文件，请另存为 .xlsx 后重试。","That file doesn't have the ID column from a Sourcebook Excel export.":"该文件没有选材手册 Excel 导出中的 ID 列。","Drop an Excel file (.xlsx) exported from this quotation.":"请拖入从此报价单导出的 Excel 文件（.xlsx）。",
 "Download package":"下载资料包","Product sheet PDF with its drawings, spec sheets, photo and 3D model, in one ZIP":"产品资料 PDF 及其图纸、规格书、照片和 3D 模型，打包为一个 ZIP","Preparing the package…":"正在准备资料包…","The package couldn't be made. Try again.":"无法生成资料包，请重试。","Photo":"照片","Links":"链接","Sourcebook":"选材手册","Changes requested":"需修改","Client review":"客户审核","Specification":"规格","Save PDF":"保存 PDF","Download this product sheet as a PDF, ready to print or send":"将此产品资料下载为 PDF，可直接打印或发送","Preparing the PDF…":"正在生成 PDF…","PDF downloaded":"PDF 已下载","The PDF couldn't be made. Try again.":"无法生成 PDF，请重试。","Product sheet":"产品资料","Extended":"小计","Unit price":"单价","Required on site":"现场需用日期","Order by":"下单截止","Drawings & references":"图纸与参考资料","(attached in Sourcebook)":"（附于选材手册中）","Approved":"已批准","Code":"编号","Category":"类别","Status":"状态","Notes":"备注","Try again":"重试","Use this":"使用此项","Dismiss":"关闭","Add products or materials":"添加产品或材料","Spec sheet":"规格书","Link":"链接","Unit cost (CAD)":"单价（加元）","Unit cost (CNY)":"单价（人民币）","New piece":"新项目","Drop PDFs or images. Link other files (like .dwg) with the form instead.":"请拖入 PDF 或图片。其他文件（如 .dwg）请通过表单添加链接。","A finish, fixture, fitting or piece of furniture, with its image, specification and quantity. Or drop an image here.":"饰面、灯具、配件或家具，以及其图片、规格和数量。也可将图片拖到这里。","3D model":"3D 模型","Add a 3D model":"添加 3D 模型","GLB exported from Rhino, SketchUp or Revit, with its materials. Drop it here or choose a file. Up to 100 MB.":"从 Rhino、SketchUp 或 Revit 导出的含材质 GLB 文件。拖放到此处或选择文件，最大 100 MB。","Drag to turn · pinch or scroll to zoom":"拖动旋转 · 双指或滚轮缩放","Drag to turn · pinch or scroll to zoom · double-tap to reset":"拖动旋转 · 双指或滚轮缩放 · 双击复位","View in your room":"在您的房间中查看","View in 3D":"3D 查看","Replace model":"替换模型","Remove model":"移除模型","3D model added":"已添加 3D 模型","3D model removed":"已移除 3D 模型","USDZ added for iPhone and iPad":"已为 iPhone 和 iPad 添加 USDZ","Add USDZ for iPhone & iPad":"为 iPhone 和 iPad 添加 USDZ","Replace USDZ for iPhone & iPad":"替换 iPhone 和 iPad 的 USDZ","Full screen":"全屏","Upload failed. Try again.":"上传失败，请重试。","Open a product, then drop the model on its 3D model section.":"请先打开产品，再将模型拖到其 3D 模型区域。","Export as glTF Binary (.glb) so the textures travel inside one file.":"请导出为 glTF 二进制（.glb），使贴图包含在同一文件中。","Use a GLB file (or USDZ for iPhone and iPad).":"请使用 GLB 文件（iPhone 和 iPad 可用 USDZ）。","Add the GLB first. The USDZ is an extra for Apple AR.":"请先添加 GLB。USDZ 仅用于苹果 AR。","That isn't a GLB file. Export as glTF Binary (.glb).":"这不是 GLB 文件。请导出为 glTF 二进制（.glb）。","That model is over 100 MB.":"模型超过 100 MB。","The 3D viewer couldn't load. Check your connection.":"3D 查看器无法加载，请检查网络。","Admin":"管理员","Sourcing agent":"采购代理","Specifier / designer":"设计师","Client":"客户","Sign out":"退出登录","Signed in":"已登录","Client review":"客户审核","✓ Client approved":"✓ 客户已批准","Changes requested":"需修改","✓ Approved":"✓ 已批准","Let the studio know if this piece works for you.":"请告诉工作室此项目是否合适。","Waiting for the client's review.":"等待客户审核。","Add a note (optional)":"添加备注（可选）","Approve":"批准","Request changes":"要求修改","Clear my review":"撤销我的审核","Comments":"评论","No comments yet.":"暂无评论。","Ask a question or leave a note for the studio":"向工作室提问或留言","Write a comment":"写评论","Post":"发布","Remove comment":"删除评论","Approved. The studio can see it.":"已批准，工作室可以看到。","Sent to the studio.":"已发送给工作室。","Review cleared":"审核已撤销","Your role can't do that.":"您的角色无法执行此操作。","Clients can view, approve and comment.":"客户可以查看、批准和评论。","Only admins can delete projects.":"只有管理员可以删除项目。","Only admins can find products online.":"只有管理员可以在线查找产品。","← Projects":"← 项目",
+"+ Add a cover image":"+ 添加封面图片","Choose an image or drop one here. Only admins can change it.":"选择一张图片或拖放到这里。只有管理员可以更改。","Change cover":"更换封面","Remove cover":"移除封面","Drop to use as the cover":"拖放到这里作为封面","Cover image added":"已添加封面图片",
 "Sourcebook":"选材手册","Sourcing library":"采购图库","Design to construction":"从设计到施工","Untitled":"未命名","project":"项目","Untitled project":"未命名项目",
 "Import":"导入","Add product":"添加产品","Edit project":"编辑项目","Update from sheet":"从表格更新","Linked Google Sheet ↗":"已关联 Google 表格 ↗",
 "Concept":"概念","Specified":"已定规格","Approved":"已批准","Ordered":"已下单","Delivered":"已到场",

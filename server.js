@@ -871,6 +871,8 @@ const server = http.createServer(async (req, res) => {
         let next = stripUndefined(op === "set" ? data : mergeDeep(cur.data, data));
         // Specifiers can't change the studio's sourcing service rates on their projects.
         if (me.role === "specifier" && /^projects\/[^/]+\/project\/main$/.test(dp)) for (const k of ["quoteFee", "quoteFeeCustom"]) { if (cur?.data?.[k] != null) next[k] = cur.data[k]; else delete next[k]; }
+        // Only admins choose a project's cover image.
+        if (!isAdmin && /^projects\/[^/]+\/project\/main$/.test(dp)) { if (cur?.data?.cover != null) next.cover = cur.data.cover; else delete next.cover; }
         if (me.role === "specifier" && /^projects\/[^/]+$/.test(dp)) { if (cur?.data?.by) next.by = cur.data.by; else if (cur) delete next.by; }
         if (ITEM_DOC.test(dp)) { if (op === "update") next.chg = cur.data.chg; next = trackChanges(me, cur?.data, next); }
         if (Buffer.byteLength(JSON.stringify(next)) > 256 * 1024) return send(res, 400, { code: "invalid_argument", message: "document too large" });

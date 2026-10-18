@@ -6,7 +6,6 @@ const fs = require("fs");
 const fsp = fs.promises;
 const path = require("path");
 const crypto = require("crypto");
-const dns = require("dns").promises;
 const net = require("net");
 const tls = require("tls");
 
@@ -30,12 +29,14 @@ const LIB_THUMB_DIR = path.join(DATA_DIR, "lib-thumbs");
 // The library index, read once and kept in memory for building pieces on the server.
 const LIB_LABEL = { "BILLA-Sofa": ["Billa", "Sofas & lounge chairs"], "BILLA-CoffeeTV": ["Billa", "Coffee tables & TV units"], "BILLA-Dining": ["Billa", "Dining"], "BILLA-Outdoor": ["Billa", "Outdoor"], "HALO": ["HALO", "Collection 2026"], "Kaiwuli": ["Kaiwuli", "Catalogue 2026"], "TO-Tearsheet": ["TO Interactive", "Tearsheets 2025"] };
 const LIB_CAT = { FURNITURE: "Furniture", LIGHTING: "Lighting", PLUMBING: "Plumbing", MILLWORK: "Millwork", DOORS: "Millwork", STONE: "Stone", "WALL PANELLING": "Finishes", "WOOD PRODUCTS": "Finishes", "PARTITION SYSTEMS": "Glazing", "GLASS PRODUCTS": "Glazing", FLOORING: "Finishes", OFFICE: "Furniture", VANITIES: "Plumbing", MIRRORS: "Glazing", SIGNAGE: "Hardware" };
+// Code prefix for a library piece outside furniture, the same as CAT_PREFIX in the book.
+const LIB_CODE = { Stone: "ST", Tile: "CT", Textiles: "FAB", Glazing: "GL", Millwork: "MW", Lighting: "LT", Hardware: "HW", Plumbing: "P", Finishes: "FIN" };
 const libCatFile = c => String(c).replace(/ /g, "-");
 let libCache = null;
 // The scanned catalogues in lib/ plus the finished ones added from PDFs; uploaded catalogues carry label and up: 1.
 async function libIndex() {
   if (libCache) return libCache;
-  let d, types = {};
+  let d, types = {}; const added = {};
   try { d = JSON.parse(await fsp.readFile(path.join(LIB_DIR, "data.json"), "utf8")); } catch (_) { d = { sups: {}, items: [], cell: 280, grid: 8 }; }
   // Product type of each scanned image (lib/types.json, { file: code }), added as item[7].
   try { types = JSON.parse(await fsp.readFile(path.join(LIB_DIR, "types.json"), "utf8")); } catch (_) {}
@@ -45,12 +46,16 @@ async function libIndex() {
       const c = JSON.parse(await fsp.readFile(path.join(LIB_CATS_DIR, f), "utf8"));
       if (c.status !== "done" || d.sups[c.sup]) continue;
       d.sups[c.sup] = { pdf: c.pdf, drive: c.drive || "", pages: c.pages, cat: c.cat, n: c.items.length, label: [c.supplier, c.product || ""], up: 1, created: c.created };
+      added[c.sup] = { at: Date.parse(c.finished || c.created) || 0, by: c.byId || "" };
       c.items.forEach(x => d.items.push([x[0], c.sup, x[1], x[2] || "", x[3] || "", null, null, x[4] || libCatType(c.cat) || ""]));
     } catch (_) {}
   }
-  libCache = { sups: d.sups, byFile: new Map(d.items.map(x => [x[0], x])), json: JSON.stringify(d) };
+  // added: when each catalogue added from a PDF was finished and by whom (server only, for "new" badges).
+  libCache = { sups: d.sups, byFile: new Map(d.items.map(x => [x[0], x])), json: JSON.stringify(d), added, byKey: libByKey(d.items) };
   return libCache;
 }
+// "<catalogue>|<key>" -> file name, where key = page*100 + image number (as stored in library/<catalogue>.on).
+const libByKey = items => new Map(items.map(x => { const m = String(x[0]).match(/_p(\d+)_(\d+)\.jpg$/); return m ? [x[1] + "|" + ((+m[1]) * 100 + (+m[2])), x[0]] : null; }).filter(Boolean));
 // Product types (see TYPES in library.js). Catalogues outside furniture take their category's type;
 // furniture images added from a PDF are sorted by Claude from their thumbnails when an API key is set.
 const LIB_TYPES = "SLCTBKDEGR1HPXZMINJWQVYAO";
@@ -142,6 +147,31 @@ function sniffType(file) {
   return "application/octet-stream";
 }
 
+// A one-page PDF holding a JPEG (a catalogue page rendered in the browser). w and h are the page size in points.
+function jpegToPdf(jpg, w, h) {
+  let i = 2, px = 0, py = 0, comps = 3;
+  while (i + 9 < jpg.length && jpg[i] === 0xff) {
+    const m = jpg[i + 1], len = jpg.readUInt16BE(i + 2);
+    if (m >= 0xc0 && m <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(m)) { py = jpg.readUInt16BE(i + 5); px = jpg.readUInt16BE(i + 7); comps = jpg[i + 9]; break; }
+    i += 2 + len;
+  }
+  if (!px || !py) return null;
+  if (!(w > 0 && h > 0 && w < 20000 && h < 20000)) { w = px * 0.5; h = py * 0.5; }
+  const W = w.toFixed(2), H = h.toFixed(2), cs = comps === 1 ? "/DeviceGray" : comps === 4 ? "/DeviceCMYK" : "/DeviceRGB";
+  const draw = `q ${W} 0 0 ${H} 0 0 cm /Im0 Do Q`;
+  const parts = [], offs = []; let pos = 0;
+  const put = x => { const b = Buffer.isBuffer(x) ? x : Buffer.from(x, "latin1"); parts.push(b); pos += b.length; };
+  const obj = (n, body) => { offs[n] = pos; put(`${n} 0 obj\n`); body(); put("\nendobj\n"); };
+  put("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+  obj(1, () => put("<< /Type /Catalog /Pages 2 0 R >>"));
+  obj(2, () => put("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"));
+  obj(3, () => put(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>`));
+  obj(4, () => put(`<< /Length ${draw.length} >>\nstream\n${draw}\nendstream`));
+  obj(5, () => { put(`<< /Type /XObject /Subtype /Image /Width ${px} /Height ${py} /ColorSpace ${cs} /BitsPerComponent 8 /Filter /DCTDecode${comps === 4 ? " /Decode [1 0 1 0 1 0 1 0]" : ""} /Length ${jpg.length} >>\nstream\n`); put(jpg); put("\nendstream"); });
+  const xref = pos;
+  put(`xref\n0 6\n0000000000 65535 f \n${[1, 2, 3, 4, 5].map(n => String(offs[n]).padStart(10, "0") + " 00000 n \n").join("")}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return Buffer.concat(parts);
+}
 function sniffBuf(b) {
   if (b[0] === 0xff && b[1] === 0xd8) return "image/jpeg";
   if (b.slice(0, 4).toString("hex") === "89504e47") return "image/png";
@@ -174,7 +204,9 @@ if (!Object.keys(store).length && fs.existsSync(path.join(SEED_DIR, "db.json")))
 }
 
 let saveTimer = null, saving = Promise.resolve();
+let storeRev = 0;
 function persist() {
+  storeRev++;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     saving = saving.then(async () => {
@@ -240,11 +272,89 @@ function projectSummaries() {
     const thumbs = items.filter(i => i.photo).slice(0, 4).map(i => i.photo);
     const updated = [reg?.updatedAt, ...Object.entries(store).filter(([k]) => k.startsWith(pre)).map(([, v]) => v.updatedAt)].filter(Boolean).sort().pop();
     return { id, name: main.name || "Untitled project", client: main.client || "", location: main.location || "", phase: main.phase || "",
-      created: reg?.data?.created, archived: !!reg?.data?.archived, updated, cover, thumbs,
+      created: reg?.data?.created, archived: !!reg?.data?.archived, by: reg?.data?.by?.name ? { id: reg.data.by.id, name: reg.data.by.name } : null, updated, cover, thumbs,
       counts: { items: items.length, images: images.length, drawings: drawings.length, decisions: decisions.length, priced: items.filter(i => unitCAD(i) != null).length },
-      stages, overdue, dueSoon, quote: { cad: total, cny: total * fx, fx } };
+      stages, overdue, dueSoon, quote: { cad: total, cny: total * fx, fx }, landedTax: landed * (1 + (main.quoteTax == null || main.quoteTax === "" ? 13 : Number(main.quoteTax)) / 100) };
   }).sort((a, b) => String(b.updated || "").localeCompare(String(a.updated || "")));
 }
+
+/* ---------------- new catalogues on Google Drive ---------------- */
+// With a Google service account (GOOGLE_SERVICE_ACCOUNT: its JSON key, raw or base64) that can read the catalogue folder
+// (DRIVE_CATALOGUE_FOLDER: the folder id of 90 CHINA PRODUCTS), the server lists the PDFs in its category folders every
+// 15 minutes. PDFs that aren't a catalogue yet are offered to admins in the Sourcing library to add or ignore.
+// Ignored ones are kept in librarydrive/main = { ignored: [file ids] }.
+const DRIVE_FOLDER = String(process.env.DRIVE_CATALOGUE_FOLDER || "").trim().replace(/^.*folders\//, "").replace(/[?#].*$/, "");
+let driveKey = null;
+try {
+  const raw = String(process.env.GOOGLE_SERVICE_ACCOUNT || "").trim();
+  if (raw) driveKey = JSON.parse(raw.startsWith("{") ? raw : Buffer.from(raw, "base64").toString("utf8"));
+} catch (_) { console.error("GOOGLE_SERVICE_ACCOUNT isn't a valid JSON key"); }
+const drive = { files: [], checked: null, error: driveKey || !process.env.GOOGLE_SERVICE_ACCOUNT ? "" : "The Google key in Render (GOOGLE_SERVICE_ACCOUNT) couldn't be read.", busy: false, token: null, exp: 0 };
+const driveOn = () => !!(driveKey && driveKey.client_email && driveKey.private_key && DRIVE_FOLDER);
+async function driveToken() {
+  if (drive.token && Date.now() < drive.exp - 60000) return drive.token;
+  const b64 = o => Buffer.from(JSON.stringify(o)).toString("base64url"), now = Math.floor(Date.now() / 1000);
+  const head = b64({ alg: "RS256", typ: "JWT" }) + "." + b64({ iss: driveKey.client_email, scope: "https://www.googleapis.com/auth/drive.readonly", aud: "https://oauth2.googleapis.com/token", iat: now, exp: now + 3600 });
+  const sig = crypto.createSign("RSA-SHA256").update(head).sign(driveKey.private_key, "base64url");
+  const r = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion: head + "." + sig }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.access_token) throw new Error("Google didn't accept the key (" + (j.error_description || j.error || r.status) + ").");
+  drive.token = j.access_token; drive.exp = Date.now() + (j.expires_in || 3600) * 1000; return drive.token;
+}
+async function driveList(q) {
+  const out = []; let page = "";
+  do {
+    const u = new URL("https://www.googleapis.com/drive/v3/files");
+    Object.entries({ q, fields: "nextPageToken,files(id,name,mimeType,size,modifiedTime)", pageSize: "1000", supportsAllDrives: "true", includeItemsFromAllDrives: "true", ...(page ? { pageToken: page } : {}) }).forEach(([k, v]) => u.searchParams.set(k, v));
+    const r = await fetch(u, { headers: { authorization: "Bearer " + (await driveToken()) } });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(r.status === 404 ? "The catalogue folder isn't shared with Sourcebook's Google account." : "Google Drive said: " + (j.error?.message || r.status));
+    out.push(...(j.files || [])); page = j.nextPageToken || "";
+  } while (page);
+  return out;
+}
+// The catalogue category for a Drive folder name: the built-in ones (FURNITURE, LIGHTING…, "Plumbing fixtures & …" is PLUMBING), then admins' own.
+function driveCat(name) {
+  const n = String(name || "").trim().toUpperCase();
+  if (LIB_CAT[n]) return n;
+  if (n.startsWith("PLUMBING")) return "PLUMBING";
+  if (n.startsWith("GLASS")) return "GLASS PRODUCTS";
+  const c = customTypes().find(x => String(x.en || "").trim().toUpperCase() === n);
+  return c ? "CUSTOM-" + c.c : "";
+}
+async function driveCheck() {
+  if (!driveOn() || drive.busy) return;
+  drive.busy = true;
+  try {
+    const files = [], esc = id => id.replace(/'/g, "\\'");
+    // Each category folder, and folders inside it (two levels), skipping the image library.
+    let level = (await driveList(`'${esc(DRIVE_FOLDER)}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`))
+      .filter(f => !/IMAGE LIBRARY/i.test(f.name)).map(f => ({ id: f.id, cat: driveCat(f.name), folder: f.name }));
+    for (let depth = 0; depth < 3 && level.length; depth++) {
+      const next = [];
+      for (const d of level) {
+        for (const f of await driveList(`'${esc(d.id)}' in parents and trashed=false`)) {
+          if (f.mimeType === "application/vnd.google-apps.folder") { if (depth < 2) next.push({ id: f.id, cat: d.cat, folder: d.folder + " / " + f.name }); }
+          else if (f.mimeType === "application/pdf" || /\.pdf$/i.test(f.name)) files.push({ id: f.id, name: f.name, size: Number(f.size) || 0, modified: f.modifiedTime || "", cat: d.cat, folder: d.folder });
+        }
+      }
+      level = next;
+    }
+    drive.files = files; drive.error = ""; drive.checked = new Date().toISOString();
+  } catch (e) { drive.error = e.message || "Google Drive couldn't be reached."; drive.checked = new Date().toISOString(); }
+  finally { drive.busy = false; }
+}
+// PDFs on Drive that aren't a catalogue in the library yet (by Drive file id, or same file name) and weren't ignored.
+async function drivePending() {
+  const lib = await libIndex(), ids = new Set(), names = new Set();
+  Object.values(lib.sups).forEach(S => { if (S.drive) ids.add(S.drive); if (S.pdf) names.add(String(S.pdf).toLowerCase()); });
+  for (const f of (await fsp.readdir(LIB_CATS_DIR).catch(() => [])).filter(f => f.endsWith(".json"))) {
+    const c = await libCatRead(f.slice(0, -5)); if (c && c.status === "done" && c.drive) ids.add(c.drive);
+  }
+  const ign = new Set(store["librarydrive/main"]?.data?.ignored || []);
+  return drive.files.filter(f => !ids.has(f.id) && !names.has(f.name.toLowerCase()) && !ign.has(f.id));
+}
+if (driveOn()) { setTimeout(() => driveCheck(), 5000); setInterval(() => driveCheck(), 15 * 60 * 1000); }
 
 /* ---------------- live updates (server-sent events) ---------------- */
 const clients = new Set();
@@ -255,7 +365,12 @@ function broadcast(msg) {
     const u = liveUser(c); if (!u) continue;
     try {
       if (allAccess(u) && !isSourcingPath(msg.path)) c.res.write(line);
-      else if (canRead(u, msg.path)) c.res.write(`data: ${JSON.stringify(msg.exists ? { ...msg, data: forUser(u, msg.path, msg.data) } : msg)}\n\n`);
+      else if (canRead(u, msg.path)) {
+        c.res.write(`data: ${JSON.stringify(msg.exists ? { ...msg, data: forUser(u, msg.path, msg.data) } : msg)}\n\n`);
+        // A client's prices depend on every piece and on the project's shipping and fees, so any change re-sends their pieces.
+        const pid = u.role === "client" && (ITEM_DOC.test(msg.path) || /^projects\/[^/]+\/project\/main$/.test(msg.path)) ? projectOf(msg.path) : null;
+        if (pid) for (const [k, v] of Object.entries(store)) if (k !== msg.path && k.startsWith(`projects/${pid}/items/`) && ITEM_DOC.test(k)) c.res.write(`data: ${JSON.stringify({ path: k, exists: true, data: forUser(u, k, v.data) })}\n\n`);
+      }
     } catch (_) {}
   }
 }
@@ -287,8 +402,10 @@ function samePass(given) {
 
 /* ---------------- people and roles ---------------- */
 // admin: everything · agent: everything except managing people and deleting projects
-// client: only assigned projects, read-only apart from approvals and comments
-const ROLES = ["admin", "agent", "client"];
+// specifier (designer): creates their own projects, which only they and the studio see; edits those like the studio,
+//   except the sourcing service rates; sees every approved catalogue in the library
+// client: only assigned projects, read-only apart from approvals and comments; only catalogues shown to clients
+const ROLES = ["admin", "agent", "specifier", "client"];
 const USERS_FILE = path.join(DATA_DIR, "users.json");
 let people = { secret: "", users: [] };
 try { people = JSON.parse(fs.readFileSync(USERS_FILE, "utf8")); } catch (_) {}
@@ -328,7 +445,21 @@ function currentUser(req) {
 const projectOf = p => { const m = /^projects\/([^/]+)/.exec(p || ""); return m ? m[1] : null; };
 function canSeeProject(u, id) { return allAccess(u) || (u.projects || []).includes(id); }
 // The sourcing library (library/<catalogue>) is studio-wide: everyone can see what's approved; only admins approve.
-const isLibPath = p => /^library(types|cats)?(\/|$)/.test(p || "");
+const isLibPath = p => /^library(types|cats|show|feat)?(\/|$)/.test(p || "");
+// Catalogues an admin has hidden from clients: libraryshow/main = { hide: [catalogue ids] }. Everyone else sees them all.
+const libHidden = () => new Set(Array.isArray(store["libraryshow/main"]?.data?.hide) ? store["libraryshow/main"].data.hide : []);
+const libHiddenFor = (u, sup) => u.role === "client" && libHidden().has(sup);
+let libClientJSON = null; // { key, json }: the catalogue index without the hidden catalogues, for clients
+async function libJSONFor(u) {
+  const lib = await libIndex(), hide = libHidden();
+  if (u.role !== "client" || !hide.size) return lib.json;
+  const key = [...hide].sort().join(",");
+  if (libClientJSON && libClientJSON.key === key && libClientJSON.lib === lib) return libClientJSON.json;
+  const d = JSON.parse(lib.json);
+  hide.forEach(s => delete d.sups[s]); d.items = d.items.filter(x => !hide.has(x[1]));
+  libClientJSON = { key, lib, json: JSON.stringify(d) };
+  return libClientJSON.json;
+}
 // Sourcing requests (sourcing/<id>): admins see them all; sourcing agents the ones sent to them; anyone else their own
 // and the ones asked from a project they're on, never another project's.
 const isSourcingPath = p => /^sourcing(\/|$)/.test(p || "");
@@ -340,11 +471,48 @@ function canSeeRequest(u, d) {
 function canRead(u, p) { if (isLibPath(p)) return true; if (isSourcingPath(p)) { if (u.role === "admin") return true; if (p === "sourcing") return u.role === "agent"; return canSeeRequest(u, store[p]?.data); } if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
 // Internal fields a client never receives.
 const CLIENT_HIDDEN = ["notes", "match", "pendingSetup", "chg"];
+// Costs a client never receives: the supplier price (¥ and $), duty, and the project's freight, insurance, brokerage,
+// delivery, sourcing service rates and exchange rate. A client's piece carries its all-in price instead (unitCost, CAD,
+// before sales tax): the supplier price plus its share of shipping, duty and delivery, plus the sourcing service.
+const CLIENT_COST_ITEM = ["unitCostCNY", "priceBase", "dutyRate"];
+const CLIENT_COST_PROJECT = ["fxRate", "quoteFee", "quoteFeeCustom", "quoteFreight", "quoteIns", "quoteDuty", "quoteBroker", "quoteDeliv"];
+// Clients see no prices at all unless SHOW_CLIENT_PRICES is set in Render (1 / on); with it on they see their all-in prices.
+const CLIENT_PRICES = /^(1|on|true|yes)$/i.test(String(process.env.SHOW_CLIENT_PRICES || "").trim());
+const clientPriceCache = new Map();
+function clientPrices(id) {
+  const hit = clientPriceCache.get(id); if (hit && hit.rev === storeRev) return hit.prices;
+  const pre = `projects/${id}/items/`, main = store[`projects/${id}/project/main`]?.data || {};
+  const items = Object.entries(store).filter(([k]) => k.startsWith(pre) && ITEM_DOC.test(k)).map(([k, v]) => ({ id: k.slice(pre.length), ...v.data }));
+  const n = v => v == null || v === "" || !isFinite(Number(v)) ? null : Number(v);
+  const fx = n(main.fxRate) > 0 ? n(main.fxRate) : 4.73;
+  const unitCAD = it => it.priceBase === "CNY" && n(it.unitCostCNY) != null ? n(it.unitCostCNY) / fx : n(it.unitCost);
+  const sub = items.reduce((s, it) => s + (n(it.qty) || 0) * (unitCAD(it) || 0), 0);
+  const insP = n(main.quoteIns) || 0, spread = (n(main.quoteFreight) || 0) + (n(main.quoteBroker) || 0) + (n(main.quoteDeliv) || 0);
+  // the same split as quoteTotals in the page: each piece carries its own duty and insurance, plus freight, brokerage and delivery by value
+  const prices = new Map(items.map(it => {
+    const u = unitCAD(it); if (u == null) return [it.id, null];
+    const landed = u * (1 + insP / 100 + (n(it.dutyRate) ?? (n(main.quoteDuty) || 0)) / 100) + (sub ? spread * u / sub : 0);
+    const fee = (it.custom ? n(main.quoteFeeCustom) : n(main.quoteFee)) || 0;
+    return [it.id, landed * (1 + fee / 100)];
+  }));
+  clientPriceCache.set(id, { rev: storeRev, prices });
+  return prices;
+}
 function forUser(u, p, data) {
   // The sourcing agent never sees which client asked for a TBS item: it comes from the studio.
   if (u.role === "agent" && data && /^sourcing\/[^/]+$/.test(p) && data.by && data.by.id !== u.id && data.by.role !== "admin") return { ...data, by: { role: "admin" } };
-  if (u.role !== "client" || !data || !/^projects\/[^/]+\/items\/[^/]+$/.test(p)) return data;
-  const o = { ...data }; CLIENT_HIDDEN.forEach(k => delete o[k]); return o;
+  // Specifiers never receive the studio's sourcing service rates.
+  if (u.role === "specifier" && data && /^projects\/[^/]+\/project\/main$/.test(p)) { const o = { ...data }; delete o.quoteFee; delete o.quoteFeeCustom; return o; }
+  if (u.role !== "client" || !data) return data;
+  // Featured images from catalogues hidden from clients aren't sent to them.
+  if (p === "libraryfeat/main" && libCache) return { ...data, f: (data.f || []).filter(f => { const it = libCache.byFile.get(f); return it && !libHiddenFor(u, it[1]); }) };
+  if (/^projects\/[^/]+\/project\/main$/.test(p)) { const o = { ...data }; CLIENT_COST_PROJECT.forEach(k => delete o[k]); return o; }
+  if (!ITEM_DOC.test(p)) return data;
+  const o = { ...data }; CLIENT_HIDDEN.forEach(k => delete o[k]); CLIENT_COST_ITEM.forEach(k => delete o[k]);
+  if (CLIENT_PRICES) o.unitCost = clientPrices(projectOf(p)).get(p.split("/")[3]) ?? null; else delete o.unitCost;
+  // supplier quotes attached to a piece stay with the studio
+  if (Array.isArray(o.refs)) o.refs = o.refs.filter(r => r?.kind !== "Quote");
+  return o;
 }
 /* ---------------- what's changed between the studio and the sourcing agent ---------------- */
 // Each piece keeps chg = { field: { r: role, n: name, at } } for fields an admin or agent changed
@@ -455,33 +623,8 @@ async function askClaude({ input, images = [], modelTier = "default" }) {
   return { text, truncated: j.stop_reason === "max_tokens", modelTierApplied: modelTier };
 }
 
-/* ---------------- find products online ---------------- */
-// Claude searches the web for the product in a photo (web search tool), then reads the
-// chosen product page (web fetch tool). Jobs run on the server and write into the item,
-// so they finish even if the page that started them is closed.
+/* ---------------- background jobs ---------------- */
 const API_URL = process.env.ANTHROPIC_API_URL || "https://api.anthropic.com/v1/messages";
-async function claudeTurns({ messages, tools, max_tokens = 6000, model }) {
-  if (!ANTHROPIC_API_KEY) throw Object.assign(new Error("Claude isn't set up on this server. Add ANTHROPIC_API_KEY in Render."), { code: "sampling_disabled" });
-  const convo = messages.slice();
-  for (let i = 0; i < 6; i++) {
-    const r = await fetch(API_URL, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: model || MODELS.default, max_tokens, messages: convo, tools }),
-    });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) {
-      const msg = j?.error?.message || `Claude API error ${r.status}`;
-      const code = /usage limits|spend limit|credit balance/i.test(msg) || j?.error?.error_code === "enforced_spend_limit_reached" ? "limit" : /web search|web_search|web fetch/i.test(msg) ? "web_disabled" : r.status === 429 ? "rate_limited" : "upstream_error";
-      throw Object.assign(new Error(msg), { code });
-    }
-    if (j.stop_reason === "pause_turn") { convo.push({ role: "assistant", content: j.content }); continue; }
-    const text = (j.content || []).filter(c => c.type === "text").map(c => c.text).join("");
-    const searched = (j.content || []).filter(c => c.type === "web_search_tool_result" && Array.isArray(c.content)).flatMap(c => c.content.map(x => x.url)).filter(Boolean);
-    return { text, searched, stop: j.stop_reason };
-  }
-  throw Object.assign(new Error("Claude took too long."), { code: "upstream_error" });
-}
 function parseJSON(text) {
   const tries = [text.trim()];
   const m = text.match(/```(?:json)?\s*([\s\S]*?)```/); if (m) tries.push(m[1].trim());
@@ -489,114 +632,9 @@ function parseJSON(text) {
   for (const t of tries) { try { return JSON.parse(t); } catch (_) {} }
   return null;
 }
-// Fetch a public web page or image, refusing private addresses.
-function privateIP(ip) {
-  if (net.isIPv4(ip)) { const [a, b] = ip.split(".").map(Number); return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224; }
-  const x = ip.toLowerCase(); return x === "::1" || x === "::" || x.startsWith("fc") || x.startsWith("fd") || x.startsWith("fe80") || x.startsWith("::ffff:") && privateIP(x.slice(7));
-}
-async function safeFetch(url, { maxBytes = 2e6, timeout = 12000, accept = "*/*" } = {}) {
-  let u = new URL(url);
-  for (let hop = 0; hop < 5; hop++) {
-    if (!/^https?:$/.test(u.protocol) || u.username || u.password) throw new Error("bad url");
-    const addrs = net.isIP(u.hostname) ? [{ address: u.hostname }] : await dns.lookup(u.hostname, { all: true });
-    if (!addrs.length || addrs.some(a => privateIP(a.address))) throw new Error("blocked host");
-    const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), timeout);
-    let r;
-    try { r = await fetch(u, { redirect: "manual", signal: ctl.signal, headers: { accept, "user-agent": "Mozilla/5.0 (compatible; Sourcebook/1.0; product lookup)", "accept-language": "en-CA,en;q=0.9" } }); }
-    finally { clearTimeout(tm); }
-    if (r.status >= 300 && r.status < 400 && r.headers.get("location")) { u = new URL(r.headers.get("location"), u); continue; }
-    if (!r.ok) throw new Error("status " + r.status);
-    const chunks = []; let size = 0;
-    for await (const c of r.body) { size += c.length; if (size > maxBytes) throw new Error("too large"); chunks.push(c); }
-    return { url: u.href, type: String(r.headers.get("content-type") || "").split(";")[0].trim().toLowerCase(), body: Buffer.concat(chunks) };
-  }
-  throw new Error("too many redirects");
-}
-async function pageImage(url) {
-  try {
-    const { body, type, url: final } = await safeFetch(url, { maxBytes: 1.5e6, timeout: 9000, accept: "text/html" });
-    if (!/html/.test(type)) return null;
-    const html = body.toString("utf8");
-    const pick = re => { const m = html.match(re); return m ? m[1] : null; };
-    const raw = pick(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i) || pick(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)
-      || pick(/<meta[^>]+name=["']twitter:image(?::src)?["'][^>]+content=["']([^"']+)["']/i) || pick(/<link[^>]+rel=["']image_src["'][^>]+href=["']([^"']+)["']/i);
-    if (!raw) return null;
-    const abs = new URL(raw.replace(/&amp;/g, "&"), final).href;
-    return /^https?:/.test(abs) ? abs : null;
-  } catch (_) { return null; }
-}
-function patchItem(dp, patch) {
-  const cur = store[dp]; if (!cur) return null;
-  const next = stripUndefined({ ...cur.data, ...patch });
-  store[dp] = { data: next, version: (cur.version || 0) + 1, updatedAt: new Date().toISOString() };
-  persist(); broadcast({ path: dp, exists: true, data: next });
-  return next;
-}
 const jobQueue = []; let jobsRunning = 0;
 function enqueue(fn) { jobQueue.push(fn); pump(); }
 function pump() { while (jobsRunning < 2 && jobQueue.length) { const fn = jobQueue.shift(); jobsRunning++; Promise.resolve().then(fn).catch(e => console.error("job", e.message)).finally(() => { jobsRunning--; pump(); }); } }
-const LOC = { type: "approximate", city: "Toronto", region: "Ontario", country: "CA", timezone: "America/Toronto" };
-const CATS = ["Stone", "Finishes", "Millwork", "Lighting", "Hardware", "Plumbing", "Textiles", "Furniture", "Tile", "Glazing"];
-const matchError = e => e.code === "limit" ? "The Claude spending limit or credit for this account has been reached. Check Billing in the Anthropic Console."
-  : e.code === "web_disabled" ? "Web search is turned off for this Anthropic account. Turn it on in the Anthropic Console under Settings → Capabilities (or ask whoever manages the account)."
-  : e.code === "sampling_disabled" ? e.message : e.code === "rate_limited" ? "Claude is busy right now. Try again in a minute." : "The search didn't finish. Try again.";
-async function runIdentify(dp, image, hint, lang) {
-  const it = store[dp]?.data; if (!it) return;
-  const known = [["Name", it.pendingSetup ? "" : it.name], ["Description", it.description], ["Category", it.category], ["Manufacturer", it.supplier], ["Product", it.product], ["Model", it.modelCode], ["Dimensions", it.dims], ["Finish", it.finishName]].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("; ");
-  const prompt = `You are a sourcing agent for an interior design studio in Toronto. ${image ? "The photo shows a product (furniture, lighting, a fixture, a finish or a material)" : "Find this product"}${it.pendingSetup ? "" : ` filed as "${it.name}"`}.${known ? "\nWhat we already know: " + known + "." : ""}${hint ? "\nHint from the studio: " + hint : ""}
-1. Identify the specific commercial product: designer, manufacturer, collection and model if you can. If the photo shows a room, focus on ${it.pendingSetup ? "the most prominent product" : `the ${it.name}`}.
-2. Use web search to find the actual product: the manufacturer's page first, then reputable retailers or distributors (Canadian ones where possible, to see CAD prices). Search with distinctive features, likely brand and product names. Run several searches if needed.
-3. Return up to 4 candidates ranked by how well they match the photo. Only include products you found a real page for, using the URL from the search results. Do not invent URLs, prices or model numbers.
-Reply with only a JSON object:
-{"identified": one sentence describing what is in the photo,
- "piece": {"name": short trade name a supplier would recognise, "category": one of ${JSON.stringify(CATS)}, "description": one sentence, "isFurniture": boolean},
- "candidates": [{"brand": string, "name": product name, "model": model or SKU|null, "designer": string|null, "url": page URL, "source": site name, "price": number|null, "currency": "CAD"|"USD"|"EUR"|"GBP"|"CNY"|null, "confidence": "high"|"medium"|"low", "why": one short line on why it matches or how it differs}]}
-Use an empty candidates list if nothing credible turns up.${lang === "zh" ? "\nWrite identified, description and why in Simplified Chinese; keep brand, product and model names as published." : ""}`;
-  const content = [];
-  if (image) content.push({ type: "image", source: { type: "base64", media_type: image.media_type, data: image.data } });
-  content.push({ type: "text", text: prompt });
-  try {
-    const { text } = await claudeTurns({ messages: [{ role: "user", content }], tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 6, user_location: LOC }], max_tokens: 4000 });
-    const out = parseJSON(text) || {};
-    let cands = (Array.isArray(out.candidates) ? out.candidates : []).filter(c => c && c.url && /^https?:\/\//.test(c.url) && c.name).slice(0, 4)
-      .map(c => ({ brand: String(c.brand || "").slice(0, 120), name: String(c.name).slice(0, 200), model: c.model ? String(c.model).slice(0, 120) : null, designer: c.designer ? String(c.designer).slice(0, 120) : null,
-        url: String(c.url), source: String(c.source || (() => { try { return new URL(c.url).hostname.replace(/^www\./, ""); } catch (_) { return ""; } })()).slice(0, 80),
-        price: Number.isFinite(Number(c.price)) && c.price !== null && c.price !== "" ? Number(c.price) : null, currency: c.currency || null,
-        confidence: ["high", "medium", "low"].includes(c.confidence) ? c.confidence : "low", why: String(c.why || "").slice(0, 300) }));
-    const imgs = await Promise.all(cands.map(c => pageImage(c.url)));
-    cands = cands.map((c, i) => ({ ...c, image: imgs[i] }));
-    const piece = out.piece && typeof out.piece === "object" ? { name: String(out.piece.name || "").slice(0, 200), category: CATS.includes(out.piece.category) ? out.piece.category : null, description: String(out.piece.description || "").slice(0, 400), isFurniture: !!out.piece.isFurniture } : null;
-    patchItem(dp, { match: { ...(store[dp]?.data?.match || {}), status: cands.length ? "found" : "none", identified: String(out.identified || "").slice(0, 400), piece, candidates: cands, finished: new Date().toISOString() } });
-  } catch (e) {
-    console.error("identify", e.message);
-    patchItem(dp, { match: { ...(store[dp]?.data?.match || {}), status: "error", message: matchError(e), finished: new Date().toISOString() } });
-  }
-}
-async function runDetails(dp, index, lang) {
-  const it = store[dp]?.data; const m = it?.match; const c = m?.candidates?.[index]; if (!c) return;
-  const prompt = `You are a sourcing agent for an interior design studio in Toronto. We've chosen this product:
-${c.brand} ${c.name}${c.model ? " (" + c.model + ")" : ""}: ${c.url}
-Read that page with web fetch. If it doesn't give dimensions, materials or a spec sheet, you may search once or twice for the manufacturer's spec sheet or product page.
-Extract only what the sources state. Leave anything not stated as null. Do not guess.
-Reply with only a JSON object:
-{"fields": {"name": product name as a schedule line, "description": one or two sentences, "supplier": manufacturer or brand, "product": collection or product name, "modelCode": model / SKU|null, "materialCategory": e.g. "Upholstered seating", "Porcelain tile", "Pendant light"|null, "finishName": finish or colour name|null, "dims": dimensions with units, e.g. "W 2400 × D 1000 × H 700 mm"|null, "frameFinish": frame or base finish|null, "upholstery": fabric or leather|null, "leadWeeks": number|null},
- "price": {"amount": number|null, "currency": "CAD"|"USD"|"EUR"|"GBP"|"CNY"|null, "note": e.g. "from", "per m²", "list price"|null},
- "specs": [{"label": string, "value": string}] (up to 10 more lines: materials, weight, certifications, options, care, warranty, origin),
- "specSheetUrl": URL of a PDF spec sheet or technical page if found|null,
- "imageUrl": main product image URL if the page states it|null,
- "summary": one sentence}${lang === "zh" ? "\nWrite description, summary and spec values in Simplified Chinese where they are prose; keep names, codes and units as published." : ""}`;
-  try {
-    const { text } = await claudeTurns({ messages: [{ role: "user", content: prompt }], tools: [{ type: "web_fetch_20250910", name: "web_fetch", max_uses: 3, max_content_tokens: 30000 }, { type: "web_search_20250305", name: "web_search", max_uses: 2, user_location: LOC }], max_tokens: 4000 });
-    const out = parseJSON(text);
-    if (!out || !out.fields) throw Object.assign(new Error("no details"), { code: "empty" });
-    const details = { fields: out.fields, price: out.price || null, specs: Array.isArray(out.specs) ? out.specs.filter(x => x && x.label && x.value).slice(0, 10).map(x => ({ label: String(x.label).slice(0, 80), value: String(x.value).slice(0, 300) })) : [],
-      specSheetUrl: /^https?:\/\//.test(out.specSheetUrl || "") ? out.specSheetUrl : null, imageUrl: (/^https?:\/\//.test(out.imageUrl || "") ? out.imageUrl : null) || c.image || null, summary: String(out.summary || "").slice(0, 400), at: new Date().toISOString() };
-    patchItem(dp, { match: { ...(store[dp]?.data?.match || {}), status: "ready", chosen: index, details } });
-  } catch (e) {
-    console.error("details", e.message);
-    patchItem(dp, { match: { ...(store[dp]?.data?.match || {}), status: "found", chosen: index, message: e.code === "empty" ? "Couldn't read that product page. Try another match or open the page to check it." : matchError(e) } });
-  }
-}
 
 /* ---------------- server ---------------- */
 const server = http.createServer(async (req, res) => {
@@ -642,7 +680,7 @@ const server = http.createServer(async (req, res) => {
     const isAdmin = me.role === "admin", isClient = me.role === "client";
 
     // who's signed in
-    if (p === "/api/me" && req.method === "GET") return send(res, 200, publicUser(me));
+    if (p === "/api/me" && req.method === "GET") return send(res, 200, { ...publicUser(me), ...(me.role === "client" ? { prices: CLIENT_PRICES } : {}) });
     if (p === "/api/me/password" && req.method === "POST") {
       const { current, next } = await readJSON(req);
       if (me.id === "owner") return send(res, 400, { code: "invalid_argument", message: "The studio password is changed in Render (APP_PASSWORD)." });
@@ -728,7 +766,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     // projects
-    if (p === "/api/projects" && req.method === "GET") return send(res, 200, { projects: projectSummaries().filter(x => canSeeProject(me, x.id)).map(x => ({ ...x, news: newsCount(me, x.id) })) });
+    if (p === "/api/projects" && req.method === "GET") return send(res, 200, { projects: projectSummaries().filter(x => canSeeProject(me, x.id)).map(x => ({ ...x, news: newsCount(me, x.id), ...(isClient ? { quote: CLIENT_PRICES ? { cad: x.quote.cad } : null } : me.role === "specifier" ? { quote: { cad: x.landedTax, cny: x.landedTax * x.quote.fx, fx: x.quote.fx } } : {}), landedTax: undefined })) });
     // mark changes from the other side as seen: { project, items: [ids] } (all pieces in the project when items is left out)
     if (p === "/api/changes/seen" && req.method === "POST") {
       const side = sideOf(me); if (!side) return deny();
@@ -784,7 +822,11 @@ const server = http.createServer(async (req, res) => {
         persist(); broadcast({ path: dp, exists: true, data: next });
         return send(res, 200, { ok: true, version: store[dp].version });
       };
-      if (!cur && op === "set" && /^projects\/[^/]+$/.test(dp) && me.role === "agent" && !allAccess(me)) { me.projects = [...new Set([...(me.projects || []), projectOf(dp)])]; savePeople(); }
+      // A limited agent or a specifier who starts a project gets it on their own list; a specifier's project stays theirs
+      // (only they, admins and agents set to all projects see it), and remembers who started it.
+      const newProject = !cur && op === "set" && /^projects\/[^/]+$/.test(dp);
+      if (newProject && ((me.role === "agent" && !allAccess(me)) || me.role === "specifier")) { me.projects = [...new Set([...(me.projects || []), projectOf(dp)])]; savePeople(); }
+      if (newProject && me.role === "specifier" && data && typeof data === "object") data.by = { id: me.id, name: me.name || "", role: me.role };
       // Comments: anyone who can see the project may post; the author is always the signed-in person.
       if (/^projects\/[^/]+\/comments\/[^/]+$/.test(dp)) {
         if (!canRead(me, dp)) return deny();
@@ -823,6 +865,9 @@ const server = http.createServer(async (req, res) => {
         if (!data || typeof data !== "object" || Array.isArray(data)) return send(res, 400, { code: "invalid_argument" });
         if (op === "update" && !cur) return send(res, 400, { code: "invalid_argument", message: "document does not exist" });
         let next = stripUndefined(op === "set" ? data : mergeDeep(cur.data, data));
+        // Specifiers can't change the studio's sourcing service rates on their projects.
+        if (me.role === "specifier" && /^projects\/[^/]+\/project\/main$/.test(dp)) for (const k of ["quoteFee", "quoteFeeCustom"]) { if (cur?.data?.[k] != null) next[k] = cur.data[k]; else delete next[k]; }
+        if (me.role === "specifier" && /^projects\/[^/]+$/.test(dp)) { if (cur?.data?.by) next.by = cur.data.by; else if (cur) delete next.by; }
         if (ITEM_DOC.test(dp)) { if (op === "update") next.chg = cur.data.chg; next = trackChanges(me, cur?.data, next); }
         if (Buffer.byteLength(JSON.stringify(next)) > 256 * 1024) return send(res, 400, { code: "invalid_argument", message: "document too large" });
         store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: new Date().toISOString() };
@@ -838,17 +883,25 @@ const server = http.createServer(async (req, res) => {
 
     // sourcing library: catalogue index, thumbnail sheets, approvals and adding a piece
     if (p === "/lib/data.json" && req.method === "GET") {
-      const lib = await libIndex();
-      return send(res, 200, lib.json, { "Content-Type": "application/json", "Cache-Control": "no-cache" });
+      return send(res, 200, await libJSONFor(me), { "Content-Type": "application/json", "Cache-Control": "no-cache" });
     }
     const tm = p.match(/^\/lib\/(thumb\/[A-Za-z0-9_.-]+\.jpg|pdf\/[A-Za-z0-9-]+\.pdf)$/);
     if (tm && req.method === "GET") {
       // Thumbnails and source PDFs of catalogues added from a PDF (any signed-in user)
       const fp = tm[1].startsWith("thumb/") ? path.join(LIB_THUMB_DIR, tm[1].slice(6)) : path.join(LIB_CATS_DIR, tm[1].slice(4));
+      if (me.role === "client") { const lib = await libIndex(), sup = tm[1].startsWith("thumb/") ? lib.byFile.get(tm[1].slice(6))?.[1] : tm[1].slice(4, -4); if (sup && libHiddenFor(me, sup)) return send(res, 404, "Not found"); }
       try {
         const st = await fsp.stat(fp);
         const pdf = fp.endsWith(".pdf");
-        res.writeHead(200, { "Content-Type": pdf ? "application/pdf" : "image/jpeg", "Content-Length": st.size, "Cache-Control": "private, max-age=86400", ...(pdf ? { "Content-Disposition": "inline" } : {}) });
+        // Byte ranges, so the browser can read one page of a large catalogue without downloading all of it.
+        const rg = pdf && /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || "");
+        if (rg && (rg[1] || rg[2])) {
+          let a = rg[1] ? Number(rg[1]) : Math.max(0, st.size - Number(rg[2])), b = rg[1] && rg[2] ? Math.min(Number(rg[2]), st.size - 1) : st.size - 1;
+          if (a > b || a >= st.size) { res.writeHead(416, { "Content-Range": `bytes */${st.size}` }); return res.end(); }
+          res.writeHead(206, { "Content-Type": "application/pdf", "Content-Length": b - a + 1, "Content-Range": `bytes ${a}-${b}/${st.size}`, "Accept-Ranges": "bytes", "Cache-Control": "private, max-age=86400", "Content-Disposition": "inline" });
+          return fs.createReadStream(fp, { start: a, end: b }).pipe(res);
+        }
+        res.writeHead(200, { "Content-Type": pdf ? "application/pdf" : "image/jpeg", "Content-Length": st.size, "Cache-Control": "private, max-age=86400", ...(pdf ? { "Content-Disposition": "inline", "Accept-Ranges": "bytes" } : {}) });
         return fs.createReadStream(fp).pipe(res);
       } catch (_) { return send(res, 404, "Not found"); }
     }
@@ -873,7 +926,7 @@ const server = http.createServer(async (req, res) => {
         if (!(pages >= 1 && pages <= 2000)) return send(res, 400, { code: "invalid_argument", message: "That PDF has too many pages (2,000 at most)." });
         const lib = await libIndex(), old = await libCatRead(s1);
         if (lib.sups[s1] || (old && old.status === "done")) return send(res, 409, { code: "exists", message: `There's already a catalogue called ${s1}. Use a different catalogue name.` });
-        const c = { sup: s1, supplier, product, cat: b.cat, pdf: String(b.pdf || "").slice(0, 200), pages, drive: /^[A-Za-z0-9_-]{10,}$/.test(b.drive || "") ? b.drive : "", status: "scanning", created: new Date().toISOString(), by: me.name || "", items: [] };
+        const c = { sup: s1, supplier, product, cat: b.cat, pdf: String(b.pdf || "").slice(0, 200), pages, drive: /^[A-Za-z0-9_-]{10,}$/.test(b.drive || "") ? b.drive : "", status: "scanning", created: new Date().toISOString(), by: me.name || "", byId: me.id, items: [] };
         await fsp.writeFile(path.join(LIB_CATS_DIR, s1 + ".json"), JSON.stringify(c));
         return send(res, 200, { ok: true, sup: s1, prefix: `${libCatFile(b.cat)}_${s1}` });
       }
@@ -924,7 +977,7 @@ const server = http.createServer(async (req, res) => {
     const fm = p.match(/^\/(?:lib|api\/library)\/full\/([A-Za-z0-9_.-]+\.jpg)$/);
     if (fm) {
       // GET /lib/full/<file>: the full-size image (any signed-in user). PUT /api/library/full/<file>: an admin uploads one.
-      const lib = await libIndex(); if (!lib || !lib.byFile.has(fm[1])) return send(res, 404, "Not found");
+      const lib = await libIndex(); if (!lib || !lib.byFile.has(fm[1]) || libHiddenFor(me, lib.byFile.get(fm[1])[1])) return send(res, 404, "Not found");
       const fp = path.join(LIB_FULL_DIR, fm[1]);
       if (req.method === "GET" && p.startsWith("/lib/")) {
         try { return send(res, 200, await fsp.readFile(fp), { "Content-Type": "image/jpeg", "Cache-Control": "private, max-age=604800" }); } catch (_) { return send(res, 404, "Not found"); }
@@ -955,6 +1008,49 @@ const server = http.createServer(async (req, res) => {
       const next = { f: [...f], updated: new Date().toISOString() };
       store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
       persist(); return send(res, 200, { ok: true, files: next.f });
+    }
+    // Featured products: the studio's picks, shown to everyone when the Sourcing library opens.
+    // libraryfeat/main = { f: [file names, oldest first], at: { file: ms featured } }. Only admins pick, and only approved images.
+    if (p === "/api/library/featured" && req.method === "POST") {
+      if (!isAdmin) return deny("Only admins choose featured products.");
+      const b = await readJSON(req), idx = await libIndex(), it = typeof b.file === "string" && idx.byFile.get(b.file);
+      if (!it || typeof b.on !== "boolean") return send(res, 400, { code: "invalid_argument" });
+      const m = b.file.match(/_p(\d+)_(\d+)\.jpg$/), key = m ? (+m[1]) * 100 + (+m[2]) : -1;
+      if (b.on && !(store["library/" + it[1]]?.data?.on || []).map(Number).includes(key)) return send(res, 400, { code: "invalid_argument", message: "Approve the image before featuring it." });
+      const dp = "libraryfeat/main", cur = store[dp], f = (cur?.data?.f || []).filter(x => x !== b.file), at = { ...(cur?.data?.at || {}) };
+      if (b.on) { if (f.length >= 1000) return send(res, 400, { code: "invalid_argument", message: "Featured is full (1,000 images)." }); f.push(b.file); at[b.file] = Date.now(); } else delete at[b.file];
+      const next = { f, at, updated: new Date().toISOString(), by: me.name || "" };
+      store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
+      persist(); broadcast({ path: dp, exists: true, data: next });
+      return send(res, 200, { ok: true, files: f });
+    }
+    // New in the Sourcing library, per person: libraryseen/<user id> = { base: ms, f: [file names seen since] }.
+    // New for an admin: images from a catalogue another admin added since base. For everyone else: images approved
+    // since base. The first time someone asks, base is now, so what's already there never counts as new.
+    //   GET  /api/library/seen                 -> { files: [new file names] }
+    //   POST /api/library/seen { files: [...] } marks them seen -> { files }
+    if (p === "/api/library/seen") {
+      const dp = "libraryseen/" + me.id, cur = store[dp], idx = await libIndex();
+      let base = cur?.data?.base, seen = new Set(cur?.data?.f || []);
+      const save = () => { const next = { base, f: [...seen], updated: new Date().toISOString() }; store[dp] = { data: next, version: (store[dp]?.version || 0) + 1, updatedAt: next.updated }; persist(); };
+      const fresh = () => {
+        const out = [];
+        if (isAdmin) { for (const [sup, a] of Object.entries(idx.added)) if (a.at > base && a.by !== me.id) for (const [f, x] of idx.byFile) if (x[1] === sup && !seen.has(f)) out.push(f); return out; }
+        for (const [k, v] of Object.entries(store)) {
+          if (!k.startsWith("library/") || !v?.data?.at) continue; const sup = k.slice(8); if (libHiddenFor(me, sup)) continue;
+          for (const [key, t0] of Object.entries(v.data.at)) if (t0 > base) { const f = idx.byKey.get(sup + "|" + key); if (f && !seen.has(f)) out.push(f); }
+        }
+        return out;
+      };
+      if (typeof base !== "number") { base = Date.now(); seen = new Set(); save(); }
+      if (req.method === "GET") return send(res, 200, { files: fresh() });
+      if (req.method !== "POST") return send(res, 405, { code: "method_not_allowed" });
+      const b = await readJSON(req, 2 * 1024 * 1024);
+      if (!Array.isArray(b.files) || b.files.length > 20000) return send(res, 400, { code: "invalid_argument" });
+      b.files.forEach(f => { if (typeof f === "string" && idx.byFile.has(f)) seen.add(f); });
+      // Nothing new left: start again from now, so the list of seen images doesn't keep growing.
+      const left = fresh(); if (!left.length) { base = Date.now(); seen = new Set(); }
+      save(); return send(res, 200, { files: left });
     }
     // "Have something you want?": find similar products in the library from a photo, step by step.
     // type: Claude says which product types to look in. match: the browser sends numbered contact sheets of the
@@ -1138,6 +1234,33 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       persist(); broadcast({ path: dp, exists: true, data: next });
       return send(res, 200, { ok: true });
     }
+    if (p === "/api/library/drive" && req.method === "GET") {
+      // { on, pending: [{id, name, size, cat, folder}], checked, error } for the Sourcing library (admins)
+      if (!isAdmin) return deny("Only admins can add catalogues.");
+      if (!driveOn()) return send(res, 200, { on: false, error: drive.error, pending: [] });
+      if (!drive.checked || (url.searchParams.get("check") && !drive.busy && Date.now() - Date.parse(drive.checked) > 60000)) await driveCheck();
+      return send(res, 200, { on: true, checked: drive.checked, error: drive.error, pending: drive.error ? [] : await drivePending() });
+    }
+    if (p === "/api/library/drive/ignore" && req.method === "POST") {
+      if (!isAdmin) return deny("Only admins can add catalogues.");
+      const b = await readJSON(req); const id = String(b.id || "");
+      if (!/^[A-Za-z0-9_-]{10,}$/.test(id)) return send(res, 400, { code: "invalid_argument" });
+      const cur = store["librarydrive/main"], ign = new Set(cur?.data?.ignored || []); b.undo ? ign.delete(id) : ign.add(id);
+      store["librarydrive/main"] = { data: { ignored: [...ign] }, version: (cur?.version || 0) + 1, updatedAt: new Date().toISOString() };
+      persist(); return send(res, 200, { ok: true });
+    }
+    const dpm = p.match(/^\/api\/library\/drive\/pdf\/([A-Za-z0-9_-]{10,})$/);
+    if (dpm && req.method === "GET") {
+      // The PDF itself, passed through from Drive so the browser can scan it like a dropped file.
+      if (!isAdmin) return deny("Only admins can add catalogues.");
+      if (!driveOn() || !drive.files.some(f => f.id === dpm[1])) return send(res, 404, { code: "not_found", message: "That PDF isn't in the catalogue folder any more." });
+      try {
+        const r = await fetch(`https://www.googleapis.com/drive/v3/files/${dpm[1]}?alt=media&supportsAllDrives=true`, { headers: { authorization: "Bearer " + (await driveToken()) } });
+        if (!r.ok || !r.body) return send(res, 502, { code: "upstream_error", message: "Google Drive didn't send the PDF. Try again." });
+        res.writeHead(200, { "Content-Type": "application/pdf", ...(r.headers.get("content-length") ? { "Content-Length": r.headers.get("content-length") } : {}), "Cache-Control": "no-store" });
+        const { Readable } = require("stream"); Readable.fromWeb(r.body).on("error", () => res.destroy()).pipe(res); return;
+      } catch (e) { return send(res, 502, { code: "upstream_error", message: e.message }); }
+    }
     if (p === "/api/library/category" && req.method === "POST") {
       // An admin adds a category to the Sourcing library: { en, zh, section } (section = where its products go in a project).
       if (!isAdmin) return deny("Only admins can add categories.");
@@ -1167,6 +1290,18 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       persist(); broadcast({ path: dp, exists: true, data: next });
       return send(res, 200, { ok: true });
     }
+    if (p === "/api/library/show" && req.method === "POST") {
+      // { sup, clients: true|false } shows or hides a whole catalogue from clients (libraryshow/main.hide)
+      if (!isAdmin) return deny("Only admins choose what clients see.");
+      const b = await readJSON(req), lib = await libIndex();
+      if (typeof b.sup !== "string" || !lib.sups[b.sup] || typeof b.clients !== "boolean") return send(res, 400, { code: "invalid_argument" });
+      const dp = "libraryshow/main", cur = store[dp], hide = libHidden();
+      b.clients ? hide.delete(b.sup) : hide.add(b.sup);
+      const next = { hide: [...hide].sort(), updated: new Date().toISOString(), by: me.name || "" };
+      store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
+      persist(); broadcast({ path: dp, exists: true, data: next }); broadcast({ path: "library", index: true });
+      return send(res, 200, { ok: true, hide: next.hide });
+    }
     if (p === "/api/library/set" && req.method === "POST") {
       // { sup, keys: [page*100 + image number], on: true|false } approves or unapproves images in library/<sup>.on
       if (!isAdmin) return deny("Only admins can approve library images.");
@@ -1175,9 +1310,11 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       if (typeof b.sup !== "string" || !validPath(dp, true) || !Array.isArray(b.keys) || b.keys.length > 5000) return send(res, 400, { code: "invalid_argument" });
       const keys = b.keys.map(Number).filter(k => Number.isInteger(k) && k >= 0 && k < 1e7);
       const cur = store[dp];
-      const set = new Set((cur?.data?.on || []).map(Number));
-      keys.forEach(k => (b.on ? set.add(k) : set.delete(k)));
-      const next = { on: [...set].sort((x, y) => x - y), updated: new Date().toISOString(), by: me.name || "" };
+      const set = new Set((cur?.data?.on || []).map(Number)), at = { ...(cur?.data?.at || {}) }, now = Date.now();
+      // at = { key: when it was approved }, so each person can be shown what's new since they last looked.
+      // Images approved before this was kept have no time and never count as new.
+      keys.forEach(k => { if (b.on) { if (!set.has(k)) at[k] = now; set.add(k); } else { set.delete(k); delete at[k]; } });
+      const next = { on: [...set].sort((x, y) => x - y), at, updated: new Date().toISOString(), by: me.name || "" };
       store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
       persist(); broadcast({ path: dp, exists: true, data: next });
       return send(res, 200, { ok: true, on: next.on.length });
@@ -1185,7 +1322,7 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
     if (p === "/api/library/add" && req.method === "POST") {
       // { project, file, photo?: base64 JPEG, prefix?: "SF" } adds an approved library image to a project as a piece.
       // Built here from the catalogue index so clients (who can't otherwise create pieces) can add them too.
-      const b = await readJSON(req, 4 * 1024 * 1024);
+      const b = await readJSON(req, 9 * 1024 * 1024);
       const pid = String(b.project || "");
       if (!validPath("projects/" + pid, true) || !store["projects/" + pid]) return send(res, 404, { code: "not_found", message: "That project no longer exists." });
       if (!canSeeProject(me, pid)) return deny("You can't add to that project.");
@@ -1195,6 +1332,7 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       const [file, sup, page, codesStr, text] = it; const S = lib.sups[sup] || {};
       const m = file.match(/_p(\d+)_(\d+)\.jpg$/); const key = m ? Number(m[1]) * 100 + Number(m[2]) : -1;
       if (!isAdmin && !(store["library/" + sup]?.data?.on || []).includes(key)) return deny("That image hasn't been approved yet.");
+      if (libHiddenFor(me, sup)) return send(res, 400, { code: "invalid_argument", message: "That image isn't in the library." });
       const pre = `projects/${pid}/items/`;
       const items = Object.entries(store).filter(([k]) => k.startsWith(pre) && k.split("/").length === 4).map(([, v]) => v.data);
       const dup = Object.entries(store).find(([k, v]) => k.startsWith(pre) && v.data?.libSource?.file === file);
@@ -1203,7 +1341,8 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       const category = libCatSection(S.cat) || "Finishes";
       const t0 = String(text || "");
       const zhPrefix = /沙发/.test(t0) ? "SF" : /(休闲椅|躺椅)/.test(t0) ? "LC" : /凳/.test(t0) ? "STL" : /椅/.test(t0) ? "CH" : /(茶几|餐台|餐桌|桌|几)/.test(t0) ? "TB" : /(柜|架)/.test(t0) ? "CR" : /床/.test(t0) ? "BD" : null;
-      const prefix = zhPrefix || (/^[A-Z]{1,5}$/.test(b.prefix || "") ? b.prefix : category === "Furniture" ? "F" : "M");
+      // Furniture is tagged by what it is (SF, CH, TB…); everything else by its category, like pieces added in the book (LT for lighting).
+      const prefix = category === "Furniture" ? zhPrefix || (/^[A-Z]{1,5}$/.test(b.prefix || "") ? b.prefix : "F") : LIB_CODE[category] || "FIN";
       const used = new Set(items.map(x => String(x.code || "").toUpperCase().match(/^([A-Z]+)-?(\d+)/)).filter(x => x && x[1] === prefix).map(x => Number(x[2])));
       let n = 1; while (used.has(n)) n++;
       const code = `${prefix}-${n}`;
@@ -1218,56 +1357,30 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       }
       const codes = String(codesStr || "").split(" ").filter(Boolean);
       const drive = S.drive ? `https://drive.google.com/file/d/${S.drive}/view` : S.up ? `/lib/pdf/${sup}.pdf` : null;
-      const doc = { specs: [], photo, photoFit: "contain", name: codes[0] ? `${codes[0]} · ${L[0]}` : `${L[0]} ${L[1]} · p${page}`.trim(), description: L[1] ? `${L[0]} ${L[1]}` : "",
+      // The catalogue page the image is on goes in the Specification as a one-page PDF (the browser renders the page;
+      // catalogues kept on Google Drive can't be read here, so those get a link instead). Drawings & references stay for the project's own drawings.
+      const catSpec = { label: "Catalogue page", value: `${S.pdf || L[0]} · p.${page}` };
+      if (typeof b.page === "string" && b.page.length < 6e6) {
+        const jpg = Buffer.from(b.page, "base64");
+        const pdf = jpg.length && sniffBuf(jpg) === "image/jpeg" ? jpegToPdf(jpg, Number(b.pageW), Number(b.pageH)) : null;
+        if (pdf) {
+          const id = crypto.randomBytes(16).toString("hex");
+          await fsp.writeFile(path.join(BLOB_DIR, id), pdf);
+          await fsp.writeFile(path.join(BLOB_DIR, id + ".json"), JSON.stringify({ contentType: "application/pdf", sizeBytes: pdf.length, createdAt: new Date().toISOString(), source: `library:${file} p.${page}` }));
+          Object.assign(catSpec, { asset: id, mime: "application/pdf" });
+        }
+      }
+      if (!catSpec.asset && drive) catSpec.url = S.up && !S.drive ? `${drive}#page=${page}` : drive;
+      const doc = { specs: [catSpec], photo, photoFit: "contain", name: codes[0] ? `${codes[0]} · ${L[0]}` : `${L[0]} ${L[1]} · p${page}`.trim(), description: L[1] ? `${L[0]} ${L[1]}` : "",
         category, supplier: L[0], product: L[1] || "", modelCode: codes[0] || "", zone: "", ...(category === "Furniture" ? { furnType: prefix } : {}),
         code, qty: null, unit: "ea", leadWeeks: null, needBy: null, unitCost: null, status: "Concept", material: "wood", color: "#C9C3B8",
-        notes: `From the sourcing library: ${file}`, refs: [{ kind: "Spec sheet", no: "p." + page, title: S.pdf || "", url: drive, asset: null }],
+        notes: `From the sourcing library: ${file}`, refs: [],
         libSource: { file, sup, page, pdf: S.pdf || "", drive: S.drive || "" }, created: new Date().toISOString(), source: "Sourcing library", addedBy: { id: me.id, name: me.name || "", role: me.role } };
       const id = crypto.randomBytes(10).toString("hex");
       const dp = pre + id, tracked = trackChanges(me, null, doc);
       store[dp] = { data: tracked, version: 1, updatedAt: doc.created };
       persist(); broadcast({ path: dp, exists: true, data: tracked });
       return send(res, 200, { ok: true, id, code });
-    }
-
-    // find products online
-    if (p.startsWith("/api/match/") && req.method === "POST") {
-      if (!isAdmin) return deny("Only admins can find products online.");
-      const b = await readJSON(req, 12 * 1024 * 1024);
-      const dp = `projects/${b.project}/items/${b.item}`;
-      if (!validPath(dp, true) || !canRead(me, dp)) return deny();
-      const it = store[dp]?.data; if (!it) return send(res, 404, { code: "not_found", message: "That piece no longer exists." });
-      if (p === "/api/match/start") {
-        if (!ANTHROPIC_API_KEY) return send(res, 503, { code: "sampling_disabled", message: "Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render." });
-        const img = b.image && /^image\/(jpeg|png|webp|gif)$/.test(b.image.media_type) && typeof b.image.data === "string" && b.image.data.length < 7e6 ? b.image : null;
-        if (!img && !it.name) return send(res, 400, { code: "invalid_argument", message: "Add a photo or a name first." });
-        if (it.match?.status === "searching" || it.match?.status === "pulling") return send(res, 200, { ok: true, already: true });
-        const hint = String(b.hint || "").trim().slice(0, 300);
-        patchItem(dp, { match: { status: "searching", started: new Date().toISOString(), by: me.name || "", hint, candidates: [] } });
-        enqueue(() => runIdentify(dp, img, hint, b.lang));
-        return send(res, 200, { ok: true });
-      }
-      if (p === "/api/match/details") {
-        const i = Number(b.index); const c = it.match?.candidates?.[i];
-        if (!c) return send(res, 400, { code: "invalid_argument", message: "Pick a match first." });
-        if (!ANTHROPIC_API_KEY) return send(res, 503, { code: "sampling_disabled", message: "Claude isn't set up on this server yet." });
-        patchItem(dp, { match: { ...it.match, status: "pulling", chosen: i, message: null } });
-        enqueue(() => runDetails(dp, i, b.lang));
-        return send(res, 200, { ok: true });
-      }
-      if (p === "/api/match/photo") {
-        // Save the product photo from the web into the project's files.
-        try {
-          const { body, type } = await safeFetch(String(b.url || ""), { maxBytes: 15e6, timeout: 15000, accept: "image/*" });
-          const ct = /^image\/(jpeg|png|webp|gif)$/.test(type) ? type : sniffBuf(body);
-          if (!ct) return send(res, 415, { code: "unsupported_type", message: "That image couldn't be used." });
-          const id = crypto.randomBytes(16).toString("hex");
-          await fsp.writeFile(path.join(BLOB_DIR, id), body);
-          await fsp.writeFile(path.join(BLOB_DIR, id + ".json"), JSON.stringify({ contentType: ct, sizeBytes: body.length, createdAt: new Date().toISOString(), source: String(b.url).slice(0, 500) }));
-          return send(res, 200, { id });
-        } catch (e) { return send(res, 502, { code: "upstream_error", message: "Couldn't download that photo from the site." }); }
-      }
-      return send(res, 404, { code: "not_found" });
     }
 
     // files

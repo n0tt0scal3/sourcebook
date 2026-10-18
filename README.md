@@ -71,16 +71,9 @@ In the service's **Settings → Custom Domains**, add something like `sourcebook
   - **Roles:** Admin: everything, including people, deleting projects and backups. Sourcing agent: create, edit, import, upload, read drawings, archive. Client: only their projects; can view, approve or request changes, and comment. Internal notes and the order schedule are hidden from clients.
 - **Studio password:** leaving the email / WeChat box blank and entering `APP_PASSWORD` always signs in as the owner (an admin). It's your way back in, so keep it private.
 
-## Finding products online
+## Adding pieces from images
 
-Drop an image on **Add products or materials** (or open any piece and use **Find it online**). Claude searches the web for the product and shows up to four likely matches with their source. Pick one and Claude reads that product page and brings back its details (manufacturer, model, dimensions, finishes, price, lead time, spec sheet), which you tick to apply. You can also use the product photo from the site.
-
-- Searches run on the server, so they finish even if you close the page. Cards show "Searching" and then "Matches ready".
-- When you start a project from an image, tick **Find each piece online** to look up every detected piece.
-- Each search uses Claude's web search on your Anthropic account: roughly 10–20¢ per piece. Web search must be allowed for the account (it is by default; see Settings → Capabilities in the Anthropic Console).
-- Prices are only filled in when listed in CAD or CNY; other currencies are noted as a spec line. Always confirm prices and lead times with the supplier.
-
-You can also drop PDFs and images straight onto a piece's **Drawings & references** section to attach them; Claude reads the first one.
+Drop an image on **Add products or materials** to open a new piece with that image. You can also drop PDFs and images straight onto a piece's **Drawings & references** section to attach them; Claude reads the first one.
 
 ## Sourcing library
 
@@ -158,6 +151,8 @@ Your data lives on the Render disk and the app's code lives in GitHub. An update
 | `ANTHROPIC_API_KEY` | Enables image detection and drawing reading. |
 | `ANTHROPIC_MODEL` | Claude model used for reading images and drawings. Default `claude-sonnet-5`. |
 | `DATA_DIR` | Where data is stored. Must stay on the disk's mount path. |
+| `GOOGLE_SERVICE_ACCOUNT` | JSON key of a Google service account (paste the whole file, or it base64-encoded). With `DRIVE_CATALOGUE_FOLDER`, Sourcebook checks Google Drive for new catalogue PDFs every 15 minutes and offers them to admins in the Sourcing library. |
+| `DRIVE_CATALOGUE_FOLDER` | The catalogue folder (90 CHINA PRODUCTS): its Drive link or folder id. Share the folder with the service account's email as Viewer. Category comes from the subfolder name. |
 
 ## Limits
 

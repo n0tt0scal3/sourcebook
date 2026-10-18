@@ -8,9 +8,16 @@
   const LIB_LABEL = { "BILLA-Sofa": ["Billa", "Sofas & lounge chairs"], "BILLA-CoffeeTV": ["Billa", "Coffee tables & TV units"], "BILLA-Dining": ["Billa", "Dining"], "BILLA-Outdoor": ["Billa", "Outdoor"], "HALO": ["HALO", "Collection 2026"], "Kaiwuli": ["Kaiwuli", "Catalogue 2026"], "TO-Tearsheet": ["TO Interactive", "Tearsheets 2025"] };
   const LIB_ROOT = "G:\\My Drive\\LMNL\\90 CHINA PRODUCTS\\";
   const ZH = {
+    "Sourcebook can't check Google Drive for new catalogues:": "选材手册无法检查 Google 云盘上的新目录：", "Check again": "重新检查", "No new catalogues on Google Drive.": "Google 云盘上没有新目录。", "Check now": "立即检查",
+    "Ignore": "忽略", "Couldn't get the PDF from Google Drive. Try again.": "无法从 Google 云盘获取 PDF，请重试。", "Checking Google Drive…": "正在检查 Google 云盘…", "Google Drive couldn't be reached.": "无法连接 Google 云盘。",
+    "The catalogue folder isn't shared with Sourcebook's Google account.": "目录文件夹尚未共享给选材手册的 Google 账号。", "That PDF isn't in the catalogue folder any more.": "该 PDF 已不在目录文件夹中。",
+    "The Google key in Render (GOOGLE_SERVICE_ACCOUNT) couldn't be read.": "无法读取 Render 中的 Google 密钥（GOOGLE_SERVICE_ACCOUNT）。",
     "Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.": "把图片拖到这里，我们会在图库中搜索相似的产品。如果找不到，我们会为您采购。", "Choose a photo": "选择图片", "What are you looking for? (optional) e.g. the chair, in walnut": "您想找什么？（可选）例如：这把椅子，胡桃木", "Sending it to our sourcing agent…": "正在发送给采购代理…", "Searching our library for something similar…": "正在图库中搜索相似产品…", "We couldn't find anything similar in our library, so we've sent it to our sourcing agent. We'll source it for you.": "图库中没有找到相似的产品，已发送给采购代理，我们会为您采购。", "Sent to our sourcing agent. We'll source it for you.": "已发送给采购代理，我们会为您采购。", "Withdraw the request": "撤回请求", "Search for something else": "搜索其他产品", "None of these? Send it to our sourcing agent": "都不合适？发送给采购代理", "Waiting to be sourced": "等待采购", "We're sourcing it": "正在为您采购", "Sourced": "已采购", "Note for the person who asked (optional)": "给提出请求者的备注（可选）", "Mark as sourced": "标为已采购", "Reopen": "重新打开", "Remove": "移除", "Sourcing requests": "采购请求", "Your sourcing requests": "您的采购请求", "Hide sourced": "隐藏已采购", "Nothing waiting to be sourced.": "没有待采购的请求。", "That isn't a photo.": "这不是图片。", "The search didn't finish. Try again.": "搜索未完成，请重试。", "Couldn't send it. Check your connection and try again.": "无法发送，请检查网络后重试。", "Photo": "图片", "Studio owner": "工作室负责人", "new": "新", "New": "新", "Add category": "添加类别", "Admins only": "仅限管理员", "New category": "新类别", "Name in English": "英文名称", "Name in Chinese": "中文名称", "e.g. Outdoor furniture": "例如：Outdoor furniture", "e.g. 户外家具": "例如：户外家具", "In a project, its products go under": "加入项目时归入", "Adding…": "正在添加…", "Cancel": "取消", "Give the category a name.": "请填写类别名称。", "There's already a category with that name.": "已有同名类别。", "Choose where its products go in a project.": "请选择加入项目时归入的分类。", "Only admins can add categories.": "只有管理员可以添加类别。", "No more categories can be added.": "无法再添加更多类别。", "Furniture": "家具", "Lighting": "灯具", "Plumbing": "卫浴", "Millwork": "木作", "Stone": "石材", "Finishes": "饰面", "Glazing": "玻璃", "Hardware": "五金", "Add photos of what you found": "添加找到的产品照片", "Attach photos or files": "添加照片或文件", "Up to 10 files per request.": "每个请求最多 10 个文件。", "That file is too big (25 MB at most).": "文件太大（最大 25 MB）。", "That file is empty.": "文件是空的。", "Only the studio and the sourcing agent can attach files to a request.": "只有工作室和采购代理可以为请求添加文件。", "Adding photos…": "正在添加照片…", "Photos of what was found": "找到的产品照片", "Up to 8 photos per request.": "每个请求最多 8 张照片。", "Only the studio and the sourcing agent can add photos to a request.": "只有工作室和采购代理可以为请求添加照片。",
     "You have 50 open requests. Wait for some to be sourced first.": "您有 50 个未完成的请求，请等部分采购完成后再提交。", "Only admins can remove a request.": "只有管理员可以移除请求。", "Only the studio and the sourcing agent can update a request.": "只有工作室和采购代理可以更新请求。", "Add a photo first.": "请先添加图片。", "Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.": "此服务器尚未设置 Claude。请在 Render 中添加 Anthropic API 密钥（ANTHROPIC_API_KEY）。",
     "Back to all product types": "返回全部产品类型",
+    "Catalogues clients see": "客户可见的图册", "Specifier / designer": "设计师", "Hidden from clients": "对客户隐藏", "Show all to clients": "全部对客户显示", "Hide all from clients": "全部对客户隐藏",
+    "Clients only see the approved images in the catalogues ticked here, in the library and in photo searches. Specifiers and designers see every approved catalogue.": "客户只能看到这里勾选的图册中已批准的图片（包括图库和以图搜图）。设计师可以看到所有已批准的图册。",
+    "Only admins choose what clients see.": "只有管理员可以设置客户可见内容。",
     "To be sourced": "待采购", "To review": "待审核", "With the studio": "工作室审核中", "With the sourcing agent": "采购代理处理中", "To find": "待寻找", "Turn on alerts for new requests": "开启新请求提醒", "Photos sent from the Sourcing library that we couldn't match. Review each one, then send it to the sourcing agent; with email set up, it goes to their QQ Mail with the photo attached.": "从采购图库提交、但未找到匹配的图片。逐一审核后发送给采购代理；设置邮件后会附上照片发送到其 QQ 邮箱。", "Items the studio has asked you to find. Mark each one sourced when you've found it, with a note on where.": "工作室请您寻找的产品。找到后请标记为已采购，并备注来源。", "Things you've asked us to find. We review each one and send it to our sourcing agent.": "您请我们寻找的产品。我们会逐一审核并交给采购代理。", "Nothing here.": "这里没有内容。", "Nothing to be sourced yet. Drop a photo in the box on the Sourcing library page.": "还没有待采购的产品。可在采购图库页面的方框中拖入图片。", "Sourcing agent's email (QQ Mail)": "采购代理的邮箱（QQ 邮箱）", "Email isn't set up yet, so this sends it in Sourcebook only. Add the SMTP settings in Render to email the agent's QQ Mail.": "尚未设置邮件，因此仅在选材手册中发送。在 Render 中添加 SMTP 设置后即可发送到代理的 QQ 邮箱。", "Message to the agent (optional)": "给代理的留言（可选）", "e.g. Need 6, walnut, by November": "例如：需要 6 件，胡桃木，11 月前", "Sending…": "正在发送…", "Send to the sourcing agent again": "再次发送给采购代理", "Send to the sourcing agent": "发送给采购代理", "Client": "客户", "Message to the agent": "给代理的留言", "Where it was found, for the person who asked (optional)": "在哪里找到的，告诉提出请求的人（可选）", "Add the sourcing agent's email first.": "请先填写采购代理的邮箱。", "Sent to the sourcing agent by email.": "已通过邮件发送给采购代理。", "Sent to the sourcing agent in Sourcebook.": "已在选材手册中发送给采购代理。", "Adding it to TBS (to be sourced)…": "正在加入待采购 TBS…", "Nothing similar in our library, so it's been added to TBS (to be sourced).": "图库中没有相似产品，已加入待采购 TBS。", "We couldn't find anything similar in our library, so it's been added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "图库中没有找到相似的产品，已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Added to TBS (to be sourced).": "已加入待采购 TBS。", "Added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Open TBS": "打开待采购 TBS", "None of these? Add it to TBS (to be sourced)": "都不合适？加入待采购 TBS", "Email isn't set up on this server yet. Add the SMTP settings in Render, or send it in Sourcebook only.": "此服务器尚未设置邮件。请在 Render 中添加 SMTP 设置，或仅在选材手册中发送。", "The email couldn't be sent. Check the SMTP settings in Render and try again.": "邮件无法发送，请检查 Render 中的 SMTP 设置后重试。", "That email doesn't look right.": "邮箱格式不正确。", "Only admins can send requests to the sourcing agent.": "只有管理员可以将请求发送给采购代理。",
     "Sourcing library": "采购图库", "Approved": "已批准", "Not approved": "未批准", "All": "全部", "Scanned": "已扫描", "In this project": "本项目中", "All catalogues": "全部图册",
     "Approve all shown": "批准全部显示项", "Move selected to…": "将所选移至…", "Select all shown": "全选显示项", "Clear selection": "清除选择", "Select images first.": "请先选择图片。", "Select to move": "选择以移动", "Unapprove all shown": "取消批准全部显示项", "Approve page": "批准本页", "Unapprove page": "取消批准本页", "In project": "已在项目中",
@@ -32,6 +39,10 @@
     "Choose a PDF and enter the supplier.": "请选择 PDF 并填写供应商。", "Couldn't read that PDF.": "无法读取该 PDF。",
     "The PDF is scanned in this browser, so keep this tab open until it finishes. Photos in the PDF become library images named like the others (category_supplier_page_number) and start unapproved. Up to 300 MB and 2,000 pages.": "PDF 在此浏览器中扫描，请保持此标签页打开直到完成。PDF 中的照片会按与其他图片相同的方式命名（类别_供应商_页码_编号）成为图库图片，默认未批准。最大 300 MB、2000 页。",
     "All product types": "全部产品类型", "Favourites": "收藏", "Favourite": "收藏", "Add to favourites": "加入收藏", "Remove from favourites": "取消收藏", "No favourites yet. Tap the star on any image to save it here.": "还没有收藏。点击任意图片上的星标即可收藏到这里。", "Star images to save them here": "点星标即可收藏到这里", "Product type": "产品类型", "Not sorted yet": "尚未分类", "Choose a product type to see its images.": "选择一个产品类型以查看图片。",
+    "Featured products": "精选产品", "Featured": "精选", "Feature": "设为精选", "Feature on the landing page": "设为首页精选", "Remove from featured": "取消精选", "The studio's picks": "工作室精选",
+    "See all featured products": "查看全部精选产品", "Pause": "暂停", "Play": "播放", "Open this product": "打开此产品",
+    "No featured products yet. Open an approved product and press Feature.": "还没有精选产品。打开已批准的产品，点“设为精选”。",
+    "Approve the image before featuring it.": "请先批准该图片，再设为精选。", "Featured products show here, large, for everyone who opens the library. Open an approved product and press Feature.": "精选产品会以大图显示在这里，所有打开图库的人都能看到。打开已批准的产品，点“设为精选”。",
     "Full-size images": "高清大图", "Upload zips": "上传压缩包", "Uploading…": "正在上传…", "Click to see it full screen": "点击全屏查看",
     "Choose the catalogue zips from Google Drive (or the JPEGs inside them). Images are matched to the library by file name.": "选择 Google 云端硬盘中的图册压缩包（或其中的 JPEG 图片）。图片按文件名与图库匹配。",
   };
@@ -133,6 +144,10 @@
 .sbl-zoomview img{max-width:100%;max-height:100%;object-fit:contain}
 .sbl-full{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;grid-column:1/-1;font-size:13px;color:var(--ink2)}
 .sbl-full .mono{font-size:12px;color:var(--muted)}
+.sbl-cli{font-size:13px;color:var(--ink2)}.sbl-cli.open{border-top:1px solid var(--rule);padding-top:12px}.sbl-cli .sbl-hint{margin:8px 0}
+.sbl-clilist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 18px;margin-top:8px}
+.sbl-clirow{display:flex!important;flex-direction:row!important;gap:10px;font-size:13px!important;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--rule);cursor:pointer}.sbl-clirow input{margin-top:3px}.sbl-clirow b{display:block;font-weight:500;color:var(--ink)}.sbl-clirow .sbl-sub{display:block;font-size:12px;color:var(--muted)}
+.sbl-hid{color:var(--muted)}
 .sbl-find{margin-top:22px;padding:18px;background:var(--paper);border:1.5px dashed var(--ink2);transition:background .2s,border-color .2s}
 .sbl-find.busy{border-style:solid;border-color:var(--rule)}
 .sbl-find.over{border-color:var(--ink);background:var(--ground)}
@@ -153,6 +168,34 @@
 .sbl-fbar{display:block;height:3px;max-width:320px;margin-top:6px;background:var(--rule2);overflow:hidden}
 .sbl-fbar i{display:block;height:100%;width:35%;background:var(--ink);animation:sblbar 1.4s ease-in-out infinite}
 @keyframes sblbar{0%{transform:translateX(-100%)}100%{transform:translateX(290%)}}
+.sbl-cat .sbl-sw{position:relative}
+.sbl-sw .sbl-newb{position:absolute;top:8px;right:8px;min-width:26px;padding:3px 8px;background:#1E7A3C;color:#fff;font-style:normal;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;text-align:center}
+.sbl-newc{font-weight:500;color:#1E7A3C;font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.sbl-hero-f{position:relative;margin-top:22px;border:1px solid var(--rule);background:var(--paper);overflow:hidden}
+.sbl-hero-f .sbl-fslide{display:grid;grid-template-columns:minmax(0,1fr) 300px;min-height:min(58vh,540px);animation:sbl-fade .9s ease}
+@keyframes sbl-fade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.sbl-hero-f .sbl-fslide{animation:none}}
+.sbl-fpic{position:relative;display:grid;place-items:center;width:100%;height:100%;border:0;padding:18px;margin:0;background:#fff;cursor:zoom-in;min-width:0}
+.sbl-fpic img{max-width:100%;max-height:min(54vh,500px);object-fit:contain;display:block}
+.sbl-fpic .sbl-sw{display:block;width:min(100%,460px);aspect-ratio:1;border:0}
+.sbl-finfo{display:flex;flex-direction:column;gap:10px;padding:26px 24px;border-left:1px solid var(--rule)}
+.sbl-finfo h3{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(26px,2.6vw,34px);line-height:1.1;word-break:break-word}
+.sbl-finfo p{margin:0;color:var(--muted);font-size:13px}
+.sbl-finfo .sbl-fctl{margin-top:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sbl-fdots{display:flex;gap:6px;flex-wrap:wrap;max-width:100%}
+.sbl-fdots button{width:8px;height:8px;border-radius:50%;border:0;padding:0;background:var(--rule);cursor:pointer}
+.sbl-fdots button[aria-current=true]{background:var(--ink)}
+.sbl-fbar{position:absolute;left:0;bottom:0;height:2px;background:#c8a046;width:0}
+.sbl-hero-f.run .sbl-fbar{animation:sbl-bar var(--dur) linear forwards}
+@keyframes sbl-bar{from{width:0}to{width:100%}}
+.sbl-fnav{border:1px solid var(--rule);background:var(--paper);width:34px;height:34px;cursor:pointer;font-size:18px;line-height:1;color:var(--ink)}
+.sbl-ftag{position:absolute;right:6px;bottom:34px;background:#c8a046;color:#fff;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;pointer-events:none}
+.sbl-feat{margin-left:auto;flex:none;border:0;background:none;padding:0 2px;font-size:14px;line-height:1;color:var(--muted);cursor:pointer;font-family:inherit}
+.sbl-feat[aria-pressed=true]{color:#c8a046}
+.sbl-feat+.sbl-star{margin-left:0}
+.btn.sbl-featbtn[aria-pressed=true]{color:#a07a20}
+@media (max-width:760px){.sbl-hero-f .sbl-fslide{grid-template-columns:1fr;min-height:0}.sbl-fpic img{max-height:52vh}.sbl-finfo{border-left:0;border-top:1px solid var(--rule);padding:16px}}
+.sbl-newt{position:absolute;left:6px;bottom:34px;background:#1E7A3C;color:#fff;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;pointer-events:none}
 .sbl-cat .sbl-tbsic{position:relative;background-size:cover;background-position:center}
 .sbl-tbsic i{position:absolute;top:8px;right:8px;min-width:26px;padding:3px 8px;background:#1E7A3C;color:#fff;font-style:normal;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;text-align:center}
 .sbl-req .sbl-newtag{align-self:flex-start;background:#1E7A3C;color:#fff;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px}
@@ -192,6 +235,12 @@
 .sbl-fext{flex:none;font-family:var(--mono);font-size:10px;letter-spacing:.06em;padding:2px 5px;background:var(--ink);color:var(--paper)}
 .sbl-addfound{align-self:flex-start;cursor:pointer}
 .sbl-addfound input{display:none}
+.sbl-drive{grid-column:1/-1;margin:0 0 14px;padding:14px 16px;background:var(--paper);border:1px solid var(--rule);font-size:14px;color:var(--ink)}
+.sbl-drive h5{margin:0 0 8px;font-family:var(--display);font-weight:400;font-size:18px}
+.sbl-drive.quiet{padding:0;background:none;border:0;color:var(--muted);font-size:13px}
+.sbl-drive.err{border-color:var(--crit);color:var(--crit)}
+.sbl-driverow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--rule2,var(--rule))}
+.sbl-driverow span{display:flex;flex-direction:column;min-width:0}.sbl-driverow b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sbl-driverow small{color:var(--muted);font-size:12px}
 .sbl-addcat{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:14px 18px;align-items:end;padding:16px;background:var(--paper);border:1px solid var(--rule)}
 .sbl-addcat label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
 .sbl-addcat input:not([type=file]),.sbl-addcat select{font:inherit;font-size:15px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px;min-width:0}
@@ -229,6 +278,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
 .sbl-note code{font-family:var(--mono);font-size:12px;overflow-wrap:anywhere;color:var(--ink)}
 .sbl-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
 .sbl-hint{color:var(--muted);font-size:13px;margin:10px 0 0}
+.sbl-added{flex-basis:100%;margin:2px 0 0;color:var(--ok);font-size:13.5px;font-weight:600}
 .sbl-pick{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted);min-width:min(100%,260px)}
 .sbl-pick select{font:inherit;font-size:15px;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:7px 2px}
 .sbl-excerpt{margin:16px 0 0;color:var(--muted);font-size:13px;max-width:65ch}
@@ -237,7 +287,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
 `;
   const style = document.createElement("style"); style.textContent = CSS; document.head.appendChild(style);
 
-  let LIB = null, libP = null, on = {}, tov = {}, watching = false, qT = null, full = new Set(), up = null;
+  let LIB = null, libP = null, on = {}, tov = {}, hideCli = new Set(), watching = false, qT = null, full = new Set(), up = null;
   // Product types, independent of the supplier catalogue. Images are sorted into them once (lib/data.json, item[7]);
   // an admin's corrections are stored as librarytypes/<catalogue> = { t: { key: code } }.
   const BASE_TYPES = [["S", "Sofas", "沙发"], ["L", "Lounge chairs", "休闲椅"], ["C", "Dining chairs", "餐椅"], ["T", "Stools & bar stools", "凳子与吧凳"], ["B", "Benches & ottomans", "长凳与脚凳"],
@@ -251,10 +301,23 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const at = BASE_TYPES.findIndex(x => x[0] === "A");
     TYPES = [...BASE_TYPES.slice(0, at), ...custom.map(x => [x.c, x.en, x.zh || x.en]), ...BASE_TYPES.slice(at)];
   }
-  const typeName = c => { if (c === "F") return t("Favourites"); const x = TYPES.find(y => y[0] === c) || TYPES[TYPES.length - 1]; return zh() ? x[2] : x[1]; };
+  const typeName = c => { if (c === "F") return t("Favourites"); if (c === "FT") return t("Featured products"); const x = TYPES.find(y => y[0] === c) || TYPES[TYPES.length - 1]; return zh() ? x[2] : x[1]; };
   // Each person's own starred images (file names), saved on the server for their account.
   let fav = new Set();
-  const inType = o => ui.type === "F" ? fav.has(o.file) : typeOf(o) === ui.type;
+  const inType = o => ui.type === "F" ? fav.has(o.file) : ui.type === "FT" ? feat.has(o.file) : typeOf(o) === ui.type;
+  // Featured products: the studio's picks (libraryfeat/main, file names oldest first), chosen by admins from approved
+  // images. They cycle, large, at the top of the library, and all of them are listed under the Featured tile.
+  let feat = new Map();
+  const setFeat = d => { feat = new Map(((d && d.f) || []).map((f, i) => [f, i])); };
+  async function fetchFeat() { const r = await fetch("/api/db/doc?path=libraryfeat/main"); if (!r.ok) return; const d = await r.json(); setFeat(d.exists && d.data); repaint(); }
+  function toggleFeat(o) {
+    const x = !feat.has(o.file); if (x) feat.set(o.file, Date.now()); else feat.delete(o.file);
+    api("/api/library/featured", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ file: o.file, on: x }) })
+      .catch(e => { host.toast(t(e.message || "Couldn't save. Check your connection and try again.")); fetchFeat().catch(() => {}); });
+    return x;
+  }
+  // Newest picks first. Only approved ones, except for an admin curating on the dashboard.
+  const featPool = () => LIB.items.filter(o => feat.has(o.file) && (curating() || isOn(o))).sort((a, b) => feat.get(b.file) - feat.get(a.file));
   async function fetchFav() { const r = await fetch("/api/library/fav"); if (!r.ok) return; fav = new Set((await r.json()).files || []); repaint(); }
   function toggleFav(o) {
     const x = !fav.has(o.file); x ? fav.add(o.file) : fav.delete(o.file);
@@ -262,7 +325,21 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       .then(r => { if (!r.ok) throw new Error(); }).catch(() => { host.toast(t("Couldn't save. Check your connection and try again.")); fetchFav().catch(() => {}); });
     return x;
   }
+  // New in the library for this person (file names, from the server): approved since they last looked (for an
+  // admin, uploaded by another admin). Opening a product type or an image marks it seen; what was just seen keeps a
+  // "New" tag until they leave the page, so they can find it.
+  let fresh = new Set(), justSeen = new Set(), seenT = null;
+  async function fetchSeen() { const r = await fetch("/api/library/seen"); if (!r.ok) return; fresh = new Set((await r.json()).files || []); repaint(); tbsBadge(); }
+  const fetchSeenSoon = () => { clearTimeout(seenT); seenT = setTimeout(() => fetchSeen().catch(() => {}), 1500); };
+  function markSeen(files) {
+    files = files.filter(f => fresh.has(f)); if (!files.length) return;
+    files.forEach(f => { fresh.delete(f); justSeen.add(f); }); tbsBadge();
+    fetch("/api/library/seen", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ files }) }).catch(() => {});
+  }
+  const isNew = o => fresh.has(o.file) && (curating() || isOn(o));
+  const newBadge = n => n ? `<i class="sbl-newb">● ${nf(n)} ${t("new")}</i>` : "";
   const ui = { type: null, sup: null, q: "", show: null, n: 120, open: null, adding: false, target: "", zoom: false, seq: [] };
+  const done = new Map(); // file -> [{project, pname, code, id, existing}] added from the card this visit, shown on the card
   // host.ctx: "studio" (dashboard) or "project". canEdit: may approve (admins, on the dashboard).
   // project(): this project's id (project ctx). projects(): [{id, name}] to add to (studio ctx).
   let host = { ctx: "studio", internal: () => true, canEdit: () => false, canAdd: () => false, project: () => null, projectName: () => "", projects: () => [], inProject: () => new Map(), prefix: null, added: null, openPiece: () => {}, layer: () => {}, toast: m => console.log(m), toastUndo: m => console.log(m) };
@@ -298,20 +375,21 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   async function fetchTypes() {
     const r = await fetch("/api/db/col?path=librarytypes"); if (!r.ok) return;
     const j = await r.json(); const next = {}; j.docs.forEach(d => { next[d.id] = (d.data && d.data.t) || {}; }); tov = next;
+    const rs = await fetch("/api/db/doc?path=libraryshow/main").catch(() => null); if (rs && rs.ok) { const d = await rs.json(); hideCli = new Set((d.exists && d.data && d.data.hide) || []); }
     const rc = await fetch("/api/db/col?path=librarycats").catch(() => null); if (rc && rc.ok) { const m = ((await rc.json()).docs || []).find(d => d.id === "main"); setCustom(m && m.data && m.data.types); }
     repaint();
   }
   async function fetchFull() {
     const r = await fetch("/api/library/full"); if (!r.ok) return;
-    full = new Set((await r.json()).files || []); fullLine(); if (ui.open != null) host.layer();
+    full = new Set((await r.json()).files || []); fullLine(); fPaint(); if (ui.open != null) host.layer();
   }
   function watch() {
     if (watching) return; watching = true;
-    fetchOn().catch(() => {}); fetchFull().catch(() => {}); fetchTypes().catch(() => {}); fetchFav().catch(() => {}); fetchReqs().catch(() => {});
+    fetchOn().catch(() => {}); fetchFull().catch(() => {}); fetchTypes().catch(() => {}); fetchFav().catch(() => {}); fetchFeat().catch(() => {}); fetchReqs().catch(() => {});
     try {
       const es = new EventSource("/api/events");
-      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data && !was && isAdm() && inReview(m.data) && !(m.data.by && m.data.by.id === tbsCfg.me)) tbsAlert({ id, ...m.data }); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "") && JSON.stringify(was.sent || null) === JSON.stringify(m.data.sent || null) && JSON.stringify(was.found || []) === JSON.stringify(m.data.found || []) && JSON.stringify(was.files || []) === JSON.stringify(m.data.files || [])) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (m.path === "librarycats/main") { setCustom(m.exists && m.data && m.data.types); repaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); } catch (_) {} };
-      es.onopen = () => { fetchOn().catch(() => {}); fetchTypes().catch(() => {}); fetchReqs().catch(() => {}); };
+      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); fetchSeenSoon(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data && !was && isAdm() && inReview(m.data) && !(m.data.by && m.data.by.id === tbsCfg.me)) tbsAlert({ id, ...m.data }); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "") && JSON.stringify(was.sent || null) === JSON.stringify(m.data.sent || null) && JSON.stringify(was.found || []) === JSON.stringify(m.data.found || []) && JSON.stringify(was.files || []) === JSON.stringify(m.data.files || [])) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (m.path === "libraryshow/main") { hideCli = new Set((m.exists && m.data && m.data.hide) || []); const w = $("#sbl-cliwrap"); if (w) w.innerHTML = cliHTML(); repaint(); return; } if (m.path === "libraryfeat/main") { setFeat(m.exists && m.data); repaint(); return; } if (m.path === "librarycats/main") { setCustom(m.exists && m.data && m.data.types); repaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); fetchSeenSoon(); } catch (_) {} };
+      es.onopen = () => { fetchSeen().catch(() => {}); fetchFeat().catch(() => {}); fetchOn().catch(() => {}); fetchTypes().catch(() => {}); fetchReqs().catch(() => {}); };
     } catch (_) {}
   }
 
@@ -330,6 +408,9 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const src = ui.sup && LIB.bySup[ui.sup] ? LIB.bySup[ui.sup] : LIB.items;
     return src.filter(o => { if (ui.type && !inType(o)) return false; const x = isOn(o); if (show === "on" && !x) return false; if (show === "off" && x) return false; return q.every(w => o.h.includes(w)); });
   }
+  // As shown in the grid: outside a single catalogue, images new to this person come first.
+  const markedNew = o => justSeen.has(o.file) || fresh.has(o.file);
+  function ordered() { const l = list(); if (ui.type === "FT") return l.sort((a, b) => feat.get(b.file) - feat.get(a.file)); if (!ui.sup && l.some(markedNew)) l.sort((a, b) => markedNew(b) - markedNew(a)); return l; }
   const sups = () => Object.keys(LIB.sups).filter(s => curating() || approved(LIB.bySup[s]));
 
   function view() {
@@ -347,10 +428,10 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       ${host.ctx === "project" ? `<h2>${t("Sourcing library")}</h2>` : ""}
       <p>${t(lede)}</p></div>
       <div class="sbl-stat"><div><span class="eyebrow">${t("Approved")}</span><b id="sbl-kept">${nf(a)}</b></div>${cur ? `<div><span class="eyebrow">${t("Scanned")}</span><b>${nf(tot)}</b></div>` : ""}${host.ctx === "project" ? `<div><span class="eyebrow">${t("In this project")}</span><b>${host.inProject().size}</b></div>` : ""}</div>
-      ${cur ? `<div class="sbl-full" id="sbl-full">${fullHTML()}</div><div id="sbl-addwrap" style="grid-column:1/-1">${addCatHTML()}</div>` : ""}</section>
+      ${cur ? `<div class="sbl-full" id="sbl-full">${fullHTML()}</div><div id="sbl-addwrap" style="grid-column:1/-1">${addCatHTML()}</div><div id="sbl-cliwrap" style="grid-column:1/-1">${cliHTML()}</div>` : ""}</section>
     ${ui.type === "TBS" ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All product types")}</button><h3>TBS · ${t("To be sourced")}</h3></div><div id="sbl-tbs">${tbsHTML()}</div><div class="sbl-tools"><button class="btn ghost sm sbl-back" data-sbltype="" data-sbltop>‹ ${t("Back to all product types")}</button></div>`
       : ""}${ui.type === "TBS" ? "" : `${ui.type ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All product types")}</button><h3>${esc(typeName(ui.type))}</h3></div><div class="sbl-chips" id="sbl-cats">${catsHTML()}</div>`
-      : `<div id="sbl-findwrap">${findHTML()}</div><div class="sbl-cats" id="sbl-cats">${catsHTML()}</div>`}
+      : `<div id="sbl-featwrap">${featHTML()}</div><div id="sbl-findwrap">${findHTML()}</div><div class="sbl-cats" id="sbl-cats">${catsHTML()}</div>`}
     <div class="sbl-tools"><input class="sbl-q" type="search" id="sbl-q" value="${esc(ui.q)}" placeholder="${esc(t("Search a code, product or page, e.g. AA01, Ampleforth, p44"))}" autocomplete="off" aria-label="${esc(t("Sourcing library"))}">
       ${cur ? `<span class="sbl-seg" role="group" aria-label="${t("Show")}">${[["on", "Approved"], ["off", "Not approved"], ["all", "All"]].map(([v, l]) => `<button class="chip" data-sblshow="${v}" aria-pressed="${show === v}">${t(l)}</button>`).join("")}</span>` : ""}
       <span class="sbl-count" id="sbl-count"></span>
@@ -359,22 +440,80 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       ${cur && (ui.sup || ui.type) ? `<span class="sbl-bulk"><button class="linkbtn" data-sblbulk="on">${t("Approve all shown")}</button><button class="linkbtn" data-sblbulk="off">${t("Unapprove all shown")}</button></span>` : ""}</div>
     <div id="sbl-grid">${gridHTML()}</div>`}</div>`;
   }
+  // The landing slideshow: one featured product at a time, large, changing every few seconds. It pauses while the
+  // pointer is over it, after a touch, while a product card is open, in a hidden tab, or when the viewer asked for less motion.
+  const F_MS = 6000;
+  let fIdx = 0, fT = null, fSig = "", fHover = false, fUser = true, fTouch = 0;
+  const featBtn = o => `<button class="sbl-feat" data-sblfeat="${o.i}" aria-pressed="${feat.has(o.file)}" title="${t(feat.has(o.file) ? "Remove from featured" : "Feature on the landing page")}">${feat.has(o.file) ? "◆" : "◇"}</button>`;
+  const fReduce = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (_) { return false; } };
+  const fRunning = () => fUser && !fHover && Date.now() > fTouch && ui.open == null && !document.hidden && !fReduce() && featPool().length > 1;
+  function featHTML() {
+    const pool = featPool(); fSig = pool.map(o => o.file).join("|");
+    if (!pool.length) return curating() ? `<p class="sbl-hint" style="padding-top:18px">◆ ${t("Featured products show here, large, for everyone who opens the library. Open an approved product and press Feature.")}</p>` : "";
+    fIdx = ((fIdx % pool.length) + pool.length) % pool.length;
+    const o = pool[fIdx], L = label(o.sup), nx = pool[(fIdx + 1) % pool.length];
+    if (nx && full.has(nx.file)) new Image().src = `/lib/full/${nx.file}`;
+    return `<section class="sbl-hero-f${fRunning() ? " run" : ""}" id="sbl-hero-f" style="--dur:${F_MS}ms" aria-roledescription="carousel" aria-label="${esc(t("Featured products"))}">
+      <div class="sbl-fslide" data-k="${esc(o.file)}">
+        <button class="sbl-fpic" data-sbl="fopen" aria-label="${esc(t("Open this product"))}: ${esc(name(o))}">${full.has(o.file) ? `<img src="/lib/full/${esc(o.file)}" alt="${esc(name(o))}">` : `<span class="sbl-sw" ${sprite(o)}></span>`}</button>
+        <div class="sbl-finfo"><span class="eyebrow">◆ ${t("Featured products")} · ${nf(fIdx + 1)} / ${nf(pool.length)}</span>
+          <h3>${esc(name(o))}</h3><p>${esc(typeName(typeOf(o)))} · ${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""}</p>
+          <span class="sbl-row" style="margin-top:6px"><button class="btn sm" data-sbl="fopen">${t("Open this product")}</button></span>
+          <div class="sbl-fctl">${pool.length > 1 ? `<button class="sbl-fnav" data-sbl="fprev" aria-label="${t("Previous")}">‹</button><button class="sbl-fnav" data-sbl="fnext" aria-label="${t("Next")}">›</button><button class="linkbtn" data-sbl="fplay">${t(fUser ? "Pause" : "Play")}</button>` : ""}
+            <button class="linkbtn" data-sbltype="FT">${t("See all featured products")} ›</button></div>
+          ${pool.length > 1 && pool.length <= 40 ? `<div class="sbl-fdots">${pool.map((_, i) => `<button data-sblfslide="${i}" aria-label="${i + 1}" aria-current="${i === fIdx}"></button>`).join("")}</div>` : ""}
+        </div></div><span class="sbl-fbar"></span></section>${(setTimeout(fArm, 0), "")}`;
+  }
+  function fArm() { clearTimeout(fT); if ($("#sbl-hero-f") && fRunning()) fT = setTimeout(() => fGo(fIdx + 1), F_MS); }
+  function fPaint() { clearTimeout(fT); const w = $("#sbl-featwrap"); if (w) w.innerHTML = featHTML(); }
+  function fGo(i) { fIdx = i; fPaint(); }
+  // Resume after a pause without redrawing the picture: restart the progress line and the timer.
+  function fResume() { const h = $("#sbl-hero-f"); if (!h) return; h.classList.remove("run"); void h.offsetWidth; h.classList.toggle("run", fRunning()); const b = h.querySelector("[data-sbl=fplay]"); if (b) b.textContent = t(fUser ? "Pause" : "Play"); fArm(); }
+  function fHold() { clearTimeout(fT); $("#sbl-hero-f")?.classList.remove("run"); }
+  // Only redraw the slideshow when the pool of picks changes, so it isn't restarted by every other repaint.
+  function fRefresh() { const pool = featPool(), sig = pool.map(o => o.file).join("|"); if (sig !== fSig) fPaint(); }
+  document.addEventListener("pointerover", e => { if (e.pointerType === "touch") return; const h = !!(e.target.closest && e.target.closest("#sbl-hero-f")); if (h !== fHover) { fHover = h; h ? fHold() : fResume(); } });
+  document.addEventListener("touchstart", e => { if (e.target.closest && e.target.closest("#sbl-hero-f")) { fTouch = Date.now() + 15000; fHold(); clearTimeout(fTouchT); fTouchT = setTimeout(fResume, 15100); } }, { passive: true });
+  let fTouchT = null;
+  document.addEventListener("visibilitychange", () => { document.hidden ? fHold() : fResume(); });
   function catsHTML() {
     const cur = curating(), vis = o => cur || isOn(o);
     if (ui.type) {
-      const mine = LIB.items.filter(o => inType(o) && vis(o)); const n = {}; mine.forEach(o => (n[o.sup] = (n[o.sup] || 0) + 1));
+      const mine = LIB.items.filter(o => inType(o) && vis(o)); const n = {}, nw = {}; mine.forEach(o => { n[o.sup] = (n[o.sup] || 0) + 1; if (markedNew(o)) nw[o.sup] = (nw[o.sup] || 0) + 1; });
       return `<button class="chip" data-sblsup="" aria-pressed="${!ui.sup}">${t("All catalogues")} · ${nf(mine.length)}</button>` +
-        Object.keys(n).map(s => { const L = label(s); return `<button class="chip" data-sblsup="${esc(s)}" aria-pressed="${ui.sup === s}">${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""} · ${nf(n[s])}</button>`; }).join("");
+        Object.keys(n).map(s => { const L = label(s); return `<button class="chip" data-sblsup="${esc(s)}" aria-pressed="${ui.sup === s}">${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""} · ${nf(n[s])}${nw[s] ? ` <b class="sbl-newc">● ${nf(nw[s])} ${t("new")}</b>` : ""}${cur && hideCli.has(s) ? ` <span class="sbl-hid">· ${t("Hidden from clients")}</span>` : ""}</button>`; }).join("");
     }
     const sub = (n, of) => cur ? `${nf(n)} / ${nf(of)} ${t("Approved").toLowerCase()}` : zh() ? `${nf(n)} 张图片` : `${nf(n)} image${n === 1 ? "" : "s"}`;
     const by = {}; LIB.items.forEach(o => (by[typeOf(o)] = by[typeOf(o)] || []).push(o));
     const favs = LIB.items.filter(o => fav.has(o.file) && vis(o)), fc = favs[0];
     const favTile = `<button class="sbl-cat" data-sbltype="F">${fc ? `<span class="sbl-sw" ${sprite(fc)}></span>` : `<span class="sbl-favic">★</span>`}<span class="sbl-name">★ ${t("Favourites")}</span><span class="sbl-sub">${favs.length ? (zh() ? `${nf(favs.length)} 张图片` : `${nf(favs.length)} image${favs.length === 1 ? "" : "s"}`) : t("Star images to save them here")}</span></button>`;
-    return favTile + tbsTileHTML() + TYPES.filter(([c]) => (by[c] && (cur || by[c].some(isOn))) || (cur && custom.some(x => x.c === c))).map(([c]) => {
+    const fp = featPool(), ftc = fp[0];
+    const featTile = fp.length || cur ? `<button class="sbl-cat" data-sbltype="FT">${ftc ? `<span class="sbl-sw" ${sprite(ftc)}></span>` : `<span class="sbl-favic">◆</span>`}<span class="sbl-name">◆ ${t("Featured products")}</span><span class="sbl-sub">${fp.length ? (zh() ? `${nf(fp.length)} 张图片` : `${nf(fp.length)} image${fp.length === 1 ? "" : "s"}`) : t("The studio's picks")}</span></button>` : "";
+    return featTile + favTile + tbsTileHTML() + TYPES.filter(([c]) => (by[c] && (cur || by[c].some(isOn))) || (cur && custom.some(x => x.c === c))).map(([c]) => {
       // Cover: an approved image if there is one, preferring product photos over tearsheet pages.
       const arr = by[c] || [], ok = arr.filter(isOn), pool0 = cur && !ok.length ? arr : ok, photos = pool0.filter(o => !/tearsheet/i.test(o.sup)), pool = photos.length ? photos : pool0, cover = pool[Math.min(pool.length - 1, Math.floor(pool.length * .12))];
-      return `<button class="sbl-cat" data-sbltype="${c}">${cover ? `<span class="sbl-sw" ${sprite(cover)}></span>` : `<span class="sbl-favic sbl-empty-ic">${esc(typeName(c).slice(0, 1))}</span>`}<span class="sbl-name">${esc(typeName(c))}</span><span class="sbl-sub">${sub(ok.length, arr.length)}</span>${cur ? `<span class="sbl-bar"><i style="width:${arr.length ? ok.length / arr.length * 100 : 0}%"></i></span>` : ""}</button>`;
+      const nn = arr.filter(isNew).length;
+      return `<button class="sbl-cat" data-sbltype="${c}">${cover ? `<span class="sbl-sw" ${sprite(cover)}>${newBadge(nn)}</span>` : `<span class="sbl-favic sbl-empty-ic">${esc(typeName(c).slice(0, 1))}</span>`}<span class="sbl-name">${esc(typeName(c))}</span><span class="sbl-sub">${sub(ok.length, arr.length)}</span>${cur ? `<span class="sbl-bar"><i style="width:${arr.length ? ok.length / arr.length * 100 : 0}%"></i></span>` : ""}</button>`;
     }).join("") + (cur ? addTypeHTML() : "");
+  }
+  // Which catalogues clients see. Specifiers, agents and admins see every approved catalogue; clients only the ones ticked here.
+  function cliHTML() {
+    const all = Object.keys(LIB.sups), shown = all.filter(s => !hideCli.has(s)).length;
+    const head = `<button class="linkbtn" data-sbl="clitog" aria-expanded="${!!ui.cli}">${t("Catalogues clients see")} · ${zh() ? `${nf(shown)} / ${nf(all.length)}` : `${nf(shown)} of ${nf(all.length)}`} ${ui.cli ? "▴" : "▾"}</button>`;
+    if (!ui.cli) return `<div class="sbl-cli">${head}</div>`;
+    const cat = c => { const x = String(c || ""); return x.startsWith("CUSTOM-") ? (custom.find(y => "CUSTOM-" + y.c === x) || {}).en || x : x[0] + x.slice(1).toLowerCase(); };
+    const rows = all.slice().sort((a, b) => cat(LIB.sups[a].cat).localeCompare(cat(LIB.sups[b].cat)) || label(a).join(" ").localeCompare(label(b).join(" "))).map(s => {
+      const L = label(s), n = approved(LIB.bySup[s]);
+      return `<label class="sbl-clirow"><input type="checkbox" data-sblcli="${esc(s)}" ${hideCli.has(s) ? "" : "checked"}><span><b>${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""}</b><span class="sbl-sub">${esc(zh() ? ({ Furniture: "家具", Office: "办公家具", Lighting: "灯具", Doors: "门", Millwork: "木作", Stone: "石材", Flooring: "地板", Signage: "标识", Plumbing: "卫浴", Vanities: "浴室柜", Mirrors: "镜子", "Wall panelling": "墙板", "Wood products": "木制品", "Partition systems": "隔断系统", "Glass products": "玻璃制品" })[cat(LIB.sups[s].cat)] || cat(LIB.sups[s].cat) : cat(LIB.sups[s].cat))} · ${zh() ? `已批准 ${nf(n)} 张` : `${nf(n)} approved`}</span></span></label>`;
+    }).join("");
+    return `<div class="sbl-cli open">${head}<p class="sbl-hint">${t("Clients only see the approved images in the catalogues ticked here, in the library and in photo searches. Specifiers and designers see every approved catalogue.")}</p>
+      <div class="sbl-row"><button class="linkbtn" data-sbl="cliall">${t("Show all to clients")}</button><button class="linkbtn" data-sbl="clinone">${t("Hide all from clients")}</button></div><div class="sbl-clilist">${rows}</div></div>`;
+  }
+  async function setCli(sups, show) {
+    const prev = new Set(hideCli); sups.forEach(s => show ? hideCli.delete(s) : hideCli.add(s));
+    const w = $("#sbl-cliwrap"); if (w) w.innerHTML = cliHTML(); const c = $("#sbl-cats"); if (c) c.innerHTML = catsHTML();
+    try { for (const s of sups) await api("/api/library/show", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ sup: s, clients: show }) }); }
+    catch (e) { hideCli = prev; const w2 = $("#sbl-cliwrap"); if (w2) w2.innerHTML = cliHTML(); host.toast(t(e.message || "Couldn't save. Check your connection and try again.")); }
   }
   // Admins add a category: its name in English and Chinese, and where its products go when added to a project.
   const SECTIONS = [["Furniture", "家具"], ["Lighting", "灯具"], ["Plumbing", "卫浴"], ["Millwork", "木作"], ["Stone", "石材"], ["Finishes", "饰面"], ["Glazing", "玻璃"], ["Hardware", "五金"]];
@@ -398,9 +537,9 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
   function gridHTML() {
     if (!ui.type && !ui.q.trim()) { setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = ""; }, 0); return `<p class="sbl-hint" style="padding-top:18px">${t("Choose a product type to see its images.")}</p>`; }
-    const l = list(), cur = curating(), inP = host.ctx === "project" ? host.inProject() : new Map();
+    const l = ordered(), cur = curating(), inP = host.ctx === "project" ? host.inProject() : new Map();
     setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = zh() ? `${nf(l.length)} 张图片` : `${nf(l.length)} image${l.length === 1 ? "" : "s"}`; autoMore(); }, 0);
-    if (!l.length) return `<div class="sbl-grid"><p class="sbl-empty">${ui.type === "F" && !ui.q ? t("No favourites yet. Tap the star on any image to save it here.") : ui.q ? t("Nothing matches that search.") : showMode() === "off" ? t("Nothing is waiting for approval here.") : t("Nothing has been approved yet.")}</p></div>`;
+    if (!l.length) return `<div class="sbl-grid"><p class="sbl-empty">${ui.type === "F" && !ui.q ? t("No favourites yet. Tap the star on any image to save it here.") : ui.type === "FT" && !ui.q ? t("No featured products yet. Open an approved product and press Feature.") : ui.q ? t("Nothing matches that search.") : showMode() === "off" ? t("Nothing is waiting for approval here.") : t("Nothing has been approved yet.")}</p></div>`;
     // Inside a product type, admins tick images and send them to another type in one go.
     const sorting = cur && !!ui.type;
     if (!sorting) sel.clear(); else { const ids = new Set(l.map(o => o.i)); [...sel].forEach(i => ids.has(i) || sel.delete(i)); }
@@ -409,8 +548,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       return `<div class="sbl-tile ${cur && !x ? "off" : ""} ${sel.has(o.i) ? "sel" : ""}"><button class="sbl-open" data-sblopen="${o.i}" aria-label="${esc(o.file)}"><span class="sbl-sw" ${sprite(o)}></span></button>
         ${sorting ? `<label class="sbl-sel" title="${t("Select to move")}"><input type="checkbox" data-sblsel="${o.i}" ${sel.has(o.i) ? "checked" : ""} aria-label="${t("Select to move")} ${esc(o.file)}"></label>` : ""}
         ${cur ? `<label class="sbl-chk" title="${x ? t("Approved. Untick to hide it.") : t("Not approved. Tick to approve.")}"><input type="checkbox" data-sblkeep="${o.i}" ${x ? "checked" : ""} aria-label="${t("Approve")} ${esc(o.file)}"></label>` : ""}
-        ${inP.has(o.file) ? `<span class="sbl-inproj">${t("In project")}</span>` : ""}
-        <span class="sbl-cap"><b>${esc(o.codes[0] || label(o.sup)[0])}</b><span>${bySup ? "" : esc(label(o.sup)[0]) + " · "}p${o.page}</span><button class="sbl-star" data-sblfav="${o.i}" aria-pressed="${fav.has(o.file)}" title="${t(fav.has(o.file) ? "Remove from favourites" : "Add to favourites")}">${fav.has(o.file) ? "★" : "☆"}</button></span></div>`; };
+        ${inP.has(o.file) ? `<span class="sbl-inproj">${t("In project")}</span>` : ""}${markedNew(o) ? `<span class="sbl-newt">● ${t("New")}</span>` : ""}${feat.has(o.file) && ui.type !== "FT" ? `<span class="sbl-ftag">◆ ${t("Featured")}</span>` : ""}
+        <span class="sbl-cap"><b>${esc(o.codes[0] || label(o.sup)[0])}</b><span>${bySup ? "" : esc(label(o.sup)[0]) + " · "}p${o.page}</span>${isAdm() && x ? featBtn(o) : ""}<button class="sbl-star" data-sblfav="${o.i}" aria-pressed="${fav.has(o.file)}" title="${t(fav.has(o.file) ? "Remove from favourites" : "Add to favourites")}">${fav.has(o.file) ? "★" : "☆"}</button></span></div>`; };
     let html;
     if (bySup) {
       // Inside one catalogue, each page is a card and the cards tile across the screen, sized to their number of images.
@@ -433,7 +572,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     // Switch between the empty state and the grid when the first approval arrives or the last one goes.
     if (r && !curating() && !!$("#sbl-cats") !== !!approved()) { r.outerHTML = view(); if (ui.open != null) host.layer(); return; }
     const g = $("#sbl-grid"), c = $("#sbl-cats"), k = $("#sbl-kept");
-    if (g && c) g.innerHTML = gridHTML(); if (c) c.innerHTML = catsHTML(); if (k) k.textContent = nf(approved());
+    if (g && c) g.innerHTML = gridHTML(); if (c) c.innerHTML = catsHTML(); if (k) k.textContent = nf(approved()); fRefresh();
     if (ui.open != null) host.layer();
   }
   function rerender() { const r = $("#sblib"); if (r) r.outerHTML = view(); }
@@ -468,18 +607,24 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
 
   function sourceNote(o) { const S = LIB.sups[o.sup]; return `${o.file}\nSource: ${S.pdf}, page ${o.page} of ${S.pages} (${S.cat})\nPDF: ${S.up && !S.drive ? location.origin : ""}${pdfURL(S)}` + (S.up ? "" : `\nImage: ${LIB_ROOT}_IMAGE LIBRARY\\${S.cat}\\${o.sup}\\${o.file}`); }
+  // After an add the card stays open on the same product and says where it went, so you can carry on with ‹ ›.
+  function addedHTML(o) {
+    const d = done.get(o.file); if (!d || !d.length) return "";
+    return `<p class="sbl-added">${d.map(x => "✓ " + (zh() ? `${x.existing ? "已在" : "已添加到"} ${esc(x.pname)}，编号 ${esc(x.code)}` : `${x.existing ? "Already in" : "Added to"} ${esc(x.pname)} as ${esc(x.code)}`)).join("<br>")}</p>`;
+  }
   function addControls(o) {
     if (!host.canAdd() || (!isOn(o) && !host.canEdit())) return "";
     if (host.ctx === "project") {
-      const inId = host.inProject().get(o.file);
-      return inId ? `<button class="btn" data-sbl="piece" data-id="${esc(inId)}">${t("Open the piece in this project")}</button>`
-        : `<button class="btn" data-sbl="add" ${ui.adding ? "disabled" : ""}>${ui.adding ? t("Adding…") : (zh() ? "添加到 " : "Add to ") + esc(host.projectName())}</button>`;
+      const mine = (done.get(o.file) || []).find(x => x.project === host.project());
+      const inId = host.inProject().get(o.file) || (mine && mine.id);
+      return (inId ? `<button class="btn" data-sbl="piece" data-id="${esc(inId)}">${t("Open the piece in this project")}</button>`
+        : `<button class="btn" data-sbl="add" ${ui.adding ? "disabled" : ""}>${ui.adding ? t("Adding…") : (zh() ? "添加到 " : "Add to ") + esc(host.projectName())}</button>`) + addedHTML(o);
     }
     const ps = host.projects();
     if (!ps.length) return `<span class="sbl-hint" style="margin:0">${t("No projects to add to yet.")}</span>`;
     if (!ps.some(p => p.id === ui.target)) ui.target = ps.length === 1 ? ps[0].id : "";
     return `<label class="sbl-pick">${t("Add to project")}<select id="sbl-target"><option value="">${t("Choose a project")}</option>${ps.map(p => `<option value="${esc(p.id)}" ${p.id === ui.target ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select></label>
-      <button class="btn" data-sbl="add" ${ui.adding || !ui.target ? "disabled" : ""}>${ui.adding ? t("Adding…") : t("Add")}</button>`;
+      <button class="btn" data-sbl="add" ${ui.adding || !ui.target ? "disabled" : ""}>${ui.adding ? t("Adding…") : t("Add")}</button>${addedHTML(o)}`;
   }
   // Next / previous move through the images that were listed when the card was opened,
   // so approving one while showing "Not approved" doesn't skip the next.
@@ -496,13 +641,14 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   function sheet() {
     const o = LIB && ui.open != null ? LIB.items[ui.open] : null; if (!o) { ui.open = null; return ""; }
     const S = LIB.sups[o.sup], L = label(o.sup), x = isOn(o), cur = curating();
+    if (fresh.has(o.file)) markSeen([o.file]);
     document.body.style.overflow = "hidden";
     return `<div class="sbl-scrim" data-sbl="close"></div>
     <section class="sbl-sheet${full.has(o.file) ? " big" : ""}" role="dialog" aria-modal="true" aria-label="${esc(o.file)}">
       ${full.has(o.file) ? `<div class="sbl-hero big"><button class="sbl-zoom" data-sbl="zoom" title="${t("Click to see it full screen")}"><span class="sbl-sw" ${sprite(o)}></span><img class="sbl-big" src="/lib/full/${esc(o.file)}" alt="${esc(o.file)}"></button>${navHTML()}</div>`
         : `<div class="sbl-hero"><span class="sbl-sw" ${sprite(o)}></span>${navHTML()}</div>`}
       <div class="sbl-body">
-        <div class="sbl-top"><span class="eyebrow">${esc(typeName(typeOf(o)))} · ${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""}</span><span class="sbl-topr"><button class="btn sm ghost sbl-favbtn" data-sbl="fav" aria-pressed="${fav.has(o.file)}">${fav.has(o.file) ? "★ " + t("Favourite") : "☆ " + t("Add to favourites")}</button>${cur ? `<button class="btn sm sbl-appr ${x ? "on" : ""}" data-sbl="toggle" aria-pressed="${x}">${x ? "✓ " + t("Approved") : t("Approve")}</button>` : ""}<button class="sbl-x" data-sbl="close" aria-label="${t("Close")}">×</button></span></div>
+        <div class="sbl-top"><span class="eyebrow">${esc(typeName(typeOf(o)))} · ${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""}</span><span class="sbl-topr"><button class="btn sm ghost sbl-favbtn" data-sbl="fav" aria-pressed="${fav.has(o.file)}">${fav.has(o.file) ? "★ " + t("Favourite") : "☆ " + t("Add to favourites")}</button>${isAdm() && (x || feat.has(o.file)) ? `<button class="btn sm ghost sbl-featbtn" data-sbl="feat" aria-pressed="${feat.has(o.file)}" title="${t(feat.has(o.file) ? "Remove from featured" : "Feature on the landing page")}">${feat.has(o.file) ? "◆ " + t("Featured") : "◇ " + t("Feature")}</button>` : ""}${cur ? `<button class="btn sm sbl-appr ${x ? "on" : ""}" data-sbl="toggle" aria-pressed="${x}">${x ? "✓ " + t("Approved") : t("Approve")}</button>` : ""}<button class="sbl-x" data-sbl="close" aria-label="${t("Close")}">×</button></span></div>
         ${ui.seq.length > 1 || cur ? `<p class="sbl-hint" style="margin-top:6px">${t(ui.seq.length > 1 ? (cur ? "← → to move between products · Space to approve" : "← → to move between products") : "Space to approve")}</p>` : ""}
         <h2>${esc(name(o))}</h2>
         <p class="sbl-file">${esc(o.file)}</p>
@@ -528,7 +674,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       </div></section>
     ${ui.zoom && full.has(o.file) ? `<div class="sbl-zoomview" data-sbl="unzoom" role="dialog" aria-label="${esc(o.file)}"><img src="/lib/full/${esc(o.file)}" alt="${esc(o.file)}">${navHTML()}</div>` : ""}`;
   }
-  function close() { if (ui.open == null) return; ui.open = null; ui.adding = false; ui.zoom = false; ui.seq = []; document.body.style.overflow = ""; host.layer(); }
+  function close() { if (ui.open == null) return; ui.open = null; ui.adding = false; ui.zoom = false; ui.seq = []; document.body.style.overflow = ""; host.layer(); fResume(); }
 
   // Cut one image out of its thumbnail sheet, for the piece's photo (JPEG, base64).
   async function crop(o) {
@@ -545,6 +691,21 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(b, 0, 0, cv.width, cv.height);
     return cv.toDataURL("image/jpeg", .86).split(",")[1];
   }
+  // The catalogue page the image is on, rendered from the PDF kept on the server (catalogues added from a PDF),
+  // for the piece's Specification. Only that page's bytes are read. Returns null for catalogues kept on Google Drive.
+  async function pagePic(o) {
+    const S = LIB.sups[o.sup]; if (!S || !S.up) return null;
+    const lib = await pdfjs();
+    const doc = await lib.getDocument({ url: `/lib/pdf/${encodeURIComponent(o.sup)}.pdf`, disableAutoFetch: true, disableStream: true, rangeChunkSize: 262144 }).promise;
+    try {
+      const pg = await doc.getPage(Math.max(1, Math.min(doc.numPages, Number(o.page) || 1)));
+      const v1 = pg.getViewport({ scale: 1 }), sc = Math.min(3, 2200 / Math.max(v1.width, v1.height)), vp = pg.getViewport({ scale: sc });
+      const cv = document.createElement("canvas"); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+      const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height);
+      await pg.render({ canvasContext: g, viewport: vp }).promise;
+      return { data: cv.toDataURL("image/jpeg", .85).split(",")[1], w: v1.width, h: v1.height };
+    } finally { doc.destroy(); }
+  }
   // The server builds the piece from the catalogue index, so clients can add pieces too.
   async function add() {
     const o = LIB && LIB.items[ui.open]; if (!o || ui.adding) return;
@@ -555,11 +716,13 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       if (full.has(o.file)) try { photo = await bigPhoto(o); } catch (_) {}
       if (!photo) try { photo = await crop(o); } catch (_) {}
       const prefix = host.prefix ? host.prefix(o, label(o.sup)[1]) : null;
-      const r = await fetch("/api/library/add", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ project, file: o.file, photo, prefix }) });
+      let pg = null; try { pg = await pagePic(o); } catch (_) {}
+      const r = await fetch("/api/library/add", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ project, file: o.file, photo, prefix, ...(pg ? { page: pg.data, pageW: pg.w, pageH: pg.h } : {}) }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw Object.assign(new Error(j.message || "add"), { code: j.code });
       const pname = host.ctx === "project" ? host.projectName() : (host.projects().find(p => p.id === project) || {}).name || project;
-      ui.adding = false; ui.open = null; document.body.style.overflow = ""; host.layer();
+      const d = (done.get(o.file) || []).filter(x => x.project !== project); d.push({ project, pname, code: j.code, id: j.id, existing: !!j.existing }); done.set(o.file, d);
+      ui.adding = false; host.layer();
       if (host.added) host.added(j, pname); else host.toast(zh() ? `已添加到 ${pname}，编号 ${j.code}` : `Added to ${pname} as ${j.code}`);
       rerender();
     } catch (e) { ui.adding = false; host.layer(); host.toast(e.code === "forbidden" || e.code === "invalid_argument" ? e.message : t("Couldn't add it. Try again.")); }
@@ -574,7 +737,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   let scan = null, scanErr = "", pdfMode = "scan"; // progress text while a PDF is being scanned; why the last one stopped
   function addCatHTML() {
     if (scan) return `<div class="sbl-addcat"><p style="color:var(--ink);font-size:14px">${esc(scan)}</p></div>`;
-    if (!ui.addcat) return `<button class="linkbtn" data-sbl="addcat">${t("Add a catalogue from a PDF")}</button>`;
+    if (!ui.addcat) return driveHTML() + `<button class="linkbtn" data-sbl="addcat">${t("Add a catalogue from a PDF")}</button>`;
     return `<div class="sbl-addcat">${scanErr ? `<p style="color:var(--crit);font-size:14px">${esc(scanErr)}</p>` : ""}
       <label class="sbl-drop">${t("PDF catalogue")}<span>${t("Drop the PDF here, or click to choose it")}</span><b id="sbl-pdfname"></b><input type="file" id="sbl-pdf" accept="application/pdf,.pdf"></label>
       <fieldset class="sbl-mode" id="sbl-mode" hidden><legend>${t("How to add it")}</legend>
@@ -588,6 +751,48 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       <div class="sbl-row"><button class="btn" data-sbl="scan" id="sbl-go">${t(pdfMode === "pages" ? "Import pages" : "Scan and add")}</button><button class="btn ghost" data-sbl="addcancel">${t("Cancel")}</button></div></div>`;
   }
   function addLine() { const el = $("#sbl-addwrap"); if (el) el.innerHTML = addCatHTML(); }
+  // New catalogues on Google Drive: PDFs in the catalogue folder that aren't in the library yet. Add opens the form
+  // with the PDF, category and Drive link filled in; Ignore hides that PDF for good.
+  let driveSt = null, driveBusy = "";
+  async function loadDrive(check) {
+    try { const r = await fetch("/api/library/drive" + (check ? "?check=1" : "")); driveSt = r.ok ? await r.json() : { on: false, pending: [] }; } catch (_) { driveSt = driveSt || { on: false, pending: [] }; }
+    if (!ui.addcat && !scan) addLine();
+  }
+  function driveHTML() {
+    if (!curating()) return "";
+    if (!driveSt) { loadDrive(); return ""; }
+    if (!driveSt.on) return driveSt.error ? `<p class="sbl-drive err">${esc(t(driveSt.error))}</p>` : "";
+    if (driveSt.error) return `<div class="sbl-drive err"><p>${t("Sourcebook can't check Google Drive for new catalogues:")} ${esc(t(driveSt.error))}</p><button class="linkbtn" data-sbl="drivecheck">${t("Check again")}</button></div>`;
+    if (driveBusy) return `<div class="sbl-drive"><p>${esc(driveBusy)}</p></div>`;
+    const P = driveSt.pending || [];
+    if (!P.length) return `<p class="sbl-drive quiet">${t("No new catalogues on Google Drive.")} <button class="linkbtn" data-sbl="drivecheck">${t("Check now")}</button></p>`;
+    const mb = n => n ? ` · ${(n / 1048576).toFixed(n < 10485760 ? 1 : 0)} MB` : "";
+    return `<div class="sbl-drive"><h5>${zh() ? `Google 云盘上有 ${P.length} 份新目录` : `${P.length} new catalogue${P.length === 1 ? "" : "s"} on Google Drive`}</h5>
+      ${P.slice(0, ui.driveAll ? 500 : 6).map(f => `<div class="sbl-driverow"><span><b>${esc(f.name)}</b><small>${esc(f.cat ? catLabel(f.cat) : f.folder)}${mb(f.size)}</small></span><button class="btn sm" data-sbl="driveadd" data-id="${esc(f.id)}">${t("Add")}</button><button class="btn ghost sm" data-sbl="driveignore" data-id="${esc(f.id)}">${t("Ignore")}</button></div>`).join("")}
+      ${P.length > 6 && !ui.driveAll ? `<button class="linkbtn" data-sbl="driveall">${zh() ? `显示全部 ${P.length} 份` : `Show all ${P.length}`}</button>` : ""}</div>`;
+  }
+  const catLabel = c => c.startsWith("CUSTOM-") ? (x => x ? (zh() ? x.zh || x.en : x.en) : c)(custom.find(x => x.c === c.slice(7))) : catName(c);
+  async function driveAdd(id) {
+    const f = driveSt && (driveSt.pending || []).find(x => x.id === id); if (!f || driveBusy) return;
+    driveBusy = zh() ? `正在从 Google 云盘获取 ${f.name}…` : `Getting ${f.name} from Google Drive…`; addLine();
+    try {
+      const r = await fetch(`/api/library/drive/pdf/${encodeURIComponent(id)}`);
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).message || "drive");
+      const file = new File([await r.blob()], f.name, { type: "application/pdf" });
+      driveBusy = ""; ui.addcat = true; addLine();
+      const inp = $("#sbl-pdf"); if (inp) { const dt = new DataTransfer(); dt.items.add(file); inp.files = dt.files; pdfName(); }
+      const sel = $("#sbl-cat"); if (sel && f.cat && [...sel.options].some(o => o.value === f.cat)) sel.value = f.cat;
+      const dv = $("#sbl-drive"); if (dv) dv.value = `https://drive.google.com/file/d/${id}/view`;
+      const sp = $("#sbl-supplier"); if (sp) { sp.value = f.name.replace(/\.pdf$/i, "").replace(/^\d{4}\s*/, "").replace(/[^A-Za-z0-9 &-]+/g, " ").trim().split(/\s+/)[0] || ""; sp.focus(); sp.select(); }
+    } catch (e) { driveBusy = ""; addLine(); host.toast(e.message && e.message !== "drive" ? e.message : t("Couldn't get the PDF from Google Drive. Try again.")); }
+  }
+  async function driveIgnore(id) {
+    if (!driveSt) return; const f = (driveSt.pending || []).find(x => x.id === id);
+    driveSt.pending = (driveSt.pending || []).filter(x => x.id !== id); addLine();
+    try { await api("/api/library/drive/ignore", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id }) });
+      host.toastUndo(zh() ? `已忽略 ${f ? f.name : ""}` : `Ignored ${f ? f.name : ""}`, async () => { await api("/api/library/drive/ignore", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, undo: true }) }).catch(() => {}); loadDrive(); });
+    } catch (_) { host.toast(t("Couldn't save. Check your connection and try again.")); loadDrive(); }
+  }
   let PDFJS = null;
   async function pdfjs() {
     if (!PDFJS) { PDFJS = await import("/pdfjs/pdf.min.mjs"); PDFJS.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs"; }
@@ -696,7 +901,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       const done = await api(`/api/library/catalogue/${sup}/done`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ items: keep }) });
       scan = null; ui.addcat = false; ui.sup = sup; ui.show = "all";
       host.toast(zh() ? `已添加 ${nf(done.n)} 张图片，尚未批准` : `${nf(done.n)} images added. None are approved yet`);
-      reloadIndex();
+      reloadIndex(); if (driveSt && driveSt.on) loadDrive();
     } catch (e) {
       scan = null;
       scanErr = e.code ? e.message : e.name === "InvalidPDFException" || e.name === "PasswordException" ? t("Couldn't read that PDF.") : (zh() ? "扫描中断，请重试。" : "The scan stopped part way. Try again.") + (e.message ? " (" + e.message + ")" : "");
@@ -885,8 +1090,9 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   let badgeEl = null;
   function tbsBadge() {
     if (!badgeEl) { badgeEl = document.createElement("style"); document.head.appendChild(badgeEl); }
-    const n = tbsTodo();
-    badgeEl.textContent = n ? `[data-dview="library"]::after,[data-view="lib"]::after{content:"● ${n}${isAdm() ? (zh() ? " 新" : " new") : ""}";display:inline-block;min-width:18px;margin-left:7px;padding:1px 7px;border-radius:9px;background:#1E7A3C;color:#fff;font-size:11px;line-height:16px;text-align:center;font-family:var(--mono,monospace)}` : "";
+    // TBS items waiting on this person, plus images new to them in the library.
+    const k = LIB ? LIB.items.filter(isNew).length : fresh.size, n = tbsTodo() + k;
+    badgeEl.textContent = n ? `[data-dview="library"]::after,[data-view="lib"]::after{content:"● ${n}${isAdm() || k ? (zh() ? " 新" : " new") : ""}";display:inline-block;min-width:18px;margin-left:7px;padding:1px 7px;border-radius:9px;background:#1E7A3C;color:#fff;font-size:11px;line-height:16px;text-align:center;font-family:var(--mono,monospace)}` : "";
   }
   function tbsAlert(x) {
     const msg = (zh() ? "新的待采购 TBS 需要审核：" : "New item to review in TBS: ") + ((zh() ? x.zh : x.what) || x.what || t("Photo")) + (x.by && x.by.name ? " · " + x.by.name : "");
@@ -923,7 +1129,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
         <span class="sbl-row"><button class="btn sm" data-sbl="tbssend" data-id="${esc(x.id)}" ${sending ? "disabled" : ""}>${t(sending ? "Sending…" : s === "sent" ? "Send to the sourcing agent again" : "Send to the sourcing agent")}</button></span></div>` : "";
     return `<article class="sbl-req${s === "sourced" ? " done" : ""}${tbsFocus === x.id ? " focus" : ""}" id="sbl-req-${esc(x.id)}"><a href="/_blob/${esc(x.photo)}" target="_blank" rel="noopener"><img src="/_blob/${esc(x.photo)}" alt="" loading="lazy"></a><div>
       ${adm && tbsNew(x) ? `<span class="sbl-newtag">● ${t("New")}</span>` : ""}<b>${esc((zh() ? x.zh : x.what) || x.what || t("Photo"))}</b>${x.note ? `<p>“${esc(x.note)}”</p>` : ""}
-      <span class="sbl-sub">${st ? esc(x.by && x.by.name || t("Studio owner")) + (x.by && x.by.role === "client" ? " · " + t("Client") : "") + " · " : ""}${esc(ago(x.at))}${x.project && x.project.name ? " · " + esc(x.project.name) : ""}</span>
+      <span class="sbl-sub">${st ? esc(x.by && x.by.name || t("Studio owner")) + (x.by && x.by.role === "client" ? " · " + t("Client") : x.by && x.by.role === "specifier" ? " · " + t("Specifier / designer") : "") + " · " : ""}${esc(ago(x.at))}${x.project && x.project.name ? " · " + esc(x.project.name) : ""}</span>
       ${chip}
       ${x.sent && x.sent.message && st ? `<p class="sbl-rmsg">${t("Message to the agent")}: ${esc(x.sent.message)}</p>` : ""}
       ${x.reply && !st ? `<p class="sbl-rreply">${esc(x.reply)}</p>` : ""}
@@ -1002,23 +1208,29 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   document.addEventListener("error", e => { const el = e.target; if (el.classList && el.classList.contains("sbl-big")) { const h = el.closest(".sbl-hero"); if (h) { h.classList.remove("big"); el.remove(); } } }, true);
 
   document.addEventListener("click", async e => {
-    const el = e.target.closest && e.target.closest("[data-sbltype],[data-sblsup],[data-sblshow],[data-sblmore],[data-sblopen],[data-sblbulk],[data-sblpage],[data-sblfav],[data-sbltbsf],[data-sbl]"); if (!el || !LIB) return;
+    const el = e.target.closest && e.target.closest("[data-sbltype],[data-sblsup],[data-sblshow],[data-sblmore],[data-sblopen],[data-sblbulk],[data-sblpage],[data-sblfav],[data-sblfeat],[data-sblfslide],[data-sbltbsf],[data-sbl]"); if (!el || !LIB) return;
     if (el.dataset.sbltbsf) { tbsFilter = el.dataset.sbltbsf; tbsPaint(); return; }
+    if (el.dataset.sblfeat !== undefined) {
+      const o = LIB.items[+el.dataset.sblfeat]; if (!o || !isAdm()) return; toggleFeat(o); repaint(); return;
+    }
+    if (el.dataset.sblfslide !== undefined) { fGo(+el.dataset.sblfslide); return; }
     if (el.dataset.sblfav !== undefined) {
       const o = LIB.items[+el.dataset.sblfav]; if (!o) return; const x = toggleFav(o);
       if (ui.type === "F") { repaint(); return; }
       el.setAttribute("aria-pressed", x); el.textContent = x ? "★" : "☆"; el.title = t(x ? "Remove from favourites" : "Add to favourites"); return;
     }
     if (el.dataset.sblsup !== undefined) { ui.sup = el.dataset.sblsup || null; ui.n = 120; rerender(); return; }
-    if (el.dataset.sbltype !== undefined) { ui.type = el.dataset.sbltype || null; ui.sup = null; ui.n = 120; if (el.dataset.sbltop !== undefined) { ui.q = ""; } rerender(); const r = $("#sblib"); if (r && (ui.type || el.dataset.sbltop !== undefined)) r.scrollIntoView({ block: "start" }); return; }
+    if (el.dataset.sbltype !== undefined) { ui.type = el.dataset.sbltype || null; ui.sup = null; ui.n = 120; if (ui.type && ui.type !== "TBS") markSeen(LIB.items.filter(o => inType(o) && isNew(o)).map(o => o.file)); if (el.dataset.sbltop !== undefined) { ui.q = ""; } rerender(); const r = $("#sblib"); if (r && (ui.type || el.dataset.sbltop !== undefined)) r.scrollIntoView({ block: "start" }); return; }
     if (el.dataset.sblshow) { ui.show = el.dataset.sblshow; ui.n = 120; document.querySelectorAll("[data-sblshow]").forEach(b => b.setAttribute("aria-pressed", b === el)); repaint(); return; }
     if (el.dataset.sblmore !== undefined) { ui.n += 120; repaint(); return; }
-    if (el.dataset.sblopen !== undefined) { ui.open = +el.dataset.sblopen; ui.seq = el.dataset.sblseq === "find" ? find.m.slice() : list().map(o => o.i); host.layer(); return; }
+    if (el.dataset.sblopen !== undefined) { ui.open = +el.dataset.sblopen; ui.seq = el.dataset.sblseq === "find" ? find.m.slice() : ordered().map(o => o.i); host.layer(); return; }
     if (!curating() && (el.dataset.sblbulk || el.dataset.sblpage)) return;
     if (el.dataset.sblbulk) { bulk(list(), el.dataset.sblbulk === "on"); return; }
     if (el.dataset.sblpage) { const p = +el.dataset.sblpage; bulk(list().filter(o => o.page === p), el.dataset.v === "on"); return; }
     const a = el.dataset.sbl;
     if (a === "close") close();
+    else if (a === "clitog" && curating()) { ui.cli = !ui.cli; const w = $("#sbl-cliwrap"); if (w) w.innerHTML = cliHTML(); }
+    else if ((a === "cliall" || a === "clinone") && curating()) setCli(Object.keys(LIB.sups).filter(s => hideCli.has(s) === (a === "cliall")), a === "cliall");
     else if (a === "addcat" && curating()) { ui.addcat = true; addLine(); }
     else if (a === "addtype" && curating()) { ui.addtype = true; repaint(); const f = $("#sbl-nten"); if (f) f.focus(); }
     else if (a === "addtypex") { ui.addtype = false; repaint(); }
@@ -1037,10 +1249,18 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     else if (a === "rdel") updReq(el.dataset.id, { remove: true });
 
     else if (a === "scan" && curating() && !scan) scanPDF();
+    else if (a === "driveadd" && curating()) driveAdd(el.dataset.id);
+    else if (a === "driveignore" && curating()) driveIgnore(el.dataset.id);
+    else if (a === "driveall") { ui.driveAll = true; addLine(); }
+    else if (a === "drivecheck" && curating()) { driveBusy = t("Checking Google Drive…"); addLine(); driveBusy = ""; loadDrive(true); }
     else if (a === "delcat" && curating() && ui.sup) deleteCat(ui.sup);
     else if (a === "prev" || a === "next") { e.stopPropagation(); step(a === "next" ? 1 : -1); }
     else if (a === "zoom") { ui.zoom = true; host.layer(); }
     else if (a === "unzoom" && !e.target.closest(".sbl-nav")) { ui.zoom = false; host.layer(); }
+    else if (a === "feat" && isAdm()) { const o = LIB.items[ui.open]; if (o) { toggleFeat(o); host.layer(); repaint(); } }
+    else if (a === "fprev" || a === "fnext") fGo(fIdx + (a === "fnext" ? 1 : -1));
+    else if (a === "fplay") { fUser = !fUser; fResume(); }
+    else if (a === "fopen") { const pool = featPool(), o = pool[fIdx]; if (o) { ui.open = o.i; ui.seq = pool.map(x => x.i); host.layer(); } }
     else if (a === "fav") { const o = LIB.items[ui.open]; if (o) { toggleFav(o); host.layer(); if (ui.type === "F") repaint(); } }
     else if (a === "toggle" && curating()) { const o = LIB.items[ui.open]; if (o) { setOn(o.sup, [o.key], !isOn(o)); repaint(); host.layer(); } }
     else if (a === "add") add();
@@ -1056,6 +1276,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (el.id === "sbl-target") { ui.target = el.value; host.layer(); return; }
     if (el.id === "sbl-type" && curating()) { const o = LIB && LIB.items[ui.open]; if (o) { setType([o], el.value); host.toast(zh() ? `已移至「${typeName(el.value)}」` : `Moved to ${typeName(el.value)}`); } return; }
     if (el.id === "sbl-pdf") { pdfName(); return; }
+    if (el.dataset && el.dataset.sblcli !== undefined) { if (curating()) setCli([el.dataset.sblcli], el.checked); return; }
     if (el.dataset && el.dataset.sblsel !== undefined) { const i = +el.dataset.sblsel; el.checked ? sel.add(i) : sel.delete(i); selPaint(); return; }
     if (el.id === "sbl-moveto" && curating()) {
       const code = el.value; if (!code) return;
@@ -1100,7 +1321,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   document.addEventListener("keydown", e => { if (e.key === "Escape" && ui.open != null && !document.getElementById("viewer")) { e.stopPropagation(); if (ui.zoom) { ui.zoom = false; host.layer(); } else close(); } }, true);
 
   window.SBLibrary = Object.freeze({
-    configure(h) { host = { ...host, ...h }; if (host.internal() || tbsFocus) setTimeout(watch, 0); },
+    configure(h) { host = { ...host, ...h }; if (host.internal() || tbsFocus) setTimeout(watch, 0); else setTimeout(() => fetchSeen().catch(() => {}), 0); },
     view, sheet, close, repaint, load,
     isOpen: () => ui.open != null && !!LIB,
     t,

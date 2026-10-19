@@ -11,6 +11,7 @@
 <link rel="icon" href="/icon-192.png">
 <title>Sourcebook · Projects</title>
 <script src="/library.js"></script>
+<script src="/rfi.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500&family=Noto+Sans+SC:wght@400;500&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" media="print" onload="this.media=\'all\'">
@@ -184,7 +185,7 @@ function render(){
   <header class="mast"><div><div class="eyebrow">${t("Sourcebook · Studio")}</div><h1>${lib?(lang==="zh"?"采购图库":"Sourcing <em>library</em>"):lang==="zh"?"项目":"<em>Projects</em>"}</h1></div>
     <div class="side"><div class="langtog" role="group" aria-label="${t("Language")}"><button type="button" data-lang="en" aria-pressed="${lang==="en"}">EN</button><button type="button" data-lang="zh" aria-pressed="${lang==="zh"}">中文</button></div>
     ${isClient()?"":`<button class="btn" data-a="new">${t("New project")}</button>`}
-    <div class="who"><span>${esc(me.name||"")}</span><span class="mono">${t(ROLE[me.role]||"")}</span>${isAdmin()?`<a class="linkbtn" href="/admin">${t("Admin")}</a>`:""}${me.id!=="owner"?`<button class="linkbtn" data-a="pw">${t("Change password")}</button>`:""}<a class="linkbtn" href="/logout">${t("Sign out")}</a></div></div></header>
+    <div class="who">${isAdmin()?"<sb-rfis></sb-rfis>":""}<span>${esc(me.name||"")}</span><span class="mono">${t(ROLE[me.role]||"")}</span>${isAdmin()?`<a class="linkbtn" href="/admin">${t("Admin")}</a>`:""}${me.id!=="owner"?`<button class="linkbtn" data-a="pw">${t("Change password")}</button>`:""}<a class="linkbtn" href="/logout">${t("Sign out")}</a></div></div></header>
   ${libOn()?`<nav class="tabs" role="tablist"><button class="tab" role="tab" data-dview="projects" aria-selected="${!lib}">${t("Projects")}</button><button class="tab" role="tab" data-dview="library" aria-selected="${lib}">${t("Sourcing library")}</button></nav>`:""}
   ${lib?`<main>${SBLibrary.view()}</main>`:`
   ${failed?`<p class="err" style="padding-top:14px">${t("Couldn't reach the server. Check your connection and reload.")}</p>`:""}

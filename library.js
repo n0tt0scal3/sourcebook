@@ -38,7 +38,7 @@
     "Google Drive link to the PDF (optional)": "PDF 的 Google 云端硬盘链接（可选）", "Scan and add": "扫描并添加", "Cancel": "取消", "Delete this catalogue": "删除此图册",
     "Choose a PDF and enter the supplier.": "请选择 PDF 并填写供应商。", "Couldn't read that PDF.": "无法读取该 PDF。",
     "The PDF is scanned in this browser, so keep this tab open until it finishes. Photos in the PDF become library images named like the others (category_supplier_page_number) and start unapproved. Up to 300 MB and 2,000 pages.": "PDF 在此浏览器中扫描，请保持此标签页打开直到完成。PDF 中的照片会按与其他图片相同的方式命名（类别_供应商_页码_编号）成为图库图片，默认未批准。最大 300 MB、2000 页。",
-    "All product types": "全部产品类型", "Favourites": "收藏", "Favourite": "收藏", "Add to favourites": "加入收藏", "Remove from favourites": "取消收藏", "No favourites yet. Tap the star on any image to save it here.": "还没有收藏。点击任意图片上的星标即可收藏到这里。", "Star images to save them here": "点星标即可收藏到这里", "Product type": "产品类型", "Not sorted yet": "尚未分类", "Choose a product type to see its images.": "选择一个产品类型以查看图片。",
+    "All product types": "全部产品类型", "Favourites": "收藏", "Favourite": "收藏", "Add to favourites": "加入收藏", "Client & designer favourites": "客户与设计师收藏", "What this project's clients and designers starred": "本项目客户和设计师收藏的图片", "No client or designer has starred anything in this project yet.": "本项目的客户和设计师还没有收藏任何图片。", "Remove from favourites": "取消收藏", "No favourites yet. Tap the star on any image to save it here.": "还没有收藏。点击任意图片上的星标即可收藏到这里。", "Star images to save them here": "点星标即可收藏到这里", "Product type": "产品类型", "Not sorted yet": "尚未分类", "Choose a product type to see its images.": "选择一个产品类型以查看图片。",
     "Featured products": "精选产品", "Featured": "精选", "Feature": "设为精选", "Feature on the landing page": "设为首页精选", "Remove from featured": "取消精选", "The studio's picks": "工作室精选",
     "See all featured products": "查看全部精选产品", "Pause": "暂停", "Play": "播放", "Open this product": "打开此产品",
     "No featured products yet. Open an approved product and press Feature.": "还没有精选产品。打开已批准的产品，点“设为精选”。",
@@ -114,6 +114,7 @@
 .sbl-addtype input,.sbl-addtype select{font:inherit;font-size:14px;padding:5px 0;border:0;border-bottom:1px solid var(--rule);background:none;color:var(--ink)}
 .sbl-cat .sbl-favic{display:grid;place-items:center;width:100%;aspect-ratio:4/3;background:var(--paper);border:1px solid var(--rule);font-size:44px;color:#c8a046}
 .btn.sbl-favbtn[aria-pressed=true]{color:#a07a20}
+.sbl-cfby{display:block;font-size:11px;color:#a07a20;margin:4px 0 -2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sbl-cap b{font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis}
 .sbl-cap span{flex:none;color:var(--muted)}
 .sbl-inproj{position:absolute;left:6px;top:6px;background:var(--accent);color:#fff;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px}
@@ -314,10 +315,17 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const at = BASE_TYPES.findIndex(x => x[0] === "A");
     TYPES = [...BASE_TYPES.slice(0, at), ...custom.map(x => [x.c, x.en, x.zh || x.en]), ...BASE_TYPES.slice(at)];
   }
-  const typeName = c => { if (c === "F") return t("Favourites"); if (c === "FT") return t("Featured products"); const x = TYPES.find(y => y[0] === c) || TYPES[TYPES.length - 1]; return zh() ? x[2] : x[1]; };
+  const typeName = c => { if (c === "F") return t("Favourites"); if (c === "CF") return t("Client & designer favourites"); if (c === "FT") return t("Featured products"); const x = TYPES.find(y => y[0] === c) || TYPES[TYPES.length - 1]; return zh() ? x[2] : x[1]; };
   // Each person's own starred images (file names), saved on the server for their account.
   let fav = new Set();
-  const inType = o => ui.type === "F" ? fav.has(o.file) : ui.type === "FT" ? feat.has(o.file) : typeOf(o) === ui.type;
+  // Admins inside a project also see what that project's clients and designers starred: file name -> [their names].
+  let cfav = new Map();
+  const showCfav = () => host.ctx === "project" && isAdm();
+  async function fetchCfav() {
+    if (host.ctx !== "project") return; const r = await fetch("/api/library/fav/clients?project=" + encodeURIComponent(host.project())); if (!r.ok) return;
+    const m = new Map(); ((await r.json()).clients || []).forEach(c => c.files.forEach(f => m.set(f, [...(m.get(f) || []), c.name]))); cfav = m; repaint();
+  }
+  const inType = o => ui.type === "CF" ? cfav.has(o.file) : ui.type === "F" ? fav.has(o.file) : ui.type === "FT" ? feat.has(o.file) : typeOf(o) === ui.type;
   // Featured products: the studio's picks (libraryfeat/main, file names oldest first), chosen by admins from approved
   // images. They cycle, large, at the top of the library, and all of them are listed under the Featured tile.
   let feat = new Map();
@@ -398,11 +406,11 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
   function watch() {
     if (watching) return; watching = true;
-    fetchOn().catch(() => {}); fetchFull().catch(() => {}); fetchTypes().catch(() => {}); fetchFav().catch(() => {}); fetchFeat().catch(() => {}); fetchReqs().catch(() => {});
+    fetchOn().catch(() => {}); fetchFull().catch(() => {}); fetchTypes().catch(() => {}); fetchFav().catch(() => {}); fetchCfav().catch(() => {}); fetchFeat().catch(() => {}); fetchReqs().catch(() => {});
     try {
       const es = new EventSource("/api/events");
       es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); fetchSeenSoon(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data && !was && isAdm() && inReview(m.data) && !(m.data.by && m.data.by.id === tbsCfg.me)) tbsAlert({ id, ...m.data }); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "") && JSON.stringify(was.sent || null) === JSON.stringify(m.data.sent || null) && JSON.stringify(was.found || []) === JSON.stringify(m.data.found || []) && JSON.stringify(was.files || []) === JSON.stringify(m.data.files || [])) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (m.path === "libraryshow/main") { hideCli = new Set((m.exists && m.data && m.data.hide) || []); const w = $("#sbl-cliwrap"); if (w) w.innerHTML = cliHTML(); repaint(); return; } if (m.path === "libraryfeat/main") { setFeat(m.exists && m.data); repaint(); return; } if (m.path === "librarycats/main") { setCustom(m.exists && m.data && m.data.types); repaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); fetchSeenSoon(); } catch (_) {} };
-      es.onopen = () => { fetchSeen().catch(() => {}); fetchFeat().catch(() => {}); fetchOn().catch(() => {}); fetchTypes().catch(() => {}); fetchReqs().catch(() => {}); };
+      es.onopen = () => { fetchSeen().catch(() => {}); fetchCfav().catch(() => {}); fetchFeat().catch(() => {}); fetchOn().catch(() => {}); fetchTypes().catch(() => {}); fetchReqs().catch(() => {}); };
     } catch (_) {}
   }
 
@@ -465,7 +473,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     LIB.items.forEach(o => { if (!vis(o)) return; const c = typeOf(o); by[c] = (by[c] || 0) + 1; if (isNew(o)) nw[c] = (nw[c] || 0) + 1; });
     const row = (c, name, n, k) => `<button class="sbl-sidei" data-sbltype="${c}" aria-current="${ui.type === c ? "true" : "false"}"><span>${name}</span>${k ? `<b class="sbl-newc">● ${nf(k)}</b>` : ""}${n != null ? `<em>${nf(n)}</em>` : ""}</button>`;
     const fp = featPool().length, fv = LIB.items.filter(o => fav.has(o.file) && vis(o)).length, tb = tbsList(), tn = tbsTodo();
-    return (fp || cur ? row("FT", "◆ " + esc(t("Featured products")), fp) : "") + row("F", "★ " + esc(t("Favourites")), fv)
+    return (fp || cur ? row("FT", "◆ " + esc(t("Featured products")), fp) : "") + row("F", "★ " + esc(t("Favourites")), fv) + (showCfav() ? row("CF", "★ " + esc(t("Client & designer favourites")), LIB.items.filter(o => cfav.has(o.file) && vis(o)).length) : "")
       + (tb.length || staff() ? row("TBS", "TBS · " + esc(t("To be sourced")), tb.length, tn) : "")
       + `<span class="sbl-siderule"></span>`
       + TYPES.filter(([c]) => by[c] || (cur && custom.some(x => x.c === c))).map(([c]) => row(c, esc(typeName(c)), by[c] || 0, nw[c])).join("");
@@ -517,9 +525,11 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const by = {}; LIB.items.forEach(o => (by[typeOf(o)] = by[typeOf(o)] || []).push(o));
     const favs = LIB.items.filter(o => fav.has(o.file) && vis(o)), fc = favs[0];
     const favTile = `<button class="sbl-cat" data-sbltype="F">${fc ? `<span class="sbl-sw" ${sprite(fc)}></span>` : `<span class="sbl-favic">★</span>`}<span class="sbl-name">★ ${t("Favourites")}</span><span class="sbl-sub">${favs.length ? (zh() ? `${nf(favs.length)} 张图片` : `${nf(favs.length)} image${favs.length === 1 ? "" : "s"}`) : t("Star images to save them here")}</span></button>`;
+    const cfs = showCfav() ? LIB.items.filter(o => cfav.has(o.file) && vis(o)) : [], cfc = cfs[0];
+    const cfTile = showCfav() ? `<button class="sbl-cat" data-sbltype="CF">${cfc ? `<span class="sbl-sw" ${sprite(cfc)}></span>` : `<span class="sbl-favic">★</span>`}<span class="sbl-name">★ ${t("Client & designer favourites")}</span><span class="sbl-sub">${cfs.length ? (zh() ? `${nf(cfs.length)} 张图片` : `${nf(cfs.length)} image${cfs.length === 1 ? "" : "s"}`) : t("What this project's clients and designers starred")}</span></button>` : "";
     const fp = featPool(), ftc = fp[0];
     const featTile = fp.length || cur ? `<button class="sbl-cat" data-sbltype="FT">${ftc ? `<span class="sbl-sw" ${sprite(ftc)}></span>` : `<span class="sbl-favic">◆</span>`}<span class="sbl-name">◆ ${t("Featured products")}</span><span class="sbl-sub">${fp.length ? (zh() ? `${nf(fp.length)} 张图片` : `${nf(fp.length)} image${fp.length === 1 ? "" : "s"}`) : t("The studio's picks")}</span></button>` : "";
-    return featTile + favTile + tbsTileHTML() + TYPES.filter(([c]) => (by[c] && (cur || by[c].some(isOn))) || (cur && custom.some(x => x.c === c))).map(([c]) => {
+    return featTile + favTile + cfTile + tbsTileHTML() + TYPES.filter(([c]) => (by[c] && (cur || by[c].some(isOn))) || (cur && custom.some(x => x.c === c))).map(([c]) => {
       // Cover: an approved image if there is one, preferring product photos over tearsheet pages.
       const arr = by[c] || [], ok = arr.filter(isOn), pool0 = cur && !ok.length ? arr : ok, photos = pool0.filter(o => !/tearsheet/i.test(o.sup)), pool = photos.length ? photos : pool0, cover = pool[Math.min(pool.length - 1, Math.floor(pool.length * .12))];
       const nn = arr.filter(isNew).length;
@@ -569,7 +579,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (!ui.type && !ui.q.trim()) { setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = ""; }, 0); return `<p class="sbl-hint" style="padding-top:18px">${t("Choose a product type to see its images.")}</p>`; }
     const l = ordered(), cur = curating(), inP = host.ctx === "project" ? host.inProject() : new Map();
     setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = zh() ? `${nf(l.length)} 张图片` : `${nf(l.length)} image${l.length === 1 ? "" : "s"}`; autoMore(); }, 0);
-    if (!l.length) return `<div class="sbl-grid"><p class="sbl-empty">${ui.type === "F" && !ui.q ? t("No favourites yet. Tap the star on any image to save it here.") : ui.type === "FT" && !ui.q ? t("No featured products yet. Open an approved product and press Feature.") : ui.q ? t("Nothing matches that search.") : showMode() === "off" ? t("Nothing is waiting for approval here.") : t("Nothing has been approved yet.")}</p></div>`;
+    if (!l.length) return `<div class="sbl-grid"><p class="sbl-empty">${ui.type === "F" && !ui.q ? t("No favourites yet. Tap the star on any image to save it here.") : ui.type === "CF" && !ui.q ? t("No client or designer has starred anything in this project yet.") : ui.type === "FT" && !ui.q ? t("No featured products yet. Open an approved product and press Feature.") : ui.q ? t("Nothing matches that search.") : showMode() === "off" ? t("Nothing is waiting for approval here.") : t("Nothing has been approved yet.")}</p></div>`;
     // Inside a product type, admins tick images and send them to another type in one go.
     const sorting = cur && !!ui.type;
     if (!sorting) sel.clear(); else { const ids = new Set(l.map(o => o.i)); [...sel].forEach(i => ids.has(i) || sel.delete(i)); }
@@ -578,7 +588,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       return `<div class="sbl-tile ${cur && !x ? "off" : ""} ${sel.has(o.i) ? "sel" : ""}"><button class="sbl-open" data-sblopen="${o.i}" aria-label="${esc(o.file)}"><span class="sbl-sw" ${sprite(o)}></span></button>
         ${sorting ? `<label class="sbl-sel" title="${t("Select to move")}"><input type="checkbox" data-sblsel="${o.i}" ${sel.has(o.i) ? "checked" : ""} aria-label="${t("Select to move")} ${esc(o.file)}"></label>` : ""}
         ${cur ? `<label class="sbl-chk" title="${x ? t("Approved. Untick to hide it.") : t("Not approved. Tick to approve.")}"><input type="checkbox" data-sblkeep="${o.i}" ${x ? "checked" : ""} aria-label="${t("Approve")} ${esc(o.file)}"></label>` : ""}
-        ${inP.has(o.file) ? `<span class="sbl-inproj">${t("In project")}</span>` : ""}${markedNew(o) ? `<span class="sbl-newt">● ${t("New")}</span>` : ""}${feat.has(o.file) && ui.type !== "FT" ? `<span class="sbl-ftag">◆ ${t("Featured")}</span>` : ""}
+        ${inP.has(o.file) ? `<span class="sbl-inproj">${t("In project")}</span>` : ""}${markedNew(o) ? `<span class="sbl-newt">● ${t("New")}</span>` : ""}${feat.has(o.file) && ui.type !== "FT" ? `<span class="sbl-ftag">◆ ${t("Featured")}</span>` : ""}${ui.type === "CF" && cfav.has(o.file) ? `<span class="sbl-cfby" title="${esc(cfav.get(o.file).join(", "))}">★ ${esc(cfav.get(o.file).join(", "))}</span>` : ""}
         <span class="sbl-cap"><b>${esc(o.codes[0] || label(o.sup)[0])}</b><span>${bySup ? "" : esc(label(o.sup)[0]) + " · "}p${o.page}</span>${isAdm() && x ? featBtn(o) : ""}<button class="sbl-star" data-sblfav="${o.i}" aria-pressed="${fav.has(o.file)}" title="${t(fav.has(o.file) ? "Remove from favourites" : "Add to favourites")}">${fav.has(o.file) ? "★" : "☆"}</button></span></div>`; };
     let html;
     if (bySup) {

@@ -40,7 +40,7 @@
     "The PDF is scanned in this browser, so keep this tab open until it finishes. Photos in the PDF become library images named like the others (category_supplier_page_number) and start unapproved. Up to 300 MB and 2,000 pages.": "PDF 在此浏览器中扫描，请保持此标签页打开直到完成。PDF 中的照片会按与其他图片相同的方式命名（类别_供应商_页码_编号）成为图库图片，默认未批准。最大 300 MB、2000 页。",
     "All product types": "全部产品类型", "Favourites": "收藏", "Favourite": "收藏", "Add to favourites": "加入收藏", "Client & designer favourites": "客户与设计师收藏", "What this project's clients and designers starred": "本项目客户和设计师收藏的图片", "No client or designer has starred anything in this project yet.": "本项目的客户和设计师还没有收藏任何图片。", "Remove from favourites": "取消收藏", "No favourites yet. Tap the star on any image to save it here.": "还没有收藏。点击任意图片上的星标即可收藏到这里。", "Star images to save them here": "点星标即可收藏到这里", "Product type": "产品类型", "Not sorted yet": "尚未分类", "Choose a product type to see its images.": "选择一个产品类型以查看图片。",
     "Featured products": "精选产品", "Featured": "精选", "Feature": "设为精选", "Feature on the landing page": "设为首页精选", "Remove from featured": "取消精选", "The studio's picks": "工作室精选",
-    "See all featured products": "查看全部精选产品", "Pause": "暂停", "Play": "播放", "Open this product": "打开此产品",
+    "See all featured products": "查看全部精选产品", "Catalogue page": "图册页面", "Opens the page inside Sourcebook": "在 Sourcebook 中打开该页", "Pause": "暂停", "Play": "播放", "Open this product": "打开此产品",
     "No featured products yet. Open an approved product and press Feature.": "还没有精选产品。打开已批准的产品，点“设为精选”。",
     "Approve the image before featuring it.": "请先批准该图片，再设为精选。", "Featured products show here, large, for everyone who opens the library. Open an approved product and press Feature.": "精选产品会以大图显示在这里，所有打开图库的人都能看到。打开已批准的产品，点“设为精选”。",
     "Full-size images": "高清大图", "Upload zips": "上传压缩包", "Uploading…": "正在上传…", "Click to see it full screen": "点击全屏查看",
@@ -87,6 +87,8 @@
 .sbl-pg{flex:1 1 calc(max(var(--n) * 128px,210px) + 26px);max-width:min(100%,calc(max(var(--n) * 128px,210px) * 1.6 + 26px));min-width:0;padding:4px 12px 12px;background:var(--paper);border:1px solid var(--rule)}
 .sbl-pg .sbl-page{padding-top:6px;flex-wrap:wrap}
 .sbl-pg .sbl-page b{font-size:17px}
+.sbl-pg.hit{box-shadow:0 0 0 2px #c8a046}
+.sbl-tile.hit .sbl-open{outline:3px solid #c8a046;outline-offset:1px}
 .sbl-pg .sbl-page span{gap:10px;font-size:12.5px;white-space:nowrap}
 .sbl-pgimgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px 10px;padding-top:10px}
 .sbl-tile{position:relative;display:flex;flex-direction:column;gap:6px;min-width:0;transition:opacity .2s}
@@ -359,7 +361,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
   const isNew = o => fresh.has(o.file) && (curating() || isOn(o));
   const newBadge = n => n ? `<i class="sbl-newb">● ${nf(n)} ${t("new")}</i>` : "";
-  const ui = { type: null, sup: null, q: "", show: null, n: 120, open: null, adding: false, target: "", zoom: false, seq: [] };
+  const ui = { type: null, sup: null, q: "", show: null, n: 120, hit: null, open: null, adding: false, target: "", zoom: false, seq: [] };
   const done = new Map(); // file -> [{project, pname, code, id, existing}] added from the card this visit, shown on the card
   // host.ctx: "studio" (dashboard) or "project". canEdit: may approve (admins, on the dashboard).
   // project(): this project's id (project ctx). projects(): [{id, name}] to add to (studio ctx).
@@ -420,6 +422,20 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   const label = sup => LIB_LABEL[sup] || (LIB && LIB.sups[sup] && LIB.sups[sup].label) || [sup, ""];
   const pdfURL = S => S.drive ? `https://drive.google.com/file/d/${S.drive}/view` : S.up ? `/lib/pdf/${encodeURIComponent(Object.keys(LIB.sups).find(k => LIB.sups[k] === S))}.pdf` : "#";
   const name = o => o.codes[0] || label(o.sup)[0] + " · p" + o.page;
+  const pageBtn = o => zh() ? `打开图册第 ${o.page} 页` : `Open catalogue page ${o.page}`;
+  // Open the catalogue an image comes from inside the library, scrolled to its page card with the image picked out,
+  // instead of the PDF (which opens at page 1). Only images this person can see are listed there.
+  function goPage(o) {
+    if (ui.open != null) close();
+    ui.type = typeOf(o); ui.sup = o.sup; ui.q = "";
+    if (curating() && showMode() === (isOn(o) ? "off" : "on")) ui.show = "all";
+    const l = ordered(), at = l.map(x => x.page).lastIndexOf(o.page);
+    ui.n = Math.max(120, Math.ceil((at + 1) / 120) * 120);
+    markSeen(LIB.items.filter(x => inType(x) && isNew(x)).map(x => x.file));
+    ui.hit = o.i; rerender();
+    const pg = document.querySelector(`.sbl-pg[data-p="${o.page}"]`);
+    (pg || $("#sblib"))?.scrollIntoView({ block: pg ? "center" : "start" });
+  }
   const approved = arr => (arr || LIB.items).filter(isOn).length;
   // Only an admin on the dashboard sees images that aren't approved.
   const curating = () => host.ctx === "studio" && host.canEdit();
@@ -496,7 +512,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
         <button class="sbl-fpic" data-sbl="fopen" aria-label="${esc(t("Open this product"))}: ${esc(name(o))}">${full.has(o.file) ? `<img src="/lib/full/${esc(o.file)}" alt="${esc(name(o))}">` : `<span class="sbl-sw" ${sprite(o)}></span>`}</button>
         <div class="sbl-finfo"><span class="eyebrow">◆ ${t("Featured products")} · ${nf(fIdx + 1)} / ${nf(pool.length)}</span>
           <h3>${esc(name(o))}</h3><p>${esc(typeName(typeOf(o)))} · ${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""}</p>
-          <span class="sbl-row" style="margin-top:6px"><button class="btn sm" data-sbl="fopen">${t("Open this product")}</button></span>
+          <span class="sbl-row" style="margin-top:6px"><button class="btn sm" data-sbl="fopen">${t("Open this product")}</button><button class="btn sm ghost" data-sbl="gopage" data-i="${o.i}" title="${esc(t("Opens the page inside Sourcebook"))}">${pageBtn(o)}</button></span>
           <div class="sbl-fctl">${pool.length > 1 ? `<button class="sbl-fnav" data-sbl="fprev" aria-label="${t("Previous")}">‹</button><button class="sbl-fnav" data-sbl="fnext" aria-label="${t("Next")}">›</button><button class="linkbtn" data-sbl="fplay">${t(fUser ? "Pause" : "Play")}</button>` : ""}
             <button class="linkbtn" data-sbltype="FT">${t("See all featured products")} ›</button></div>
           ${pool.length > 1 && pool.length <= 40 ? `<div class="sbl-fdots">${pool.map((_, i) => `<button data-sblfslide="${i}" aria-label="${i + 1}" aria-current="${i === fIdx}"></button>`).join("")}</div>` : ""}
@@ -585,7 +601,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (!sorting) sel.clear(); else { const ids = new Set(l.map(o => o.i)); [...sel].forEach(i => ids.has(i) || sel.delete(i)); }
     const bySup = !!ui.sup, shown = l.slice(0, ui.n);
     const tile = o => { const x = isOn(o);
-      return `<div class="sbl-tile ${cur && !x ? "off" : ""} ${sel.has(o.i) ? "sel" : ""}"><button class="sbl-open" data-sblopen="${o.i}" aria-label="${esc(o.file)}"><span class="sbl-sw" ${sprite(o)}></span></button>
+      return `<div class="sbl-tile ${cur && !x ? "off" : ""} ${sel.has(o.i) ? "sel" : ""}${o.i === ui.hit ? " hit" : ""}"><button class="sbl-open" data-sblopen="${o.i}" aria-label="${esc(o.file)}"><span class="sbl-sw" ${sprite(o)}></span></button>
         ${sorting ? `<label class="sbl-sel" title="${t("Select to move")}"><input type="checkbox" data-sblsel="${o.i}" ${sel.has(o.i) ? "checked" : ""} aria-label="${t("Select to move")} ${esc(o.file)}"></label>` : ""}
         ${cur ? `<label class="sbl-chk" title="${x ? t("Approved. Untick to hide it.") : t("Not approved. Tick to approve.")}"><input type="checkbox" data-sblkeep="${o.i}" ${x ? "checked" : ""} aria-label="${t("Approve")} ${esc(o.file)}"></label>` : ""}
         ${inP.has(o.file) ? `<span class="sbl-inproj">${t("In project")}</span>` : ""}${markedNew(o) ? `<span class="sbl-newt">● ${t("New")}</span>` : ""}${feat.has(o.file) && ui.type !== "FT" ? `<span class="sbl-ftag">◆ ${t("Featured")}</span>` : ""}${ui.type === "CF" && cfav.has(o.file) ? `<span class="sbl-cfby" title="${esc(cfav.get(o.file).join(", "))}">★ ${esc(cfav.get(o.file).join(", "))}</span>` : ""}
@@ -594,7 +610,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (bySup) {
       // Inside one catalogue, each page is a card and the cards tile across the screen, sized to their number of images.
       const pages = []; shown.forEach(o => { const g = pages[pages.length - 1]; if (g && g.p === o.page) g.l.push(o); else pages.push({ p: o.page, l: [o] }); });
-      html = `<div class="sbl-pages">${pages.map(g => `<section class="sbl-pg" style="--n:${Math.min(g.l.length, 4)}"><div class="sbl-page"><b>${t("Page")} ${g.p}</b>${cur ? `<span><button class="linkbtn" data-sblpage="${g.p}" data-v="on">${t("Approve page")}</button><button class="linkbtn" data-sblpage="${g.p}" data-v="off">${t("Unapprove page")}</button></span>` : ""}</div><div class="sbl-pgimgs">${g.l.map(tile).join("")}</div></section>`).join("")}</div>`;
+      html = `<div class="sbl-pages">${pages.map(g => `<section class="sbl-pg${g.l.some(o => o.i === ui.hit) ? " hit" : ""}" data-p="${g.p}" style="--n:${Math.min(g.l.length, 4)}"><div class="sbl-page"><b>${t("Page")} ${g.p}</b>${cur ? `<span><button class="linkbtn" data-sblpage="${g.p}" data-v="on">${t("Approve page")}</button><button class="linkbtn" data-sblpage="${g.p}" data-v="off">${t("Unapprove page")}</button></span>` : ""}</div><div class="sbl-pgimgs">${g.l.map(tile).join("")}</div></section>`).join("")}</div>`;
     } else html = `<div class="sbl-grid">${shown.map(tile).join("")}</div>`;
     return `${sorting ? sortBarHTML() : ""}${html}${l.length > ui.n ? `<div class="sbl-more"><button class="btn ghost" data-sblmore>${zh() ? `再显示 ${Math.min(120, l.length - ui.n)} 张（还有 ${nf(l.length - ui.n)} 张）` : `Show ${Math.min(120, l.length - ui.n)} more of ${nf(l.length - ui.n)}`}</button></div>` : ""}`;
   }
@@ -699,7 +715,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
         </div>
         <div class="sbl-row" style="margin-top:22px;align-items:flex-end">${addControls(o)}</div>
         <section class="sbl-sec"><header><h5>${t("Source")}</h5></header>
-          <div class="sbl-kv"><div class="k">PDF</div><div><a href="${esc(pdfURL(S))}" target="_blank" rel="noopener">${esc(S.pdf)} ↗</a></div>
+          <div class="sbl-kv"><div class="k">${t("Catalogue page")}</div><div><button class="linkbtn" data-sbl="gopage" data-i="${o.i}" title="${esc(t("Opens the page inside Sourcebook"))}">${pageBtn(o)} ›</button></div><div class="k">PDF</div><div><a href="${esc(pdfURL(S))}" target="_blank" rel="noopener">${esc(S.pdf)} ↗</a></div>
             ${host.internal() && !S.up ? `<div class="k">${t("Catalogue folder")}</div><div class="m">${esc(LIB_ROOT + S.cat)}</div>
             <div class="k">${t("Image file")}</div><div class="m">${esc(LIB_ROOT + "_IMAGE LIBRARY\\" + S.cat + "\\" + o.sup + "\\")}</div>` : ""}</div>
           ${host.internal() ? `<div class="sbl-note"><code id="sbl-note">${esc(sourceNote(o)).replace(/\n/g, "<br>")}</code><div class="sbl-row" style="margin-top:0"><button class="btn sm" data-sbl="copy">${t("Copy source note")}</button><span class="mono" style="font-size:11.5px;color:var(--muted)">${zh() ? `PDF 从第 1 页打开；此图片在第 ${o.page} 页。` : `The PDF opens at page 1; this image is on page ${o.page}.`}</span></div></div>` : ""}
@@ -1259,8 +1275,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       if (ui.type === "F") { repaint(); return; }
       el.setAttribute("aria-pressed", x); el.textContent = x ? "★" : "☆"; el.title = t(x ? "Remove from favourites" : "Add to favourites"); return;
     }
-    if (el.dataset.sblsup !== undefined) { ui.sup = el.dataset.sblsup || null; ui.n = 120; rerender(); return; }
-    if (el.dataset.sbltype !== undefined) { ui.type = el.dataset.sbltype || null; ui.sup = null; ui.n = 120; if (ui.type && ui.type !== "TBS") markSeen(LIB.items.filter(o => inType(o) && isNew(o)).map(o => o.file)); if (el.dataset.sbltop !== undefined) { ui.q = ""; } rerender(); const r = $("#sblib"); if (r && (ui.type || el.dataset.sbltop !== undefined)) r.scrollIntoView({ block: "start" }); return; }
+    if (el.dataset.sblsup !== undefined) { ui.sup = el.dataset.sblsup || null; ui.n = 120; ui.hit = null; rerender(); return; }
+    if (el.dataset.sbltype !== undefined) { ui.type = el.dataset.sbltype || null; ui.sup = null; ui.n = 120; ui.hit = null; if (ui.type && ui.type !== "TBS") markSeen(LIB.items.filter(o => inType(o) && isNew(o)).map(o => o.file)); if (el.dataset.sbltop !== undefined) { ui.q = ""; } rerender(); const r = $("#sblib"); if (r && (ui.type || el.dataset.sbltop !== undefined)) r.scrollIntoView({ block: "start" }); return; }
     if (el.dataset.sblshow) { ui.show = el.dataset.sblshow; ui.n = 120; document.querySelectorAll("[data-sblshow]").forEach(b => b.setAttribute("aria-pressed", b === el)); repaint(); return; }
     if (el.dataset.sblmore !== undefined) { ui.n += 120; repaint(); return; }
     if (el.dataset.sblopen !== undefined) { ui.open = +el.dataset.sblopen; ui.seq = el.dataset.sblseq === "find" ? find.m.slice() : ordered().map(o => o.i); host.layer(); return; }
@@ -1300,6 +1316,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     else if (a === "feat" && isAdm()) { const o = LIB.items[ui.open]; if (o) { toggleFeat(o); host.layer(); repaint(); } }
     else if (a === "fprev" || a === "fnext") fGo(fIdx + (a === "fnext" ? 1 : -1));
     else if (a === "fplay") { fUser = !fUser; fResume(); }
+    else if (a === "gopage") { const o = LIB.items[+el.dataset.i]; if (o) goPage(o); }
     else if (a === "fopen") { const pool = featPool(), o = pool[fIdx]; if (o) { ui.open = o.i; ui.seq = pool.map(x => x.i); host.layer(); } }
     else if (a === "fav") { const o = LIB.items[ui.open]; if (o) { toggleFav(o); host.layer(); if (ui.type === "F") repaint(); } }
     else if (a === "toggle" && curating()) { const o = LIB.items[ui.open]; if (o) { setOn(o.sup, [o.key], !isOn(o)); repaint(); host.layer(); } }

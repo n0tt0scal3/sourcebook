@@ -259,6 +259,18 @@ textarea.f{resize:vertical;min-height:70px;border:1px solid var(--rule);padding:
 .look.size-l .plate{aspect-ratio:5/4}
 .look.size-l .cap h3{font-size:28px}
 .plate.fitwhole{background:var(--paper)}
+/* delete from the tile */
+.tiledel{position:absolute;right:10px;top:10px;z-index:2;width:30px;height:30px;display:grid;place-content:center;background:var(--paper);color:var(--crit);border:1px solid var(--crit);font-size:19px;line-height:1;cursor:pointer;opacity:0;transition:opacity .2s}
+.card:hover .tiledel,.fincard:hover .tiledel,.tiledel:focus-visible{opacity:1}
+.tiledel:hover{background:var(--crit);color:#fff}
+@media (hover:none){.tiledel{opacity:.85}}
+.card:hover .plate:has(.tiledel) .late{right:48px}
+@media (hover:none){.plate:has(.tiledel) .late{right:48px}}
+.fincard .tiledel{left:8px;right:auto;top:8px}
+.tdconf{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:8px;padding:16px;background:color-mix(in srgb,var(--paper) 94%,transparent);color:var(--ink);text-align:left;cursor:default}
+.tdconf b{font-weight:600;overflow-wrap:anywhere}
+.tdconf .tdbtns{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:4px}
+.tdconf .btn{cursor:pointer}
 .plate.fitwhole img{object-fit:contain;padding:6%}
 .card:hover .plate.fitwhole img{transform:scale(1.02)}
 .sheet .hero.fitwhole{background:var(--paper)}
@@ -894,7 +906,7 @@ function finishSchedule(){
     list.forEach(it=>{const g=fam(it);if(g!==grp){if(cards.length)sections.push([grp,cards]);grp=g;cards=[]}cards.push(it)});if(cards.length)sections.push([grp,cards]);
     const line=(v,cls="")=>v?`<span class="${cls}">${esc(v)}</span>`:`<span class="tbd">TBD</span>`;
     body=sections.map(([g,arr])=>`<section class="finsec" data-fam="${g==="—"?"":g}"><h3 class="fingroup"><span>${esc(g==="—"?"Other finishes":STD_LABEL[g])}</span><span class="mono muted">${g==="—"?"":g+" · "}${arr.length}</span></h3>
-      <div class="finboard">${arr.map(it=>`<button class="fincard" data-open="${it.id}" ${ed?`data-drag="${it.id}"`:""}>${ed?`<span class="grip" aria-hidden="true" title="Drag to another family"><i></i><i></i><i></i></span>`:""}
+      <div class="finboard">${arr.map(it=>`<button class="fincard" data-open="${it.id}" ${ed?`data-drag="${it.id}"`:""}>${ed?`<span class="grip" aria-hidden="true" title="Drag to another family"><i></i><i></i><i></i></span>`:""}${tileDel(it)}
         <span class="finimg"><img alt="" src="${imgFor(it,420)}" loading="lazy"></span>
         <span class="fintext">
           <b class="fincode">${esc(it.code||"—")}:</b>${clip(it,"oncard")}
@@ -991,7 +1003,7 @@ function furnitureSchedule(){
     let grp=null,cards=[];const sections=[];
     list.forEach(it=>{const g=fam(it);if(g!==grp){if(cards.length)sections.push([grp,cards]);grp=g;cards=[]}cards.push(it)});if(cards.length)sections.push([grp,cards]);
     body=sections.map(([g,arr])=>`<section class="finsec" data-fam="${g==="—"?"":g}"><h3 class="fingroup"><span>${esc(g==="—"?"Untagged":FUR_LABEL[g])}</span><span class="mono muted">${g==="—"?"":g+" · "}${arr.length}</span></h3>
-      <div class="finboard">${arr.map(it=>`<button class="fincard furcard" data-open="${it.id}" ${ed?`data-drag="${it.id}" data-kind="fur"`:""}>${ed?`<span class="grip" aria-hidden="true" title="Drag to another type"><i></i><i></i><i></i></span>`:""}
+      <div class="finboard">${arr.map(it=>`<button class="fincard furcard" data-open="${it.id}" ${ed?`data-drag="${it.id}" data-kind="fur"`:""}>${ed?`<span class="grip" aria-hidden="true" title="Drag to another type"><i></i><i></i><i></i></span>`:""}${tileDel(it)}
         <span class="finimg"><img alt="" src="${imgFor(it,420)}" loading="lazy"></span>
         <span class="fintext">
           <b class="fincode">${esc(it.code||"—")}:</b>${clip(it,"oncard")}
@@ -2195,7 +2207,7 @@ function lookbook(){
   const size=ui.cardSize||"m";const pattern=size==="m"?["feature","feature","","","tall","","",""]:[""];
   return head+`<div class="look size-${size}">${list.map((it,i)=>{const p=pattern[i%pattern.length];const u=urgency(it);return`
     <button class="card ${p}" data-open="${it.id}">
-      <div class="plate ${fitOf(it)==="contain"?"fitwhole":""}"><img alt="" src="${imgFor(it,size==="l"||p==="feature"?760:size==="s"?360:520)}" loading="lazy"><span class="tag mono">${esc(it.code||"")}</span>${hasModel(it)?`<span class="b3d mono" title="3D model">3D</span>`:""}${clip(it,"onplate")}${u?`<span class="late mono">${u.label}</span>`:""}${newsOf(it)?`<span class="newtag">${newsOf(it).isNew?"New":"Updated"}</span>`:""}</div>
+      <div class="plate ${fitOf(it)==="contain"?"fitwhole":""}"><img alt="" src="${imgFor(it,size==="l"||p==="feature"?760:size==="s"?360:520)}" loading="lazy"><span class="tag mono">${esc(it.code||"")}</span>${hasModel(it)?`<span class="b3d mono" title="3D model">3D</span>`:""}${clip(it,"onplate")}${u?`<span class="late mono">${u.label}</span>`:""}${newsOf(it)?`<span class="newtag">${newsOf(it).isNew?"New":"Updated"}</span>`:""}${tileDel(it)}</div>
       <div class="cap"><h3>${esc(it.name)}</h3><span class="q">${esc(qtyStr(it))}</span>
       <div class="sub"><span><i class="dot s-${esc(it.status)}"></i>${esc(it.status)}</span><span>${esc(it.category||"")}</span>${it.supplier?`<span>${esc(it.supplier)}</span>`:""}${reviewChip(it)}${(()=>{const n=commentsFor(it.id).length;return n?`<span class="ccount">${n} comment${n===1?"":"s"}</span>`:""})()}</div></div>
     </button>`}).join("")}${addTile}</div>`;
@@ -2460,7 +2472,7 @@ function projectSheet(){
 /* ---------- events ---------- */
 document.addEventListener("click",async e=>{
   const t=e.target.closest("[data-csize],[data-cfit],[data-readref],[data-img],[data-pick],[data-view],[data-cat],[data-stage],[data-open],[data-a],[data-status],[data-delspec],[data-delref],[data-deldec],[data-sw]");if(!t)return;
-  if(t.dataset.view){ui.view=t.dataset.view;if(ui.view==="proj"){ui.open=null;document.body.style.overflow="";loadSummaries()}try{localStorage.setItem("sb_view",ui.view)}catch(_){}render();return}
+  if(t.dataset.view){ui.view=t.dataset.view;ui.tileDel=null;if(ui.view==="proj"){ui.open=null;document.body.style.overflow="";loadSummaries()}try{localStorage.setItem("sb_view",ui.view)}catch(_){}render();return}
   if(t.dataset.cat){ui.cat=t.dataset.cat;render();return}
   if(t.dataset.stage){ui.stage=ui.stage===t.dataset.stage?null:t.dataset.stage;if(ui.view==="look"||ui.view==="dec")ui.view="mat";render();return}
   if(t.dataset.csize){ui.cardSize=t.dataset.csize;try{localStorage.setItem("sb_csize",ui.cardSize)}catch(_){}render();return}
@@ -2483,7 +2495,7 @@ document.addEventListener("click",async e=>{
   else if(a==="closeproj"){ui.editProject=false;document.body.style.overflow="";renderLayer();}
   else if(a==="askdel"){ui.confirmDel=true;renderLayer();}
   else if(a==="nodel"){ui.confirmDel=false;renderLayer();}
-  else if(a==="del"){const id=ui.open;items=items.filter(i=>i.id!==id);ui.open=null;ui.mode="view";ui.confirmDel=false;render();if(db)write(id,()=>db.doc("items/"+id).delete());toast("Piece deleted")}
+  else if(a==="del"){deletePiece(ui.open)}
   else if(a==="unphoto"){setItem(ui.open,{photo:null})}
   else if(a==="uncover"){if(!canCover())return;const{cover,...rest}=project;project=rest;write("project",()=>db.doc("project/main").set(project));force=true;render();force=false}
   else if(a==="csv"){exportCSV()}
@@ -2566,6 +2578,26 @@ document.addEventListener("change",async e=>{
 });
 /* Project cover: a band above the project name. Only admins choose it (project.cover = blob id); everyone sees it. */
 const canCover=()=>(!ME||ME.role==="admin")&&canWrite&&!preview&&!!assets;
+/* delete a piece straight from its tile (admins), with a confirm on the tile itself */
+const canTileDel=()=>(!ME||ME.role==="admin")&&canWrite&&!preview;
+function deletePiece(id){if(!id)return;items=items.filter(i=>i.id!==id);if(ui.open===id){ui.open=null;ui.mode="view"}ui.confirmDel=false;ui.tileDel=null;render();if(db)write(id,()=>db.doc("items/"+id).delete());toast("Piece deleted")}
+function tileDel(it){
+  if(!canTileDel())return"";
+  if(ui.tileDel!==it.id)return`<span class="tiledel" role="button" tabindex="0" data-tiledel="${it.id}" title="Delete this piece" aria-label="Delete this piece">×</span>`;
+  return`<span class="tdconf" role="alertdialog"><span>Delete this piece?</span><b data-noi18n>${esc([it.code,it.name].filter(Boolean).join(" · "))}</b><span class="tdbtns"><span role="button" tabindex="0" class="btn danger sm" data-tdyes="${it.id}">Delete</span><span role="button" tabindex="0" class="linkbtn" data-tdno>Keep it</span></span></span>`;
+}
+document.addEventListener("click",e=>{
+  const el=e.target.closest&&e.target.closest("[data-tiledel],[data-tdyes],[data-tdno],.tdconf");if(!el)return;
+  e.preventDefault();e.stopPropagation();
+  if(el.dataset.tiledel){ui.tileDel=el.dataset.tiledel;render()}
+  else if(el.dataset.tdyes){if(canTileDel())deletePiece(el.dataset.tdyes)}
+  else if(el.hasAttribute("data-tdno")){ui.tileDel=null;render()}
+},true);
+document.addEventListener("keydown",e=>{
+  const el=e.target.closest&&e.target.closest("[data-tiledel],[data-tdyes],[data-tdno]");
+  if(el&&(e.key==="Enter"||e.key===" ")){e.preventDefault();e.stopPropagation();el.click();return}
+  if(e.key==="Escape"&&ui.tileDel&&!ui.open){ui.tileDel=null;render()}
+},true);
 function coverBand(){
   const adm=canCover();if(!project.cover&&!adm)return"";
   if(!project.cover)return`<label class="pcov empty" id="pcov" data-drop="${esc(tr("Drop to use as the cover"))}"><input type="file" accept="image/*" data-up="cover" hidden><b>+ Add a cover image</b><span>Choose an image or drop one here. Only admins can change it.</span></label>`;
@@ -3204,7 +3236,7 @@ function endDrag(drop){
   }
 }
 document.addEventListener("pointerdown",e=>{
-  const card=e.target.closest&&e.target.closest("[data-drag]");if(!card||e.button>0)return;
+  const card=e.target.closest&&e.target.closest("[data-drag]");if(!card||e.button>0||e.target.closest(".tiledel,.tdconf"))return;
   const onGrip=!!e.target.closest(".grip");if(e.pointerType!=="mouse"&&!onGrip)return;
   const it=items.find(i=>i.id===card.dataset.drag);if(!it)return;
   drag={it,card,kind:card.dataset.kind||"fin",sx:e.clientX,sy:e.clientY,x:e.clientX,y:e.clientY,active:false,pid:e.pointerId};
@@ -3262,7 +3294,7 @@ const ZH={
 "Notes":"备注","Seen in":"出现在","Detected from this view":"从此视图识别","From this view":"来自此视图","Add photo":"添加照片","Replace image":"替换图片","Use material plate":"使用材料样板",
 "Finish schedule ":"饰面表","Material category ":"材料类别","Save finish details":"保存饰面信息","Not listed on the finish schedule.":"未列入饰面表。","Save furniture details":"保存家具信息","Not listed on the furniture schedule.":"未列入家具表。",
 "Collection / product":"系列 / 产品","Model / SKU":"型号 / SKU","Frame / base finish":"框架 / 底座饰面","Upholstery":"软包","Location / room":"位置 / 房间","Add to the":"加入","or the":"或","finish schedule":"饰面表","furniture schedule":"家具表",
-"Edit piece":"编辑项目","Add a material or product":"添加材料或产品","Code":"编号","Assigned automatically":"自动分配","Category":"类别","Name":"名称","Description":"描述","One line on the design intent":"一句话描述设计意图","Zone / room":"区域 / 房间","Lead time (weeks)":"交货期（周）","Unit cost (CAD)":"单价（加元）","Stage":"阶段","Image":"图片","Upload product or sample photo":"上传产品或样板照片","Or use a material plate below":"或使用下方的材料样板","Current photo kept unless replaced":"未替换时保留当前照片","Material plate":"材料样板","Save changes":"保存更改","Delete":"删除","Delete piece":"删除项目","Keep it":"保留","Keep them":"保留",
+"Edit piece":"编辑项目","Add a material or product":"添加材料或产品","Code":"编号","Assigned automatically":"自动分配","Category":"类别","Name":"名称","Description":"描述","One line on the design intent":"一句话描述设计意图","Zone / room":"区域 / 房间","Lead time (weeks)":"交货期（周）","Unit cost (CAD)":"单价（加元）","Stage":"阶段","Image":"图片","Upload product or sample photo":"上传产品或样板照片","Or use a material plate below":"或使用下方的材料样板","Current photo kept unless replaced":"未替换时保留当前照片","Material plate":"材料样板","Save changes":"保存更改","Delete":"删除","Delete piece":"删除项目","Delete this piece":"删除此项目","Delete this piece?":"删除此项目？","Keep it":"保留","Keep them":"保留",
 "stone":"石材","wood":"木材","metal":"金属","textile":"织物","terrazzo":"水磨石","plaster":"灰泥","glass":"玻璃","tile":"瓷砖",
 "Project":"项目","Project details":"项目信息","Project name":"项目名称","Client":"客户","Phase":"阶段","Construction documents":"施工图","Google Sheet link":"Google 表格链接","Save":"保存","Start fresh":"重新开始","Clear the book":"清空手册","Delete everything":"全部删除",
 "Remove every piece and decision, for example to clear the sample pieces before importing your own schedule.":"删除所有项目和决策，例如在导入您自己的清单前清除示例项目。",

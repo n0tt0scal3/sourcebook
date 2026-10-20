@@ -18,6 +18,7 @@ head='''<!doctype html>
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,-apple-system,sans-serif;background:#fafaf9}img{max-width:100%}[hidden]{display:none!important}</style>
 <script src="/claude-shim.js"></script>
 <script src="/library.js"></script>
+<script src="/rfi.js"></script>
 </head>
 <body>
 '''

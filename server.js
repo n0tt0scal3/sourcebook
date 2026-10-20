@@ -18,7 +18,7 @@ const DB_FILE = path.join(DATA_DIR, "db.json");
 const exists = f => { try { return fs.existsSync(f); } catch (_) { return false; } };
 const PUBLIC_DIR = exists(path.join(__dirname, "public", "dashboard.html")) ? path.join(__dirname, "public") : __dirname;
 const FLAT_PUBLIC = PUBLIC_DIR === __dirname;
-const PUBLIC_FILES = new Set(["index.html", "dashboard.html", "admin.html", "claude-shim.js", "library.js", "pdfjs/pdf.min.mjs", "pdfjs/pdf.worker.min.mjs", "manifest.webmanifest", "icon-192.png", "icon-512.png"]);
+const PUBLIC_FILES = new Set(["index.html", "dashboard.html", "admin.html", "claude-shim.js", "library.js", "rfi.js", "pdfjs/pdf.min.mjs", "pdfjs/pdf.worker.min.mjs", "manifest.webmanifest", "icon-192.png", "icon-512.png"]);
 // Sourcing library: lib/data.json (index) and lib/sprites/ (thumbnail sheets), next to the app files.
 const LIB_DIR = exists(path.join(PUBLIC_DIR, "lib", "data.json")) ? path.join(PUBLIC_DIR, "lib") : path.join(__dirname, "lib");
 // Full-size library images, uploaded by an admin from the Drive zips, live on the data disk.
@@ -446,9 +446,10 @@ const projectOf = p => { const m = /^projects\/([^/]+)/.exec(p || ""); return m 
 function canSeeProject(u, id) { return allAccess(u) || (u.projects || []).includes(id); }
 // The sourcing library (library/<catalogue>) is studio-wide: everyone can see what's approved; only admins approve.
 const isLibPath = p => /^library(types|cats|show|feat)?(\/|$)/.test(p || "");
-// Each person's own library lists (libraryfav/<user id> favourites, libraryseen/<user id> what's new): only that person,
+// Each person's own library lists (libraryfav/<user id> favourites, libraryseen/<user id> what's new) and the supplier RFIs
+// they've seen (rfiseen/<user id>): only that person,
 // admins included, and never as a whole collection. They are read and changed through /api/library/fav and /seen.
-const isOwnPath = p => /^library(fav|seen)(\/|$)/.test(p || "");
+const isOwnPath = p => /^(library(fav|seen)|rfiseen)(\/|$)/.test(p || "");
 const ownPath = (u, p) => p === p.split("/")[0] + "/" + u.id;
 // Catalogues an admin has hidden from clients: libraryshow/main = { hide: [catalogue ids] }. Everyone else sees them all.
 const libHidden = () => new Set(Array.isArray(store["libraryshow/main"]?.data?.hide) ? store["libraryshow/main"].data.hide : []);
@@ -542,6 +543,37 @@ function newsCount(u, id) {
   const pre = `projects/${id}/items/`; let n = 0;
   for (const [k, v] of Object.entries(store)) if (k.startsWith(pre) && Object.values(v.data?.chg || {}).some(c => c && c.r !== side)) n++;
   return n;
+}
+/* ---------------- supplier RFIs ---------------- */
+// A piece keeps rfis = [{ id, kind: "rfi"|"resp", text, images, at, name, by: { id, name, role } }]. Who added an entry and
+// when is set here from the signed-in person, never taken from the page, and never changes once it's saved.
+function stampRfis(me, prev, list) {
+  const old = new Map((Array.isArray(prev) ? prev : []).filter(r => r && r.id).map(r => [String(r.id), r])), now = new Date().toISOString();
+  return list.filter(r => r && typeof r === "object" && !Array.isArray(r)).map(r => {
+    const o = { ...r }, was = old.get(String(r.id)); delete o.by; delete o.at; delete o.name;
+    if (was) return { ...o, ...(was.at ? { at: was.at } : {}), ...(was.name ? { name: was.name } : {}), ...(was.by ? { by: was.by } : {}) };
+    return { ...o, id: r.id ? String(r.id).slice(0, 40) : "r" + crypto.randomBytes(5).toString("hex"), at: now, name: me.name || "", by: { id: me.id, name: me.name || "", role: me.role } };
+  });
+}
+// Every RFI and supplier response across the projects this person can see, newest first, and whether they've seen it.
+// Seen: their own entries, anything before rfiseen/<user id>.base, and the entries listed in its ids.
+function rfiFeed(u) {
+  const seenDoc = store["rfiseen/" + u.id]?.data || {}, base = seenDoc.base || "", ids = new Set(seenDoc.ids || []);
+  const names = Object.fromEntries(projectSummaries().map(x => [x.id, x.name || x.id])), out = [];
+  for (const [k, v] of Object.entries(store)) {
+    if (!ITEM_DOC.test(k) || !Array.isArray(v.data?.rfis) || !v.data.rfis.length) continue;
+    const pid = projectOf(k); if (!canSeeProject(u, pid) || !(pid in names)) continue;
+    const it = v.data, rs = it.rfis.filter(r => r && r.id);
+    for (const r of rs) {
+      const mine = r.by ? r.by.id === u.id : !!r.name && r.name === u.name;
+      const answered = r.kind !== "resp" && rs.some(x => x.kind === "resp" && String(x.at || "") > String(r.at || ""));
+      out.push({ id: r.id, kind: r.kind === "resp" ? "resp" : "rfi", text: String(r.text || "").slice(0, 300), images: (r.images || []).length, at: r.at || null,
+        by: r.by ? { name: r.by.name || "", role: r.by.role || "" } : r.name ? { name: r.name, role: "" } : null,
+        project: { id: pid, name: names[pid] }, item: { id: k.split("/")[3], code: it.code || "", name: it.name || "" },
+        ...(r.kind === "resp" ? {} : { answered }), seen: mine || (!!base && String(r.at || "") <= base) || ids.has(r.id) });
+    }
+  }
+  return out.sort((a, b) => String(b.at || "").localeCompare(String(a.at || "")));
 }
 function loginPage(error) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -771,6 +803,27 @@ const server = http.createServer(async (req, res) => {
 
     // projects
     if (p === "/api/projects" && req.method === "GET") return send(res, 200, { projects: projectSummaries().filter(x => canSeeProject(me, x.id)).map(x => ({ ...x, news: newsCount(me, x.id), ...(isClient ? { quote: CLIENT_PRICES ? { cad: x.quote.cad } : null } : me.role === "specifier" ? { quote: { cad: x.landedTax, cny: x.landedTax * x.quote.fx, fx: x.quote.fx } } : {}), landedTax: undefined })) });
+    // Supplier RFIs across all projects, for the bell next to the admin's name (admins only).
+    //   GET  /api/rfis                                       -> { rfis: [...newest first], unseen }
+    //   POST /api/rfis/seen { all: true } | { project, item } -> { unseen }
+    if (p === "/api/rfis" && req.method === "GET") {
+      if (!isAdmin) return deny();
+      const all = rfiFeed(me);
+      return send(res, 200, { rfis: all.slice(0, 80), unseen: all.filter(x => !x.seen).length });
+    }
+    if (p === "/api/rfis/seen" && req.method === "POST") {
+      if (!isAdmin) return deny();
+      const b = await readJSON(req), dp = "rfiseen/" + me.id, cur = store[dp]?.data || {};
+      let base = cur.base || "", ids = new Set(cur.ids || []);
+      if (b.all === true) { base = new Date().toISOString(); ids = new Set(); }
+      else if (typeof b.project === "string" && typeof b.item === "string") rfiFeed(me).forEach(x => { if (x.project.id === b.project && x.item.id === b.item && !x.seen) ids.add(x.id); });
+      else return send(res, 400, { code: "invalid_argument" });
+      // only keep ids that still need remembering
+      const feed = () => rfiFeed(me), live = new Set(feed().filter(x => !base || String(x.at || "") > base).map(x => x.id));
+      const next = { base, ids: [...ids].filter(i => live.has(i)), updated: new Date().toISOString() };
+      store[dp] = { data: next, version: (store[dp]?.version || 0) + 1, updatedAt: next.updated }; persist();
+      return send(res, 200, { ok: true, unseen: feed().filter(x => !x.seen).length });
+    }
     // mark changes from the other side as seen: { project, items: [ids] } (all pieces in the project when items is left out)
     if (p === "/api/changes/seen" && req.method === "POST") {
       const side = sideOf(me); if (!side) return deny();
@@ -874,7 +927,7 @@ const server = http.createServer(async (req, res) => {
         // Only admins choose a project's cover image.
         if (!isAdmin && /^projects\/[^/]+\/project\/main$/.test(dp)) { if (cur?.data?.cover != null) next.cover = cur.data.cover; else delete next.cover; }
         if (me.role === "specifier" && /^projects\/[^/]+$/.test(dp)) { if (cur?.data?.by) next.by = cur.data.by; else if (cur) delete next.by; }
-        if (ITEM_DOC.test(dp)) { if (op === "update") next.chg = cur.data.chg; next = trackChanges(me, cur?.data, next); }
+        if (ITEM_DOC.test(dp)) { if (Array.isArray(next.rfis)) next.rfis = stampRfis(me, cur?.data?.rfis, next.rfis); if (op === "update") next.chg = cur.data.chg; next = trackChanges(me, cur?.data, next); }
         if (Buffer.byteLength(JSON.stringify(next)) > 256 * 1024) return send(res, 400, { code: "invalid_argument", message: "document too large" });
         store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: new Date().toISOString() };
         persist(); broadcast({ path: dp, exists: true, data: next });

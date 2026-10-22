@@ -13,6 +13,7 @@
 <script src="/claude-shim.js"></script>
 <script src="/library.js"></script>
 <script src="/rfi.js"></script>
+<script src="/agentnote.js"></script>
 </head>
 <body>
 <title>Sourcebook</title>
@@ -160,6 +161,7 @@ tr.row:hover td{background:var(--paper)}
 .sheet .hero .herotools .btn{background:var(--paper);color:var(--ink);border-color:var(--paper)}
 .sheet .body{overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 22px) clamp(18px,4vw,48px) calc(env(safe-area-inset-bottom,0px) + 60px)}
 .sheet .top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.top>.row2{justify-content:flex-end}
 .close{background:none;border:1px solid var(--rule);width:38px;height:38px;border-radius:50%;font-size:18px;line-height:1}
 .sheet h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,4.4vw,56px);line-height:1;margin:18px 0 8px;letter-spacing:-.01em;text-wrap:balance}
 .sheet .lede{color:var(--ink2);margin:0;max-width:60ch}
@@ -303,6 +305,8 @@ textarea.f{resize:vertical;min-height:70px;border:1px solid var(--rule);padding:
 .rfi .cmeta{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.rfi .cmeta .x{margin-left:auto;padding:0 0 0 8px}
 .rfi .rfiby{font-size:13px;color:var(--ink2)}.rfi .rfiby b{font-weight:500}.rfi .rfiby .mono{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-left:4px}
 .rfikind{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}.rfi.resp .rfikind{color:var(--accent)}
+.agentsec .rfi{border-left-color:var(--new)}.agentsec .rfi.latest{background:var(--new-soft);padding:8px 12px;border-left-width:4px}
+.agentbox{width:min(560px,100%)}.agentbox textarea{width:100%;margin-top:6px;resize:vertical}.agentbox input.f{width:100%;margin-top:6px}.agentbox .muted{font-size:13px;margin:6px 0 0}
 .rfiform{display:flex;flex-direction:column;gap:10px;margin-top:18px}.rfiform .xgal{margin-top:0}
 .xgdrop.sm{padding:12px 16px;margin-top:0}.xgdrop.sm b{font-size:17px}
 .ximgsec.imgdrop .xgdrop,.rfisec.imgdrop .xgdrop{border:2px solid var(--accent);background:var(--accent-soft)}
@@ -768,7 +772,7 @@ const otherSide=()=>ME&&(ME.role==="admin"?"agent":ME.role==="agent"?"admin":nul
 function newsOf(it){const o=otherSide();if(!o||!it||!it.chg)return null;const e=Object.entries(it.chg).filter(([,c])=>c&&c.r===o);if(!e.length)return null;
   const last=e.map(x=>x[1]).sort((a,b)=>String(b.at).localeCompare(String(a.at)))[0];return{fields:new Set(e.map(x=>x[0])),isNew:e.some(x=>x[0]==="_new"),by:last.n||"",at:last.at}}
 const hot=(it,...f)=>{const n=newsOf(it);return n&&(n.isNew||f.some(x=>n.fields.has(x)))?" chg":""};
-const CHG_LABEL={qty:"Qty",unitCost:"Unit price",unitCostCNY:"Unit price",priceBase:"Unit price",supplier:"Supplier",leadWeeks:"Lead time",needBy:"On site",status:"Status",name:"Name",code:"Code",unit:"Unit",modelCode:"Model",notes:"Notes",refs:"Attachments",images:"Images",photo:"Photo",model:"3D model",description:"Description",category:"Category",specs:"Specification",dutyRate:"Duty %"};
+const CHG_LABEL={qty:"Qty",unitCost:"Unit price",unitCostCNY:"Unit price",priceBase:"Unit price",supplier:"Supplier",leadWeeks:"Lead time",needBy:"On site",status:"Status",name:"Name",code:"Code",unit:"Unit",modelCode:"Model",notes:"Notes",refs:"Attachments",images:"Images",photo:"Photo",model:"3D model",description:"Description",category:"Category",specs:"Specification",dutyRate:"Duty %",toAgent:"Note from the studio"};
 const chgFields=(n)=>[...new Set([...n.fields].filter(f=>f!=="_new").map(f=>CHG_LABEL[f]||"Details"))];
 const newsFrom=()=>otherSide()==="agent"?"the sourcing agent":"the studio";
 function newsPill(it){const n=newsOf(it);if(!n)return"";return`<div class="newpill">${n.isNew?"New":"Updated"}<button class="seenbtn" data-seen="${it.id}" title="Mark as seen">✓ Seen</button></div>`}
@@ -1657,15 +1661,18 @@ function subscribeProject(){
 }
 /* ---------- the RFI bell (rfi.js) links here as /p/<project>#rfi=<piece>: open the piece at its Supplier RFIs ---------- */
 let rfiSig=null;
-function rfiWatch(){const sig=items.map(i=>i.id+":"+(i.rfis||[]).length).join(",");if(rfiSig!==null&&sig!==rfiSig&&window.SBRfis)SBRfis.refresh();rfiSig=sig;openRfiHash()}
-function openRfiHash(){const m=/^#rfi=(.+)$/.exec(location.hash||"");if(!m||!loaded)return;const id=decodeURIComponent(m[1]);
+let agentSig=null;
+function rfiWatch(){const sig=items.map(i=>i.id+":"+(i.rfis||[]).length).join(",");if(rfiSig!==null&&sig!==rfiSig&&window.SBRfis)SBRfis.refresh();rfiSig=sig;
+  const as=items.map(i=>i.id+":"+(i.toAgent||[]).length+":"+(i.chg&&i.chg.toAgent?1:0)).join(",");if(agentSig!==null&&as!==agentSig&&window.SBAgentNotes)SBAgentNotes.refresh();agentSig=as;openRfiHash()}
+function openRfiHash(){const m=/^#(rfi|agent)=(.+)$/.exec(location.hash||"");if(!m||!loaded)return;const id=decodeURIComponent(m[2]),sel=m[1]==="agent"?".sheet .agentsec":".sheet .rfisec";
   try{history.replaceState(null,"",location.pathname+location.search)}catch(_){}
   if(!items.some(i=>i.id===id)){toast("That piece isn't in this project any more.");return}
   if(ui.view==="lib"){ui.view="mat";render()}
   ui.img=null;ui.open=id;ui.mode="view";renderLayer();
-  setTimeout(()=>{const sec=document.querySelector(".sheet .rfisec");if(sec)sec.scrollIntoView({block:"start",behavior:"smooth"})},120)}
+  setTimeout(()=>{const sec=document.querySelector(sel);if(sec)sec.scrollIntoView({block:"start",behavior:"smooth"})},120)}
 window.addEventListener("hashchange",openRfiHash);
 window.SBRfisOpen=()=>HOSTED&&ui.open?[window.SOURCEBOOK_PROJECT,ui.open]:null;
+window.SBAgentNotesOpen=window.SBRfisOpen;
 function watchRegistry(){
   rawdb.collection("projectlist").onSnapshot(s=>{
     registry=s.docs.map(d=>({id:d.id,...d.data()}));
@@ -2311,6 +2318,7 @@ function renderLayer(passive){
   document.body.style.overflow="hidden";
   if(ui.open==="new"||ui.mode==="edit"){L.innerHTML=formSheet(ui.open==="new"?null:items.find(i=>i.id===ui.open));return}
   const it=items.find(i=>i.id===ui.open);if(!it){ui.open=null;L.innerHTML="";document.body.style.overflow="";return}
+  if(HOSTED&&ME&&ME.role==="agent"&&it.chg&&it.chg.toAgent&&window.SBAgentNotes)SBAgentNotes.seenItem(window.SOURCEBOOK_PROJECT,it.id);
   const si=STAGES.indexOf(it.status);const ob=orderBy(it);const u=urgency(it);const ed=canWrite&&!preview;
   const decs=decisions.filter(d=>d.itemId===it.id).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
   const same=prevKey==="view:"+it.id;L.dataset.key="view:"+it.id;
@@ -2323,7 +2331,7 @@ function renderLayer(passive){
     </div>
     <div class="body">
       <div class="top"><span class="eyebrow">${[it.code,it.category].filter(Boolean).map(esc).join(" · ")}${it.zone?" · "+esc(it.zone):""}</span>
-        <div class="row2">${HOSTED?`<button class="btn ghost sm" data-a="savepdf" title="Download this product sheet as a PDF, ready to print or send">Save PDF</button><button class="btn ghost sm" data-a="pkg" title="Product sheet PDF with its drawings, spec sheets, photo and 3D model, in one ZIP">Download package</button>`:""}${ed?`<button class="btn ghost sm" data-a="edit">Edit</button>`:""}<button class="close" data-a="close" aria-label="Close">×</button></div></div>
+        <div class="row2">${HOSTED&&ME&&ME.role==="admin"&&!preview?`<button class="btn ghost sm" data-a="toagent" title="Send the sourcing agent a note about this piece">Send to agent</button>`:""}${HOSTED?`<button class="btn ghost sm" data-a="savepdf" title="Download this product sheet as a PDF, ready to print or send">Save PDF</button><button class="btn ghost sm" data-a="pkg" title="Product sheet PDF with its drawings, spec sheets, photo and 3D model, in one ZIP">Download package</button>`:""}${ed?`<button class="btn ghost sm" data-a="edit">Edit</button>`:""}<button class="close" data-a="close" aria-label="Close">×</button></div></div>
       <h2>${esc(it.name)}</h2>
       ${(()=>{const n=newsOf(it);if(!n)return"";const f=chgFields(n);return`<div class="newsline"><span><b>●</b> ${n.isNew?"New from "+newsFrom():"Updated by "+newsFrom()}${n.by?" ("+esc(n.by)+")":""} · ${fmtD(new Date(n.at),true)}</span>${!n.isNew&&f.length?`<span>${f.map(esc).join(", ")}</span>`:""}<button class="seenbtn" data-seen="${it.id}">✓ Mark seen</button></div>`})()}
       ${it.description?`<p class="lede">${esc(it.description)}</p>`:""}
@@ -2337,6 +2345,7 @@ function renderLayer(passive){
         ${noPrices()?"":`<div><span class="eyebrow">${isClient()?"Unit price":"Unit cost"}</span><b class="${hot(it,"unitCost","unitCostCNY","priceBase")}">${it.unitCost?(isClient()?fmtC(Number(it.unitCost),"CAD"):"$"+Number(it.unitCost).toLocaleString("en-CA")):"—"}</b></div>`}
       </div>
 
+      ${agentNotesSection(it)}
       ${extraImagesSection(it,ed&&!!assets)}
       <section class="sec refsec"><header><h5>Drawings &amp; references</h5><span class="mono muted">${(it.refs||[]).length}${ed&&assets?" · drop PDFs or images here":""}</span></header>
         ${scanPanel(it)}
@@ -2401,6 +2410,52 @@ function rfiDraftFor(id){if(!rfiDraft||rfiDraft.item!==id)rfiDraft={item:id,kind
 // Who added an RFI entry: the server records the signed-in person's name and role. Older entries kept only a name.
 function rfiBy(r){const b=r.by||(r.name?{name:r.name}:null);if(!b||!b.name)return`<b>Unknown</b>`;return`<b>${esc(b.name)}</b>${b.role&&ROLE_LABEL[b.role]?` <span class="mono">${ROLE_LABEL[b.role]}</span>`:""}`}
 function fmtDT(iso){const d=iso&&new Date(iso);if(!d||isNaN(d))return"—";return fmtD(d,true)+" · "+d.toLocaleTimeString(lang==="zh"?"zh-CN":"en-CA",{hour:"numeric",minute:"2-digit"})}
+/* ---------- notes to the sourcing agent ----------
+   An admin presses "Send to agent" on a product card and writes a note. The server keeps it on the piece as
+   toAgent = [{ id, text, at, by: { id, name }, to }] and emails the agent when mail is set up; the agent gets a pulsing
+   alert at the top of every page (agentnote.js) until they open the piece. Only admins and the agent see the notes. */
+function agentNotesSection(it){
+  const list=(it.toAgent||[]).slice().reverse();if(!list.length||!ME||!(ME.role==="admin"||ME.role==="agent"))return"";
+  const adm=ME.role==="admin";
+  return`<section class="sec agentsec"><header><h5>${adm?"Notes to the sourcing agent":"Notes from the studio"}</h5><span class="mono muted">${list.length}</span></header>
+    <div class="rfilist">${list.map((n,i)=>`<div class="rfi agentnote${i===0?" latest":""}"><div class="cmeta"><span class="rfiby"><b>${esc(n.by&&n.by.name&&n.by.name!=="Studio owner"?n.by.name:"Studio")}</b></span><span class="muted">${fmtDT(n.at)}</span>${adm&&n.to?`<span class="muted">Emailed to ${esc(n.to)}</span>`:""}</div><p>${esc(n.text)}</p></div>`).join("")}</div>
+    ${adm?`<div class="row2" style="margin-top:12px"><button class="btn ghost sm" data-a="toagent">Send another note</button></div>`:""}
+  </section>`;
+}
+let adlg=null;
+async function openAgentDlg(it){
+  adlg={id:it.id,busy:false,mail:false,to:"",ready:false};renderAgentDlg();
+  try{const r=await fetch("/api/agentnote?project="+encodeURIComponent(window.SOURCEBOOK_PROJECT||""));const j=r.ok?await r.json():{};if(adlg&&adlg.id===it.id){adlg.mail=!!j.mail;adlg.to=j.agentEmail||"";adlg.ready=true;renderAgentDlg()}}
+  catch(_){if(adlg){adlg.ready=true;renderAgentDlg()}}
+}
+function renderAgentDlg(){
+  const old=document.getElementById("agentdlg"),txt=old?.querySelector("#an-text")?.value,to=old?.querySelector("#an-to")?.value;
+  if(txt!=null&&adlg)adlg.text=txt;if(to!=null&&adlg)adlg.to=to;
+  old?.remove();if(!adlg)return;const it=items.find(i=>i.id===adlg.id);if(!it){adlg=null;return}
+  const d=document.createElement("div");d.className="xlwrap";d.id="agentdlg";
+  d.innerHTML=`<form class="xlbox agentbox" role="dialog" aria-modal="true" aria-label="Send to agent" data-form="toagent"><div class="eyebrow">Send to agent</div><h2>${esc([it.code,it.name].filter(Boolean).join(" · "))}</h2>
+    <label class="eyebrow" for="an-text">Note to the agent</label>
+    <textarea class="f" id="an-text" rows="5" maxlength="2000" placeholder="e.g. Please confirm the walnut finish and the lead time for 6 pieces">${esc(adlg.text||"")}</textarea>
+    ${!adlg.ready?`<p class="muted">Loading…</p>`:adlg.mail?`<label class="eyebrow" for="an-to" style="margin-top:14px">Also email it to (QQ Mail)</label><input class="f" id="an-to" value="${esc(adlg.to)}" placeholder="12345678@qq.com" autocomplete="off"><p class="muted">Leave it blank to send it in Sourcebook only.</p>`
+      :`<p class="muted">Email isn't set up yet, so the agent sees this in Sourcebook only, with an alert at the top of their screen.</p>`}
+    <div class="row2"><button type="button" class="btn ghost" data-adlg="cancel">Cancel</button><button class="btn" ${adlg.busy||!adlg.ready?"disabled":""}>${adlg.busy?"Sending…":"Send to agent"}</button></div></form>`;
+  document.body.appendChild(d);
+  if(!old)setTimeout(()=>d.querySelector("#an-text")?.focus(),30);
+}
+async function sendAgentNote(){
+  if(!adlg||adlg.busy)return;const text=(document.querySelector("#an-text")?.value||"").trim(),to=adlg.mail?(document.querySelector("#an-to")?.value||"").trim():"";
+  if(!text){toast("Write a note to the agent first.");document.querySelector("#an-text")?.focus();return}
+  adlg.busy=true;renderAgentDlg();
+  try{const r=await fetch("/api/agentnote",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({project:window.SOURCEBOOK_PROJECT,item:adlg.id,text,to})});
+    const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.message||"");
+    adlg=null;renderAgentDlg();toast(j.emailed?"Sent to the agent by email.":"Sent to the agent in Sourcebook.")}
+  catch(e){if(adlg){adlg.busy=false;renderAgentDlg()}toast(e.message&&/mail|email|SMTP|piece|note/i.test(e.message)?e.message:"Couldn't send it. Check your connection and try again.")}
+}
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest('[data-a="toagent"],[data-adlg]');
+  if(t){e.preventDefault();e.stopPropagation();if(t.dataset.adlg){adlg=null;renderAgentDlg();return}const it=items.find(i=>i.id===ui.open);if(it)openAgentDlg(it);return}
+  if(adlg&&e.target.id==="agentdlg"&&!adlg.busy){adlg=null;renderAgentDlg()}},true);
+document.addEventListener("submit",e=>{if(e.target.matches&&e.target.matches('[data-form="toagent"]')){e.preventDefault();e.stopPropagation();sendAgentNote()}},true);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&adlg&&!adlg.busy){e.stopPropagation();adlg=null;renderAgentDlg()}},true);
 function rfiSection(it,ed){
   if(window.SBRfis&&HOSTED)SBRfis.seenItem(window.SOURCEBOOK_PROJECT,it.id);
   const list=(it.rfis||[]).slice().sort((a,b)=>(a.at||"").localeCompare(b.at||""));
@@ -3274,7 +3329,7 @@ document.addEventListener("dragstart",e=>{if(e.target.closest&&e.target.closest(
 /* ---------- English / 中文 ---------- */
 const ZH={
 "Model":"型号","Unit cost (CAD)":"单价（加元）","No.":"序号","Picture":"图片","Product":"产品","Colour":"颜色","Unit price ¥":"单价 ¥","Total price ¥":"合计 ¥","Unit price $":"单价 $","Total price $":"合计 $","Unit cost (CNY)":"单价（人民币）","Drop an Excel file here":"将 Excel 文件拖放到这里","to fill the quotation: the agent's edited export, or any price list or supplier quote. You'll check the columns and see the changes before anything is saved.":"即可填充报价单：可以是代理修改后的导出文件，也可以是任何价目表或供应商报价。保存前可核对各列并查看更改。","Export Excel + drawings (ZIP)":"导出 Excel 和图纸（ZIP）","The Excel file plus every piece's drawings and references, one folder per piece":"Excel 文件及每个项目的图纸和参考资料，每个项目一个文件夹","Open the folder":"打开文件夹","Attachment":"附件","File":"文件","New":"新增","What":"更改内容","Was":"原值","Now":"新值","Details":"详情","Images":"图片","Duty %":"关税 %","✓ Seen":"✓ 已查看","✓ Mark seen":"✓ 标为已查看","Mark as seen":"标为已查看","Mark all seen":"全部标为已查看","Show in order schedule":"在订货计划中查看","Turn on alerts":"开启提醒","Alerts are on for this device while Sourcebook is open.":"此设备在打开选材手册时会收到提醒。","Alerts are off. You can allow them in your browser settings.":"提醒已关闭。可在浏览器设置中允许。","Export Excel":"导出 Excel","Drop the sourcing agent's Excel file here":"将采购代理的 Excel 文件拖放到这里","to bring in their prices, quantities and notes. You'll see every change before it's saved.":"即可导入其价格、数量和备注。保存前会显示每一项更改。","Choose Excel file":"选择 Excel 文件","Changes from Excel":"来自 Excel 的更改","Untick anything you don't want. Blank cells are left as they are.":"取消勾选不需要的更改。空白单元格保持不变。","Nothing in this file differs from the quotation.":"此文件与报价单没有差异。","Apply this change":"应用此更改","Unit price (CNY)":"单价（人民币）","Unit price (CAD)":"单价（加元）","Couldn't load the Excel tools. Check your connection and try again.":"无法加载 Excel 工具，请检查网络后重试。","Couldn't read that file. Save it as .xlsx and try again.":"无法读取该文件，请另存为 .xlsx 后重试。","That file doesn't have the ID column from a Sourcebook Excel export.":"该文件没有选材手册 Excel 导出中的 ID 列。","Drop an Excel file (.xlsx) exported from this quotation.":"请拖入从此报价单导出的 Excel 文件（.xlsx）。",
-"Download package":"下载资料包","Product sheet PDF with its drawings, spec sheets, photo and 3D model, in one ZIP":"产品资料 PDF 及其图纸、规格书、照片和 3D 模型，打包为一个 ZIP","Preparing the package…":"正在准备资料包…","The package couldn't be made. Try again.":"无法生成资料包，请重试。","Photo":"照片","Links":"链接","Sourcebook":"选材手册","Changes requested":"需修改","Client review":"客户审核","Specification":"规格","Save PDF":"保存 PDF","Download this product sheet as a PDF, ready to print or send":"将此产品资料下载为 PDF，可直接打印或发送","Preparing the PDF…":"正在生成 PDF…","PDF downloaded":"PDF 已下载","The PDF couldn't be made. Try again.":"无法生成 PDF，请重试。","Product sheet":"产品资料","Extended":"小计","Unit price":"单价","Required on site":"现场需用日期","Order by":"下单截止","Drawings & references":"图纸与参考资料","(attached in Sourcebook)":"（附于选材手册中）","Approved":"已批准","Code":"编号","Category":"类别","Status":"状态","Notes":"备注","Try again":"重试","Use this":"使用此项","Dismiss":"关闭","Add products or materials":"添加产品或材料","Spec sheet":"规格书","Link":"链接","Unit cost (CAD)":"单价（加元）","Unit cost (CNY)":"单价（人民币）","New piece":"新项目","Drop PDFs or images. Link other files (like .dwg) with the form instead.":"请拖入 PDF 或图片。其他文件（如 .dwg）请通过表单添加链接。","A finish, fixture, fitting or piece of furniture, with its image, specification and quantity. Or drop an image here.":"饰面、灯具、配件或家具，以及其图片、规格和数量。也可将图片拖到这里。","3D model":"3D 模型","Add a 3D model":"添加 3D 模型","GLB exported from Rhino, SketchUp or Revit, with its materials. Drop it here or choose a file. Up to 100 MB.":"从 Rhino、SketchUp 或 Revit 导出的含材质 GLB 文件。拖放到此处或选择文件，最大 100 MB。","Drag to turn · pinch or scroll to zoom":"拖动旋转 · 双指或滚轮缩放","Drag to turn · pinch or scroll to zoom · double-tap to reset":"拖动旋转 · 双指或滚轮缩放 · 双击复位","View in your room":"在您的房间中查看","View in 3D":"3D 查看","Replace model":"替换模型","Remove model":"移除模型","3D model added":"已添加 3D 模型","3D model removed":"已移除 3D 模型","USDZ added for iPhone and iPad":"已为 iPhone 和 iPad 添加 USDZ","Add USDZ for iPhone & iPad":"为 iPhone 和 iPad 添加 USDZ","Replace USDZ for iPhone & iPad":"替换 iPhone 和 iPad 的 USDZ","Full screen":"全屏","Upload failed. Try again.":"上传失败，请重试。","Open a product, then drop the model on its 3D model section.":"请先打开产品，再将模型拖到其 3D 模型区域。","Export as glTF Binary (.glb) so the textures travel inside one file.":"请导出为 glTF 二进制（.glb），使贴图包含在同一文件中。","Use a GLB file (or USDZ for iPhone and iPad).":"请使用 GLB 文件（iPhone 和 iPad 可用 USDZ）。","Add the GLB first. The USDZ is an extra for Apple AR.":"请先添加 GLB。USDZ 仅用于苹果 AR。","That isn't a GLB file. Export as glTF Binary (.glb).":"这不是 GLB 文件。请导出为 glTF 二进制（.glb）。","That model is over 100 MB.":"模型超过 100 MB。","The 3D viewer couldn't load. Check your connection.":"3D 查看器无法加载，请检查网络。","Admin":"管理员","Sourcing agent":"采购代理","Specifier / designer":"设计师","Client":"客户","Sign out":"退出登录","Signed in":"已登录","Client review":"客户审核","✓ Client approved":"✓ 客户已批准","Changes requested":"需修改","✓ Approved":"✓ 已批准","Let the studio know if this piece works for you.":"请告诉工作室此项目是否合适。","Waiting for the client's review.":"等待客户审核。","Add a note (optional)":"添加备注（可选）","Approve":"批准","Request changes":"要求修改","Clear my review":"撤销我的审核","Comments":"评论","No comments yet.":"暂无评论。","Ask a question or leave a note for the studio":"向工作室提问或留言","Write a comment":"写评论","Post":"发布","Remove comment":"删除评论","Approved. The studio can see it.":"已批准，工作室可以看到。","Sent to the studio.":"已发送给工作室。","Review cleared":"审核已撤销","Your role can't do that.":"您的角色无法执行此操作。","Clients can view, approve and comment.":"客户可以查看、批准和评论。","Only admins can delete projects.":"只有管理员可以删除项目。","Only admins can find products online.":"只有管理员可以在线查找产品。","← Projects":"← 项目",
+"Download package":"下载资料包","Product sheet PDF with its drawings, spec sheets, photo and 3D model, in one ZIP":"产品资料 PDF 及其图纸、规格书、照片和 3D 模型，打包为一个 ZIP","Preparing the package…":"正在准备资料包…","The package couldn't be made. Try again.":"无法生成资料包，请重试。","Photo":"照片","Links":"链接","Sourcebook":"选材手册","Changes requested":"需修改","Client review":"客户审核","Specification":"规格","Save PDF":"保存 PDF","Send to agent":"发送给代理","Send the sourcing agent a note about this piece":"就此产品给采购代理发送留言","Note to the agent":"给代理的留言","e.g. Please confirm the walnut finish and the lead time for 6 pieces":"例如：请确认胡桃木饰面以及 6 件的交货期","Also email it to (QQ Mail)":"同时发送邮件至（QQ 邮箱）","Leave it blank to send it in Sourcebook only.":"留空则仅在选材手册中发送。","Email isn't set up yet, so the agent sees this in Sourcebook only, with an alert at the top of their screen.":"尚未设置邮件，代理将仅在选材手册中看到此留言，并在屏幕顶部收到提醒。","Sending…":"正在发送…","Write a note to the agent first.":"请先填写给代理的留言。","Sent to the agent by email.":"已通过邮件发送给代理。","Sent to the agent in Sourcebook.":"已在选材手册中发送给代理。","Couldn't send it. Check your connection and try again.":"无法发送，请检查网络后重试。","Notes to the sourcing agent":"给采购代理的留言","Notes from the studio":"工作室留言","Note from the studio":"工作室留言","Send another note":"再发一条留言","Studio":"工作室","Loading…":"正在加载…","That piece isn't in this project any more.":"该产品已不在此项目中。","That email doesn't look right.":"邮箱地址格式不正确。","Email isn't set up on this server yet. Add the SMTP settings in Render, or send it in Sourcebook only.":"此服务器尚未设置邮件。请在 Render 中添加 SMTP 设置，或仅在选材手册中发送。","The email couldn't be sent. Check the SMTP settings in Render and try again.":"邮件无法发送，请检查 Render 中的 SMTP 设置后重试。","Download this product sheet as a PDF, ready to print or send":"将此产品资料下载为 PDF，可直接打印或发送","Preparing the PDF…":"正在生成 PDF…","PDF downloaded":"PDF 已下载","The PDF couldn't be made. Try again.":"无法生成 PDF，请重试。","Product sheet":"产品资料","Extended":"小计","Unit price":"单价","Required on site":"现场需用日期","Order by":"下单截止","Drawings & references":"图纸与参考资料","(attached in Sourcebook)":"（附于选材手册中）","Approved":"已批准","Code":"编号","Category":"类别","Status":"状态","Notes":"备注","Try again":"重试","Use this":"使用此项","Dismiss":"关闭","Add products or materials":"添加产品或材料","Spec sheet":"规格书","Link":"链接","Unit cost (CAD)":"单价（加元）","Unit cost (CNY)":"单价（人民币）","New piece":"新项目","Drop PDFs or images. Link other files (like .dwg) with the form instead.":"请拖入 PDF 或图片。其他文件（如 .dwg）请通过表单添加链接。","A finish, fixture, fitting or piece of furniture, with its image, specification and quantity. Or drop an image here.":"饰面、灯具、配件或家具，以及其图片、规格和数量。也可将图片拖到这里。","3D model":"3D 模型","Add a 3D model":"添加 3D 模型","GLB exported from Rhino, SketchUp or Revit, with its materials. Drop it here or choose a file. Up to 100 MB.":"从 Rhino、SketchUp 或 Revit 导出的含材质 GLB 文件。拖放到此处或选择文件，最大 100 MB。","Drag to turn · pinch or scroll to zoom":"拖动旋转 · 双指或滚轮缩放","Drag to turn · pinch or scroll to zoom · double-tap to reset":"拖动旋转 · 双指或滚轮缩放 · 双击复位","View in your room":"在您的房间中查看","View in 3D":"3D 查看","Replace model":"替换模型","Remove model":"移除模型","3D model added":"已添加 3D 模型","3D model removed":"已移除 3D 模型","USDZ added for iPhone and iPad":"已为 iPhone 和 iPad 添加 USDZ","Add USDZ for iPhone & iPad":"为 iPhone 和 iPad 添加 USDZ","Replace USDZ for iPhone & iPad":"替换 iPhone 和 iPad 的 USDZ","Full screen":"全屏","Upload failed. Try again.":"上传失败，请重试。","Open a product, then drop the model on its 3D model section.":"请先打开产品，再将模型拖到其 3D 模型区域。","Export as glTF Binary (.glb) so the textures travel inside one file.":"请导出为 glTF 二进制（.glb），使贴图包含在同一文件中。","Use a GLB file (or USDZ for iPhone and iPad).":"请使用 GLB 文件（iPhone 和 iPad 可用 USDZ）。","Add the GLB first. The USDZ is an extra for Apple AR.":"请先添加 GLB。USDZ 仅用于苹果 AR。","That isn't a GLB file. Export as glTF Binary (.glb).":"这不是 GLB 文件。请导出为 glTF 二进制（.glb）。","That model is over 100 MB.":"模型超过 100 MB。","The 3D viewer couldn't load. Check your connection.":"3D 查看器无法加载，请检查网络。","Admin":"管理员","Sourcing agent":"采购代理","Specifier / designer":"设计师","Client":"客户","Sign out":"退出登录","Signed in":"已登录","Client review":"客户审核","✓ Client approved":"✓ 客户已批准","Changes requested":"需修改","✓ Approved":"✓ 已批准","Let the studio know if this piece works for you.":"请告诉工作室此项目是否合适。","Waiting for the client's review.":"等待客户审核。","Add a note (optional)":"添加备注（可选）","Approve":"批准","Request changes":"要求修改","Clear my review":"撤销我的审核","Comments":"评论","No comments yet.":"暂无评论。","Ask a question or leave a note for the studio":"向工作室提问或留言","Write a comment":"写评论","Post":"发布","Remove comment":"删除评论","Approved. The studio can see it.":"已批准，工作室可以看到。","Sent to the studio.":"已发送给工作室。","Review cleared":"审核已撤销","Your role can't do that.":"您的角色无法执行此操作。","Clients can view, approve and comment.":"客户可以查看、批准和评论。","Only admins can delete projects.":"只有管理员可以删除项目。","Only admins can find products online.":"只有管理员可以在线查找产品。","← Projects":"← 项目",
 "+ Add a cover image":"+ 添加封面图片","Choose an image or drop one here. Only admins can change it.":"选择一张图片或拖放到这里。只有管理员可以更改。","Change cover":"更换封面","Remove cover":"移除封面","Drop to use as the cover":"拖放到这里作为封面","Cover image added":"已添加封面图片",
 "Sourcebook":"选材手册","Sourcing library":"采购图库","Design to construction":"从设计到施工","Untitled":"未命名","project":"项目","Untitled project":"未命名项目",
 "Import":"导入","Add product":"添加产品","Edit project":"编辑项目","Update from sheet":"从表格更新","Linked Google Sheet ↗":"已关联 Google 表格 ↗",
@@ -3347,7 +3402,7 @@ const ZH_PAT=[
  [/^(\d+) · drop images here$/,m=>`${m[1]} · 可将图片拖放到这里`],[/^(.+) · Additional images$/,m=>`${m[1]} · 更多图片`],[/^(.+) · Supplier response$/,m=>`${m[1]} · 供应商回复`],[/^(.+) · RFI$/,m=>`${m[1]} · 询问`],
  [/^Added to (.+) as (.+)$/,m=>`已添加到 ${m[1]}，编号 ${m[2]}`],[/^Already in (.+) as (.+)$/,m=>`已在 ${m[1]} 中，编号 ${m[2]}`],
  [/^Package downloaded · (\d+) files?$/,m=>`资料包已下载 · ${m[1]} 个文件`],[/^Package downloaded · (\d+) files? couldn't be included$/,m=>`资料包已下载 · ${m[1]} 个文件无法包含`],
- [/^Product sheet · (.+)$/,m=>`产品资料 · ${m[1]}`],
+ [/^Product sheet · (.+)$/,m=>`产品资料 · ${m[1]}`],[/^Emailed to (.+)$/,m=>`已发邮件至 ${m[1]}`],
  [/^Attaching (\d+) files?…$/,m=>`正在附加 ${m[1]} 个文件…`],[/^(\d+) files? attached(.*)$/,m=>`已附加 ${m[1]} 个文件`],[/^(.+) match$/,m=>({high:"高",medium:"中",low:"低"}[m[1]]?`匹配度${({high:"高",medium:"中",low:"低"})[m[1]]}`:m[0])],[/^Design: (.+)$/,m=>`设计：${m[1]}`],
  [/^Uploading (.+)$/,m=>`正在上传 ${m[1]}`],[/^(.+) · large models can take a minute$/,m=>`${m[1]} · 大型模型可能需要一分钟`],[/^That model is (.+)\. Keep it under 100 MB.*$/,m=>`模型大小为 ${m[1]}，请控制在 100 MB 以内：开启 Draco 压缩或使用较小的贴图。`],
  [/^by (.+) · (.+)$/,m=>`${m[1]} · ${m[2]}`],[/^(\d+) comments?$/,m=>`${m[1]} 条评论`],

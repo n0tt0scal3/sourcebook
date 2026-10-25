@@ -28,14 +28,16 @@
     "Products approved by the studio. Open one to see where it comes from, or add it to this project with its source attached.": "工作室已批准的产品。打开可查看来源，或将其连同来源一起添加到本项目。",
     "Search a code, product or page, e.g. AA01, Ampleforth, p44": "搜索编号、产品或页码，例如 AA01、p44", "Catalogue": "图册", "Page": "页码", "Codes on page": "本页编号", "Source": "来源",
     "Catalogue folder": "图册文件夹", "Image file": "图片文件", "Copy source note": "复制来源说明", "In the library": "图库状态", "Approve": "批准", "Unapprove": "取消批准",
-    "Open the piece in this project": "打开本项目中的该项", "Adding…": "正在添加…", "Close": "关闭", "Source note copied": "来源说明已复制", "Couldn't save. Check your connection and try again.": "无法保存，请检查网络后重试。",
+    "Open the piece in this project": "打开本项目中的该项", "Add another": "再添加一个", "Adds it again as a separate piece with its own code, e.g. for another room or finish.": "作为单独的一项再次添加，使用新的编号，例如用于另一个房间或另一种饰面。", "Adding…": "正在添加…", "Close": "关闭", "Source note copied": "来源说明已复制", "Couldn't save. Check your connection and try again.": "无法保存，请检查网络后重试。",
     "Approved images are shown to everyone, clients included. Unapproving hides it again; pieces already added to projects stay.": "已批准的图片对所有人（包括客户）可见。取消批准会再次隐藏；已添加到项目的项目会保留。",
     "Couldn't add it. Try again.": "无法添加，请重试。", "Approved. Untick to hide it.": "已批准，取消勾选以隐藏。", "Not approved. Tick to approve.": "未批准，勾选以批准。", "Selected. Press Ctrl+C to copy.": "已选中，按 Ctrl+C 复制。",
     "Show": "显示", "Add to project": "添加到项目", "Project": "项目", "Choose a project": "选择项目", "No projects to add to yet.": "暂无可添加的项目。", "Add": "添加",
     "The studio hasn't approved any products yet.": "工作室尚未批准任何产品。",
     "Previous": "上一个", "Next": "下一个", "← → to move between products · Space to approve": "← → 切换产品 · 按空格键批准", "Space to approve": "按空格键批准", "← → to move between products": "← → 切换产品",
     "Add a catalogue from a PDF": "从 PDF 添加图册", "PDF catalogue": "PDF 图册", "How to add it": "添加方式", "Scan for product images": "扫描产品图片", "Pulls out each photo in the PDF.": "提取 PDF 中的每张照片。", "Import page by page": "逐页导入", "Each page becomes one image.": "每一页成为一张图片。", "Import pages": "导入页面", "Drop the PDF here, or click to choose it": "将 PDF 拖到这里，或点击选择", "That isn't a PDF.": "这不是 PDF 文件。", "Supplier": "供应商", "Catalogue name (optional)": "图册名称（可选）", "Category": "类别",
-    "Google Drive link to the PDF (optional)": "PDF 的 Google 云端硬盘链接（可选）", "Scan and add": "扫描并添加", "Cancel": "取消", "Delete this catalogue": "删除此图册",
+    "Google Drive link to the PDF (optional)": "PDF 的 Google 云端硬盘链接（可选）", "Scan and add": "扫描并添加", "Cancel": "取消", "Delete this catalogue": "删除此图册", "Re-sort into product types": "重新分类到产品类型",
+    "Sorting started. The product types update in a minute or two.": "已开始分类，产品类型将在一两分钟内更新。", "Sorting needs the Anthropic API key in Render.": "分类需要在 Render 中设置 Anthropic API 密钥。",
+    "Only furniture catalogues are sorted into product types.": "只有家具图册会按产品类型分类。",
     "Choose a PDF and enter the supplier.": "请选择 PDF 并填写供应商。", "Couldn't read that PDF.": "无法读取该 PDF。",
     "The PDF is scanned in this browser, so keep this tab open until it finishes. Photos in the PDF become library images named like the others (category_supplier_page_number) and start unapproved. Up to 300 MB and 2,000 pages.": "PDF 在此浏览器中扫描，请保持此标签页打开直到完成。PDF 中的照片会按与其他图片相同的方式命名（类别_供应商_页码_编号）成为图库图片，默认未批准。最大 300 MB、2000 页。",
     "All product types": "全部产品类型", "Favourites": "收藏", "Favourite": "收藏", "Add to favourites": "加入收藏", "Client & designer favourites": "客户与设计师收藏", "What this project's clients and designers starred": "本项目客户和设计师收藏的图片", "No client or designer has starred anything in this project yet.": "本项目的客户和设计师还没有收藏任何图片。", "Remove from favourites": "取消收藏", "No favourites yet. Tap the star on any image to save it here.": "还没有收藏。点击任意图片上的星标即可收藏到这里。", "Star images to save them here": "点星标即可收藏到这里", "Product type": "产品类型", "Not sorted yet": "尚未分类", "Choose a product type to see its images.": "选择一个产品类型以查看图片。",
@@ -406,9 +408,10 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const r = await fetch("/api/library/full"); if (!r.ok) return;
     full = new Set((await r.json()).files || []); fullLine(); fPaint(); if (ui.open != null) host.layer();
   }
+  let ready = null; // approvals and product types loaded, so isOn() and typeOf() can be trusted
   function watch() {
     if (watching) return; watching = true;
-    fetchOn().catch(() => {}); fetchFull().catch(() => {}); fetchTypes().catch(() => {}); fetchFav().catch(() => {}); fetchCfav().catch(() => {}); fetchFeat().catch(() => {}); fetchReqs().catch(() => {});
+    ready = Promise.all([fetchOn().catch(() => {}), fetchTypes().catch(() => {})]); fetchFull().catch(() => {}); fetchFav().catch(() => {}); fetchCfav().catch(() => {}); fetchFeat().catch(() => {}); fetchReqs().catch(() => {});
     try {
       const es = new EventSource("/api/events");
       es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); fetchSeenSoon(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data && !was && isAdm() && inReview(m.data) && !(m.data.by && m.data.by.id === tbsCfg.me)) tbsAlert({ id, ...m.data }); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "") && JSON.stringify(was.sent || null) === JSON.stringify(m.data.sent || null) && JSON.stringify(was.found || []) === JSON.stringify(m.data.found || []) && JSON.stringify(was.files || []) === JSON.stringify(m.data.files || [])) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (m.path === "libraryshow/main") { hideCli = new Set((m.exists && m.data && m.data.hide) || []); const w = $("#sbl-cliwrap"); if (w) w.innerHTML = cliHTML(); repaint(); return; } if (m.path === "libraryfeat/main") { setFeat(m.exists && m.data); repaint(); return; } if (m.path === "librarycats/main") { setCustom(m.exists && m.data && m.data.types); repaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); fetchSeenSoon(); } catch (_) {} };
@@ -473,6 +476,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       ${cur ? `<span class="sbl-seg" role="group" aria-label="${t("Show")}">${[["on", "Approved"], ["off", "Not approved"], ["all", "All"]].map(([v, l]) => `<button class="chip" data-sblshow="${v}" aria-pressed="${show === v}">${t(l)}</button>`).join("")}</span>` : ""}
       <span class="sbl-count" id="sbl-count"></span>
       ${ui.type || ui.q.trim() ? `<button class="btn ghost sm sbl-back" data-sbltype="" data-sbltop>‹ ${t("Back to all product types")}</button>` : ""}
+      ${cur && ui.sup && LIB.sups[ui.sup] && LIB.sups[ui.sup].up && LIB.sups[ui.sup].cat === "FURNITURE" ? `<button class="linkbtn" data-sbl="resort">${t("Re-sort into product types")}</button>` : ""}
       ${cur && ui.sup && LIB.sups[ui.sup] && LIB.sups[ui.sup].up ? `<button class="linkbtn" data-sbl="delcat" style="color:var(--crit)">${t("Delete this catalogue")}</button>` : ""}
       ${cur && (ui.sup || ui.type) ? `<span class="sbl-bulk"><button class="linkbtn" data-sblbulk="on">${t("Approve all shown")}</button><button class="linkbtn" data-sblbulk="off">${t("Unapprove all shown")}</button></span>` : ""}</div>
     <div id="sbl-grid">${gridHTML()}</div>`}`)}</div>`;
@@ -604,7 +608,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       return `<div class="sbl-tile ${cur && !x ? "off" : ""} ${sel.has(o.i) ? "sel" : ""}${o.i === ui.hit ? " hit" : ""}"><button class="sbl-open" data-sblopen="${o.i}" aria-label="${esc(o.file)}"><span class="sbl-sw" ${sprite(o)}></span></button>
         ${sorting ? `<label class="sbl-sel" title="${t("Select to move")}"><input type="checkbox" data-sblsel="${o.i}" ${sel.has(o.i) ? "checked" : ""} aria-label="${t("Select to move")} ${esc(o.file)}"></label>` : ""}
         ${cur ? `<label class="sbl-chk" title="${x ? t("Approved. Untick to hide it.") : t("Not approved. Tick to approve.")}"><input type="checkbox" data-sblkeep="${o.i}" ${x ? "checked" : ""} aria-label="${t("Approve")} ${esc(o.file)}"></label>` : ""}
-        ${inP.has(o.file) ? `<span class="sbl-inproj">${t("In project")}</span>` : ""}${markedNew(o) ? `<span class="sbl-newt">● ${t("New")}</span>` : ""}${feat.has(o.file) && ui.type !== "FT" ? `<span class="sbl-ftag">◆ ${t("Featured")}</span>` : ""}${ui.type === "CF" && cfav.has(o.file) ? `<span class="sbl-cfby" title="${esc(cfav.get(o.file).join(", "))}">★ ${esc(cfav.get(o.file).join(", "))}</span>` : ""}
+        ${inP.has(o.file) ? `<span class="sbl-inproj">${t("In project")}${inCount(inP, o.file) > 1 ? " ×" + inCount(inP, o.file) : ""}</span>` : ""}${markedNew(o) ? `<span class="sbl-newt">● ${t("New")}</span>` : ""}${feat.has(o.file) && ui.type !== "FT" ? `<span class="sbl-ftag">◆ ${t("Featured")}</span>` : ""}${ui.type === "CF" && cfav.has(o.file) ? `<span class="sbl-cfby" title="${esc(cfav.get(o.file).join(", "))}">★ ${esc(cfav.get(o.file).join(", "))}</span>` : ""}
         <span class="sbl-cap"><b>${esc(o.codes[0] || label(o.sup)[0])}</b><span>${bySup ? "" : esc(label(o.sup)[0]) + " · "}p${o.page}</span>${isAdm() && x ? featBtn(o) : ""}<button class="sbl-star" data-sblfav="${o.i}" aria-pressed="${fav.has(o.file)}" title="${t(fav.has(o.file) ? "Remove from favourites" : "Add to favourites")}">${fav.has(o.file) ? "★" : "☆"}</button></span></div>`; };
     let html;
     if (bySup) {
@@ -668,19 +672,28 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const d = done.get(o.file); if (!d || !d.length) return "";
     return `<p class="sbl-added">${d.map(x => "✓ " + (zh() ? `${x.existing ? "已在" : "已添加到"} ${esc(x.pname)}，编号 ${esc(x.code)}` : `${x.existing ? "Already in" : "Added to"} ${esc(x.pname)} as ${esc(x.code)}`)).join("<br>")}</p>`;
   }
+  // The book lists each image's pieces in the project as [{id, code}]; older hosts gave one id.
+  const inList = (m, file) => { const v = m.get(file); return Array.isArray(v) ? v : v ? [{ id: v }] : []; };
+  const inCount = (m, file) => inList(m, file).length;
+  // A product can go into a project more than once (the same chair in two rooms, in two finishes):
+  // once it's there, "Add another" adds it again as a separate piece with the next free code.
   function addControls(o) {
     if (!host.canAdd() || (!isOn(o) && !host.canEdit())) return "";
+    const again = `title="${esc(t("Adds it again as a separate piece with its own code, e.g. for another room or finish."))}"`;
     if (host.ctx === "project") {
-      const mine = (done.get(o.file) || []).find(x => x.project === host.project());
-      const inId = host.inProject().get(o.file) || (mine && mine.id);
-      return (inId ? `<button class="btn" data-sbl="piece" data-id="${esc(inId)}">${t("Open the piece in this project")}</button>`
-        : `<button class="btn" data-sbl="add" ${ui.adding ? "disabled" : ""}>${ui.adding ? t("Adding…") : (zh() ? "添加到 " : "Add to ") + esc(host.projectName())}</button>`) + addedHTML(o);
+      const l = inList(host.inProject(), o.file);
+      (done.get(o.file) || []).filter(x => x.project === host.project()).forEach(x => l.some(y => y.id === x.id) || l.push({ id: x.id, code: x.code }));
+      if (!l.length) return `<button class="btn" data-sbl="add" ${ui.adding ? "disabled" : ""}>${ui.adding ? t("Adding…") : (zh() ? "添加到 " : "Add to ") + esc(host.projectName())}</button>` + addedHTML(o);
+      return (l.length === 1 ? `<button class="btn" data-sbl="piece" data-id="${esc(l[0].id)}">${t("Open the piece in this project")}</button>`
+        : l.map(x => `<button class="btn" data-sbl="piece" data-id="${esc(x.id)}">${zh() ? "打开 " : "Open "}${esc(x.code || "")}</button>`).join(""))
+        + `<button class="btn ghost" data-sbl="again" ${again} ${ui.adding ? "disabled" : ""}>${ui.adding ? t("Adding…") : "+ " + t("Add another")}</button>` + addedHTML(o);
     }
     const ps = host.projects();
     if (!ps.length) return `<span class="sbl-hint" style="margin:0">${t("No projects to add to yet.")}</span>`;
     if (!ps.some(p => p.id === ui.target)) ui.target = ps.length === 1 ? ps[0].id : "";
+    const there = !!ui.target && (done.get(o.file) || []).some(x => x.project === ui.target);
     return `<label class="sbl-pick">${t("Add to project")}<select id="sbl-target"><option value="">${t("Choose a project")}</option>${ps.map(p => `<option value="${esc(p.id)}" ${p.id === ui.target ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select></label>
-      <button class="btn" data-sbl="add" ${ui.adding || !ui.target ? "disabled" : ""}>${ui.adding ? t("Adding…") : t("Add")}</button>${addedHTML(o)}`;
+      <button class="btn" data-sbl="${there ? "again" : "add"}" ${there ? again : ""} ${ui.adding || !ui.target ? "disabled" : ""}>${ui.adding ? t("Adding…") : there ? "+ " + t("Add another") : t("Add")}</button>${addedHTML(o)}`;
   }
   // Next / previous move through the images that were listed when the card was opened,
   // so approving one while showing "Not approved" doesn't skip the next.
@@ -730,6 +743,17 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       </div></section>
     ${ui.zoom && full.has(o.file) ? `<div class="sbl-zoomview" data-sbl="unzoom" role="dialog" aria-label="${esc(o.file)}"><img src="/lib/full/${esc(o.file)}" alt="${esc(o.file)}">${navHTML()}</div>` : ""}`;
   }
+  // Open a product's card from a piece that was added from the library, with its product type listed behind it,
+  // so closing the card leaves you in the library at that type. False if this person can't see it there any more.
+  async function openFile(file) {
+    await load(); watch(); await ready;
+    const o = LIB.items.find(x => x.file === file);
+    if (!o || !(curating() || isOn(o))) return false;
+    ui.type = typeOf(o); ui.sup = null; ui.q = ""; ui.hit = null; ui.n = 120; ui.adding = false; ui.zoom = false;
+    const l = ordered().map(x => x.i);
+    ui.seq = l.includes(o.i) ? l : [o.i]; ui.open = o.i;
+    return true;
+  }
   function close() { if (ui.open == null) return; ui.open = null; ui.adding = false; ui.zoom = false; ui.seq = []; document.body.style.overflow = ""; host.layer(); fResume(); }
 
   // Cut one image out of its thumbnail sheet, for the piece's photo (JPEG, base64).
@@ -763,7 +787,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     } finally { doc.destroy(); }
   }
   // The server builds the piece from the catalogue index, so clients can add pieces too.
-  async function add() {
+  async function add(again) {
     const o = LIB && LIB.items[ui.open]; if (!o || ui.adding) return;
     const project = host.ctx === "project" ? host.project() : ui.target; if (!project) return;
     ui.adding = true; host.layer();
@@ -773,13 +797,14 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       if (!photo) try { photo = await crop(o); } catch (_) {}
       const prefix = host.prefix ? host.prefix(o, label(o.sup)[1]) : null;
       let pg = null; try { pg = await pagePic(o); } catch (_) {}
-      const r = await fetch("/api/library/add", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ project, file: o.file, photo, prefix, ...(pg ? { page: pg.data, pageW: pg.w, pageH: pg.h } : {}) }) });
+      const r = await fetch("/api/library/add", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ project, file: o.file, photo, prefix, ...(again ? { again: true } : {}), ...(pg ? { page: pg.data, pageW: pg.w, pageH: pg.h } : {}) }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw Object.assign(new Error(j.message || "add"), { code: j.code });
       const pname = host.ctx === "project" ? host.projectName() : (host.projects().find(p => p.id === project) || {}).name || project;
-      const d = (done.get(o.file) || []).filter(x => x.project !== project); d.push({ project, pname, code: j.code, id: j.id, existing: !!j.existing }); done.set(o.file, d);
+      // Each copy added gets its own line; "Already in" replaces nothing that's listed.
+      const d = (done.get(o.file) || []).filter(x => x.id !== j.id); d.push({ project, pname, code: j.code, id: j.id, existing: !!j.existing }); done.set(o.file, d);
       ui.adding = false; host.layer();
-      if (host.added) host.added(j, pname); else host.toast(zh() ? `已添加到 ${pname}，编号 ${j.code}` : `Added to ${pname} as ${j.code}`);
+      if (host.added) host.added(j, pname); else host.toast(zh() ? `${j.existing ? "已在" : "已添加到"} ${pname}，编号 ${j.code}` : `${j.existing ? "Already in" : "Added to"} ${pname} as ${j.code}`);
       rerender();
     } catch (e) { ui.adding = false; host.layer(); host.toast(e.code === "forbidden" || e.code === "invalid_argument" ? e.message : t("Couldn't add it. Try again.")); }
   }
@@ -963,6 +988,14 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       scanErr = e.code ? e.message : e.name === "InvalidPDFException" || e.name === "PasswordException" ? t("Couldn't read that PDF.") : (zh() ? "扫描中断，请重试。" : "The scan stopped part way. Try again.") + (e.message ? " (" + e.message + ")" : "");
       addLine(); host.toast(scanErr);
     }
+  }
+  // Sorts an added furniture catalogue's images into product types again; images an admin moved by hand keep their type.
+  async function resortCat(sup) {
+    const S = LIB.sups[sup]; if (!S || !S.up) return;
+    const L = label(sup).filter(Boolean).join(" · ");
+    if (!confirm(zh() ? `重新将「${L}」的 ${S.n} 张图片分类到产品类型？你手动移动过的图片保持不变。` : `Re-sort the ${S.n} images in ${L} into product types? Images you moved by hand keep your choice.`)) return;
+    try { await api(`/api/library/catalogue/${sup}/resort`, { method: "POST" }); host.toast(t("Sorting started. The product types update in a minute or two.")); }
+    catch (e) { host.toast(t(e.message || "Couldn't save. Check your connection and try again.")); }
   }
   async function deleteCat(sup) {
     const S = LIB.sups[sup]; if (!S || !S.up) return;
@@ -1310,6 +1343,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     else if (a === "driveall") { ui.driveAll = true; addLine(); }
     else if (a === "drivecheck" && curating()) { driveBusy = t("Checking Google Drive…"); addLine(); driveBusy = ""; loadDrive(true); }
     else if (a === "delcat" && curating() && ui.sup) deleteCat(ui.sup);
+    else if (a === "resort" && curating() && ui.sup) resortCat(ui.sup);
     else if (a === "prev" || a === "next") { e.stopPropagation(); step(a === "next" ? 1 : -1); }
     else if (a === "zoom") { ui.zoom = true; host.layer(); }
     else if (a === "unzoom" && !e.target.closest(".sbl-nav")) { ui.zoom = false; host.layer(); }
@@ -1321,6 +1355,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     else if (a === "fav") { const o = LIB.items[ui.open]; if (o) { toggleFav(o); host.layer(); if (ui.type === "F") repaint(); } }
     else if (a === "toggle" && curating()) { const o = LIB.items[ui.open]; if (o) { setOn(o.sup, [o.key], !isOn(o)); repaint(); host.layer(); } }
     else if (a === "add") add();
+    else if (a === "again") add(true);
     else if (a === "piece") { const id = el.dataset.id; ui.open = null; host.openPiece(id); }
     else if (a === "copy") {
       const o = LIB.items[ui.open]; if (!o) return;
@@ -1379,7 +1414,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
 
   window.SBLibrary = Object.freeze({
     configure(h) { host = { ...host, ...h }; if (host.internal() || tbsFocus) setTimeout(watch, 0); else setTimeout(() => fetchSeen().catch(() => {}), 0); },
-    view, sheet, close, repaint, load,
+    view, sheet, close, repaint, load, openFile,
     isOpen: () => ui.open != null && !!LIB,
     t,
   });

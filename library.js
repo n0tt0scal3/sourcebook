@@ -35,7 +35,9 @@
     "The studio hasn't approved any products yet.": "工作室尚未批准任何产品。",
     "Previous": "上一个", "Next": "下一个", "← → to move between products · Space to approve": "← → 切换产品 · 按空格键批准", "Space to approve": "按空格键批准", "← → to move between products": "← → 切换产品",
     "Add a catalogue from a PDF": "从 PDF 添加图册", "PDF catalogue": "PDF 图册", "How to add it": "添加方式", "Scan for product images": "扫描产品图片", "Pulls out each photo in the PDF.": "提取 PDF 中的每张照片。", "Import page by page": "逐页导入", "Each page becomes one image.": "每一页成为一张图片。", "Import pages": "导入页面", "Drop the PDF here, or click to choose it": "将 PDF 拖到这里，或点击选择", "That isn't a PDF.": "这不是 PDF 文件。", "Supplier": "供应商", "Catalogue name (optional)": "图册名称（可选）", "Category": "类别",
-    "Google Drive link to the PDF (optional)": "PDF 的 Google 云端硬盘链接（可选）", "Scan and add": "扫描并添加", "Cancel": "取消", "Delete this catalogue": "删除此图册",
+    "Google Drive link to the PDF (optional)": "PDF 的 Google 云端硬盘链接（可选）", "Scan and add": "扫描并添加", "Cancel": "取消", "Delete this catalogue": "删除此图册", "Re-sort into product types": "重新分类到产品类型",
+    "Sorting started. The product types update in a minute or two.": "已开始分类，产品类型将在一两分钟内更新。", "Sorting needs the Anthropic API key in Render.": "分类需要在 Render 中设置 Anthropic API 密钥。",
+    "Only furniture catalogues are sorted into product types.": "只有家具图册会按产品类型分类。",
     "Choose a PDF and enter the supplier.": "请选择 PDF 并填写供应商。", "Couldn't read that PDF.": "无法读取该 PDF。",
     "The PDF is scanned in this browser, so keep this tab open until it finishes. Photos in the PDF become library images named like the others (category_supplier_page_number) and start unapproved. Up to 300 MB and 2,000 pages.": "PDF 在此浏览器中扫描，请保持此标签页打开直到完成。PDF 中的照片会按与其他图片相同的方式命名（类别_供应商_页码_编号）成为图库图片，默认未批准。最大 300 MB、2000 页。",
     "All product types": "全部产品类型", "Favourites": "收藏", "Favourite": "收藏", "Add to favourites": "加入收藏", "Client & designer favourites": "客户与设计师收藏", "What this project's clients and designers starred": "本项目客户和设计师收藏的图片", "No client or designer has starred anything in this project yet.": "本项目的客户和设计师还没有收藏任何图片。", "Remove from favourites": "取消收藏", "No favourites yet. Tap the star on any image to save it here.": "还没有收藏。点击任意图片上的星标即可收藏到这里。", "Star images to save them here": "点星标即可收藏到这里", "Product type": "产品类型", "Not sorted yet": "尚未分类", "Choose a product type to see its images.": "选择一个产品类型以查看图片。",
@@ -473,6 +475,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       ${cur ? `<span class="sbl-seg" role="group" aria-label="${t("Show")}">${[["on", "Approved"], ["off", "Not approved"], ["all", "All"]].map(([v, l]) => `<button class="chip" data-sblshow="${v}" aria-pressed="${show === v}">${t(l)}</button>`).join("")}</span>` : ""}
       <span class="sbl-count" id="sbl-count"></span>
       ${ui.type || ui.q.trim() ? `<button class="btn ghost sm sbl-back" data-sbltype="" data-sbltop>‹ ${t("Back to all product types")}</button>` : ""}
+      ${cur && ui.sup && LIB.sups[ui.sup] && LIB.sups[ui.sup].up && LIB.sups[ui.sup].cat === "FURNITURE" ? `<button class="linkbtn" data-sbl="resort">${t("Re-sort into product types")}</button>` : ""}
       ${cur && ui.sup && LIB.sups[ui.sup] && LIB.sups[ui.sup].up ? `<button class="linkbtn" data-sbl="delcat" style="color:var(--crit)">${t("Delete this catalogue")}</button>` : ""}
       ${cur && (ui.sup || ui.type) ? `<span class="sbl-bulk"><button class="linkbtn" data-sblbulk="on">${t("Approve all shown")}</button><button class="linkbtn" data-sblbulk="off">${t("Unapprove all shown")}</button></span>` : ""}</div>
     <div id="sbl-grid">${gridHTML()}</div>`}`)}</div>`;
@@ -964,6 +967,14 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       addLine(); host.toast(scanErr);
     }
   }
+  // Sorts an added furniture catalogue's images into product types again; images an admin moved by hand keep their type.
+  async function resortCat(sup) {
+    const S = LIB.sups[sup]; if (!S || !S.up) return;
+    const L = label(sup).filter(Boolean).join(" · ");
+    if (!confirm(zh() ? `重新将「${L}」的 ${S.n} 张图片分类到产品类型？你手动移动过的图片保持不变。` : `Re-sort the ${S.n} images in ${L} into product types? Images you moved by hand keep your choice.`)) return;
+    try { await api(`/api/library/catalogue/${sup}/resort`, { method: "POST" }); host.toast(t("Sorting started. The product types update in a minute or two.")); }
+    catch (e) { host.toast(t(e.message || "Couldn't save. Check your connection and try again.")); }
+  }
   async function deleteCat(sup) {
     const S = LIB.sups[sup]; if (!S || !S.up) return;
     const L = label(sup);
@@ -1310,6 +1321,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     else if (a === "driveall") { ui.driveAll = true; addLine(); }
     else if (a === "drivecheck" && curating()) { driveBusy = t("Checking Google Drive…"); addLine(); driveBusy = ""; loadDrive(true); }
     else if (a === "delcat" && curating() && ui.sup) deleteCat(ui.sup);
+    else if (a === "resort" && curating() && ui.sup) resortCat(ui.sup);
     else if (a === "prev" || a === "next") { e.stopPropagation(); step(a === "next" ? 1 : -1); }
     else if (a === "zoom") { ui.zoom = true; host.layer(); }
     else if (a === "unzoom" && !e.target.closest(".sbl-nav")) { ui.zoom = false; host.layer(); }

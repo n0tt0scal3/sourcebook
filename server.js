@@ -71,10 +71,11 @@ const libCatSection = c => LIB_CAT[c] || customOfCat(c)?.section || "";
 const LIB_TYPE_PROMPT = `Each image is a product photo from a furniture catalogue. For each image, in order, give ONE letter for the main product shown:
 S sofa/sectional/loveseat · L lounge or arm chair · C dining chair · 1 office or desk chair (swivel base or castors) · T stool or bar stool · B bench, ottoman or pouf · K coffee or side table · D dining table (a table shown with chairs is D) · E desk, console or dressing table · G cabinet, sideboard, chest, TV unit, shelving or wardrobe · R bed or nightstand · H lamp · Z mirror · A rug, vase, art or other decor · O logo, text, swatch, drawing or no clear product.
 In a room scene, use the most prominent piece. A page showing several products of one kind (an overview or range page) gets that kind's letter; use O only when no one kind leads. Reply with only the letters, no spaces.`;
-async function classifyCat(sup) {
+// all: re-sort every image (an admin pressed Re-sort), with the stronger model; images keep their old type until the new one is in.
+async function classifyCat(sup, all) {
   if (!ANTHROPIC_API_KEY) return;
   const c = await libCatRead(sup); if (!c || c.status !== "done") return;
-  const todo = c.items.filter(x => !x[4]);
+  const todo = all ? c.items : c.items.filter(x => !x[4]), got = new Map();
   for (let i = 0; i < todo.length; i += 20) {
     const chunk = todo.slice(i, i + 20), content = [];
     for (const [n, x] of chunk.entries()) {
@@ -82,15 +83,15 @@ async function classifyCat(sup) {
     }
     content.push({ type: "text", text: LIB_TYPE_PROMPT + ` There are ${chunk.length} images, so reply with exactly ${chunk.length} letters.` });
     try {
-      const r = await fetch(API_URL, { method: "POST", headers: { "content-type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" }, body: JSON.stringify({ model: MODELS.quick, max_tokens: 100, messages: [{ role: "user", content }] }) });
+      const r = await fetch(API_URL, { method: "POST", headers: { "content-type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" }, body: JSON.stringify({ model: all ? MODELS.default : MODELS.quick, max_tokens: 100, messages: [{ role: "user", content }] }) });
       const j = await r.json().catch(() => ({}));
       const out = ((j.content || []).map(b => b.text || "").join("").toUpperCase().match(/[A-Z1]/g) || []).join("");
-      if (r.ok && out.length === chunk.length) chunk.forEach((x, k) => { if (LIB_TYPES.includes(out[k])) x[4] = out[k]; });
+      if (r.ok && out.length === chunk.length) chunk.forEach((x, k) => { if (LIB_TYPES.includes(out[k])) got.set(x[0], out[k]); });
       else console.error("library sorting:", r.status, j?.error?.message || out);
     } catch (e) { console.error("library sorting:", e.message); }
   }
   const cur = await libCatRead(sup); if (!cur || cur.status !== "done") return; // deleted meanwhile
-  const got = new Map(c.items.map(x => [x[0], x[4]])); cur.items.forEach(x => { if (!x[4] && got.get(x[0])) x[4] = got.get(x[0]); });
+  cur.items.forEach(x => { if (got.has(x[0]) && (all || !x[4])) x[4] = got.get(x[0]); });
   await fsp.writeFile(path.join(LIB_CATS_DIR, sup + ".json"), JSON.stringify(cur));
   libCache = null; broadcast({ path: "library", index: true });
 }
@@ -964,7 +965,7 @@ const server = http.createServer(async (req, res) => {
         return fs.createReadStream(fp).pipe(res);
       } catch (_) { return send(res, 404, "Not found"); }
     }
-    const cm = p.match(/^\/api\/library\/catalogue(?:\/([A-Za-z0-9-]+)(?:\/(pdf|done|img\/[A-Za-z0-9_.-]+\.jpg))?)?$/);
+    const cm = p.match(/^\/api\/library\/catalogue(?:\/([A-Za-z0-9-]+)(?:\/(pdf|done|resort|img\/[A-Za-z0-9_.-]+\.jpg))?)?$/);
     if (cm) {
       // Adding a catalogue from a PDF (admins). The browser scans the PDF; the server keeps the files.
       //   POST   /api/library/catalogue {supplier, product, cat, pdf, pages, drive}  -> { sup, prefix }
@@ -972,6 +973,7 @@ const server = http.createServer(async (req, res) => {
       //   PUT    /api/library/catalogue/<sup>/img/<file>?thumb=1  a full-size image or its thumbnail
       //   POST   /api/library/catalogue/<sup>/done {items: [[file, page, codes, text]]}
       //   DELETE /api/library/catalogue/<sup>                     removes an added catalogue and its approvals
+      //   POST   /api/library/catalogue/<sup>/resort              sorts a furniture catalogue's images into product types again
       if (!isAdmin) return deny("Only admins can add catalogues.");
       const [, sup, sub] = cm;
       if (!sup && req.method === "POST") {
@@ -1000,6 +1002,12 @@ const server = http.createServer(async (req, res) => {
         if (store["librarytypes/" + sup]) { delete store["librarytypes/" + sup]; persist(); }
         libCache = null; broadcast({ path: dp, exists: false }); broadcast({ path: "library", index: true });
         return send(res, 200, { ok: true });
+      }
+      if (sub === "resort" && req.method === "POST") {
+        if (c.status !== "done" || libCatType(c.cat)) return send(res, 400, { code: "invalid_argument", message: "Only furniture catalogues are sorted into product types." });
+        if (!ANTHROPIC_API_KEY) return send(res, 503, { code: "unavailable", message: "Sorting needs the Anthropic API key in Render." });
+        enqueue(() => classifyCat(sup, true));
+        return send(res, 200, { ok: true, n: c.items.length });
       }
       if (c.status !== "scanning") return send(res, 409, { code: "exists", message: "That catalogue is already finished." });
       if (sub === "pdf" && req.method === "PUT") { await bodyToFile(req, path.join(LIB_CATS_DIR, sup + ".pdf"), 400 * 1024 * 1024); return send(res, 200, { ok: true }); }

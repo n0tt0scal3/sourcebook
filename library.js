@@ -406,9 +406,10 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const r = await fetch("/api/library/full"); if (!r.ok) return;
     full = new Set((await r.json()).files || []); fullLine(); fPaint(); if (ui.open != null) host.layer();
   }
+  let ready = null; // approvals and product types loaded, so isOn() and typeOf() can be trusted
   function watch() {
     if (watching) return; watching = true;
-    fetchOn().catch(() => {}); fetchFull().catch(() => {}); fetchTypes().catch(() => {}); fetchFav().catch(() => {}); fetchCfav().catch(() => {}); fetchFeat().catch(() => {}); fetchReqs().catch(() => {});
+    ready = Promise.all([fetchOn().catch(() => {}), fetchTypes().catch(() => {})]); fetchFull().catch(() => {}); fetchFav().catch(() => {}); fetchCfav().catch(() => {}); fetchFeat().catch(() => {}); fetchReqs().catch(() => {});
     try {
       const es = new EventSource("/api/events");
       es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); fetchSeenSoon(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data && !was && isAdm() && inReview(m.data) && !(m.data.by && m.data.by.id === tbsCfg.me)) tbsAlert({ id, ...m.data }); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "") && JSON.stringify(was.sent || null) === JSON.stringify(m.data.sent || null) && JSON.stringify(was.found || []) === JSON.stringify(m.data.found || []) && JSON.stringify(was.files || []) === JSON.stringify(m.data.files || [])) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (m.path === "libraryshow/main") { hideCli = new Set((m.exists && m.data && m.data.hide) || []); const w = $("#sbl-cliwrap"); if (w) w.innerHTML = cliHTML(); repaint(); return; } if (m.path === "libraryfeat/main") { setFeat(m.exists && m.data); repaint(); return; } if (m.path === "librarycats/main") { setCustom(m.exists && m.data && m.data.types); repaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); fetchSeenSoon(); } catch (_) {} };
@@ -729,6 +730,17 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
         ${o.text ? `<p class="sbl-excerpt">${zh() ? "页面文字：" : "Text on the page: "}${esc(o.text.slice(0, 220))}${o.text.length > 220 ? "…" : ""}</p>` : ""}
       </div></section>
     ${ui.zoom && full.has(o.file) ? `<div class="sbl-zoomview" data-sbl="unzoom" role="dialog" aria-label="${esc(o.file)}"><img src="/lib/full/${esc(o.file)}" alt="${esc(o.file)}">${navHTML()}</div>` : ""}`;
+  }
+  // Open a product's card from a piece that was added from the library, with its product type listed behind it,
+  // so closing the card leaves you in the library at that type. False if this person can't see it there any more.
+  async function openFile(file) {
+    await load(); watch(); await ready;
+    const o = LIB.items.find(x => x.file === file);
+    if (!o || !(curating() || isOn(o))) return false;
+    ui.type = typeOf(o); ui.sup = null; ui.q = ""; ui.hit = null; ui.n = 120; ui.adding = false; ui.zoom = false;
+    const l = ordered().map(x => x.i);
+    ui.seq = l.includes(o.i) ? l : [o.i]; ui.open = o.i;
+    return true;
   }
   function close() { if (ui.open == null) return; ui.open = null; ui.adding = false; ui.zoom = false; ui.seq = []; document.body.style.overflow = ""; host.layer(); fResume(); }
 
@@ -1379,7 +1391,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
 
   window.SBLibrary = Object.freeze({
     configure(h) { host = { ...host, ...h }; if (host.internal() || tbsFocus) setTimeout(watch, 0); else setTimeout(() => fetchSeen().catch(() => {}), 0); },
-    view, sheet, close, repaint, load,
+    view, sheet, close, repaint, load, openFile,
     isOpen: () => ui.open != null && !!LIB,
     t,
   });

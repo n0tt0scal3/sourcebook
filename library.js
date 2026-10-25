@@ -423,6 +423,12 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   const typeOf = o => (tov[o.sup] && tov[o.sup][o.key]) || o.t || "U";
   const sprite = o => { if (o.s == null) return `style="background-image:url(/lib/thumb/${encodeURIComponent(o.file)});background-size:contain;background-position:center"`; const g = LIB.grid; return `style="background-image:url(/lib/sprites/s${String(o.s).padStart(3, "0")}.jpg);background-size:${g * 100}% ${g * 100}%;background-position:${(o.k % g) / (g - 1) * 100}% ${Math.floor(o.k / g) / (g - 1) * 100}%"`; };
   const label = sup => LIB_LABEL[sup] || (LIB && LIB.sups[sup] && LIB.sups[sup].label) || [sup, ""];
+  // Catalogues A–Z by name: English names first, then Chinese names in pinyin order.
+  const enC = new Intl.Collator("en", { sensitivity: "base", numeric: true }), zhC = new Intl.Collator("zh-u-co-pinyin", { sensitivity: "base", numeric: true });
+  const supName = sup => label(sup).filter(Boolean).join(" · "), isHan = x => /^[\u3400-\u9fff\uf900-\ufaff]/.test(x.trim());
+  const bySupName = (a, b) => { const x = supName(a), y = supName(b), hx = isHan(x), hy = isHan(y); return hx !== hy ? hx - hy : (hx ? zhC : enC).compare(x, y) || enC.compare(a, b); };
+  let supRank = null, supRankOf = null;
+  const supOrder = () => { if (supRankOf !== LIB.sups) { supRankOf = LIB.sups; supRank = new Map(Object.keys(LIB.sups).sort(bySupName).map((s, i) => [s, i])); } return supRank; };
   const pdfURL = S => S.drive ? `https://drive.google.com/file/d/${S.drive}/view` : S.up ? `/lib/pdf/${encodeURIComponent(Object.keys(LIB.sups).find(k => LIB.sups[k] === S))}.pdf` : "#";
   const name = o => o.codes[0] || label(o.sup)[0] + " · p" + o.page;
   const pageBtn = o => zh() ? `打开图册第 ${o.page} 页` : `Open catalogue page ${o.page}`;
@@ -450,7 +456,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
   // As shown in the grid: outside a single catalogue, images new to this person come first.
   const markedNew = o => justSeen.has(o.file) || fresh.has(o.file);
-  function ordered() { const l = list(); if (ui.type === "FT") return l.sort((a, b) => feat.get(b.file) - feat.get(a.file)); if (!ui.sup && l.some(markedNew)) l.sort((a, b) => markedNew(b) - markedNew(a)); return l; }
+  function ordered() { const l = list(); if (ui.type === "FT") return l.sort((a, b) => feat.get(b.file) - feat.get(a.file)); if (!ui.sup) { const r = supOrder(); l.sort((a, b) => r.get(a.sup) - r.get(b.sup)); } if (!ui.sup && l.some(markedNew)) l.sort((a, b) => markedNew(b) - markedNew(a)); return l; }
   const sups = () => Object.keys(LIB.sups).filter(s => curating() || approved(LIB.bySup[s]));
 
   function view() {
@@ -539,7 +545,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (ui.type) {
       const mine = LIB.items.filter(o => inType(o) && vis(o)); const n = {}, nw = {}; mine.forEach(o => { n[o.sup] = (n[o.sup] || 0) + 1; if (markedNew(o)) nw[o.sup] = (nw[o.sup] || 0) + 1; });
       return `<button class="chip" data-sblsup="" aria-pressed="${!ui.sup}">${t("All catalogues")} · ${nf(mine.length)}</button>` +
-        Object.keys(n).map(s => { const L = label(s); return `<button class="chip" data-sblsup="${esc(s)}" aria-pressed="${ui.sup === s}">${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""} · ${nf(n[s])}${nw[s] ? ` <b class="sbl-newc">● ${nf(nw[s])} ${t("new")}</b>` : ""}${cur && hideCli.has(s) ? ` <span class="sbl-hid">· ${t("Hidden from clients")}</span>` : ""}</button>`; }).join("");
+        Object.keys(n).sort(bySupName).map(s => { const L = label(s); return `<button class="chip" data-sblsup="${esc(s)}" aria-pressed="${ui.sup === s}">${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""} · ${nf(n[s])}${nw[s] ? ` <b class="sbl-newc">● ${nf(nw[s])} ${t("new")}</b>` : ""}${cur && hideCli.has(s) ? ` <span class="sbl-hid">· ${t("Hidden from clients")}</span>` : ""}</button>`; }).join("");
     }
     const sub = (n, of) => cur ? `${nf(n)} / ${nf(of)} ${t("Approved").toLowerCase()}` : zh() ? `${nf(n)} 张图片` : `${nf(n)} image${n === 1 ? "" : "s"}`;
     const by = {}; LIB.items.forEach(o => (by[typeOf(o)] = by[typeOf(o)] || []).push(o));
@@ -562,7 +568,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const head = `<button class="linkbtn" data-sbl="clitog" aria-expanded="${!!ui.cli}">${t("Catalogues clients see")} · ${zh() ? `${nf(shown)} / ${nf(all.length)}` : `${nf(shown)} of ${nf(all.length)}`} ${ui.cli ? "▴" : "▾"}</button>`;
     if (!ui.cli) return `<div class="sbl-cli">${head}</div>`;
     const cat = c => { const x = String(c || ""); return x.startsWith("CUSTOM-") ? (custom.find(y => "CUSTOM-" + y.c === x) || {}).en || x : x[0] + x.slice(1).toLowerCase(); };
-    const rows = all.slice().sort((a, b) => cat(LIB.sups[a].cat).localeCompare(cat(LIB.sups[b].cat)) || label(a).join(" ").localeCompare(label(b).join(" "))).map(s => {
+    const rows = all.slice().sort((a, b) => cat(LIB.sups[a].cat).localeCompare(cat(LIB.sups[b].cat)) || bySupName(a, b)).map(s => {
       const L = label(s), n = approved(LIB.bySup[s]);
       return `<label class="sbl-clirow"><input type="checkbox" data-sblcli="${esc(s)}" ${hideCli.has(s) ? "" : "checked"}><span><b>${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""}</b><span class="sbl-sub">${esc(zh() ? ({ Furniture: "家具", Office: "办公家具", Lighting: "灯具", Doors: "门", Millwork: "木作", Stone: "石材", Flooring: "地板", Signage: "标识", Plumbing: "卫浴", Vanities: "浴室柜", Mirrors: "镜子", "Wall panelling": "墙板", "Wood products": "木制品", "Partition systems": "隔断系统", "Glass products": "玻璃制品" })[cat(LIB.sups[s].cat)] || cat(LIB.sups[s].cat) : cat(LIB.sups[s].cat))} · ${zh() ? `已批准 ${nf(n)} 张` : `${nf(n)} approved`}</span></span></label>`;
     }).join("");

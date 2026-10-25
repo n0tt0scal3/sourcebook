@@ -3427,7 +3427,8 @@ async function boot(){
   c.use("user").then(u=>{if(u&&u.can){Promise.resolve(u.can("data.write")).then(v=>{if(v===false){canWrite=false;render()}}).catch(()=>{})}}).catch(()=>{});
 }
 /* ---------- sourcing library (shared module in library.js) ---------- */
-function libInProj(){const m=new Map();items.forEach(it=>{if(it.libSource&&it.libSource.file)m.set(it.libSource.file,it.id)});return m}
+// Each library image's pieces in this project, oldest first: the same product can be in a project more than once.
+function libInProj(){const m=new Map();[...items].sort((a,b)=>String(a.created||"").localeCompare(String(b.created||""))).forEach(it=>{const f=it.libSource&&it.libSource.file;if(f){if(!m.has(f))m.set(f,[]);m.get(f).push({id:it.id,code:it.code||""})}});return m}
 // Furniture tag for a library image; the server prefers its own reading of the Chinese text and picks the next free number.
 function libPrefix(o,product){return furPrefixText(o.text)||furPrefixText(product)||null}
 if(window.SBLibrary)SBLibrary.configure({ctx:"project",internal:isStaff,canEdit:()=>false,canAdd:()=>!preview&&!!db,project:()=>window.SOURCEBOOK_PROJECT,projectName:()=>project.name,inProject:libInProj,prefix:libPrefix,

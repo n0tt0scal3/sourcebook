@@ -319,6 +319,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const at = BASE_TYPES.findIndex(x => x[0] === "A");
     TYPES = [...BASE_TYPES.slice(0, at), ...custom.map(x => [x.c, x.en, x.zh || x.en]), ...BASE_TYPES.slice(at)];
   }
+  // Product types A–Z by the name shown (pinyin order in Chinese); Other and Not sorted yet stay last.
+  const typesAZ = () => { const last = ["O", "U"], col = zh() ? zhC : enC; return [...TYPES.filter(x => !last.includes(x[0])).sort((a, b) => col.compare(typeName(a[0]), typeName(b[0]))), ...last.map(c => TYPES.find(x => x[0] === c)).filter(Boolean)]; };
   const typeName = c => { if (c === "F") return t("Favourites"); if (c === "CF") return t("Client & designer favourites"); if (c === "FT") return t("Featured products"); const x = TYPES.find(y => y[0] === c) || TYPES[TYPES.length - 1]; return zh() ? x[2] : x[1]; };
   // Each person's own starred images (file names), saved on the server for their account.
   let fav = new Set();
@@ -502,7 +504,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     return (fp || cur ? row("FT", "◆ " + esc(t("Featured products")), fp) : "") + row("F", "★ " + esc(t("Favourites")), fv) + (showCfav() ? row("CF", "★ " + esc(t("Client & designer favourites")), LIB.items.filter(o => cfav.has(o.file) && vis(o)).length) : "")
       + (tb.length || staff() ? row("TBS", "TBS · " + esc(t("To be sourced")), tb.length, tn) : "")
       + `<span class="sbl-siderule"></span>`
-      + TYPES.filter(([c]) => by[c] || (cur && custom.some(x => x.c === c))).map(([c]) => row(c, esc(typeName(c)), by[c] || 0, nw[c])).join("");
+      + typesAZ().filter(([c]) => by[c] || (cur && custom.some(x => x.c === c))).map(([c]) => row(c, esc(typeName(c)), by[c] || 0, nw[c])).join("");
   }
   // The landing slideshow: one featured product at a time, large, changing every few seconds. It pauses while the
   // pointer is over it, after a touch, while a product card is open, in a hidden tab, or when the viewer asked for less motion.
@@ -555,7 +557,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const cfTile = showCfav() ? `<button class="sbl-cat" data-sbltype="CF">${cfc ? `<span class="sbl-sw" ${sprite(cfc)}></span>` : `<span class="sbl-favic">★</span>`}<span class="sbl-name">★ ${t("Client & designer favourites")}</span><span class="sbl-sub">${cfs.length ? (zh() ? `${nf(cfs.length)} 张图片` : `${nf(cfs.length)} image${cfs.length === 1 ? "" : "s"}`) : t("What this project's clients and designers starred")}</span></button>` : "";
     const fp = featPool(), ftc = fp[0];
     const featTile = fp.length || cur ? `<button class="sbl-cat" data-sbltype="FT">${ftc ? `<span class="sbl-sw" ${sprite(ftc)}></span>` : `<span class="sbl-favic">◆</span>`}<span class="sbl-name">◆ ${t("Featured products")}</span><span class="sbl-sub">${fp.length ? (zh() ? `${nf(fp.length)} 张图片` : `${nf(fp.length)} image${fp.length === 1 ? "" : "s"}`) : t("The studio's picks")}</span></button>` : "";
-    return featTile + favTile + cfTile + tbsTileHTML() + TYPES.filter(([c]) => (by[c] && (cur || by[c].some(isOn))) || (cur && custom.some(x => x.c === c))).map(([c]) => {
+    return featTile + favTile + cfTile + tbsTileHTML() + typesAZ().filter(([c]) => (by[c] && (cur || by[c].some(isOn))) || (cur && custom.some(x => x.c === c))).map(([c]) => {
       // Cover: an approved image if there is one, preferring product photos over tearsheet pages.
       const arr = by[c] || [], ok = arr.filter(isOn), pool0 = cur && !ok.length ? arr : ok, photos = pool0.filter(o => !/tearsheet/i.test(o.sup)), pool = photos.length ? photos : pool0, cover = pool[Math.min(pool.length - 1, Math.floor(pool.length * .12))];
       const nn = arr.filter(isNew).length;
@@ -627,7 +629,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   const sel = new Set();
   function sortBarHTML() {
     return `<div class="sbl-sortbar"><b id="sbl-selcount">${selCount()}</b>
-      <select id="sbl-moveto" aria-label="${t("Move selected to…")}"><option value="">${t("Move selected to…")}</option>${TYPES.filter(x => x[0] !== "U" && x[0] !== ui.type).map(x => `<option value="${x[0]}">${esc(typeName(x[0]))}</option>`).join("")}</select>
+      <select id="sbl-moveto" aria-label="${t("Move selected to…")}"><option value="">${t("Move selected to…")}</option>${typesAZ().filter(x => x[0] !== "U" && x[0] !== ui.type).map(x => `<option value="${x[0]}">${esc(typeName(x[0]))}</option>`).join("")}</select>
       <button class="linkbtn" data-sbl="selall">${t("Select all shown")}</button><button class="linkbtn" data-sbl="selnone">${t("Clear selection")}</button></div>`;
   }
   const selCount = () => zh() ? `已选 ${nf(sel.size)} 张` : `${nf(sel.size)} selected`;
@@ -740,7 +742,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
           ${host.internal() ? `<div class="sbl-note"><code id="sbl-note">${esc(sourceNote(o)).replace(/\n/g, "<br>")}</code><div class="sbl-row" style="margin-top:0"><button class="btn sm" data-sbl="copy">${t("Copy source note")}</button><span class="mono" style="font-size:11.5px;color:var(--muted)">${zh() ? `PDF 从第 1 页打开；此图片在第 ${o.page} 页。` : `The PDF opens at page 1; this image is on page ${o.page}.`}</span></div></div>` : ""}
         </section>
         ${cur ? `<section class="sbl-sec"><header><h5>${t("Product type")}</h5></header>
-          <label class="sbl-pick" style="margin-top:10px"><select id="sbl-type">${TYPES.filter(x => x[0] !== "U" || typeOf(o) === "U").map(([c]) => `<option value="${c}" ${typeOf(o) === c ? "selected" : ""}>${esc(typeName(c))}</option>`).join("")}</select></label>
+          <label class="sbl-pick" style="margin-top:10px"><select id="sbl-type">${typesAZ().filter(x => x[0] !== "U" || typeOf(o) === "U").map(([c]) => `<option value="${c}" ${typeOf(o) === c ? "selected" : ""}>${esc(typeName(c))}</option>`).join("")}</select></label>
         </section>` : ""}
         ${cur ? `<section class="sbl-sec"><header><h5>${t("In the library")}</h5><span class="mono" style="color:var(--muted)">${x ? t("Approved") : t("Not approved")}</span></header>
           <p class="sbl-hint">${t("Approved images are shown to everyone, clients included. Unapproving hides it again; pieces already added to projects stay.")}</p>

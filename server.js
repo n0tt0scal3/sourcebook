@@ -1388,7 +1388,9 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       return send(res, 200, { ok: true, on: next.on.length });
     }
     if (p === "/api/library/add" && req.method === "POST") {
-      // { project, file, photo?: base64 JPEG, prefix?: "SF" } adds an approved library image to a project as a piece.
+      // { project, file, photo?: base64 JPEG, prefix?: "SF", again?: true } adds an approved library image to a project as a piece.
+      // If the project already has it, the existing piece is returned, unless again is set: then it's added once more as its own piece
+      // with the next free code (the same chair in two rooms, in two finishes).
       // Built here from the catalogue index so clients (who can't otherwise create pieces) can add them too.
       const b = await readJSON(req, 9 * 1024 * 1024);
       const pid = String(b.project || "");
@@ -1404,7 +1406,7 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       const pre = `projects/${pid}/items/`;
       const items = Object.entries(store).filter(([k]) => k.startsWith(pre) && k.split("/").length === 4).map(([, v]) => v.data);
       const dup = Object.entries(store).find(([k, v]) => k.startsWith(pre) && v.data?.libSource?.file === file);
-      if (dup) return send(res, 200, { ok: true, id: dup[0].split("/")[3], code: dup[1].data.code, existing: true });
+      if (dup && b.again !== true) return send(res, 200, { ok: true, id: dup[0].split("/")[3], code: dup[1].data.code, existing: true });
       const L = LIB_LABEL[sup] || S.label || [sup, ""];
       const category = libCatSection(S.cat) || "Finishes";
       const t0 = String(text || "");

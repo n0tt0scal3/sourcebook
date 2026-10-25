@@ -69,8 +69,8 @@ const customOfCat = c => /^CUSTOM-[a-z2-9]$/.test(c || "") ? customTypes().find(
 const libCatType = c => LIB_CAT_TYPE[c] || customOfCat(c)?.c || "";
 const libCatSection = c => LIB_CAT[c] || customOfCat(c)?.section || "";
 const LIB_TYPE_PROMPT = `Each image is a product photo from a furniture catalogue. For each image, in order, give ONE letter for the main product shown:
-S sofa/sectional/loveseat · L lounge or arm chair · C dining or office chair · T stool or bar stool · B bench, ottoman or pouf · K coffee or side table · D dining table (a table shown with chairs is D) · E desk, console or dressing table · G cabinet, sideboard, chest, TV unit, shelving or wardrobe · R bed or nightstand · H lamp · Z mirror · A rug, vase, art or other decor · O logo, text, swatch, drawing or no clear product.
-In a room scene, use the most prominent piece. Reply with only the letters, no spaces.`;
+S sofa/sectional/loveseat · L lounge or arm chair · C dining chair · 1 office or desk chair (swivel base or castors) · T stool or bar stool · B bench, ottoman or pouf · K coffee or side table · D dining table (a table shown with chairs is D) · E desk, console or dressing table · G cabinet, sideboard, chest, TV unit, shelving or wardrobe · R bed or nightstand · H lamp · Z mirror · A rug, vase, art or other decor · O logo, text, swatch, drawing or no clear product.
+In a room scene, use the most prominent piece. A page showing several products of one kind (an overview or range page) gets that kind's letter; use O only when no one kind leads. Reply with only the letters, no spaces.`;
 async function classifyCat(sup) {
   if (!ANTHROPIC_API_KEY) return;
   const c = await libCatRead(sup); if (!c || c.status !== "done") return;
@@ -84,7 +84,7 @@ async function classifyCat(sup) {
     try {
       const r = await fetch(API_URL, { method: "POST", headers: { "content-type": "application/json", "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" }, body: JSON.stringify({ model: MODELS.quick, max_tokens: 100, messages: [{ role: "user", content }] }) });
       const j = await r.json().catch(() => ({}));
-      const out = ((j.content || []).map(b => b.text || "").join("").toUpperCase().match(/[A-Z]/g) || []).join("");
+      const out = ((j.content || []).map(b => b.text || "").join("").toUpperCase().match(/[A-Z1]/g) || []).join("");
       if (r.ok && out.length === chunk.length) chunk.forEach((x, k) => { if (LIB_TYPES.includes(out[k])) x[4] = out[k]; });
       else console.error("library sorting:", r.status, j?.error?.message || out);
     } catch (e) { console.error("library sorting:", e.message); }

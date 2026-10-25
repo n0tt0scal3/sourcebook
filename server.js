@@ -18,7 +18,7 @@ const DB_FILE = path.join(DATA_DIR, "db.json");
 const exists = f => { try { return fs.existsSync(f); } catch (_) { return false; } };
 const PUBLIC_DIR = exists(path.join(__dirname, "public", "dashboard.html")) ? path.join(__dirname, "public") : __dirname;
 const FLAT_PUBLIC = PUBLIC_DIR === __dirname;
-const PUBLIC_FILES = new Set(["index.html", "dashboard.html", "admin.html", "claude-shim.js", "library.js", "rfi.js", "pdfjs/pdf.min.mjs", "pdfjs/pdf.worker.min.mjs", "manifest.webmanifest", "icon-192.png", "icon-512.png"]);
+const PUBLIC_FILES = new Set(["index.html", "dashboard.html", "admin.html", "claude-shim.js", "library.js", "rfi.js", "agentnote.js", "pdfjs/pdf.min.mjs", "pdfjs/pdf.worker.min.mjs", "manifest.webmanifest", "icon-192.png", "icon-512.png"]);
 // Sourcing library: lib/data.json (index) and lib/sprites/ (thumbnail sheets), next to the app files.
 const LIB_DIR = exists(path.join(PUBLIC_DIR, "lib", "data.json")) ? path.join(PUBLIC_DIR, "lib") : path.join(__dirname, "lib");
 // Full-size library images, uploaded by an admin from the Drive zips, live on the data disk.
@@ -476,7 +476,7 @@ function canSeeRequest(u, d) {
 }
 function canRead(u, p) { if (isOwnPath(p)) return ownPath(u, p); if (isLibPath(p)) return true; if (isSourcingPath(p)) { if (u.role === "admin") return true; if (p === "sourcing") return u.role === "agent"; return canSeeRequest(u, store[p]?.data); } if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
 // Internal fields a client never receives.
-const CLIENT_HIDDEN = ["notes", "match", "pendingSetup", "chg"];
+const CLIENT_HIDDEN = ["notes", "match", "pendingSetup", "chg", "toAgent"];
 // Costs a client never receives: the supplier price (¥ and $), duty, and the project's freight, insurance, brokerage,
 // delivery, sourcing service rates and exchange rate. A client's piece carries its all-in price instead (unitCost, CAD,
 // before sales tax): the supplier price plus its share of shipping, duty and delivery, plus the sourcing service.
@@ -509,6 +509,8 @@ function forUser(u, p, data) {
   if (u.role === "agent" && data && /^sourcing\/[^/]+$/.test(p) && data.by && data.by.id !== u.id && data.by.role !== "admin") return { ...data, by: { role: "admin" } };
   // Specifiers never receive the studio's sourcing service rates.
   if (u.role === "specifier" && data && /^projects\/[^/]+\/project\/main$/.test(p)) { const o = { ...data }; delete o.quoteFee; delete o.quoteFeeCustom; return o; }
+  // Notes the studio sends the sourcing agent from a product card stay between the two of them.
+  if (u.role === "specifier" && data && ITEM_DOC.test(p) && data.toAgent) { const o = { ...data }; delete o.toAgent; return o; }
   if (u.role !== "client" || !data) return data;
   // Featured images from catalogues hidden from clients aren't sent to them.
   if (p === "libraryfeat/main" && libCache) return { ...data, f: (data.f || []).filter(f => { const it = libCache.byFile.get(f); return it && !libHiddenFor(u, it[1]); }) };
@@ -842,6 +844,71 @@ const server = http.createServer(async (req, res) => {
       if (n) persist();
       return send(res, 200, { ok: true, cleared: n });
     }
+    /* ---------------- notes to the sourcing agent from a product card ---------------- */
+    // An admin presses "Send to agent" on a piece and writes a note. It's kept on the piece as
+    // toAgent = [{ id, text, at, by: { id, name } }], which marks the piece new for the agent (chg.toAgent) like any studio change,
+    // and it's emailed to the agent (the QQ address last used for TBS, or the agent's own email) when mail is set up.
+    const agentEmailFor = pid => store["tbscfg/main"]?.data?.agentEmail || people.users.filter(u => u.role === "agent" && !u.disabled && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email || "") && canSeeProject(u, pid)).map(u => u.email).slice(0, 3).join(", ");
+    if (p === "/api/agentnote" && req.method === "GET") {
+      if (!isAdmin) return deny("Only admins can send notes to the sourcing agent.");
+      return send(res, 200, { mail: mailOn(), agentEmail: agentEmailFor(String(url.searchParams.get("project") || "")) });
+    }
+    if (p === "/api/agentnote" && req.method === "POST") {
+      if (!isAdmin) return deny("Only admins can send notes to the sourcing agent.");
+      const b = await readJSON(req), pid = String(b.project || ""), dp = `projects/${pid}/items/${String(b.item || "")}`;
+      if (!ITEM_DOC.test(dp) || !validPath(dp, true) || !store[dp]) return send(res, 404, { code: "not_found", message: "That piece isn't in this project any more." });
+      const text = String(b.text || "").trim().slice(0, 2000);
+      if (!text) return send(res, 400, { code: "invalid_argument", message: "Write a note to the agent first." });
+      const to = String(b.to || "").split(/[,;\s]+/).map(x => x.trim().toLowerCase()).filter(Boolean).slice(0, 3);
+      if (to.length && !to.every(e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))) return send(res, 400, { code: "invalid_argument", message: "That email doesn't look right." });
+      if (to.length && !mailOn()) return send(res, 503, { code: "mail_disabled", message: "Email isn't set up on this server yet. Add the SMTP settings in Render, or send it in Sourcebook only." });
+      let emailed = false;
+      if (to.length) {
+        const it = store[dp].data, pname = String(store["projects/" + pid]?.data?.name || store[`projects/${pid}/project/main`]?.data?.name || ""), label = [it.code, it.name].filter(Boolean).join(" ") || "piece";
+        const link = `${origin(req)}/p/${encodeURIComponent(pid)}#agent=${encodeURIComponent(dp.split("/")[3])}`;
+        let photo = null; if (it.photo && /^[0-9a-f]{16,64}$/.test(it.photo)) { try { photo = await fsp.readFile(path.join(BLOB_DIR, it.photo)); } catch (_) {} }
+        const ptype = photo ? sniffBuf(photo) : null, ext = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" }[ptype];
+        try {
+          await sendMail(to, `选材手册 · 工作室留言：${label}`,
+            `您好，\n\n工作室就以下产品给您留言：\n\n${label}${pname ? "（项目：" + pname + "）" : ""}\n\n留言：${text}\n\n在选材手册中查看此产品：${link}\n\n` +
+            `----\nHello,\n\nThe studio sent you a note about this piece:\n\n${label}${pname ? " (project: " + pname + ")" : ""}\n\nNote: ${text}\n\nOpen the piece in Sourcebook: ${link}\n\n— ${me.name || "Studio"}\n`,
+            ext ? [{ name: "photo." + ext, type: ptype, data: photo }] : []);
+          emailed = true;
+        } catch (e) { console.error("agent note email:", e.message); return send(res, 502, { code: "mail_failed", message: "The email couldn't be sent. Check the SMTP settings in Render and try again." }); }
+        const cfg = store["tbscfg/main"];
+        store["tbscfg/main"] = { data: { ...(cfg?.data || {}), agentEmail: to.join(", ") }, version: (cfg?.version || 0) + 1, updatedAt: new Date().toISOString() };
+      }
+      const cur = store[dp]; if (!cur) return send(res, 404, { code: "not_found", message: "That piece isn't in this project any more." });
+      const note = { id: "n" + crypto.randomBytes(5).toString("hex"), text, at: new Date().toISOString(), by: { id: me.id, name: me.name || "" }, ...(emailed ? { to: to.join(", ") } : {}) };
+      const next = trackChanges(me, cur.data, { ...cur.data, toAgent: [...(Array.isArray(cur.data.toAgent) ? cur.data.toAgent : []), note].slice(-50) });
+      store[dp] = { data: next, version: cur.version + 1, updatedAt: note.at };
+      persist(); broadcast({ path: dp, exists: true, data: next });
+      return send(res, 200, { ok: true, emailed, note });
+    }
+    // The sourcing agent's alert: pieces with a studio note they haven't seen yet (chg.toAgent from an admin), newest first.
+    if (p === "/api/agentnotes" && req.method === "GET") {
+      if (me.role !== "agent") return send(res, 200, { notes: [] });
+      const out = [];
+      for (const [k, v] of Object.entries(store)) {
+        const c = v.data?.chg?.toAgent, list = v.data?.toAgent;
+        if (!ITEM_DOC.test(k) || !c || c.r !== "admin" || !Array.isArray(list) || !list.length) continue;
+        const pid = projectOf(k); if (!canSeeProject(me, pid) || !store["projects/" + pid]) continue;
+        const last = list[list.length - 1], it = v.data;
+        out.push({ project: { id: pid, name: String(store[`projects/${pid}/project/main`]?.data?.name || store["projects/" + pid].data?.name || pid) },
+          item: { id: k.split("/")[3], code: it.code || "", name: it.name || "" }, note: { text: String(last.text || "").slice(0, 600), at: last.at, by: last.by?.name || "" } });
+      }
+      return send(res, 200, { notes: out.sort((a, b) => String(b.note.at).localeCompare(String(a.note.at))) });
+    }
+    if (p === "/api/agentnotes/seen" && req.method === "POST") {
+      if (me.role !== "agent") return deny();
+      const b = await readJSON(req), dp = `projects/${String(b.project || "")}/items/${String(b.item || "")}`, cur = store[dp];
+      if (!ITEM_DOC.test(dp) || !cur || !canRead(me, dp)) return send(res, 200, { ok: true });
+      if (cur.data?.chg?.toAgent?.r === "admin") {
+        const next = { ...cur.data, chg: { ...cur.data.chg } }; delete next.chg.toAgent; if (!Object.keys(next.chg).length) delete next.chg;
+        store[dp] = { data: next, version: cur.version + 1, updatedAt: cur.updatedAt }; persist(); broadcast({ path: dp, exists: true, data: next });
+      }
+      return send(res, 200, { ok: true });
+    }
     if (p === "/api/projects/delete" && req.method === "POST") {
       if (!isAdmin) return deny("Only admins can delete projects. You can archive it instead.");
       const { id } = await readJSON(req);
@@ -928,6 +995,8 @@ const server = http.createServer(async (req, res) => {
         // Only admins choose a project's cover image.
         if (!isAdmin && /^projects\/[^/]+\/project\/main$/.test(dp)) { if (cur?.data?.cover != null) next.cover = cur.data.cover; else delete next.cover; }
         if (me.role === "specifier" && /^projects\/[^/]+$/.test(dp)) { if (cur?.data?.by) next.by = cur.data.by; else if (cur) delete next.by; }
+        // Notes to the sourcing agent are only added through /api/agentnote, which records who sent them and when.
+        if (ITEM_DOC.test(dp)) { if (cur?.data?.toAgent) next.toAgent = cur.data.toAgent; else delete next.toAgent; }
         if (ITEM_DOC.test(dp)) { if (Array.isArray(next.rfis)) next.rfis = stampRfis(me, cur?.data?.rfis, next.rfis); if (op === "update") next.chg = cur.data.chg; next = trackChanges(me, cur?.data, next); }
         if (Buffer.byteLength(JSON.stringify(next)) > 256 * 1024) return send(res, 400, { code: "invalid_argument", message: "document too large" });
         store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: new Date().toISOString() };

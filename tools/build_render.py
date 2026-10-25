@@ -19,6 +19,7 @@ head='''<!doctype html>
 <script src="/claude-shim.js"></script>
 <script src="/library.js"></script>
 <script src="/rfi.js"></script>
+<script src="/agentnote.js"></script>
 </head>
 <body>
 '''

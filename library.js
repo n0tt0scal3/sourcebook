@@ -319,6 +319,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const at = BASE_TYPES.findIndex(x => x[0] === "A");
     TYPES = [...BASE_TYPES.slice(0, at), ...custom.map(x => [x.c, x.en, x.zh || x.en]), ...BASE_TYPES.slice(at)];
   }
+  // Product types A–Z by the name shown (pinyin order in Chinese); Other and Not sorted yet stay last.
+  const typesAZ = () => { const last = ["O", "U"], col = zh() ? zhC : enC; return [...TYPES.filter(x => !last.includes(x[0])).sort((a, b) => col.compare(typeName(a[0]), typeName(b[0]))), ...last.map(c => TYPES.find(x => x[0] === c)).filter(Boolean)]; };
   const typeName = c => { if (c === "F") return t("Favourites"); if (c === "CF") return t("Client & designer favourites"); if (c === "FT") return t("Featured products"); const x = TYPES.find(y => y[0] === c) || TYPES[TYPES.length - 1]; return zh() ? x[2] : x[1]; };
   // Each person's own starred images (file names), saved on the server for their account.
   let fav = new Set();
@@ -423,6 +425,12 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   const typeOf = o => (tov[o.sup] && tov[o.sup][o.key]) || o.t || "U";
   const sprite = o => { if (o.s == null) return `style="background-image:url(/lib/thumb/${encodeURIComponent(o.file)});background-size:contain;background-position:center"`; const g = LIB.grid; return `style="background-image:url(/lib/sprites/s${String(o.s).padStart(3, "0")}.jpg);background-size:${g * 100}% ${g * 100}%;background-position:${(o.k % g) / (g - 1) * 100}% ${Math.floor(o.k / g) / (g - 1) * 100}%"`; };
   const label = sup => LIB_LABEL[sup] || (LIB && LIB.sups[sup] && LIB.sups[sup].label) || [sup, ""];
+  // Catalogues A–Z by name: English names first, then Chinese names in pinyin order.
+  const enC = new Intl.Collator("en", { sensitivity: "base", numeric: true }), zhC = new Intl.Collator("zh-u-co-pinyin", { sensitivity: "base", numeric: true });
+  const supName = sup => label(sup).filter(Boolean).join(" · "), isHan = x => /^[\u3400-\u9fff\uf900-\ufaff]/.test(x.trim());
+  const bySupName = (a, b) => { const x = supName(a), y = supName(b), hx = isHan(x), hy = isHan(y); return hx !== hy ? hx - hy : (hx ? zhC : enC).compare(x, y) || enC.compare(a, b); };
+  let supRank = null, supRankOf = null;
+  const supOrder = () => { if (supRankOf !== LIB.sups) { supRankOf = LIB.sups; supRank = new Map(Object.keys(LIB.sups).sort(bySupName).map((s, i) => [s, i])); } return supRank; };
   const pdfURL = S => S.drive ? `https://drive.google.com/file/d/${S.drive}/view` : S.up ? `/lib/pdf/${encodeURIComponent(Object.keys(LIB.sups).find(k => LIB.sups[k] === S))}.pdf` : "#";
   const name = o => o.codes[0] || label(o.sup)[0] + " · p" + o.page;
   const pageBtn = o => zh() ? `打开图册第 ${o.page} 页` : `Open catalogue page ${o.page}`;
@@ -450,7 +458,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
   // As shown in the grid: outside a single catalogue, images new to this person come first.
   const markedNew = o => justSeen.has(o.file) || fresh.has(o.file);
-  function ordered() { const l = list(); if (ui.type === "FT") return l.sort((a, b) => feat.get(b.file) - feat.get(a.file)); if (!ui.sup && l.some(markedNew)) l.sort((a, b) => markedNew(b) - markedNew(a)); return l; }
+  function ordered() { const l = list(); if (ui.type === "FT") return l.sort((a, b) => feat.get(b.file) - feat.get(a.file)); if (!ui.sup) { const r = supOrder(); l.sort((a, b) => r.get(a.sup) - r.get(b.sup)); } if (!ui.sup && l.some(markedNew)) l.sort((a, b) => markedNew(b) - markedNew(a)); return l; }
   const sups = () => Object.keys(LIB.sups).filter(s => curating() || approved(LIB.bySup[s]));
 
   function view() {
@@ -496,7 +504,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     return (fp || cur ? row("FT", "◆ " + esc(t("Featured products")), fp) : "") + row("F", "★ " + esc(t("Favourites")), fv) + (showCfav() ? row("CF", "★ " + esc(t("Client & designer favourites")), LIB.items.filter(o => cfav.has(o.file) && vis(o)).length) : "")
       + (tb.length || staff() ? row("TBS", "TBS · " + esc(t("To be sourced")), tb.length, tn) : "")
       + `<span class="sbl-siderule"></span>`
-      + TYPES.filter(([c]) => by[c] || (cur && custom.some(x => x.c === c))).map(([c]) => row(c, esc(typeName(c)), by[c] || 0, nw[c])).join("");
+      + typesAZ().filter(([c]) => by[c] || (cur && custom.some(x => x.c === c))).map(([c]) => row(c, esc(typeName(c)), by[c] || 0, nw[c])).join("");
   }
   // The landing slideshow: one featured product at a time, large, changing every few seconds. It pauses while the
   // pointer is over it, after a touch, while a product card is open, in a hidden tab, or when the viewer asked for less motion.
@@ -539,7 +547,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (ui.type) {
       const mine = LIB.items.filter(o => inType(o) && vis(o)); const n = {}, nw = {}; mine.forEach(o => { n[o.sup] = (n[o.sup] || 0) + 1; if (markedNew(o)) nw[o.sup] = (nw[o.sup] || 0) + 1; });
       return `<button class="chip" data-sblsup="" aria-pressed="${!ui.sup}">${t("All catalogues")} · ${nf(mine.length)}</button>` +
-        Object.keys(n).map(s => { const L = label(s); return `<button class="chip" data-sblsup="${esc(s)}" aria-pressed="${ui.sup === s}">${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""} · ${nf(n[s])}${nw[s] ? ` <b class="sbl-newc">● ${nf(nw[s])} ${t("new")}</b>` : ""}${cur && hideCli.has(s) ? ` <span class="sbl-hid">· ${t("Hidden from clients")}</span>` : ""}</button>`; }).join("");
+        Object.keys(n).sort(bySupName).map(s => { const L = label(s); return `<button class="chip" data-sblsup="${esc(s)}" aria-pressed="${ui.sup === s}">${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""} · ${nf(n[s])}${nw[s] ? ` <b class="sbl-newc">● ${nf(nw[s])} ${t("new")}</b>` : ""}${cur && hideCli.has(s) ? ` <span class="sbl-hid">· ${t("Hidden from clients")}</span>` : ""}</button>`; }).join("");
     }
     const sub = (n, of) => cur ? `${nf(n)} / ${nf(of)} ${t("Approved").toLowerCase()}` : zh() ? `${nf(n)} 张图片` : `${nf(n)} image${n === 1 ? "" : "s"}`;
     const by = {}; LIB.items.forEach(o => (by[typeOf(o)] = by[typeOf(o)] || []).push(o));
@@ -549,7 +557,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const cfTile = showCfav() ? `<button class="sbl-cat" data-sbltype="CF">${cfc ? `<span class="sbl-sw" ${sprite(cfc)}></span>` : `<span class="sbl-favic">★</span>`}<span class="sbl-name">★ ${t("Client & designer favourites")}</span><span class="sbl-sub">${cfs.length ? (zh() ? `${nf(cfs.length)} 张图片` : `${nf(cfs.length)} image${cfs.length === 1 ? "" : "s"}`) : t("What this project's clients and designers starred")}</span></button>` : "";
     const fp = featPool(), ftc = fp[0];
     const featTile = fp.length || cur ? `<button class="sbl-cat" data-sbltype="FT">${ftc ? `<span class="sbl-sw" ${sprite(ftc)}></span>` : `<span class="sbl-favic">◆</span>`}<span class="sbl-name">◆ ${t("Featured products")}</span><span class="sbl-sub">${fp.length ? (zh() ? `${nf(fp.length)} 张图片` : `${nf(fp.length)} image${fp.length === 1 ? "" : "s"}`) : t("The studio's picks")}</span></button>` : "";
-    return featTile + favTile + cfTile + tbsTileHTML() + TYPES.filter(([c]) => (by[c] && (cur || by[c].some(isOn))) || (cur && custom.some(x => x.c === c))).map(([c]) => {
+    return featTile + favTile + cfTile + tbsTileHTML() + typesAZ().filter(([c]) => (by[c] && (cur || by[c].some(isOn))) || (cur && custom.some(x => x.c === c))).map(([c]) => {
       // Cover: an approved image if there is one, preferring product photos over tearsheet pages.
       const arr = by[c] || [], ok = arr.filter(isOn), pool0 = cur && !ok.length ? arr : ok, photos = pool0.filter(o => !/tearsheet/i.test(o.sup)), pool = photos.length ? photos : pool0, cover = pool[Math.min(pool.length - 1, Math.floor(pool.length * .12))];
       const nn = arr.filter(isNew).length;
@@ -562,7 +570,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const head = `<button class="linkbtn" data-sbl="clitog" aria-expanded="${!!ui.cli}">${t("Catalogues clients see")} · ${zh() ? `${nf(shown)} / ${nf(all.length)}` : `${nf(shown)} of ${nf(all.length)}`} ${ui.cli ? "▴" : "▾"}</button>`;
     if (!ui.cli) return `<div class="sbl-cli">${head}</div>`;
     const cat = c => { const x = String(c || ""); return x.startsWith("CUSTOM-") ? (custom.find(y => "CUSTOM-" + y.c === x) || {}).en || x : x[0] + x.slice(1).toLowerCase(); };
-    const rows = all.slice().sort((a, b) => cat(LIB.sups[a].cat).localeCompare(cat(LIB.sups[b].cat)) || label(a).join(" ").localeCompare(label(b).join(" "))).map(s => {
+    const rows = all.slice().sort((a, b) => cat(LIB.sups[a].cat).localeCompare(cat(LIB.sups[b].cat)) || bySupName(a, b)).map(s => {
       const L = label(s), n = approved(LIB.bySup[s]);
       return `<label class="sbl-clirow"><input type="checkbox" data-sblcli="${esc(s)}" ${hideCli.has(s) ? "" : "checked"}><span><b>${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""}</b><span class="sbl-sub">${esc(zh() ? ({ Furniture: "家具", Office: "办公家具", Lighting: "灯具", Doors: "门", Millwork: "木作", Stone: "石材", Flooring: "地板", Signage: "标识", Plumbing: "卫浴", Vanities: "浴室柜", Mirrors: "镜子", "Wall panelling": "墙板", "Wood products": "木制品", "Partition systems": "隔断系统", "Glass products": "玻璃制品" })[cat(LIB.sups[s].cat)] || cat(LIB.sups[s].cat) : cat(LIB.sups[s].cat))} · ${zh() ? `已批准 ${nf(n)} 张` : `${nf(n)} approved`}</span></span></label>`;
     }).join("");
@@ -621,7 +629,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   const sel = new Set();
   function sortBarHTML() {
     return `<div class="sbl-sortbar"><b id="sbl-selcount">${selCount()}</b>
-      <select id="sbl-moveto" aria-label="${t("Move selected to…")}"><option value="">${t("Move selected to…")}</option>${TYPES.filter(x => x[0] !== "U" && x[0] !== ui.type).map(x => `<option value="${x[0]}">${esc(typeName(x[0]))}</option>`).join("")}</select>
+      <select id="sbl-moveto" aria-label="${t("Move selected to…")}"><option value="">${t("Move selected to…")}</option>${typesAZ().filter(x => x[0] !== "U" && x[0] !== ui.type).map(x => `<option value="${x[0]}">${esc(typeName(x[0]))}</option>`).join("")}</select>
       <button class="linkbtn" data-sbl="selall">${t("Select all shown")}</button><button class="linkbtn" data-sbl="selnone">${t("Clear selection")}</button></div>`;
   }
   const selCount = () => zh() ? `已选 ${nf(sel.size)} 张` : `${nf(sel.size)} selected`;
@@ -734,7 +742,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
           ${host.internal() ? `<div class="sbl-note"><code id="sbl-note">${esc(sourceNote(o)).replace(/\n/g, "<br>")}</code><div class="sbl-row" style="margin-top:0"><button class="btn sm" data-sbl="copy">${t("Copy source note")}</button><span class="mono" style="font-size:11.5px;color:var(--muted)">${zh() ? `PDF 从第 1 页打开；此图片在第 ${o.page} 页。` : `The PDF opens at page 1; this image is on page ${o.page}.`}</span></div></div>` : ""}
         </section>
         ${cur ? `<section class="sbl-sec"><header><h5>${t("Product type")}</h5></header>
-          <label class="sbl-pick" style="margin-top:10px"><select id="sbl-type">${TYPES.filter(x => x[0] !== "U" || typeOf(o) === "U").map(([c]) => `<option value="${c}" ${typeOf(o) === c ? "selected" : ""}>${esc(typeName(c))}</option>`).join("")}</select></label>
+          <label class="sbl-pick" style="margin-top:10px"><select id="sbl-type">${typesAZ().filter(x => x[0] !== "U" || typeOf(o) === "U").map(([c]) => `<option value="${c}" ${typeOf(o) === c ? "selected" : ""}>${esc(typeName(c))}</option>`).join("")}</select></label>
         </section>` : ""}
         ${cur ? `<section class="sbl-sec"><header><h5>${t("In the library")}</h5><span class="mono" style="color:var(--muted)">${x ? t("Approved") : t("Not approved")}</span></header>
           <p class="sbl-hint">${t("Approved images are shown to everyone, clients included. Unapproving hides it again; pieces already added to projects stay.")}</p>

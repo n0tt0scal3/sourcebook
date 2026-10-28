@@ -477,10 +477,10 @@ function canSeeRequest(u, d) {
 function canRead(u, p) { if (isOwnPath(p)) return ownPath(u, p); if (isLibPath(p)) return true; if (isSourcingPath(p)) { if (u.role === "admin") return true; if (p === "sourcing") return u.role === "agent"; return canSeeRequest(u, store[p]?.data); } if (allAccess(u)) return true; const id = projectOf(p); return !!id && canSeeProject(u, id); }
 // Internal fields a client never receives.
 const CLIENT_HIDDEN = ["notes", "match", "pendingSetup", "chg", "toAgent"];
-// Costs a client never receives: the supplier price (¥ and $), duty, and the project's freight, insurance, brokerage,
+// Costs a client never receives: the supplier price (¥ and $), duty and its HS code, and the project's freight, insurance, brokerage,
 // delivery, sourcing service rates and exchange rate. A client's piece carries its all-in price instead (unitCost, CAD,
 // before sales tax): the supplier price plus its share of shipping, duty and delivery, plus the sourcing service.
-const CLIENT_COST_ITEM = ["unitCostCNY", "priceBase", "dutyRate"];
+const CLIENT_COST_ITEM = ["unitCostCNY", "priceBase", "dutyRate", "hsCode", "hsStatus"];
 const CLIENT_COST_PROJECT = ["fxRate", "quoteFee", "quoteFeeCustom", "quoteFreight", "quoteIns", "quoteDuty", "quoteBroker", "quoteDeliv"];
 // Clients see no prices at all unless SHOW_CLIENT_PRICES is set in Render (1 / on); with it on they see their all-in prices.
 const CLIENT_PRICES = /^(1|on|true|yes)$/i.test(String(process.env.SHOW_CLIENT_PRICES || "").trim());

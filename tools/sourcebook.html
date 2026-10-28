@@ -252,6 +252,19 @@ textarea.f{resize:vertical;min-height:70px;border:1px solid var(--rule);padding:
 .card:hover .plate:has(.tiledel) .late{right:48px}
 @media (hover:none){.plate:has(.tiledel) .late{right:48px}}
 .fincard .tiledel{left:8px;right:auto;top:8px}
+/* duplicate from the tile, the order schedule and the quotation */
+.tiledup{position:absolute;right:10px;top:10px;z-index:2;height:30px;padding:0 9px;display:flex;align-items:center;gap:5px;background:var(--paper);color:var(--ink);border:1px solid var(--ink);font-size:12px;line-height:1;cursor:pointer;opacity:0;transition:opacity .2s;white-space:nowrap}
+.tiledup.withdel{right:46px}
+.card:hover .tiledup,.tiledup:focus-visible{opacity:1}
+.tiledup:hover{background:var(--ink);color:var(--paper)}
+@media (hover:none){.tiledup{opacity:.85}}
+.card:hover .plate:has(.tiledup) .late{display:none}
+@media (hover:none){.plate:has(.tiledup) .late{display:none}}
+.rowdup{background:none;border:1px solid var(--rule2);color:var(--ink);font:inherit;font-size:12px;padding:5px 9px;cursor:pointer;white-space:nowrap}
+.rowdup:hover{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+td.dupcell{width:1%;text-align:right}
+@keyframes dupflash{from{background:color-mix(in srgb,var(--new) 22%,transparent)}to{background:transparent}}
+tr.dupflash td,.card.dupflash .cap{animation:dupflash 2.6s ease-out}
 .tdconf{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:8px;padding:16px;background:color-mix(in srgb,var(--paper) 94%,transparent);color:var(--ink);text-align:left;cursor:default}
 .tdconf b{font-weight:600;overflow-wrap:anywhere}
 .tdconf .tdbtns{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:4px}
@@ -1378,7 +1391,7 @@ function quotation(){
   const priced=list.filter(it=>unitCAD(it)!=null).length,noQty=list.filter(it=>num(it.qty)==null).length;
   // Clients get each piece's all-in price from the server (supplier price, shipping, duty, delivery and sourcing service, before tax) and none of the costs behind it.
   const cl=isClient(),np=noPrices();
-  const T=quoteTotals(list);const dc=ed?"<td></td><td></td>":"",ncol=np?6:cl?8:ed?12:10;
+  const T=quoteTotals(list);const dc=ed?"<td></td><td></td><td></td>":"",ncol=np?6:cl?8:ed?13:10;
   let grp=null,gsum=0,rows="";
   const flush=()=>{if(grp!=null&&!np)rows+=cl?`<tr class="qsub"><td colspan="7">${esc(grp)} subtotal</td><td class="n mono">${fmtC(gsum,"CAD")}</td></tr>`:`<tr class="qsub"><td colspan="7">${esc(grp)} subtotal</td><td class="n mono">${fmtC(gsum*r,"CNY")}</td><td></td><td class="n mono">${fmtC(gsum,"CAD")}</td>${dc}</tr>`};
   list.forEach(it=>{
@@ -1386,7 +1399,7 @@ function quotation(){
     const q=num(it.qty),uc=unitCAD(it),un=unitCNY(it),tot=q!=null&&uc!=null?q*uc:null;gsum+=tot||0;
     const hq=cur=>hot(it,...(cur==="qty"?["qty"]:["unitCost","unitCostCNY","priceBase"]));
     const inp=(id,val,cur,base)=>ed?`<input class="qin mono ${base?"base":""}${hq(cur)}" type="number" step="any" min="0" inputmode="decimal" id="${id}" data-q="${cur}" data-id="${it.id}" value="${val==null?"":(cur==="qty"?val:Math.round(val*100)/100)}" placeholder="—" aria-label="${cur==="qty"?"Quantity":"Unit price "+cur}">`:`<span class="${hq(cur).trim()}">${cur==="qty"?(val??"—"):fmtC(val,cur)}</span>`;
-    rows+=`<tr class="qrow${newsOf(it)?" newsrow":""}">
+    rows+=`<tr class="qrow${newsOf(it)?" newsrow":""}${ui.flash===it.id?" dupflash":""}">
       <td class="mono strong"><button class="linkbtn mono" data-open="${it.id}">${esc(it.code||"—")}</button></td>
       <td class="qpic"><span class="sw${hot(it,"photo")}" style="background-image:url(${imgFor(it,160)})" data-open="${it.id}"></span></td>
       <td><div class="qname${hot(it,"name")}">${esc(it.name)}${it.custom?` <span class="qcust">Custom</span>`:""}</div><div class="muted qsup${hot(it,"supplier","modelCode")}">${esc([it.supplier,it.modelCode].filter(Boolean).join(" · "))}</div>${qAttach(it)}${newsPill(it)}</td>
@@ -1396,7 +1409,7 @@ function quotation(){
       ${cl?"":`<td class="n">${inp("qn-"+it.id,un,"CNY",it.priceBase==="CNY")}</td>
       <td class="n mono strong">${tot==null?"—":fmtC(tot*r,"CNY")}</td>`}
       ${np?"":`<td class="n">${inp("qc-"+it.id,uc,"CAD",it.priceBase!=="CNY")}</td>
-      <td class="n mono strong">${tot==null?`<span class="tbd">${uc==null?"Price TBD":"Qty TBD"}</span>`:fmtC(tot,"CAD")}</td>`}${ed?`<td class="n"><input class="qin qduty mono" type="number" step="any" min="0" inputmode="decimal" id="qd-${it.id}" data-q="duty" data-id="${it.id}" value="${num(it.dutyRate)??""}" placeholder="${num(project.quoteDuty)||0}" aria-label="Duty rate %"></td><td class="n"><input type="checkbox" class="qcustin" data-custom="${it.id}" ${it.custom?"checked":""} aria-label="Custom piece"></td>`:""}</tr>`;
+      <td class="n mono strong">${tot==null?`<span class="tbd">${uc==null?"Price TBD":"Qty TBD"}</span>`:fmtC(tot,"CAD")}</td>`}${ed?`<td class="n"><input class="qin qduty mono" type="number" step="any" min="0" inputmode="decimal" id="qd-${it.id}" data-q="duty" data-id="${it.id}" value="${num(it.dutyRate)??""}" placeholder="${num(project.quoteDuty)||0}" aria-label="Duty rate %"></td><td class="n"><input type="checkbox" class="qcustin" data-custom="${it.id}" ${it.custom?"checked":""} aria-label="Custom piece"></td><td class="dupcell">${canDup()?rowDup(it):""}</td>`:""}</tr>`;
   });flush();
   const adj=(id,label,val,suffix)=>`<label class="qadj">${label}${ed&&!(ME&&ME.role==="specifier"&&/^q-fee/.test(id))?`<input class="f mono" type="number" step="any" min="0" id="${id}" data-qp="${id}" value="${val??""}" placeholder="0">`:`<span class="mono">${val||0}</span>`}<span class="mono muted">${suffix}</span></label>`;
   const line=(label,v,cls="")=>cl?`<tr class="${cls}"><td colspan="7">${label}</td><td class="n mono">${fmtC(v,"CAD")}</td></tr>`:`<tr class="${cls}"><td colspan="7">${label}</td><td class="n mono">${fmtC(v*r,"CNY")}</td><td></td><td class="n mono">${fmtC(v,"CAD")}</td>${dc}</tr>`;
@@ -1409,7 +1422,7 @@ function quotation(){
   <div class="sum qsum">${np?`<div><span class="eyebrow">Items</span><b>${list.length}</b></div>`:`<div><span class="eyebrow">${isSpec()?"Landed cost with tax (CAD)":"Total (CAD)"}</span><b>${fmtC(T.total,"CAD")}</b></div>${cl?"":`<div><span class="eyebrow">${isSpec()?"Landed cost with tax (CNY)":"Total (CNY)"}</span><b>${fmtC(T.total*r,"CNY")}</b></div>`}<div><span class="eyebrow">Items priced</span><b class="${priced<list.length?"warnnum":""}">${priced} / ${list.length}</b></div>`}
     ${cl?"":`<div><span class="eyebrow">Exchange rate</span>${ed?`<span class="fxrow"><span class="mono">1 CAD =</span><input class="f mono" type="number" step="0.0001" min="0" id="q-fx" data-qp="fx" value="${r}"><span class="mono">CNY</span></span>`:`<b>${r}</b>`}<span class="muted fxnote">${project.fxRate?"Set for this project":"Market rate on "+fmtD(parseD(FX_DATE),true)}</span></div>`}</div>
   <p class="muted finnote">${np?"Prices will be added when the quotation is ready.":cl?"Prices include shipping, duty, delivery and our sourcing service. Sales tax is added to the total.":"Enter a unit price in either currency; the other is converted at the project rate."}${noQty?` ${noQty} item${noQty===1?"":"s"} still need a quantity.`:""}</p>
-  <div class="tablewrap"><table class="qtab"><thead><tr><th>No.</th><th>Picture</th><th>Product</th><th>Colour</th><th>Size</th><th class="n">Qty</th>${cl?"":`<th class="n">Unit price ¥</th><th class="n">Total price ¥</th>`}${np?"":`<th class="n">Unit price $</th><th class="n">Total price $</th>`}${ed?`<th class="n">Duty %</th><th class="n" title="Custom pieces use the custom sourcing service rate">Custom</th>`:""}</tr></thead>
+  <div class="tablewrap"><table class="qtab"><thead><tr><th>No.</th><th>Picture</th><th>Product</th><th>Colour</th><th>Size</th><th class="n">Qty</th>${cl?"":`<th class="n">Unit price ¥</th><th class="n">Total price ¥</th>`}${np?"":`<th class="n">Unit price $</th><th class="n">Total price $</th>`}${ed?`<th class="n">Duty %</th><th class="n" title="Custom pieces use the custom sourcing service rate">Custom</th><th></th>`:""}</tr></thead>
     <tbody>${rows||`<tr><td colspan="${ncol}" class="muted">No materials or products yet.</td></tr>`}</tbody>
     ${np?"":`<tfoot>`}${np?"":cl?`
       ${line("Subtotal before tax",T.pretax,"qland")}
@@ -2212,8 +2225,8 @@ function lookbook(){
   /* editorial rhythm: 6/6, 4/4/4, 6/6 ... */
   const size=ui.cardSize||"m";const pattern=size==="m"?["feature","feature","","","tall","","",""]:[""];
   return head+`<div class="look size-${size}">${list.map((it,i)=>{const p=pattern[i%pattern.length];const u=urgency(it);return`
-    <button class="card ${p}" data-open="${it.id}">
-      <div class="plate ${fitOf(it)==="contain"?"fitwhole":""}"><img alt="" src="${imgFor(it,size==="l"||p==="feature"?760:size==="s"?360:520)}" loading="lazy"><span class="tag mono">${esc(it.code||"")}</span>${hasModel(it)?`<span class="b3d mono" title="3D model">3D</span>`:""}${clip(it,"onplate")}${u?`<span class="late mono">${u.label}</span>`:""}${newsOf(it)?`<span class="newtag">${newsOf(it).isNew?"New":"Updated"}</span>`:""}${tileDel(it)}</div>
+    <button class="card ${p}${ui.flash===it.id?" dupflash":""}" data-open="${it.id}">
+      <div class="plate ${fitOf(it)==="contain"?"fitwhole":""}"><img alt="" src="${imgFor(it,size==="l"||p==="feature"?760:size==="s"?360:520)}" loading="lazy"><span class="tag mono">${esc(it.code||"")}</span>${hasModel(it)?`<span class="b3d mono" title="3D model">3D</span>`:""}${clip(it,"onplate")}${u?`<span class="late mono">${u.label}</span>`:""}${newsOf(it)?`<span class="newtag">${newsOf(it).isNew?"New":"Updated"}</span>`:""}${tileDup(it)}${tileDel(it)}</div>
       <div class="cap"><h3>${esc(it.name)}</h3><span class="q">${esc(qtyStr(it))}</span>
       <div class="sub"><span><i class="dot s-${esc(it.status)}"></i>${esc(it.status)}</span><span>${esc(it.category||"")}</span>${it.supplier?`<span>${esc(it.supplier)}</span>`:""}${reviewChip(it)}${(()=>{const n=commentsFor(it.id).length;return n?`<span class="ccount">${n} comment${n===1?"":"s"}</span>`:""})()}</div></div>
     </button>`}).join("")}${addTile}</div>`;
@@ -2231,15 +2244,15 @@ function schedule(){
     status:(a,b)=>STAGES.indexOf(a.status)-STAGES.indexOf(b.status)||byDate(a,b)}[sortBy];
   const groupOf={date:it=>{const ob=orderBy(it);return ob?ob.toLocaleDateString(lang==="zh"?"zh-CN":"en-CA",{month:"long",year:"numeric"}):"No site date"},
     category:it=>it.category||"No category",supplier:it=>it.supplier||"No supplier",status:it=>it.status||"No status",code:()=>""}[sortBy];
-  const list=filtered().slice().sort(cmp);
+  const list=filtered().slice().sort(cmp),dup=canDup();
   const open=list.filter(i=>STAGES.indexOf(i.status)<3);
   const overdue=open.filter(i=>{const o=orderBy(i);return o&&o<today()}).length;
   const soon=open.filter(i=>{const o=orderBy(i);return o&&o>=today()&&o-today()<=30*DAY}).length;
   const placed=list.filter(i=>STAGES.indexOf(i.status)>=3).length;
   let month="";
   const rows=list.map(it=>{const ob=orderBy(it);const m=groupOf(it);const u=urgency(it);
-    const head=m&&m!==month?(month=m,`<tr class="month"><td colspan="9">${esc(m)}</td></tr>`):"";
-    return head+`<tr class="row${newsOf(it)?" newsrow":""}" data-open="${it.id}">
+    const head=m&&m!==month?(month=m,`<tr class="month"><td colspan="${dup?10:9}">${esc(m)}</td></tr>`):"";
+    return head+`<tr class="row${newsOf(it)?" newsrow":""}${ui.flash===it.id?" dupflash":""}" data-open="${it.id}">
       <td><span class="sw" style="background-image:url(${imgFor(it,80)})"></span></td>
       <td class="mono${hot(it,"needBy","leadWeeks")}">${fmtD(ob)}</td>
       <td><div style="font-weight:600" class="${hot(it,"name")}">${esc(it.name)}</div><div class="mono muted codeclip"><span class="${hot(it,"code")}">${esc(it.code||"")}</span> · ${esc(it.zone||it.category||"")}${clip(it)}</div>${newsPill(it)}</td>
@@ -2248,7 +2261,7 @@ function schedule(){
       <td class="${hot(it,"supplier")}">${esc(it.supplier||"—")}</td>
       <td class="n mono${hot(it,"leadWeeks")}">${it.leadWeeks?esc(it.leadWeeks)+" wk":"—"}</td>
       <td class="mono${hot(it,"needBy")}">${fmtD(parseD(it.needBy))}</td>
-      <td class="${hot(it,"status")}">${u?`<span class="pill ${u.cls}">${u.label}</span>`:`<span><i class="dot s-${esc(it.status)}"></i>${esc(it.status)}</span>`}</td>
+      <td class="${hot(it,"status")}">${u?`<span class="pill ${u.cls}">${u.label}</span>`:`<span><i class="dot s-${esc(it.status)}"></i>${esc(it.status)}</span>`}</td>${dup?`<td class="dupcell">${rowDup(it)}</td>`:""}
     </tr>`}).join("");
   return`
   <div class="sum">
@@ -2261,8 +2274,8 @@ function schedule(){
     <div class="row2"><label class="mono muted inclabel">Sort by <select class="f famsel" id="sched-sort">${SCHED_SORTS.map(([k,l])=>`<option value="${k}" ${sortBy===k?"selected":""}>${l}</option>`).join("")}</select></label>
     ${downloads?`<button class="btn ghost sm" data-a="csv">Export CSV</button>`:""}</div></div>
   <div class="tablewrap"><table>
-    <thead><tr><th></th><th>Order by</th><th>Piece</th><th class="n">Qty</th><th>Unit</th><th>Supplier</th><th class="n">Lead</th><th>On site</th><th>Status</th></tr></thead>
-    <tbody>${rows||`<tr><td colspan="9" class="muted">No pieces yet.</td></tr>`}</tbody>
+    <thead><tr><th></th><th>Order by</th><th>Piece</th><th class="n">Qty</th><th>Unit</th><th>Supplier</th><th class="n">Lead</th><th>On site</th><th>Status</th>${dup?"<th></th>":""}</tr></thead>
+    <tbody>${rows||`<tr><td colspan="${dup?10:9}" class="muted">No pieces yet.</td></tr>`}</tbody>
   </table></div>`;
 }
 function decisionLog(){
@@ -2317,7 +2330,7 @@ function renderLayer(passive){
     </div>
     <div class="body">
       <div class="top"><span class="eyebrow">${[it.code,it.category].filter(Boolean).map(esc).join(" · ")}${it.zone?" · "+esc(it.zone):""}</span>
-        <div class="row2">${HOSTED&&ME&&ME.role==="admin"&&!preview?`<button class="btn ghost sm" data-a="toagent" title="Send the sourcing agent a note about this piece">Send to agent</button>`:""}${HOSTED?`<button class="btn ghost sm" data-a="savepdf" title="Download this product sheet as a PDF, ready to print or send">Save PDF</button><button class="btn ghost sm" data-a="pkg" title="Product sheet PDF with its drawings, spec sheets, photo and 3D model, in one ZIP">Download package</button>`:""}${ed?`<button class="btn ghost sm" data-a="edit">Edit</button>`:""}<button class="close" data-a="close" aria-label="Close">×</button></div></div>
+        <div class="row2">${HOSTED&&ME&&ME.role==="admin"&&!preview?`<button class="btn ghost sm" data-a="toagent" title="Send the sourcing agent a note about this piece">Send to agent</button>`:""}${HOSTED?`<button class="btn ghost sm" data-a="savepdf" title="Download this product sheet as a PDF, ready to print or send">Save PDF</button><button class="btn ghost sm" data-a="pkg" title="Product sheet PDF with its drawings, spec sheets, photo and 3D model, in one ZIP">Download package</button>`:""}${ed&&canDup()?`<button class="btn ghost sm" data-a="dup" title="${DUP_TIP}">Duplicate</button>`:""}${ed?`<button class="btn ghost sm" data-a="edit">Edit</button>`:""}<button class="close" data-a="close" aria-label="Close">×</button></div></div>
       <h2>${esc(it.name)}</h2>
       ${(()=>{const n=newsOf(it);if(!n)return"";const f=chgFields(n);return`<div class="newsline"><span><b>●</b> ${n.isNew?"New from "+newsFrom():"Updated by "+newsFrom()}${n.by?" ("+esc(n.by)+")":""} · ${fmtD(new Date(n.at),true)}</span>${!n.isNew&&f.length?`<span>${f.map(esc).join(", ")}</span>`:""}<button class="seenbtn" data-seen="${it.id}">✓ Mark seen</button></div>`})()}
       ${it.description?`<p class="lede">${esc(it.description)}</p>`:""}
@@ -2564,6 +2577,7 @@ document.addEventListener("click",async e=>{
   else if(a==="askdel"){ui.confirmDel=true;renderLayer();}
   else if(a==="nodel"){ui.confirmDel=false;renderLayer();}
   else if(a==="del"){deletePiece(ui.open)}
+  else if(a==="dup"){duplicatePiece(ui.open,true)}
   else if(a==="unphoto"){setItem(ui.open,{photo:null})}
   else if(a==="uncover"){if(!canCover())return;const{cover,...rest}=project;project=rest;write("project",()=>db.doc("project/main").set(project));force=true;render();force=false}
   else if(a==="csv"){exportCSV()}
@@ -2654,6 +2668,36 @@ function tileDel(it){
   if(ui.tileDel!==it.id)return`<span class="tiledel" role="button" tabindex="0" data-tiledel="${it.id}" title="Delete this piece" aria-label="Delete this piece">×</span>`;
   return`<span class="tdconf" role="alertdialog"><span>Delete this piece?</span><b data-noi18n>${esc([it.code,it.name].filter(Boolean).join(" · "))}</b><span class="tdbtns"><span role="button" tabindex="0" class="btn danger sm" data-tdyes="${it.id}">Delete</span><span role="button" tabindex="0" class="linkbtn" data-tdno>Keep it</span></span></span>`;
 }
+/* Duplicate a piece (admins, agents and designers): a copy with the next free code in its series, e.g. for another room or finish.
+   The copy keeps the product: photo, images, specification, drawings and references, 3D model, supplier, prices, quantity and dates.
+   It starts its own history: no RFIs, client review, comments, decisions or notes to the agent, and an ordered or delivered piece starts at Approved. */
+const canDup=()=>canWrite&&!preview&&!isClient();
+const DUP_TIP="Make a copy with the next free code, e.g. for another room or finish";
+const DUP_SKIP=["id","chg","toAgent","rfis","clientReview","created","updated","addedBy","order","pendingSetup","match"];
+function dupCode(it){const pp=codeParts(it.code);return nextStdCode(pp?pp[0]:it.category==="Furniture"||it.furnType?furPrefix(it):stdPrefix(it),items.map(i=>i.code))}
+function duplicatePiece(id,open){
+  const it=items.find(i=>i.id===id);if(!it||!canDup())return;
+  const doc=JSON.parse(JSON.stringify(it));DUP_SKIP.forEach(k=>delete doc[k]);
+  doc.code=dupCode(it);if(STAGES.indexOf(doc.status)>STAGES.indexOf("Approved"))doc.status="Approved";
+  doc.created=new Date().toISOString();if(ME)doc.addedBy={id:ME.id,name:ME.name||"",role:ME.role};
+  const ref=db?db.collection("items").doc():{id:"local"+Date.now()};
+  items.push({id:ref.id,...doc});
+  if(open){ui.open=ref.id;ui.mode="view";ui.confirmDel=false}
+  ui.flash=ref.id;setTimeout(()=>{if(ui.flash===ref.id)ui.flash=null},2600);
+  force=true;render();force=false;
+  if(db)write(ref.id,()=>ref.set(doc));
+  toastUndo(`${it.code||"Piece"} duplicated as ${doc.code}`,()=>{if(ui.open===ref.id){ui.open=id;ui.mode="view"}deletePiece(ref.id)});
+}
+function tileDup(it){return canDup()&&ui.tileDel!==it.id?`<span class="tiledup${canTileDel()?" withdel":""}" role="button" tabindex="0" data-dup="${it.id}" title="${DUP_TIP}">⧉ Duplicate</span>`:""}
+function rowDup(it){return`<button class="rowdup" data-dup="${it.id}" title="${DUP_TIP}">⧉ Duplicate</button>`}
+document.addEventListener("click",e=>{
+  const el=e.target.closest&&e.target.closest("[data-dup]");if(!el)return;
+  e.preventDefault();e.stopPropagation();duplicatePiece(el.dataset.dup,false);
+},true);
+document.addEventListener("keydown",e=>{
+  const el=e.target.closest&&e.target.closest("span[data-dup]");
+  if(el&&(e.key==="Enter"||e.key===" ")){e.preventDefault();e.stopPropagation();el.click()}
+},true);
 document.addEventListener("click",e=>{
   const el=e.target.closest&&e.target.closest("[data-tiledel],[data-tdyes],[data-tdno],.tdconf");if(!el)return;
   e.preventDefault();e.stopPropagation();
@@ -3349,7 +3393,7 @@ const ZH={
 "Standard finish codes · as keyed on drawings and elevations":"标准饰面编号 · 与图纸和立面标注一致","Sheet":"图册","Table":"表格","Layout":"布局","Add finish":"添加饰面",
 "Finish code":"饰面编号","Material category":"材料类别","Manufacturer / vendor":"制造商 / 供应商","Product name / line":"产品名称 / 系列","Colour / finish name":"颜色 / 饰面名称","Item / model code":"型号 / 编号","Application / notes":"应用部位 / 备注",
 "TBD":"待定","MODEL # TBD":"型号待定","Other finishes":"其他饰面","Review standard codes":"查看标准编号","Apply codes":"应用编号","Cancel":"取消","Update any drawings that already use the old codes.":"请同步更新已使用旧编号的图纸。",
-"Drag to another family":"拖到其他类别","Drag to another type":"拖到其他类型","Family":"类别","Type":"类型","Listed":"已列入","Undo":"撤销","Same group":"同一组","Drag onto a family":"拖到某个类别上",
+"Drag to another family":"拖到其他类别","Drag to another type":"拖到其他类型","Family":"类别","Type":"类型","Listed":"已列入","Undo":"撤销","Duplicate":"复制","⧉ Duplicate":"⧉ 复制","Make a copy with the next free code, e.g. for another room or finish":"复制一份并使用下一个可用编号，例如用于另一个房间或另一种饰面","Same group":"同一组","Drag onto a family":"拖到某个类别上",
 "Drop here":"放在这里","Drop on a family":"放到类别","Drop on a type":"放到类型",
 "Carpet":"地毯","Luxury vinyl tile":"LVT 地板","Vinyl composition tile":"VCT 地砖","Resilient flooring":"弹性地材","Resilient base":"弹性踢脚","Acoustic ceiling tile":"吸音天花板","Plastic laminate":"防火板","Melamine":"三聚氰胺板","Solid surface / quartz":"人造石 / 石英石","Terrazzo":"水磨石","Ceramic / porcelain tile":"陶瓷 / 瓷质砖","Wall covering":"墙布墙纸","Paint":"涂料","Plaster":"灰泥","Wood":"木材","Metal":"金属","Glass":"玻璃","Fabric":"面料","Concrete":"混凝土",
 "Furniture tags · as keyed on furniture plans":"家具编号 · 与家具平面图标注一致","Add furniture":"添加家具","Line items":"条目","Pieces":"件数","Furniture budget":"家具预算","Missing details":"缺少信息",
@@ -3396,7 +3440,7 @@ const ZH_PAT=[
  [/^New from the sourcing agent(.*)$/,m=>`采购代理新增${m[1]}`],[/^New from the studio(.*)$/,m=>`工作室新增${m[1]}`],[/^Updated by the sourcing agent(.*)$/,m=>`采购代理已更新${m[1]}`],[/^Updated by the studio(.*)$/,m=>`工作室已更新${m[1]}`],
  [/^(\d+) rows? didn't match a piece and will be skipped\.$/,m=>`${m[1]} 行未匹配到项目，将被跳过。`],[/^Save (\d+) changes? to (\d+) pieces?$/,m=>`保存 ${m[1]} 项更改到 ${m[2]} 个项目`],[/^Updated (\d+) pieces? from Excel$/,m=>`已从 Excel 更新 ${m[1]} 个项目`],
  [/^(\d+) · drop images here$/,m=>`${m[1]} · 可将图片拖放到这里`],[/^(.+) · Additional images$/,m=>`${m[1]} · 更多图片`],[/^(.+) · Supplier response$/,m=>`${m[1]} · 供应商回复`],[/^(.+) · RFI$/,m=>`${m[1]} · 询问`],
- [/^Added to (.+) as (.+)$/,m=>`已添加到 ${m[1]}，编号 ${m[2]}`],[/^Already in (.+) as (.+)$/,m=>`已在 ${m[1]} 中，编号 ${m[2]}`],
+ [/^Added to (.+) as (.+)$/,m=>`已添加到 ${m[1]}，编号 ${m[2]}`],[/^(.+) duplicated as (.+)$/,m=>`${m[1]} 已复制为 ${m[2]}`],[/^Already in (.+) as (.+)$/,m=>`已在 ${m[1]} 中，编号 ${m[2]}`],
  [/^Package downloaded · (\d+) files?$/,m=>`资料包已下载 · ${m[1]} 个文件`],[/^Package downloaded · (\d+) files? couldn't be included$/,m=>`资料包已下载 · ${m[1]} 个文件无法包含`],
  [/^Product sheet · (.+)$/,m=>`产品资料 · ${m[1]}`],[/^Emailed to (.+)$/,m=>`已发邮件至 ${m[1]}`],
  [/^Attaching (\d+) files?…$/,m=>`正在附加 ${m[1]} 个文件…`],[/^(\d+) files? attached(.*)$/,m=>`已附加 ${m[1]} 个文件`],[/^(.+) match$/,m=>({high:"高",medium:"中",low:"低"}[m[1]]?`匹配度${({high:"高",medium:"中",low:"低"})[m[1]]}`:m[0])],[/^Design: (.+)$/,m=>`设计：${m[1]}`],

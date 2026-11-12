@@ -421,7 +421,7 @@ const sign = v => crypto.createHmac("sha256", people.secret).update(v).digest("h
 function tokenFor(u) { const ver = u.id === "owner" ? OWNER_VER : String(u.ver || 0); const v = `${u.id}.${ver}`; return `${v}.${sign(v)}`; }
 const allAccess = u => u.role === "admin" || (u.role === "agent" && u.allProjects !== false);
 const publicUser = u => ({ id: u.id, name: u.name, email: u.email, wechat: u.wechat || "", role: u.role, projects: u.projects || [], allProjects: allAccess(u) });
-const adminView = u => ({ ...publicUser(u), disabled: !!u.disabled, created: u.created, lastSeen: u.lastSeen || null, lastLogin: u.lastLogin || null });
+const adminView = u => ({ ...publicUser(u), disabled: !!u.disabled, mustChange: !!u.mustChange, created: u.created, lastSeen: u.lastSeen || null, lastLogin: u.lastLogin || null });
 let peopleTimer = null;
 function touch(u) { // remember when someone was last active (written at most every few minutes)
   const now = Date.now(); if (u.id === "owner" || (u.lastSeen && now - Date.parse(u.lastSeen) < 5 * 60e3)) return;
@@ -594,6 +594,35 @@ input{width:100%;font:inherit;font-size:17px;color:var(--i);background:transpare
 ${error ? '<p class="err">That sign-in and password don\'t match. Studio owner: leave the first box blank and use the studio password.</p>' : ""}<button>Open Sourcebook</button>
 <p class="note">Studio owner: leave the first box blank and use the studio password.</p></form></main></body></html>`;
 }
+// Shown after signing in with a temporary password (u.mustChange): they choose their own before anything else opens.
+// English and Chinese; the page follows the language they last picked in Sourcebook (sb_lang), with a toggle.
+function changePage(u, error) {
+  const E = { short: ["Use at least 8 characters.", "密码至少需要 8 个字符。"], same: ["Choose a password that's different from the temporary one.", "新密码不能与临时密码相同。"], match: ["The two passwords don't match.", "两次输入的密码不一致。"] }[error];
+  const L = (en, zh) => `<span data-en>${en}</span><span data-zh>${zh}</span>`;
+  const esc = v => String(v || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><link rel="apple-touch-icon" href="/icon-192.png"><link rel="manifest" href="/manifest.webmanifest"><title>Choose a password · Sourcebook</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz@1,6..96&family=Hanken+Grotesk:wght@400;500&family=IBM+Plex+Mono&family=Noto+Serif+SC&family=Noto+Sans+SC&display=swap" media="print" onload="this.media=\'all\'">
+<style>:root{--g:#EEEDEA;--p:#F7F6F4;--i:#1A1918;--m:#8A8580;--r:#D6D3CE;--c:#A3322B}@media(prefers-color-scheme:dark){:root{--g:#141413;--p:#1C1B1A;--i:#ECEAE6;--m:#86817B;--r:#34322F;--c:#E07A72}}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--g);color:var(--i);font:15px/1.5 "Hanken Grotesk","Noto Sans SC",system-ui,sans-serif;padding:24px}
+main{width:min(400px,100%)}.e{font:11px "IBM Plex Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--m)}
+h1{font:italic 400 44px/1.05 "Bodoni Moda","Noto Serif SC",Georgia,serif;margin:8px 0 14px}label{display:block;font-size:12px;color:var(--m)}
+.lead{color:var(--m);font-size:14px;margin:0 0 24px}.lead b{color:var(--i);font-weight:500}
+input{width:100%;font:inherit;font-size:17px;color:var(--i);background:transparent;border:0;border-bottom:1px solid var(--r);padding:10px 2px;margin-top:4px}input:focus{outline:none;border-color:var(--i)}
+.note{font-size:12px;color:var(--m);margin-top:18px}.note a{color:var(--m)}button{margin-top:22px;width:100%;padding:12px;font:inherit;background:var(--i);color:var(--g);border:1px solid var(--i);cursor:pointer}.err{color:var(--c);font-size:13px;margin-top:12px}
+.top{display:flex;justify-content:space-between;align-items:center}.lt{display:flex;border:1px solid var(--r)}.lt button{margin:0;width:auto;padding:3px 9px;font:11px "IBM Plex Mono",monospace;background:transparent;color:var(--m);border:0}.lt button[aria-pressed=true]{background:var(--i);color:var(--g)}
+html[lang=en] [data-zh],html[lang=zh-CN] [data-en]{display:none}</style>
+<script>try{if(localStorage.getItem("sb_lang")==="zh")document.documentElement.lang="zh-CN"}catch(_){}</script></head>
+<body><main><div class="top"><div class="e">${L("Sourcebook · Studio", "选材手册 · 工作室")}</div><div class="lt"><button type="button" data-l="en">EN</button><button type="button" data-l="zh">中文</button></div></div>
+<h1>${L("Choose your password", "设置您的密码")}</h1>
+<p class="lead">${L(`Welcome, <b>${esc(u.name)}</b>. You signed in with a temporary password. Choose your own to continue.`, `欢迎，<b>${esc(u.name)}</b>。您使用的是临时密码，请设置您自己的密码后继续。`)}</p>
+<form method="post" action="/change-password"><label for="np">${L("New password", "新密码")}</label><input id="np" name="next" type="password" autocomplete="new-password" minlength="8" required autofocus>
+<label for="cp" style="margin-top:18px">${L("Type it again", "再次输入")}</label><input id="cp" name="confirm" type="password" autocomplete="new-password" minlength="8" required>
+${E ? `<p class="err">${L(E[0], E[1])}</p>` : ""}<button>${L("Save and open Sourcebook", "保存并打开选材手册")}</button>
+<p class="note">${L("At least 8 characters.", "至少 8 个字符。")} <a href="/logout">${L("Sign out", "退出登录")}</a></p></form></main>
+<script>const sync=()=>document.querySelectorAll("[data-l]").forEach(b=>b.setAttribute("aria-pressed",String((document.documentElement.lang==="zh-CN")===(b.dataset.l==="zh"))));sync();
+document.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{const zh=b.dataset.l==="zh";document.documentElement.lang=zh?"zh-CN":"en";try{localStorage.setItem("sb_lang",zh?"zh":"en")}catch(_){}sync()});</script></body></html>`;
+}
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json", ".webmanifest": "application/manifest+json", ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon" };
 
 /* ---------------- email (SMTP, no dependencies) ---------------- */
@@ -633,6 +662,31 @@ function sendMail(to, subject, text, attachments = []) {
       await cmd("QUIT", [221]).catch(() => {});
     })().then(() => end(), e => end(e));
   });
+}
+
+// Sign-in details for a person an admin has just added or given a new password. English first, then Chinese.
+// kind: "new" | "reset". temp: they must choose their own password after signing in.
+function sendSignIn(req, u, pw, kind, temp, by) {
+  const site = origin(req), login = u.email, inviter = by && by.id !== "owner" ? by.name : "";
+  const en = [`Hello ${u.name},`, "",
+    kind === "new" ? `${inviter ? inviter + " has" : "The studio has"} set up a Sourcebook account for you.` : "Your Sourcebook password has been reset.", "",
+    `Website: ${site}`, `Sign in with: ${login}`, `${temp ? "Temporary password" : "Password"}: ${pw}`, "",
+    ...(temp ? ["This password is temporary. When you first sign in, you'll be asked to choose your own password before you continue.", ""] : []),
+    "If you didn't expect this email, you can ignore it.", "", "Sourcebook"];
+  const zh = [`${u.name}，您好：`, "",
+    kind === "new" ? `${inviter ? inviter + " 已" : "工作室已"}为您开通选材手册（Sourcebook）账户。` : "您的选材手册（Sourcebook）密码已重置。", "",
+    `网址：${site}`, `登录账号：${login}`, `${temp ? "临时密码" : "密码"}：${pw}`, "",
+    ...(temp ? ["此密码为临时密码。首次登录后，系统会要求您设置自己的密码才能继续使用。", ""] : []),
+    "如果您没有预期收到此邮件，请忽略。", "", "选材手册 Sourcebook"];
+  const subject = kind === "new" ? "Your Sourcebook sign-in · 您的选材手册登录信息" : "Your new Sourcebook password · 您的选材手册新密码";
+  return sendMail([u.email], subject, [...en, "", "———", "", ...zh].join("\n"));
+}
+// Tries to email sign-in details; returns what the admin screen should say.
+async function mailSignIn(req, u, pw, kind, temp, by) {
+  if (!u.email) return { emailed: false, emailError: "no_email" };
+  if (!mailOn()) return { emailed: false, emailError: "no_smtp" };
+  try { await sendSignIn(req, u, pw, kind, temp, by); return { emailed: true }; }
+  catch (e) { console.error("sign-in email", e.message); return { emailed: false, emailError: String(e.message || "send failed").slice(0, 200) }; }
 }
 
 /* ---------------- Claude ---------------- */
@@ -693,7 +747,7 @@ const server = http.createServer(async (req, res) => {
       else { const wx = email.replace(/^@/, ""); const u = people.users.find(x => !x.disabled && ((x.email && x.email === email) || (x.wechat && x.wechat.toLowerCase() === wx))); if (u && checkPass(u, pw)) who = u; else if (!u) hashPass(pw, "x"); }
       if (who) {
         if (who.id !== "owner") { who.lastLogin = who.lastSeen = new Date().toISOString(); savePeople(); }
-        res.writeHead(303, { Location: "/", "Set-Cookie": `sb_session=${tokenFor(who)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000${req.headers["x-forwarded-proto"] === "https" ? "; Secure" : ""}` });
+        res.writeHead(303, { Location: who.mustChange ? "/change-password" : "/", "Set-Cookie": `sb_session=${tokenFor(who)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000${req.headers["x-forwarded-proto"] === "https" ? "; Secure" : ""}` });
         return res.end();
       }
       await new Promise(r => setTimeout(r, 400));
@@ -706,6 +760,25 @@ const server = http.createServer(async (req, res) => {
       if (req.method === "GET" && !p.startsWith("/api/") && !p.startsWith("/_blob/")) { res.writeHead(303, { Location: "/login" }); return res.end(); }
       return send(res, 401, { code: "not_signed_in", message: "Sign in again." });
     }
+
+    // A temporary password: nothing else opens until they choose their own. Setting mustChange always signs them out
+    // (ver changes), so this session comes from signing in with the temporary password just now.
+    if (me.mustChange) {
+      const cookie = () => `sb_session=${tokenFor(me)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000${req.headers["x-forwarded-proto"] === "https" ? "; Secure" : ""}`;
+      if (p === "/change-password" && req.method === "POST") {
+        const body = new URLSearchParams((await readBody(req, 10000)).toString("utf8"));
+        const next = body.get("next") || "", confirm = body.get("confirm") || "";
+        const err = next.length < 8 ? "short" : next !== confirm ? "match" : checkPass(me, next) ? "same" : null;
+        if (err) return send(res, 400, changePage(me, err), { "Content-Type": "text/html; charset=utf-8" });
+        me.salt = crypto.randomBytes(16).toString("hex"); me.hash = hashPass(next, me.salt); me.ver = (me.ver || 0) + 1;
+        delete me.mustChange; me.passwordChanged = new Date().toISOString(); savePeople();
+        res.writeHead(303, { Location: "/", "Set-Cookie": cookie() }); return res.end();
+      }
+      if (p === "/change-password") return send(res, 200, changePage(me, null), { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      if (req.method === "GET" && !p.startsWith("/api/") && !p.startsWith("/_blob/")) { res.writeHead(303, { Location: "/change-password" }); return res.end(); }
+      return send(res, 403, { code: "password_change_required", message: "Choose your own password first." });
+    }
+    if (p === "/change-password") { res.writeHead(303, { Location: "/" }); return res.end(); }
 
     // live updates
     if (p === "/api/events") {
@@ -725,7 +798,7 @@ const server = http.createServer(async (req, res) => {
       if (me.id === "owner") return send(res, 400, { code: "invalid_argument", message: "The studio password is changed in Render (APP_PASSWORD)." });
       if (!checkPass(me, current)) return send(res, 400, { code: "invalid_argument", message: "Your current password isn't right." });
       if (String(next || "").length < 8) return send(res, 400, { code: "invalid_argument", message: "Use at least 8 characters." });
-      me.salt = crypto.randomBytes(16).toString("hex"); me.hash = hashPass(next, me.salt); me.ver = (me.ver || 0) + 1; savePeople();
+      me.salt = crypto.randomBytes(16).toString("hex"); me.hash = hashPass(next, me.salt); me.ver = (me.ver || 0) + 1; delete me.mustChange; savePeople();
       res.writeHead(200, { "Content-Type": "application/json", "Set-Cookie": `sb_session=${tokenFor(me)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000${req.headers["x-forwarded-proto"] === "https" ? "; Secure" : ""}` });
       return res.end(JSON.stringify({ ok: true }));
     }
@@ -734,9 +807,10 @@ const server = http.createServer(async (req, res) => {
     if (p.startsWith("/api/users")) {
       if (!isAdmin) return deny("Only admins can manage people.");
       const find = id => people.users.find(x => x.id === id);
-      const setPassword = (u, pw) => { u.salt = crypto.randomBytes(16).toString("hex"); u.hash = hashPass(pw, u.salt); u.ver = (u.ver || 0) + 1; };
+      // temp: they must choose their own password when they next sign in (on by default)
+      const setPassword = (u, pw, temp = true) => { u.salt = crypto.randomBytes(16).toString("hex"); u.hash = hashPass(pw, u.salt); u.ver = (u.ver || 0) + 1; if (temp) u.mustChange = true; else delete u.mustChange; };
       const cleanProjects = a => Array.isArray(a) ? [...new Set(a.filter(x => typeof x === "string" && SEG.test(x)))].slice(0, 500) : [];
-      if (p === "/api/users" && req.method === "GET") return send(res, 200, { users: people.users.map(adminView), me: me.id });
+      if (p === "/api/users" && req.method === "GET") return send(res, 200, { users: people.users.map(adminView), me: me.id, mail: mailOn() });
       if (p === "/api/users/save" && req.method === "POST") {
         const b = await readJSON(req);
         const name = String(b.name || "").trim().slice(0, 120), email = String(b.email || "").trim().toLowerCase().slice(0, 200);
@@ -763,16 +837,29 @@ const server = http.createServer(async (req, res) => {
         u.allProjects = role === "agent" ? b.allProjects !== false : role === "admin";
         if (role === "admin") u.projects = [];
         if (b.disabled !== undefined) { if (b.disabled && u.id === me.id) return send(res, 400, { code: "invalid_argument", message: "You can't disable yourself." }); u.disabled = !!b.disabled; }
-        if (b.password) setPassword(u, b.password); else if (signOut) u.ver = (u.ver || 0) + 1;
+        const isNew = !b.id, temp = b.mustChange !== false;
+        if (b.password) setPassword(u, b.password, temp); else if (signOut) u.ver = (u.ver || 0) + 1;
         savePeople();
-        return send(res, 200, { ok: true, user: adminView(u) });
+        const mail = b.password && b.sendEmail ? await mailSignIn(req, u, b.password, isNew ? "new" : "reset", temp, me) : {};
+        return send(res, 200, { ok: true, user: adminView(u), ...mail });
       }
       if (p === "/api/users/password" && req.method === "POST") {
-        const { id, password } = await readJSON(req); const u = find(id);
+        const { id, password, mustChange, sendEmail } = await readJSON(req); const u = find(id);
         if (!u) return send(res, 404, { code: "not_found" });
         if (String(password || "").length < 8) return send(res, 400, { code: "invalid_argument", message: "Use at least 8 characters." });
-        setPassword(u, password); savePeople(); // also signs them out everywhere
-        return send(res, 200, { ok: true });
+        const temp = mustChange !== false && u.id !== me.id;
+        setPassword(u, password, temp); savePeople(); // also signs them out everywhere
+        const mail = sendEmail ? await mailSignIn(req, u, password, "reset", temp, me) : {};
+        return send(res, 200, { ok: true, user: adminView(u), ...mail });
+      }
+      if (p === "/api/users/mustchange" && req.method === "POST") {
+        // Ask someone to choose a new password the next time they sign in, keeping their current one until then.
+        // Signs them out everywhere so the next sign-in goes through the change-password page.
+        const { id } = await readJSON(req); const u = find(id);
+        if (!u) return send(res, 404, { code: "not_found" });
+        if (u.id === me.id) return send(res, 400, { code: "invalid_argument", message: "Change your own password from the projects page." });
+        u.mustChange = true; u.ver = (u.ver || 0) + 1; savePeople();
+        return send(res, 200, { ok: true, user: adminView(u) });
       }
       if (p === "/api/users/signout" && req.method === "POST") {
         const { id } = await readJSON(req); const u = find(id);

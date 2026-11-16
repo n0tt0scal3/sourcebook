@@ -514,6 +514,10 @@ body.xlover .qdrop{border-color:var(--new);background:var(--new-soft);color:var(
 /* drawings */
 .drawsec{border-radius:0}
 .drawsec.over .drawgrid{outline:2px dashed var(--accent);outline-offset:8px}
+.gdrop{display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;margin-top:30px;padding:16px 18px;border:1px dashed var(--ink2);cursor:pointer}
+.gdrop b{font-family:var(--display);font-weight:400;font-size:22px}
+.gdrop .gd-s{color:var(--muted);font-size:13px;flex:1 1 240px}
+.gdrop.over{background:var(--accent-soft);border-color:var(--accent)}
 .drawgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:22px 18px;padding-top:22px}
 .dcard{display:flex;flex-direction:column;gap:10px;background:none;border:0;padding:0;text-align:left;color:var(--ink);cursor:pointer}
 .dthumb{display:block;aspect-ratio:17/11;background:#fff;border:1px solid var(--rule);overflow:hidden;position:relative}
@@ -1230,7 +1234,7 @@ async function openAsset(o){
         <a class="vbtn wide" href="/_blob/${esc(o.asset)}${o.page?"#page="+o.page:""}" target="_blank" rel="noopener">New tab ↗</a>
         <button class="vbtn close" data-v="close" aria-label="Close">×</button></div>
       ${ed&&o.drawingId?`<form class="vedit" data-vform hidden><input class="f" id="vd-no" name="no" value="${esc(d?.no||"")}" placeholder="Sheet no. e.g. A-501"><input class="f" id="vd-title" name="title" value="${esc(d?.title||"")}" placeholder="Sheet title"><button class="btn sm">Save</button>
-        <span class="vdel">${`<button type="button" class="vbtn wide" data-v="askdel">Remove sheet</button>`}</span></form>`:""}</div>
+        <span class="vdel">${d&&d.img?`<button type="button" class="vbtn wide" data-v="tospaces">Move to Spaces</button>`:""}${`<button type="button" class="vbtn wide" data-v="askdel">Remove sheet</button>`}</span></form>`:""}</div>
     <div class="vbody" id="vbody"><p class="vmsg mono">Opening…</p></div>${o.ximgItem&&seq?`<button class="vside prev" data-v="prev" aria-label="Previous image">‹</button><button class="vside next" data-v="next" aria-label="Next image">›</button>`:""}`;
   document.body.appendChild(el);document.body.style.overflow="hidden";
   try{
@@ -1289,6 +1293,7 @@ document.addEventListener("click",e=>{
   if(a==="askdel"){b.parentElement.innerHTML=`<span class="vconfirm">Remove this sheet? <button type="button" class="vbtn wide danger" data-v="del">Remove</button><button type="button" class="vbtn wide" data-v="nodel">Keep</button></span>`;return}
   if(a==="nodel"){b.closest(".vdel").innerHTML=`<button type="button" class="vbtn wide" data-v="askdel">Remove sheet</button>`;return}
   if(a==="del"){const id=viewer.drawingId;closeViewer();removeDrawing(id);return}
+  if(a==="tospaces"){const id=viewer.drawingId;closeViewer();sheetToSpaces(id);return}
   if(a==="read"){const {itemId,refIndex,blob}=viewer;closeViewer();ui.img=null;if(ui.open!==itemId){ui.open=itemId;ui.mode="view"}scanRef(itemId,refIndex,blob);return}
   viewer.zoom=a==="fit"?1:Math.max(.5,Math.min(4,viewer.zoom*(a==="in"?1.35:1/1.35)));
   clearTimeout(vzT);vzT=setTimeout(renderViewer,80);
@@ -1305,14 +1310,13 @@ function sheetSort(a,b){const pa=String(a.no||""),pb=String(b.no||"");if(pa&&pb&
 function drawingsOrdered(){return drawings.slice().sort(sheetSort)}
 function drawingsSection(){
   const list=drawingsOrdered();const ed=canWrite&&!preview&&assets;
-  if(!list.length&&!ed)return"";
+  if(!list.length)return"";
   const sel=ed&&ui.dsel?ui.dsel.filter(id=>list.some(d=>d.id===id)):null;
   return`<section class="drawsec" id="drawsec" aria-label="Project drawings">
-    <header class="spaceshead mathead"><span class="eyebrow">Drawings · ${list.length} sheet${list.length===1?"":"s"}</span>${!ed?"":sel?`<span class="dseltools">${ui.dselconf?`<span>Remove ${sel.length} sheet${sel.length===1?"":"s"}? This can't be undone.</span><button class="btn danger sm" data-a="dseldel">Remove</button><button class="btn ghost sm" data-a="dselnoconf">Keep</button>`:`<span class="mono">${sel.length} selected</span><button class="linkbtn" data-a="dselall">${sel.length===list.length?"Select none":"Select all"}</button><button class="linkbtn danger" data-a="dselask" ${sel.length?"":"disabled"}>Remove selected</button><button class="linkbtn" data-a="dseldone">Done</button>`}</span>`:`<span class="dseltools">${list.length?`<button class="linkbtn" data-a="dsel">Select sheets</button>`:""}<label class="linkbtn">Add drawings<input type="file" id="dw-add" accept="application/pdf,.pdf,image/jpeg,image/png,image/webp" multiple hidden></label></span>`}</header>
+    <header class="spaceshead mathead"><span class="eyebrow">Drawings · ${list.length} sheet${list.length===1?"":"s"}</span>${!ed?"":sel?`<span class="dseltools">${ui.dselconf?`<span>Remove ${sel.length} sheet${sel.length===1?"":"s"}? This can't be undone.</span><button class="btn danger sm" data-a="dseldel">Remove</button><button class="btn ghost sm" data-a="dselnoconf">Keep</button>`:`<span class="mono">${sel.length} selected</span><button class="linkbtn" data-a="dselall">${sel.length===list.length?"Select none":"Select all"}</button><button class="linkbtn danger" data-a="dselask" ${sel.length?"":"disabled"}>Remove selected</button><button class="linkbtn" data-a="dseldone">Done</button>`}</span>`:`<span class="dseltools"><button class="linkbtn" data-a="dsel">Select sheets</button></span>`}</header>
     ${drawJob?`<div class="drawjob"><span class="scanpulse"></span><span class="mono" id="drawprog">${esc(drawJob.msg)}</span></div>`:""}
     <div class="drawgrid">
       ${list.map(d=>{const on=sel&&sel.includes(d.id);return`<div class="dwrap${on?" on":""}${sel?" selmode":""}"><button class="dcard" ${sel?`data-dpick="${d.id}" aria-pressed="${on}"`:`data-drawing="${d.id}"`}><span class="dthumb">${d.thumb?`<img alt="" src="/_blob/${d.thumb}" loading="lazy">`:""}${d.updated&&(Date.now()-Date.parse(d.updated))<7*DAY?`<span class="dnew mono">Updated</span>`:""}${sel?`<span class="dtick" aria-hidden="true">${on?"✓":""}</span>`:""}</span><span class="dcap"><b class="mono">${esc(d.no||"—")}</b><span>${esc(d.title||"Untitled sheet")}</span></span></button>${ed&&!sel?ui.dconf===d.id?`<span class="dconfirm"><span>Remove this sheet?</span><span class="row2"><button class="btn danger sm" data-ddel="${d.id}">Remove</button><button class="btn ghost sm" data-dkeep>Keep</button></span></span>`:`<button class="dx" data-dask="${d.id}" aria-label="Remove sheet" title="Remove sheet">×</button>`:""}</div>`}).join("")}
-      ${ed&&!sel?`<label class="dcard dadd" id="dw-drop"><input type="file" accept="application/pdf,.pdf,image/jpeg,image/png,image/webp" multiple hidden data-dwadd><span><b>Add drawings</b><span>Drop a PDF set or drawing images (JPG, PNG). Each page or image becomes its own sheet; matching sheet numbers are replaced.</span></span></label>`:""}
     </div></section>`;
 }
 function guessSheet(tc,vp){
@@ -1337,7 +1341,7 @@ async function sheetFromImage(f){
     const cv=document.createElement("canvas");cv.width=Math.max(1,Math.round(W*sc));cv.height=Math.max(1,Math.round(H*sc));const g=cv.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,cv.width,cv.height);g.drawImage(im,0,0,cv.width,cv.height);
     return{cv,landscape:W>=H}}finally{URL.revokeObjectURL(url)}
 }
-async function addDrawings(files){
+async function addDrawings(files,quiet){
   files=[...files].filter(f=>isSheetPDF(f)||isSheetImage(f));
   if(!files.length){toast("Drop a PDF drawing set or drawing images (JPG, PNG).");return}
   if(!assets){toast("Drawings can only be added by people who can edit this book.");return}
@@ -1384,7 +1388,62 @@ async function addDrawings(files){
     }catch(e){toast(e&&e.message==="pdfload"?"The PDF reader didn't load. Check your connection and try again.":e&&e.code==="quota_or_state"?"Project file storage is full.":e&&e.code?uploadMsg(e):`${f.name} couldn't be read as a PDF.`)}
   }
   drawJob=null;force=true;render();force=false;
+  if(quiet)return{added,replaced};
   if(added||replaced)toast([added?`${added} sheet${added===1?"":"s"} added`:"",replaced?`${replaced} replaced with the new version`:""].filter(Boolean).join(", ")+". Tap a sheet to open it.");
+}
+// One place to drop files: PDFs and drawing images go to Drawings, photos and renders to Spaces.
+function galleryDrop(){
+  if(!(canWrite&&!preview&&assets))return"";
+  return`<label class="gdrop" id="gdrop"><input type="file" accept="application/pdf,.pdf,image/jpeg,image/png,image/webp,image/gif" multiple hidden data-alladd><b>Drop files here</b><span class="gd-s">Photos and renders go to Spaces; drawings and PDF sets go to Drawings.</span><span class="btn ghost sm">Choose files</span></label>`;
+}
+const isViewImage=f=>/^image\/(jpeg|png|webp|gif)$/i.test(f.type)||/\.(jpe?g|png|webp|gif)$/i.test(f.name);
+// Reads a small copy of the image: how much is white paper, how much is colour, and whether the ink is thin lines (drawing) or solid areas (photo).
+async function imageStats(f){
+  const url=URL.createObjectURL(f);
+  try{const im=new Image();im.src=url;await im.decode();
+    const sc=Math.min(1,256/Math.max(im.naturalWidth,im.naturalHeight));const W=Math.max(3,Math.round(im.naturalWidth*sc)),H=Math.max(3,Math.round(im.naturalHeight*sc));
+    const cv=document.createElement("canvas");cv.width=W;cv.height=H;const g=cv.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,W,H);g.drawImage(im,0,0,W,H);
+    const d=g.getImageData(0,0,W,H).data;const wh=new Uint8Array(W*H);let white=0,col=0;
+    for(let i=0;i<W*H;i++){const r=d[i*4],gg=d[i*4+1],b=d[i*4+2],mx=Math.max(r,gg,b),mn=Math.min(r,gg,b);if(mn>215&&mx-mn<25){wh[i]=1;white++}else if(mx>60&&(mx-mn)/mx>.25)col++}
+    let ink=0,thin=0;for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const i=y*W+x;if(wh[i])continue;ink++;if(wh[i-1]||wh[i+1]||wh[i-W]||wh[i+W])thin++}
+    const s2=Math.min(1,768/Math.max(im.naturalWidth,im.naturalHeight));const c2=document.createElement("canvas");c2.width=Math.round(im.naturalWidth*s2);c2.height=Math.round(im.naturalHeight*s2);const g2=c2.getContext("2d");g2.fillStyle="#fff";g2.fillRect(0,0,c2.width,c2.height);g2.drawImage(im,0,0,c2.width,c2.height);
+    return{white:white/(W*H),col:col/(W*H),thin:ink?thin/ink:1,small:c2};
+  }finally{URL.revokeObjectURL(url)}
+}
+async function isDrawingImage(f){
+  if(!isSheetImage(f))return false;
+  let s;try{s=await imageStats(f)}catch(_){return false}
+  if(s.white<.45||s.col>.2)return false;
+  if(s.white>=.6&&s.col<.05&&s.thin>=.4)return true;
+  if(canDetect()){try{const r=await sample.json('Is this image a technical drawing (plan, elevation, section, detail, shop drawing, or a dimensioned sketch), or a photo, render or product picture? Reply with only JSON: {"drawing": true|false}',{images:[await canvasBlob(s.small,.85)],modelTier:"quick"});if(r&&typeof r.drawing==="boolean")return r.drawing}catch(_){}}
+  return s.thin>=.25;
+}
+async function addProjectFiles(files,start){
+  files=[...files];if(!files.length)return;
+  if(!assets){toast("Files can only be added by people who can edit this book.");return}
+  const pdfs=files.filter(isSheetPDF),imgs=files.filter(f=>!isSheetPDF(f)&&isViewImage(f));
+  if(!pdfs.length&&!imgs.length){toast("Use PDF, JPG, PNG or WebP files.");return}
+  const sheets=[...pdfs],views=[];
+  if(imgs.length){drawJob={msg:"Sorting files…"};toast("Sorting files…");for(const f of imgs)(await isDrawingImage(f)?sheets:views).push(f)}
+  let r={added:0,replaced:0},v=0;
+  if(sheets.length)r=await addDrawings(sheets,true)||r;
+  drawJob=null;
+  if(views.length){if(start&&!sheets.length){startFromImages(views);return}v=(await addGalleryFiles(views,true)).length;force=true;render();force=false}
+  const parts=[r.added?`${r.added} sheet${r.added===1?"":"s"} added to Drawings`:"",r.replaced?`${r.replaced} replaced with the new version`:"",v?`${v} image${v===1?"":"s"} added to Spaces`:""].filter(Boolean);
+  if(parts.length)toast(parts.join(", ")+".");
+}
+// Put a misfiled file where it belongs.
+async function sheetToSpaces(id){
+  const d=drawings.find(x=>x.id===id);if(!d||!d.img)return;
+  const doc={asset:d.img,title:d.title||"",caption:"",order:gallery.reduce((m,g)=>Math.max(m,g.order??0),0)+1,created:new Date().toISOString()};
+  try{const ref=db.collection("images").doc();await ref.set(doc);if(!gallery.some(x=>x.id===ref.id))gallery.push({id:ref.id,...doc});await db.doc("drawings/"+id).delete();drawings=drawings.filter(x=>x.id!==id);force=true;render();force=false;toast("Moved to Spaces")}catch(e){toast(uploadMsg(e))}
+}
+async function imageToDrawings(id){
+  const im=gallery.find(x=>x.id===id);if(!im)return;
+  try{const blob=await blobForAsset(im.asset);const {cv,landscape}=await sheetFromImage(blob);const th=await assets.upload(await canvasBlob(cv,.82),{type:"image/jpeg"});
+    const docu={pdf:null,img:im.asset,set:im.asset,file:im.title||"",page:1,pages:1,thumb:th.id,no:"",title:im.title||"Untitled sheet",landscape,created:new Date().toISOString()};
+    const ref=db.collection("drawings").doc();await ref.set(docu);if(!drawings.some(x=>x.id===ref.id))drawings.push({id:ref.id,...docu});
+    await db.doc("images/"+id).delete();gallery=gallery.filter(g=>g.id!==id);ui.img=null;ui.confirmImgDel=false;document.body.style.overflow="";force=true;render();force=false;toast("Moved to Drawings")}catch(e){toast(e&&e.code?uploadMsg(e):"Couldn't move it. Try again.")}
 }
 function setProg(m){if(drawJob)drawJob.msg=m;const el=$("#drawprog");if(el)el.textContent=m}
 function removeDrawing(id){removeDrawings([id])}
@@ -1404,13 +1463,13 @@ document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest
   else if(a==="dseldone"){ui.dsel=null;ui.dselconf=false}
   redrawSheets()},true);
 document.addEventListener("click",e=>{const c=e.target.closest&&e.target.closest("[data-drawing]");if(c){e.preventDefault();openDrawing(c.dataset.drawing)}});
-document.addEventListener("change",e=>{const t=e.target;if((t.id==="dw-add"||t.hasAttribute?.("data-dwadd"))&&t.files.length){addDrawings(t.files);t.value=""}});
 ["dragover","dragleave","drop"].forEach(ev=>document.addEventListener(ev,e=>{
-  const z=e.target.closest&&e.target.closest("#drawsec");if(!z||!(canWrite&&!preview&&assets))return;
+  const z=e.target.closest&&e.target.closest("#gallerypage");if(!z||!(canWrite&&!preview&&assets))return;
   if(ev!=="dragleave"&&e.dataTransfer&&![...e.dataTransfer.types].includes("Files"))return;
-  e.preventDefault();e.stopPropagation();
-  if(ev==="dragover")z.classList.add("over");else z.classList.remove("over");
-  if(ev==="drop"&&e.dataTransfer.files.length)addDrawings(e.dataTransfer.files);
+  if(ev==="dragleave"&&e.relatedTarget&&z.contains(e.relatedTarget))return;
+  e.preventDefault();e.stopPropagation();const bar=$("#gdrop");
+  if(ev==="dragover")bar?.classList.add("over");else bar?.classList.remove("over");
+  if(ev==="drop"&&e.dataTransfer.files.length)addProjectFiles(e.dataTransfer.files);
 }));
 
 /* ---------- quotation ---------- */
@@ -1933,7 +1992,7 @@ function hl(el){if(dropHL===el)return;dropHL?.classList.remove("imgdrop");dropHL
 const hasFiles=e=>e.dataTransfer&&[...e.dataTransfer.types].includes("Files");
 document.addEventListener("dragover",e=>{
   if(!hasFiles(e))return;
-  if(e.target.closest&&e.target.closest("#drawsec,#gal-drop,#start-drop,.pick.add,#imp-drop,#pcov"))return;
+  if(e.target.closest&&e.target.closest("#gallerypage,#drawsec,#gal-drop,#start-drop,.pick.add,#imp-drop,#pcov"))return;
   if(xlDropHere(e)){e.preventDefault();e.dataTransfer.dropEffect="copy";hl(null);document.body.classList.add("xlover");return}
   document.body.classList.remove("xlover");
   const z=dropZone(e.target);e.preventDefault();e.dataTransfer.dropEffect=z?"copy":"none";hl(z?z.el:null);
@@ -1941,7 +2000,7 @@ document.addEventListener("dragover",e=>{
 document.addEventListener("dragleave",e=>{if(!e.relatedTarget||!document.contains(e.relatedTarget)){hl(null);document.body.classList.remove("xlover")}});
 document.addEventListener("drop",e=>{
   if(!hasFiles(e))return;
-  if(e.target.closest&&e.target.closest("#drawsec,#gal-drop,#start-drop,.pick.add,#imp-drop,#pcov"))return;
+  if(e.target.closest&&e.target.closest("#gallerypage,#drawsec,#gal-drop,#start-drop,.pick.add,#imp-drop,#pcov"))return;
   e.preventDefault();hl(null);
   if(xlDropHere(e)){document.body.classList.remove("xlover");const f=[...e.dataTransfer.files].find(x=>/\.(xlsx|xls|csv)$/i.test(x.name));if(f)importQuoteFile(f);else toast("Drop an Excel file (.xlsx) exported from this quotation.");return}
   const z=dropZone(e.target);if(!z)return;
@@ -2279,7 +2338,7 @@ function render(){try{document.title=(project.name&&project.name!=="Untitled pro
     ${ui.view!=="dec"&&ui.view!=="look"&&ui.view!=="lib"?`<div class="tools">${cats.map(c=>`<button class="chip" data-cat="${esc(c)}" aria-pressed="${ui.cat===c}">${esc(c)}</button>`).join("")}</div>`:""}
   </div>
   ${ui.view!=="lib"?newsBar():""}
-  <main id="main">${ui.view==="lib"&&window.SBLibrary?SBLibrary.view():!items.length&&loaded&&canWrite&&!preview?startPanel():ui.view==="look"?spacesStrip()+drawingsSection()+lookJump():ui.view==="mat"?lookbook():ui.view==="sched"?schedule():ui.view==="quote"?quotation():decisionLog()}</main>`;
+  <main id="main">${ui.view==="lib"&&window.SBLibrary?SBLibrary.view():!items.length&&loaded&&canWrite&&!preview?startPanel():ui.view==="look"?`<div id="gallerypage">${galleryDrop()}${spacesStrip()}${drawingsSection()}</div>`+lookJump():ui.view==="mat"?lookbook():ui.view==="sched"?schedule():ui.view==="quote"?quotation():decisionLog()}</main>`;
   renderLayer(true);
 }
 const HOSTED=typeof window.SOURCEBOOK_PROJECT==="string";
@@ -2748,6 +2807,7 @@ document.addEventListener("click",async e=>{
   else if(a==="closeimg"){ui.img=null;ui.confirmImgDel=false;document.body.style.overflow="";renderLayer()}
   else if(a==="askdelimg"){ui.confirmImgDel=true;renderLayer()}
   else if(a==="nodelimg"){ui.confirmImgDel=false;renderLayer()}
+  else if(a==="imgtodraw"){imageToDrawings(ui.img)}
   else if(a==="delimg"){const id=ui.img;gallery=gallery.filter(g=>g.id!==id);ui.img=null;ui.confirmImgDel=false;document.body.style.overflow="";force=true;render();force=false;write(id,()=>db.doc("images/"+id).delete());toast("Image removed")}
   else if(a==="closedet"){if(det&&det.adding)return;detCtl?.abort();ui.detOpen=false;det=null;document.body.style.overflow="";renderLayer()}
   else if(a==="rundet"){runDetect()}
@@ -2766,8 +2826,8 @@ document.addEventListener("click",async e=>{
 });
 document.addEventListener("change",async e=>{
   const t=e.target;
-  if((t.id==="gal-add"||t.hasAttribute("data-galadd"))&&t.files.length){addGalleryFiles(t.files);return}
-  if(t.hasAttribute("data-startadd")&&t.files.length){startFromImages(t.files);return}
+  if(t.hasAttribute("data-startadd")&&t.files.length){addProjectFiles(t.files,true);return}
+  if(t.hasAttribute("data-alladd")&&t.files.length){addProjectFiles(t.files);t.value="";return}
   if(t.hasAttribute("data-detadd")&&t.files.length){const added=await addGalleryFiles(t.files,true);const max=imgLimits?.images?.maxCount||4;added.forEach(x=>{if(det&&det.picks.length<max)det.picks.push(x)});if(det)renderLayer();return}
   if(t.dataset.keep!==undefined){det.results[+t.dataset.keep].keep=t.checked;renderLayer();return}
   if(t.dataset.usecrop!==undefined){det.results[+t.dataset.usecrop].useCrop=t.checked;return}
@@ -3144,9 +3204,9 @@ function startPanel(){return`<section class="start">
   <div class="eyebrow">Start the book</div>
   <h2>Begin with an image, or the schedule you already keep</h2>
   <p class="lede">Drop in views of the space and Claude drafts the pieces to source, or bring in an FF&amp;E, finish or procurement schedule. Either way, codes, quantities, lead times and site dates carry into the ordering schedule.</p>
-  ${assets?`<label class="startdrop" id="start-drop"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden data-startadd>
-    <div><span class="eyebrow">From an image</span><b>Drop a render, photo or reference of the space</b><p>${canDetect()?"Claude identifies the materials, finishes and fixtures in it and drafts the schedule. You keep what you need and delete the rest. Every image stays with the project as a view of the space.":"The image is added to the project's views of the space."}</p></div>
-    <span class="fake"><span class="btn">Choose images</span></span></label>`:""}
+  ${assets?`<label class="startdrop" id="start-drop"><input type="file" accept="application/pdf,.pdf,image/jpeg,image/png,image/webp,image/gif" multiple hidden data-startadd>
+    <div><span class="eyebrow">From your files</span><b>Drop renders, photos or drawings of the space</b><p>${canDetect()?"Claude identifies the materials, finishes and fixtures in it and drafts the schedule. You keep what you need and delete the rest. Every image stays with the project as a view of the space.":"The image is added to the project's views of the space."}<span> Drawings and PDF sets go to Drawings.</span></p></div>
+    <span class="fake"><span class="btn">Choose files</span></span></label>`:""}
   ${gallery.length?spacesStrip():""}${drawingsSection()}
   <div class="opts">
     <button class="opt" data-a="openimp" data-v="file"><b>Import Excel or CSV</b><span>Upload .xlsx, .xls or .csv. Columns are matched for you.</span></button>
@@ -3230,13 +3290,12 @@ function canDetect(){return !!(sample&&imgLimits&&imgLimits.images)}
 
 function spacesStrip(){
   const g=galleryOrdered();const ed=canWrite&&!preview&&assets;
-  if(!g.length&&!ed)return"";
+  if(!g.length)return"";
   return`<section class="spaces" aria-label="Project images">
     <header class="spaceshead"><div><span class="eyebrow">Spaces · ${g.length} image${g.length===1?"":"s"}</span></div>
-      <div class="row2">${ed&&canDetect()&&g.length?`<button class="linkbtn" data-a="opendet">Detect materials</button>`:""}${ed?`<label class="linkbtn">Add images<input type="file" id="gal-add" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden></label>`:""}</div></header>
+      <div class="row2">${ed&&canDetect()&&g.length?`<button class="linkbtn" data-a="opendet">Detect materials</button>`:""}</div></header>
     <div class="strip">
       ${g.map(im=>`<button class="shot" data-img="${im.id}"><img alt="${esc(im.title||"Project image")}" src="${blobSrc(im.asset)}" loading="lazy"><span class="shotcap"><b>${esc(im.title||"Untitled view")}</b>${(()=>{const n=items.filter(i=>i.sourceImage===im.asset).length;return n?`<span class="mono">${n} piece${n===1?"":"s"}</span>`:""})()}</span></button>`).join("")}
-      ${ed?`<label class="shot add" id="gal-drop"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden data-galadd><span><b>Add a view</b><span>Photos, renders or references of the room, space or object</span></span></label>`:""}
     </div></section>`;
 }
 
@@ -3276,7 +3335,7 @@ function imageSheet(){
         ${pcs.length?`<div class="minis">${pcs.map(p=>`<button class="mini-card" data-open="${p.id}"><img alt="" src="${imgFor(p,160)}"><span><b>${esc(p.name)}</b><span class="mono muted">${esc(p.code)} · ${esc(p.status)}</span></span></button>`).join("")}</div>`:`<p class="muted">None yet.</p>`}
       </section>
       ${ed?`<section class="sec"><header><h5>Remove image</h5></header>
-        ${ui.confirmImgDel?`<div class="confirm">Remove this image from the project? Pieces detected from it stay in the book.<button class="btn danger sm" data-a="delimg">Remove image</button><button class="linkbtn" data-a="nodelimg">Keep it</button></div>`:`<button class="btn danger sm" data-a="askdelimg">Remove from project</button>`}</section>`:""}
+        ${ui.confirmImgDel?`<div class="confirm">Remove this image from the project? Pieces detected from it stay in the book.<button class="btn danger sm" data-a="delimg">Remove image</button><button class="linkbtn" data-a="nodelimg">Keep it</button></div>`:`<span class="row2"><button class="btn danger sm" data-a="askdelimg">Remove from project</button><button class="btn ghost sm" data-a="imgtodraw">Move to Drawings</button></span>`}</section>`:""}
     </div></section>`;
 }
 
@@ -3430,7 +3489,7 @@ document.addEventListener("input",e=>{const t=e.target;if(t.id==="det-zone"&&det
   const z=e.target.closest&&e.target.closest("#gal-drop,#start-drop,.pick.add");if(!z)return;e.preventDefault();
   if(ev==="dragover")z.classList.add("over");else z.classList.remove("over");
   if(ev==="drop"){const fs=e.dataTransfer.files;if(!fs.length)return;
-    if(z.id==="start-drop")startFromImages(fs);
+    if(z.id==="start-drop")addProjectFiles(fs,true);
     else if(z.classList.contains("pick")){addGalleryFiles(fs,true).then(added=>{const max=imgLimits?.images?.maxCount||4;added.forEach(x=>{if(det&&det.picks.length<max)det.picks.push(x)});if(det)renderLayer()})}
     else addGalleryFiles(fs)}
 }));
@@ -3523,7 +3582,7 @@ const ZH={
 "Nothing here at this stage.":"此阶段暂无内容。","Qty to confirm":"数量待确认","ea":"件","slab":"板","set":"套","lot":"批","roll":"卷","m²":"m²","lm":"延米","m³":"m³","sf":"平方英尺","lf":"延英尺",
 "Start the book":"开始建册","Begin with an image, or the schedule you already keep":"从一张图片开始，或使用您现有的清单",
 "Drop in views of the space and Claude drafts the pieces to source, or bring in an FF&E, finish or procurement schedule. Either way, codes, quantities, lead times and site dates carry into the ordering schedule.":"拖入空间视图，Claude 会起草需要采购的项目；也可以导入家具、饰面或采购清单。无论哪种方式，编号、数量、交货期和到场日期都会进入订货计划。",
-"From an image":"从图片开始","Drop a render, photo or reference of the space":"拖入空间的效果图、照片或参考图","Choose images":"选择图片",
+"From an image":"从图片开始","Drop a render, photo or reference of the space":"拖入空间的效果图、照片或参考图","From your files":"从文件开始","Drop renders, photos or drawings of the space":"拖入空间的效果图、照片或图纸","Choose files":"选择文件","Drop files here":"将文件拖放到这里","Photos and renders go to Spaces; drawings and PDF sets go to Drawings.":"照片和效果图归入“空间”，图纸和 PDF 图纸集归入“图纸”。","Drawings and PDF sets go to Drawings.":"图纸和 PDF 图纸集归入“图纸”。","Sorting files…":"正在整理文件…","Move to Spaces":"移至空间","Move to Drawings":"移至图纸","Moved to Spaces":"已移至空间","Moved to Drawings":"已移至图纸","Couldn't move it. Try again.":"无法移动，请重试。","Use PDF, JPG, PNG or WebP files.":"请使用 PDF、JPG、PNG 或 WebP 文件。","Files can only be added by people who can edit this book.":"只有可编辑此手册的成员才能添加文件。","Choose images":"选择图片",
 "Claude identifies the materials, finishes and fixtures in it and drafts the schedule. You keep what you need and delete the rest. Every image stays with the project as a view of the space.":"Claude 会识别其中的材料、饰面和设施并起草清单。您保留需要的，删除其余的。每张图片都会作为空间视图保存在项目中。",
 "Import Excel or CSV":"导入 Excel 或 CSV","Upload .xlsx, .xls or .csv. Columns are matched for you.":"上传 .xlsx、.xls 或 .csv，系统会自动匹配列。","Paste from Google Sheets":"从 Google 表格粘贴","Copy the rows in Sheets, including the header, and paste them in.":"在表格中复制包含表头的行，然后粘贴进来。",
 "Link a Google Sheet":"关联 Google 表格","Keep the sheet as the working source and pull updates by item code.":"以表格作为工作源，按项目编号拉取更新。","Add pieces by hand":"手动添加项目","Start with a blank book and build it as the design develops.":"从空白手册开始，随设计推进逐步完善。",
@@ -3606,6 +3665,7 @@ const ZH_PAT=[
  [/^QTY (.+)$/,m=>`数量 ${m[1]}`],[/^page (\d+) of (\d+)$/,m=>`第 ${m[1]} 页，共 ${m[2]} 页`],[/^(\d+) pages?$/,m=>`${m[1]} 页`],[/^Showing the first (\d+) of (\d+) pages.*$/,m=>`显示前 ${m[1]} 页，共 ${m[2]} 页。其余请用“新标签页”查看。`],
  [/^Splitting (.+) · sheet (\d+) of (\d+)$/,m=>`正在拆分 ${m[1]} · 第 ${m[2]} / ${m[3]} 张`],[/^Uploading (.+)…$/,m=>`正在上传 ${m[1]}…`],[/^(?:(\d+) sheets? added)?(?:, )?(?:(\d+) replaced with the new version)?\. Tap a sheet to open it\.$/,m=>[m[1]?`已添加 ${m[1]} 张图纸`:"",m[2]?`已替换 ${m[2]} 张为新版本`:""].filter(Boolean).join("，")+"。点按图纸即可打开。"],
  [/^(.+) couldn't be read as a PDF\.$/,m=>`无法将 ${m[1]} 读取为 PDF。`],[/^(.+) is over 20 MB\. Split or compress it first\.$/,m=>`${m[1]} 超过 20 MB，请先拆分或压缩。`],[/^(.+) couldn't be read as an image\.$/,m=>`无法将 ${m[1]} 读取为图片。`],
+ [/^(?=\d)(?:(\d+) sheets? added to Drawings)?(?:, )?(?:(\d+) replaced with the new version)?(?:, )?(?:(\d+) images? added to Spaces)?\.$/,m=>[m[1]?`已添加 ${m[1]} 张图纸`:"",m[2]?`已替换 ${m[2]} 张为新版本`:"",m[3]?`已在空间中添加 ${m[3]} 张图片`:""].filter(Boolean).join("，")+"。"],
  [/^Uploading (\d+) images…$/,m=>`正在上传 ${m[1]} 张图片…`],[/^(\d+) images added$/,m=>`已添加 ${m[1]} 张图片`],[/^View (\d+) attachments?$/,m=>`查看 ${m[1]} 个附件`],[/^(\d+) attachments?$/,m=>`${m[1]} 个附件`],
  [/^Open (.+)$/,m=>`打开 ${m[1]}`],[/^Delete all (\d+) pieces and (\d+) decisions\?.*$/,m=>`删除全部 ${m[1]} 个项目和 ${m[2]} 项决策？此操作无法撤销。`],
  [/^Removes the (\d+) pieces there now\..*$/,m=>`将移除现有的 ${m[1]} 个项目，已记录的决策保留。`],[/^(\d+) pieces in the book have codes to match against\..*$/,m=>`手册中有 ${m[1]} 个项目带编号可供匹配。每次从表格拉取时请使用此选项。`],

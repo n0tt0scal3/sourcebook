@@ -666,26 +666,31 @@ function sendMail(to, subject, text, attachments = []) {
 
 // Sign-in details for a person an admin has just added or given a new password. English first, then Chinese.
 // kind: "new" | "reset". temp: they must choose their own password after signing in.
-function sendSignIn(req, u, pw, kind, temp, by) {
+// opts.zh: add the Chinese version after the English (stored per person as u.mailZh; agents default to it).
+// opts.project: name of a project just started for them, mentioned in the welcome email.
+function sendSignIn(req, u, pw, kind, temp, by, opts = {}) {
   const site = origin(req), login = u.email, inviter = by && by.id !== "owner" ? by.name : "";
+  const withZh = opts.zh !== undefined ? !!opts.zh : u.mailZh !== undefined ? !!u.mailZh : true, proj = opts.project || "";
   const en = [`Hello ${u.name},`, "",
     kind === "new" ? `${inviter ? inviter + " has" : "The studio has"} set up a Sourcebook account for you.` : "Your Sourcebook password has been reset.", "",
+    ...(proj ? [`Your project: ${proj}`, ""] : []),
     `Website: ${site}`, `Sign in with: ${login}`, `${temp ? "Temporary password" : "Password"}: ${pw}`, "",
     ...(temp ? ["This password is temporary. When you first sign in, you'll be asked to choose your own password before you continue.", ""] : []),
     "If you didn't expect this email, you can ignore it.", "", "Sourcebook"];
   const zh = [`${u.name}，您好：`, "",
     kind === "new" ? `${inviter ? inviter + " 已" : "工作室已"}为您开通选材手册（Sourcebook）账户。` : "您的选材手册（Sourcebook）密码已重置。", "",
+    ...(proj ? [`您的项目：${proj}`, ""] : []),
     `网址：${site}`, `登录账号：${login}`, `${temp ? "临时密码" : "密码"}：${pw}`, "",
     ...(temp ? ["此密码为临时密码。首次登录后，系统会要求您设置自己的密码才能继续使用。", ""] : []),
     "如果您没有预期收到此邮件，请忽略。", "", "选材手册 Sourcebook"];
-  const subject = kind === "new" ? "Your Sourcebook sign-in · 您的选材手册登录信息" : "Your new Sourcebook password · 您的选材手册新密码";
-  return sendMail([u.email], subject, [...en, "", "———", "", ...zh].join("\n"));
+  const subject = kind === "new" ? "Your Sourcebook sign-in" + (withZh ? " · 您的选材手册登录信息" : "") : "Your new Sourcebook password" + (withZh ? " · 您的选材手册新密码" : "");
+  return sendMail([u.email], subject, (withZh ? [...en, "", "———", "", ...zh] : en).join("\n"));
 }
 // Tries to email sign-in details; returns what the admin screen should say.
-async function mailSignIn(req, u, pw, kind, temp, by) {
+async function mailSignIn(req, u, pw, kind, temp, by, opts) {
   if (!u.email) return { emailed: false, emailError: "no_email" };
   if (!mailOn()) return { emailed: false, emailError: "no_smtp" };
-  try { await sendSignIn(req, u, pw, kind, temp, by); return { emailed: true }; }
+  try { await sendSignIn(req, u, pw, kind, temp, by, opts); return { emailed: true }; }
   catch (e) { console.error("sign-in email", e.message); return { emailed: false, emailError: String(e.message || "send failed").slice(0, 200) }; }
 }
 
@@ -833,15 +838,30 @@ const server = http.createServer(async (req, res) => {
         const signOut = (u.role && u.role !== role) || (b.disabled === true && !u.disabled);
         Object.assign(u, { name, email, role });
         if (wechat !== undefined) u.wechat = wechat;
+        if (typeof b.mailZh === "boolean") u.mailZh = b.mailZh;
         if (b.projects !== undefined) u.projects = cleanProjects(b.projects);
         u.allProjects = role === "agent" ? b.allProjects !== false : role === "admin";
         if (role === "admin") u.projects = [];
+        // Optionally start a new project for them in the same step and give them access to it.
+        // A client's name goes on the project as its client.
+        const newName = String(b.newProject || "").trim().slice(0, 120);
+        let made = null;
+        if (newName && !allAccess(u)) {
+          const base = newName.toLowerCase().normalize("NFKD").replace(/[^\w]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 32) || "project";
+          let id; do id = base + "-" + crypto.randomBytes(2).toString("hex"); while (store["projects/" + id]);
+          const now = new Date().toISOString();
+          store["projects/" + id] = { data: { created: now, archived: false }, version: 1, updatedAt: now };
+          store[`projects/${id}/project/main`] = { data: { name: newName, client: role === "client" ? name : "", location: "", phase: "" }, version: 1, updatedAt: now };
+          persist(); broadcast({ path: "projects/" + id, exists: true, data: store["projects/" + id].data }); broadcast({ path: `projects/${id}/project/main`, exists: true, data: store[`projects/${id}/project/main`].data });
+          u.projects = [...new Set([...(u.projects || []), id])];
+          made = { id, name: newName };
+        }
         if (b.disabled !== undefined) { if (b.disabled && u.id === me.id) return send(res, 400, { code: "invalid_argument", message: "You can't disable yourself." }); u.disabled = !!b.disabled; }
         const isNew = !b.id, temp = b.mustChange !== false;
         if (b.password) setPassword(u, b.password, temp); else if (signOut) u.ver = (u.ver || 0) + 1;
         savePeople();
-        const mail = b.password && b.sendEmail ? await mailSignIn(req, u, b.password, isNew ? "new" : "reset", temp, me) : {};
-        return send(res, 200, { ok: true, user: adminView(u), ...mail });
+        const mail = b.password && b.sendEmail ? await mailSignIn(req, u, b.password, isNew ? "new" : "reset", temp, me, { project: made?.name }) : {};
+        return send(res, 200, { ok: true, user: adminView(u), ...(made ? { project: made } : {}), ...mail });
       }
       if (p === "/api/users/password" && req.method === "POST") {
         const { id, password, mustChange, sendEmail } = await readJSON(req); const u = find(id);

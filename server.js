@@ -676,9 +676,11 @@ function sendMail(to, subject, text, attachments = []) {
 // kind: "new" | "reset". temp: they must choose their own password after signing in.
 // opts.zh: add the Chinese version after the English (stored per person as u.mailZh; agents default to it).
 // opts.project: name of a project just started for them, mentioned in the welcome email.
+// opts.note: the admin's own message, put once at the top (above both languages) as they wrote it.
 function sendSignIn(req, u, pw, kind, temp, by, opts = {}) {
   const site = origin(req), login = u.email, inviter = by && by.id !== "owner" ? by.name : "";
   const withZh = opts.zh !== undefined ? !!opts.zh : u.mailZh !== undefined ? !!u.mailZh : true, proj = opts.project || "";
+  const note = String(opts.note || "").replace(/\r\n?/g, "\n").trim().slice(0, 2000);
   const en = [`Hello ${u.name},`, "",
     kind === "new" ? `${inviter ? inviter + " has" : "The studio has"} set up a Sourcebook account for you.` : "Your Sourcebook password has been reset.", "",
     ...(proj ? [`Your project: ${proj}`, ""] : []),
@@ -692,7 +694,8 @@ function sendSignIn(req, u, pw, kind, temp, by, opts = {}) {
     ...(temp ? ["此密码为临时密码。首次登录后，系统会要求您设置自己的密码才能继续使用。", ""] : []),
     "如果您没有预期收到此邮件，请忽略。", "", "选材手册 Sourcebook"];
   const subject = kind === "new" ? "Your Sourcebook sign-in" + (withZh ? " · 您的选材手册登录信息" : "") : "Your new Sourcebook password" + (withZh ? " · 您的选材手册新密码" : "");
-  return sendMail([u.email], subject, (withZh ? [...en, "", "———", "", ...zh] : en).join("\n"));
+  const top = note ? [note, ...(inviter ? ["", "— " + inviter] : []), "", "———", ""] : [];
+  return sendMail([u.email], subject, [...top, ...(withZh ? [...en, "", "———", "", ...zh] : en)].join("\n"));
 }
 // Tries to email sign-in details; returns what the admin screen should say.
 async function mailSignIn(req, u, pw, kind, temp, by, opts) {
@@ -868,7 +871,7 @@ const server = http.createServer(async (req, res) => {
         const isNew = !b.id, temp = b.mustChange !== false;
         if (b.password) setPassword(u, b.password, temp); else if (signOut) u.ver = (u.ver || 0) + 1;
         savePeople();
-        const mail = b.password && b.sendEmail ? await mailSignIn(req, u, b.password, isNew ? "new" : "reset", temp, me, { project: made?.name }) : {};
+        const mail = b.password && b.sendEmail ? await mailSignIn(req, u, b.password, isNew ? "new" : "reset", temp, me, { project: made?.name, note: isNew ? b.mailNote : "" }) : {};
         return send(res, 200, { ok: true, user: adminView(u), ...(made ? { project: made } : {}), ...mail });
       }
       if (p === "/api/users/password" && req.method === "POST") {

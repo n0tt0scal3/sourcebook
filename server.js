@@ -458,6 +458,16 @@ const ownPath = (u, p) => p === p.split("/")[0] + "/" + u.id;
 const libHidden = () => new Set(Array.isArray(store["libraryshow/main"]?.data?.hide) ? store["libraryshow/main"].data.hide : []);
 const libOwn = u => { const per = store["libraryshow/main"]?.data?.per; return per && Array.isArray(per[u.id]) ? new Set(per[u.id]) : null; };
 const libHiddenFor = (u, sup) => { if (u.role !== "client") return false; const own = libOwn(u); return own ? !own.has(sup) : libHidden().has(sup); };
+// Sets a client's own list of catalogues (null, or the same as the studio list, puts them back on the studio list).
+function libSetOwn(id, sups, by) {
+  const dp = "libraryshow/main", cur = store[dp], hide = libHidden(), per = { ...(cur?.data?.per || {}) }, all = Object.keys(libCache?.sups || {});
+  const own = sups ? [...new Set(sups.filter(s => all.includes(s)))].sort() : null;
+  const studio = all.filter(s => !hide.has(s)).sort();
+  if (!own || own.join("|") === studio.join("|")) { if (!per[id]) return; delete per[id]; } else per[id] = own;
+  const next = { hide: [...hide].sort(), per, updated: new Date().toISOString(), by: by || "" };
+  store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
+  persist(); broadcast({ path: dp, exists: true, data: next }); broadcast({ path: "library", index: true });
+}
 const libClientJSON = new Map(); // hidden-catalogue key -> { lib, json }: the catalogue index without those catalogues, for clients
 async function libJSONFor(u) {
   const lib = await libIndex();
@@ -871,6 +881,8 @@ const server = http.createServer(async (req, res) => {
         const isNew = !b.id, temp = b.mustChange !== false;
         if (b.password) setPassword(u, b.password, temp); else if (signOut) u.ver = (u.ver || 0) + 1;
         savePeople();
+        // The catalogues a client sees, chosen in the same form, are saved before the welcome email goes out.
+        if (role === "client" && Array.isArray(b.catalogues)) { await libIndex(); libSetOwn(u.id, b.catalogues.filter(x => typeof x === "string"), me.name); }
         const mail = b.password && b.sendEmail ? await mailSignIn(req, u, b.password, isNew ? "new" : "reset", temp, me, { project: made?.name, note: isNew ? b.mailNote : "" }) : {};
         return send(res, 200, { ok: true, user: adminView(u), ...(made ? { project: made } : {}), ...mail });
       }
@@ -1559,6 +1571,14 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
       persist(); broadcast({ path: dp, exists: true, data: next });
       return send(res, 200, { ok: true });
+    }
+    if (p === "/api/library/show" && req.method === "GET") {
+      // For the Add / Edit person form: every catalogue with approved images, the studio list and each client's own list.
+      if (!isAdmin) return deny("Only admins choose what clients see.");
+      const lib = await libIndex(), d = store["libraryshow/main"]?.data || {};
+      const cats = Object.keys(lib.sups).map(id => ({ id, label: LIB_LABEL[id] || lib.sups[id].label || [id, ""], cat: lib.sups[id].cat, n: (store["library/" + id]?.data?.on || []).length })).filter(c => c.n)
+        .sort((a, b) => (a.label[0] + " " + a.label[1]).localeCompare(b.label[0] + " " + b.label[1]));
+      return send(res, 200, { cats, hide: d.hide || [], per: d.per || {} });
     }
     if (p === "/api/library/show" && req.method === "POST") {
       // { sup(s), clients: true|false } shows or hides catalogues from clients: the studio list (libraryshow/main.hide), or with

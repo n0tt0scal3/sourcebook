@@ -452,19 +452,35 @@ const isLibPath = p => /^library(types|cats|show|feat)?(\/|$)/.test(p || "");
 // admins included, and never as a whole collection. They are read and changed through /api/library/fav and /seen.
 const isOwnPath = p => /^(library(fav|seen)|rfiseen)(\/|$)/.test(p || "");
 const ownPath = (u, p) => p === p.split("/")[0] + "/" + u.id;
-// Catalogues an admin has hidden from clients: libraryshow/main = { hide: [catalogue ids] }. Everyone else sees them all.
+// Catalogues clients see. libraryshow/main = { hide: [catalogue ids], per: { <client id>: [catalogue ids shown to that client] } }.
+// hide is the studio list every client follows by default (new catalogues are shown); a client with their own list in per
+// sees only the catalogues on it (new catalogues stay hidden from them until ticked). Everyone else sees them all.
 const libHidden = () => new Set(Array.isArray(store["libraryshow/main"]?.data?.hide) ? store["libraryshow/main"].data.hide : []);
-const libHiddenFor = (u, sup) => u.role === "client" && libHidden().has(sup);
-let libClientJSON = null; // { key, json }: the catalogue index without the hidden catalogues, for clients
+const libOwn = u => { const per = store["libraryshow/main"]?.data?.per; return per && Array.isArray(per[u.id]) ? new Set(per[u.id]) : null; };
+const libHiddenFor = (u, sup) => { if (u.role !== "client") return false; const own = libOwn(u); return own ? !own.has(sup) : libHidden().has(sup); };
+// Sets a client's own list of catalogues (null, or the same as the studio list, puts them back on the studio list).
+function libSetOwn(id, sups, by) {
+  const dp = "libraryshow/main", cur = store[dp], hide = libHidden(), per = { ...(cur?.data?.per || {}) }, all = Object.keys(libCache?.sups || {});
+  const own = sups ? [...new Set(sups.filter(s => all.includes(s)))].sort() : null;
+  const studio = all.filter(s => !hide.has(s)).sort();
+  if (!own || own.join("|") === studio.join("|")) { if (!per[id]) return; delete per[id]; } else per[id] = own;
+  const next = { hide: [...hide].sort(), per, updated: new Date().toISOString(), by: by || "" };
+  store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
+  persist(); broadcast({ path: dp, exists: true, data: next }); broadcast({ path: "library", index: true });
+}
+const libClientJSON = new Map(); // hidden-catalogue key -> { lib, json }: the catalogue index without those catalogues, for clients
 async function libJSONFor(u) {
-  const lib = await libIndex(), hide = libHidden();
-  if (u.role !== "client" || !hide.size) return lib.json;
-  const key = [...hide].sort().join(",");
-  if (libClientJSON && libClientJSON.key === key && libClientJSON.lib === lib) return libClientJSON.json;
+  const lib = await libIndex();
+  if (u.role !== "client") return lib.json;
+  const hide = new Set(Object.keys(lib.sups).filter(s => libHiddenFor(u, s)));
+  if (!hide.size) return lib.json;
+  const key = [...hide].sort().join(","), hit = libClientJSON.get(key);
+  if (hit && hit.lib === lib) return hit.json;
   const d = JSON.parse(lib.json);
   hide.forEach(s => delete d.sups[s]); d.items = d.items.filter(x => !hide.has(x[1]));
-  libClientJSON = { key, lib, json: JSON.stringify(d) };
-  return libClientJSON.json;
+  if (libClientJSON.size > 50) libClientJSON.clear();
+  libClientJSON.set(key, { lib, json: JSON.stringify(d) });
+  return libClientJSON.get(key).json;
 }
 // Sourcing requests (sourcing/<id>): admins see them all; sourcing agents the ones sent to them; anyone else their own
 // and the ones asked from a project they're on, never another project's.
@@ -513,6 +529,8 @@ function forUser(u, p, data) {
   if (u.role === "specifier" && data && ITEM_DOC.test(p) && data.toAgent) { const o = { ...data }; delete o.toAgent; return o; }
   if (u.role !== "client" || !data) return data;
   // Featured images from catalogues hidden from clients aren't sent to them.
+  // A client never sees other clients' catalogue lists, only whether they have their own.
+  if (p === "libraryshow/main") { const { per, ...o } = data; return o; }
   if (p === "libraryfeat/main" && libCache) return { ...data, f: (data.f || []).filter(f => { const it = libCache.byFile.get(f); return it && !libHiddenFor(u, it[1]); }) };
   if (/^projects\/[^/]+\/project\/main$/.test(p)) { const o = { ...data }; CLIENT_COST_PROJECT.forEach(k => delete o[k]); return o; }
   if (!ITEM_DOC.test(p)) return data;
@@ -668,9 +686,11 @@ function sendMail(to, subject, text, attachments = []) {
 // kind: "new" | "reset". temp: they must choose their own password after signing in.
 // opts.zh: add the Chinese version after the English (stored per person as u.mailZh; agents default to it).
 // opts.project: name of a project just started for them, mentioned in the welcome email.
+// opts.note: the admin's own message, put once at the top (above both languages) as they wrote it.
 function sendSignIn(req, u, pw, kind, temp, by, opts = {}) {
   const site = origin(req), login = u.email, inviter = by && by.id !== "owner" ? by.name : "";
   const withZh = opts.zh !== undefined ? !!opts.zh : u.mailZh !== undefined ? !!u.mailZh : true, proj = opts.project || "";
+  const note = String(opts.note || "").replace(/\r\n?/g, "\n").trim().slice(0, 2000);
   const en = [`Hello ${u.name},`, "",
     kind === "new" ? `${inviter ? inviter + " has" : "The studio has"} set up a Sourcebook account for you.` : "Your Sourcebook password has been reset.", "",
     ...(proj ? [`Your project: ${proj}`, ""] : []),
@@ -684,7 +704,8 @@ function sendSignIn(req, u, pw, kind, temp, by, opts = {}) {
     ...(temp ? ["此密码为临时密码。首次登录后，系统会要求您设置自己的密码才能继续使用。", ""] : []),
     "如果您没有预期收到此邮件，请忽略。", "", "选材手册 Sourcebook"];
   const subject = kind === "new" ? "Your Sourcebook sign-in" + (withZh ? " · 您的选材手册登录信息" : "") : "Your new Sourcebook password" + (withZh ? " · 您的选材手册新密码" : "");
-  return sendMail([u.email], subject, (withZh ? [...en, "", "———", "", ...zh] : en).join("\n"));
+  const top = note ? [note, ...(inviter ? ["", "— " + inviter] : []), "", "———", ""] : [];
+  return sendMail([u.email], subject, [...top, ...(withZh ? [...en, "", "———", "", ...zh] : en)].join("\n"));
 }
 // Tries to email sign-in details; returns what the admin screen should say.
 async function mailSignIn(req, u, pw, kind, temp, by, opts) {
@@ -860,7 +881,9 @@ const server = http.createServer(async (req, res) => {
         const isNew = !b.id, temp = b.mustChange !== false;
         if (b.password) setPassword(u, b.password, temp); else if (signOut) u.ver = (u.ver || 0) + 1;
         savePeople();
-        const mail = b.password && b.sendEmail ? await mailSignIn(req, u, b.password, isNew ? "new" : "reset", temp, me, { project: made?.name }) : {};
+        // The catalogues a client sees, chosen in the same form, are saved before the welcome email goes out.
+        if (role === "client" && Array.isArray(b.catalogues)) { await libIndex(); libSetOwn(u.id, b.catalogues.filter(x => typeof x === "string"), me.name); }
+        const mail = b.password && b.sendEmail ? await mailSignIn(req, u, b.password, isNew ? "new" : "reset", temp, me, { project: made?.name, note: isNew ? b.mailNote : "" }) : {};
         return send(res, 200, { ok: true, user: adminView(u), ...(made ? { project: made } : {}), ...mail });
       }
       if (p === "/api/users/password" && req.method === "POST") {
@@ -900,6 +923,7 @@ const server = http.createServer(async (req, res) => {
         const { id } = await readJSON(req);
         if (id === me.id) return send(res, 400, { code: "invalid_argument", message: "You can't remove yourself." });
         people.users = people.users.filter(u => u.id !== id); savePeople();
+        const ls = store["libraryshow/main"]; if (ls?.data?.per && ls.data.per[id]) { const per = { ...ls.data.per }; delete per[id]; ls.data = { ...ls.data, per }; persist(); }
         return send(res, 200, { ok: true });
       }
       return send(res, 404, { code: "not_found" });
@@ -1215,6 +1239,12 @@ const server = http.createServer(async (req, res) => {
     }
     const lm = p.match(/^\/lib\/(sprites\/s\d{3}\.jpg)$/);
     if (lm && req.method === "GET") {
+      // A client doesn't get a thumbnail sheet when every catalogue on it is hidden from them.
+      if (me.role === "client") {
+        const lib = await libIndex(), n = +lm[1].slice(9, 12);
+        if (!lib.sheets) { lib.sheets = new Map(); for (const x of lib.byFile.values()) if (x[5] != null) { if (!lib.sheets.has(x[5])) lib.sheets.set(x[5], new Set()); lib.sheets.get(x[5]).add(x[1]); } }
+        const on = lib.sheets.get(n); if (on && [...on].every(sup => libHiddenFor(me, sup))) return send(res, 404, "Not found");
+      }
       try { return send(res, 200, await fsp.readFile(path.join(LIB_DIR, lm[1])), { "Content-Type": lm[1].endsWith(".json") ? "application/json" : "image/jpeg", "Cache-Control": "private, max-age=86400" }); } catch (_) { return send(res, 404, "Not found"); }
     }
     const fm = p.match(/^\/(?:lib|api\/library)\/full\/([A-Za-z0-9_.-]+\.jpg)$/);
@@ -1542,17 +1572,31 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       persist(); broadcast({ path: dp, exists: true, data: next });
       return send(res, 200, { ok: true });
     }
+    if (p === "/api/library/show" && req.method === "GET") {
+      // For the Add / Edit person form: every catalogue with approved images, the studio list and each client's own list.
+      if (!isAdmin) return deny("Only admins choose what clients see.");
+      const lib = await libIndex(), d = store["libraryshow/main"]?.data || {};
+      const cats = Object.keys(lib.sups).map(id => ({ id, label: LIB_LABEL[id] || lib.sups[id].label || [id, ""], cat: lib.sups[id].cat, n: (store["library/" + id]?.data?.on || []).length })).filter(c => c.n)
+        .sort((a, b) => (a.label[0] + " " + a.label[1]).localeCompare(b.label[0] + " " + b.label[1]));
+      return send(res, 200, { cats, hide: d.hide || [], per: d.per || {} });
+    }
     if (p === "/api/library/show" && req.method === "POST") {
-      // { sup, clients: true|false } shows or hides a whole catalogue from clients (libraryshow/main.hide)
+      // { sup(s), clients: true|false } shows or hides catalogues from clients: the studio list (libraryshow/main.hide), or with
+      // { user } that client's own list (per[user], started from the studio list). { user, reset: true } puts them back on the studio list.
       if (!isAdmin) return deny("Only admins choose what clients see.");
       const b = await readJSON(req), lib = await libIndex();
-      if (typeof b.sup !== "string" || !lib.sups[b.sup] || typeof b.clients !== "boolean") return send(res, 400, { code: "invalid_argument" });
-      const dp = "libraryshow/main", cur = store[dp], hide = libHidden();
-      b.clients ? hide.delete(b.sup) : hide.add(b.sup);
-      const next = { hide: [...hide].sort(), updated: new Date().toISOString(), by: me.name || "" };
+      const sups = Array.isArray(b.sups) ? b.sups : [b.sup];
+      if (b.user !== undefined && !people.users.some(u => u.id === b.user && u.role === "client")) return send(res, 400, { code: "invalid_argument", message: "That person isn't a client." });
+      if (!b.reset && (!sups.length || sups.some(s => typeof s !== "string" || !lib.sups[s]) || typeof b.clients !== "boolean")) return send(res, 400, { code: "invalid_argument" });
+      const dp = "libraryshow/main", cur = store[dp], hide = libHidden(), per = { ...(cur?.data?.per || {}) };
+      if (b.user !== undefined) {
+        if (b.reset) delete per[b.user];
+        else { const own = new Set(per[b.user] || Object.keys(lib.sups).filter(s => !hide.has(s))); sups.forEach(s => b.clients ? own.add(s) : own.delete(s)); per[b.user] = [...own].sort(); }
+      } else sups.forEach(s => b.clients ? hide.delete(s) : hide.add(s));
+      const next = { hide: [...hide].sort(), per, updated: new Date().toISOString(), by: me.name || "" };
       store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
       persist(); broadcast({ path: dp, exists: true, data: next }); broadcast({ path: "library", index: true });
-      return send(res, 200, { ok: true, hide: next.hide });
+      return send(res, 200, { ok: true, hide: next.hide, per });
     }
     if (p === "/api/library/set" && req.method === "POST") {
       // { sup, keys: [page*100 + image number], on: true|false } approves or unapproves images in library/<sup>.on

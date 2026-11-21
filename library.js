@@ -20,7 +20,7 @@
     "Only admins choose what clients see.": "只有管理员可以设置客户可见内容。",
     "To be sourced": "待采购", "To review": "待审核", "With the studio": "工作室审核中", "With the sourcing agent": "采购代理处理中", "To find": "待寻找", "Turn on alerts for new requests": "开启新请求提醒", "Photos sent from the Sourcing library that we couldn't match. Review each one, then send it to the sourcing agent; with email set up, it goes to their QQ Mail with the photo attached.": "从采购图库提交、但未找到匹配的图片。逐一审核后发送给采购代理；设置邮件后会附上照片发送到其 QQ 邮箱。", "Items the studio has asked you to find. Mark each one sourced when you've found it, with a note on where.": "工作室请您寻找的产品。找到后请标记为已采购，并备注来源。", "Things you've asked us to find. We review each one and send it to our sourcing agent.": "您请我们寻找的产品。我们会逐一审核并交给采购代理。", "Nothing here.": "这里没有内容。", "Nothing to be sourced yet. Drop a photo in the box on the Sourcing library page.": "还没有待采购的产品。可在采购图库页面的方框中拖入图片。", "Sourcing agent's email (QQ Mail)": "采购代理的邮箱（QQ 邮箱）", "Email isn't set up yet, so this sends it in Sourcebook only. Add the SMTP settings in Render to email the agent's QQ Mail.": "尚未设置邮件，因此仅在选材手册中发送。在 Render 中添加 SMTP 设置后即可发送到代理的 QQ 邮箱。", "Message to the agent (optional)": "给代理的留言（可选）", "e.g. Need 6, walnut, by November": "例如：需要 6 件，胡桃木，11 月前", "Sending…": "正在发送…", "Send to the sourcing agent again": "再次发送给采购代理", "Send to the sourcing agent": "发送给采购代理", "Client": "客户", "Message to the agent": "给代理的留言", "Where it was found, for the person who asked (optional)": "在哪里找到的，告诉提出请求的人（可选）", "Add the sourcing agent's email first.": "请先填写采购代理的邮箱。", "Sent to the sourcing agent by email.": "已通过邮件发送给采购代理。", "Sent to the sourcing agent in Sourcebook.": "已在选材手册中发送给采购代理。", "Adding it to TBS (to be sourced)…": "正在加入待采购 TBS…", "Nothing similar in our library, so it's been added to TBS (to be sourced).": "图库中没有相似产品，已加入待采购 TBS。", "We couldn't find anything similar in our library, so it's been added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "图库中没有找到相似的产品，已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Added to TBS (to be sourced).": "已加入待采购 TBS。", "Added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Open TBS": "打开待采购 TBS", "None of these? Add it to TBS (to be sourced)": "都不合适？加入待采购 TBS", "Email isn't set up on this server yet. Add the SMTP settings in Render, or send it in Sourcebook only.": "此服务器尚未设置邮件。请在 Render 中添加 SMTP 设置，或仅在选材手册中发送。", "The email couldn't be sent. Check the SMTP settings in Render and try again.": "邮件无法发送，请检查 Render 中的 SMTP 设置后重试。", "That email doesn't look right.": "邮箱格式不正确。", "Only admins can send requests to the sourcing agent.": "只有管理员可以将请求发送给采购代理。",
     "Sourcing library": "采购图库", "Approved": "已批准", "Not approved": "未批准", "All": "全部", "Scanned": "已扫描", "In this project": "本项目中", "All catalogues": "全部图册",
-    "Approve all shown": "批准全部显示项", "Move selected to…": "将所选移至…", "Select all shown": "全选显示项", "Clear selection": "清除选择", "Select images first.": "请先选择图片。", "Select to move": "选择以移动", "Unapprove all shown": "取消批准全部显示项", "Approve page": "批准本页", "Unapprove page": "取消批准本页", "In project": "已在项目中",
+    "Approve all shown": "批准全部显示项", "Move selected to…": "将所选移至…", "+ New category…": "+ 新类别…", "Create and move": "新建并移入", "Select all shown": "全选显示项", "Clear selection": "清除选择", "Select images first.": "请先选择图片。", "Select to move": "选择以移动", "Unapprove all shown": "取消批准全部显示项", "Approve page": "批准本页", "Unapprove page": "取消批准本页", "In project": "已在项目中",
     "Loading catalogues…": "正在加载图册…", "The catalogue index didn't load. Reload the page to try again.": "图册索引未能加载，请刷新页面重试。",
     "Nothing matches that search.": "没有匹配的结果。", "Nothing is waiting for approval here.": "这里没有待批准的图片。", "Nothing has been approved yet.": "尚未批准任何图片。",
     "Every image scanned from the supplier catalogues, each kept with its catalogue and page. Tick an image to approve it; only approved images are shown to the team and clients.": "从供应商图册中扫描出的所有图片，均保留其图册和页码。勾选即可批准；只有已批准的图片会向团队和客户显示。",
@@ -110,6 +110,8 @@
 .sbl-sortbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:12px 14px;margin:18px 0 4px;background:var(--paper);border:1px solid var(--rule);font-size:14px}
 .sbl-sortbar select{font:inherit;font-size:14px;color:var(--ink);background:var(--paper);border:1px solid var(--rule);padding:6px 8px}
 .sbl-sortbar b{font-weight:500}
+.sbl-sortbar input{font:inherit;font-size:14px;color:var(--ink);background:none;border:0;border-bottom:1px solid var(--rule);padding:5px 0;width:12em;max-width:100%}
+.sbl-sortbar input:focus{outline:0;border-bottom-color:var(--ink)}
 .sbl-chk input{width:17px;height:17px;margin:0;accent-color:var(--ok);cursor:pointer}
 .sbl-cap{display:flex;gap:6px;align-items:baseline;font-family:var(--mono);font-size:11px;color:var(--ink2);overflow:hidden;white-space:nowrap}
 .sbl-star{margin-left:auto;flex:none;border:0;background:none;padding:0 2px;font-size:17px;line-height:1;color:var(--muted);cursor:pointer;font-family:inherit}
@@ -320,7 +322,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   // Categories an admin added (librarycats/main): shown before Decor & accessories, each also a catalogue category CUSTOM-<code>.
   let custom = [], TYPES = BASE_TYPES;
   function setCustom(list) {
-    custom = (Array.isArray(list) ? list : []).filter(x => x && typeof x.c === "string" && x.c.length === 1 && x.en);
+    // One entry per code: the server's update can arrive before our own reply does.
+    custom = (Array.isArray(list) ? list : []).filter((x, i, l) => x && typeof x.c === "string" && x.c.length === 1 && x.en && l.findIndex(y => y && y.c === x.c) === i);
     const at = BASE_TYPES.findIndex(x => x[0] === "A");
     TYPES = [...BASE_TYPES.slice(0, at), ...custom.map(x => [x.c, x.en, x.zh || x.en]), ...BASE_TYPES.slice(at)];
   }
@@ -662,19 +665,48 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
   const sel = new Set();
   function sortBarHTML() {
-    return `<div class="sbl-sortbar"><b id="sbl-selcount">${selCount()}</b>
-      <select id="sbl-moveto" aria-label="${t("Move selected to…")}"><option value="">${t("Move selected to…")}</option>${typesAZ().filter(x => x[0] !== "U" && x[0] !== ui.type).map(x => `<option value="${x[0]}">${esc(typeName(x[0]))}</option>`).join("")}</select>
+    // "+ New category…" at the end of the list turns the bar into two name boxes; Enter creates it and moves the selection in.
+    const n = ui.newcat && ui.newcat.type === ui.type ? ui.newcat : null;
+    if (n) return `<div class="sbl-sortbar" id="sbl-sortbar"><b id="sbl-selcount">${selCount()}</b>
+      <input id="sbl-ncen" maxlength="40" autocomplete="off" placeholder="${esc(t("Name in English"))}" aria-label="${esc(t("Name in English"))}" value="${esc(n.en)}" ${n.busy ? "disabled" : ""}>
+      <input id="sbl-nczh" maxlength="20" autocomplete="off" placeholder="${esc(t("Name in Chinese"))}" aria-label="${esc(t("Name in Chinese"))}" value="${esc(n.zh)}" ${n.busy ? "disabled" : ""}>
+      <button class="btn sm" data-sbl="newcatgo" ${n.busy ? "disabled" : ""}>${t(n.busy ? "Adding…" : "Create and move")}</button><button class="linkbtn" data-sbl="newcatx">${t("Cancel")}</button></div>`;
+    return `<div class="sbl-sortbar" id="sbl-sortbar"><b id="sbl-selcount">${selCount()}</b>
+      <select id="sbl-moveto" aria-label="${t("Move selected to…")}"><option value="">${t("Move selected to…")}</option>${typesAZ().filter(x => x[0] !== "U" && x[0] !== ui.type).map(x => `<option value="${x[0]}">${esc(typeName(x[0]))}</option>`).join("")}<option value="+">${t("+ New category…")}</option></select>
       <button class="linkbtn" data-sbl="selall">${t("Select all shown")}</button><button class="linkbtn" data-sbl="selnone">${t("Clear selection")}</button></div>`;
   }
   const selCount = () => zh() ? `已选 ${nf(sel.size)} 张` : `${nf(sel.size)} selected`;
+  function barPaint(focus) { const b = $("#sbl-sortbar"); if (b) b.outerHTML = sortBarHTML(); const f = focus && $("#" + focus); if (f) f.focus(); }
+  // A new category's products go where most of the selected images' catalogues already go in a project (Furniture if none).
+  const CAT_SEC = { FURNITURE: "Furniture", LIGHTING: "Lighting", PLUMBING: "Plumbing", MILLWORK: "Millwork", DOORS: "Millwork", STONE: "Stone", "WALL PANELLING": "Finishes", "WOOD PRODUCTS": "Finishes", "PARTITION SYSTEMS": "Glazing", "GLASS PRODUCTS": "Glazing", FLOORING: "Finishes", OFFICE: "Furniture", VANITIES: "Plumbing", MIRRORS: "Glazing", SIGNAGE: "Hardware" };
+  function guessSection(l) {
+    const n = {}; l.forEach(o => { const c = (LIB.sups[o.sup] || {}).cat || "", s = CAT_SEC[c] || (custom.find(x => "CUSTOM-" + x.c === c) || {}).section; if (s) n[s] = (n[s] || 0) + 1; });
+    return Object.keys(n).sort((a, b) => n[b] - n[a])[0] || "Furniture";
+  }
+  async function newCat() {
+    const n = ui.newcat; if (!n || n.busy) return;
+    const en = n.en.replace(/\s+/g, " ").trim(), zhn = n.zh.replace(/\s+/g, " ").trim();
+    if (!en) { host.toast(t("Give the category a name.")); barPaint("sbl-ncen"); return; }
+    const l = [...sel].map(i => LIB.items[i]).filter(Boolean);
+    const moved = (code, name) => { ui.newcat = null; if (l.length) { sel.clear(); setType(l, code); } else repaint();
+      host.toast(zh() ? (l.length ? `已将 ${nf(l.length)} 张移至「${name}」` : `已添加类别「${name}」`) : (l.length ? `Moved ${nf(l.length)} to ${name}` : `Added ${name}.`)); };
+    // A name that's already a category just moves the images there.
+    const same = TYPES.find(x => !["U", "F", "CF", "FT"].includes(x[0]) && [x[1], x[2]].some(v => v.toLowerCase() === en.toLowerCase() || (zhn && v === zhn)));
+    if (same) { moved(same[0], typeName(same[0])); return; }
+    n.busy = true; barPaint();
+    try {
+      const section = guessSection(l), j = await api("/api/library/category", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ en, zh: zhn, section }) });
+      setCustom([...custom, { c: j.code, en, zh: zhn, section }]); moved(j.code, zh() ? zhn || en : en);
+    } catch (e) { n.busy = false; barPaint("sbl-ncen"); host.toast(t(e.message || "Couldn't save. Check your connection and try again.")); }
+  }
   function selPaint() { const c = $("#sbl-selcount"); if (c) c.textContent = selCount(); document.querySelectorAll("[data-sblsel]").forEach(el => { const on = sel.has(+el.dataset.sblsel); el.checked = on; el.closest(".sbl-tile")?.classList.toggle("sel", on); }); }
   function repaint() {
     if (!LIB) return;
     const r = $("#sblib");
     // Switch between the empty state and the grid when the first approval arrives or the last one goes.
     if (r && !curating() && !!$("#sbl-cats") !== !!approved()) { r.outerHTML = view(); if (ui.open != null) host.layer(); return; }
-    const g = $("#sbl-grid"), c = $("#sbl-cats"), k = $("#sbl-kept");
-    if (g && c) g.innerHTML = gridHTML(); if (c) c.innerHTML = catsHTML(); const sd = $("#sbl-side"); if (sd) sd.innerHTML = sideHTML(); if (k) k.textContent = nf(approved()); fRefresh();
+    const g = $("#sbl-grid"), c = $("#sbl-cats"), k = $("#sbl-kept"), fid = document.activeElement && /^sbl-nc/.test(document.activeElement.id) ? document.activeElement.id : "";
+    if (g && c) g.innerHTML = gridHTML(); if (fid) { const f = $("#" + fid); if (f) f.focus(); } if (c) c.innerHTML = catsHTML(); const sd = $("#sbl-side"); if (sd) sd.innerHTML = sideHTML(); if (k) k.textContent = nf(approved()); fRefresh();
     if (ui.open != null) host.layer();
   }
   function rerender() { const r = $("#sblib"); if (r) r.outerHTML = view(); }
@@ -1325,7 +1357,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     tbsUp.delete(id); findPaint();
   }
   document.addEventListener("change", e => { if (e.target.dataset && e.target.dataset.sblfound) { const files = [...e.target.files]; tbsAddFound(e.target.dataset.sblfound, files); return; } if (e.target.id === "sbl-fimg") { const f = e.target.files[0]; e.target.value = ""; if (f) findSearch(f); } });
-  document.addEventListener("input", e => { if (e.target.id === "sbl-fnote") find.note = e.target.value; });
+  document.addEventListener("input", e => { if (e.target.id === "sbl-fnote") find.note = e.target.value; else if (ui.newcat && (e.target.id === "sbl-ncen" || e.target.id === "sbl-nczh")) ui.newcat[e.target.id === "sbl-ncen" ? "en" : "zh"] = e.target.value; });
+  document.addEventListener("keydown", e => { if (!ui.newcat || (e.target.id !== "sbl-ncen" && e.target.id !== "sbl-nczh")) return; if (e.key === "Enter") { e.preventDefault(); newCat(); } else if (e.key === "Escape") { ui.newcat = null; barPaint(); } });
   document.addEventListener("focusout", e => { const id = e.target.dataset && e.target.dataset.sblreply; if (!id) return; const x = reqs.get(id); if (x && (x.reply || "") !== e.target.value.trim()) updReq(id, { reply: e.target.value.trim() }, true); });
   // Inside a product type, the next images load by themselves as you near the bottom (the button stays as a fallback).
   let moreBusy = false;
@@ -1370,6 +1403,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     else if (a === "addtypego" && curating() && ui.addtype !== "busy") addType();
     else if (a === "selall" && curating()) { list().forEach(o => sel.add(o.i)); selPaint(); }
     else if (a === "selnone") { sel.clear(); selPaint(); }
+    else if (a === "newcatgo" && curating()) newCat();
+    else if (a === "newcatx") { ui.newcat = null; barPaint(); }
     else if (a === "addcancel") { ui.addcat = false; addLine(); }
     else if (a === "freq") sendReq();
     else if (a === "freset") { Object.assign(find, { st: "idle", url: "", b64: "", note: "", what: "", zh: "", m: [], err: "", req: null, auto: false }); findPaint(); }
@@ -1417,6 +1452,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (el.dataset && el.dataset.sblsel !== undefined) { const i = +el.dataset.sblsel; el.checked ? sel.add(i) : sel.delete(i); selPaint(); return; }
     if (el.id === "sbl-moveto" && curating()) {
       const code = el.value; if (!code) return;
+      if (code === "+") { ui.newcat = { type: ui.type, en: "", zh: "" }; barPaint("sbl-ncen"); return; }
       if (!sel.size) { el.value = ""; host.toast(t("Select images first.")); return; }
       const l = [...sel].map(i => LIB.items[i]).filter(Boolean); sel.clear(); setType(l, code);
       host.toast(zh() ? `已将 ${nf(l.length)} 张移至「${typeName(code)}」` : `Moved ${nf(l.length)} to ${typeName(code)}`); return;

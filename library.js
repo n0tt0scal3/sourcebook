@@ -15,7 +15,7 @@
     "Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.": "把图片拖到这里，我们会在图库中搜索相似的产品。如果找不到，我们会为您采购。", "Choose a photo": "选择图片", "What are you looking for? (optional) e.g. the chair, in walnut": "您想找什么？（可选）例如：这把椅子，胡桃木", "Sending it to our sourcing agent…": "正在发送给采购代理…", "Searching our library for something similar…": "正在图库中搜索相似产品…", "We couldn't find anything similar in our library, so we've sent it to our sourcing agent. We'll source it for you.": "图库中没有找到相似的产品，已发送给采购代理，我们会为您采购。", "Sent to our sourcing agent. We'll source it for you.": "已发送给采购代理，我们会为您采购。", "Withdraw the request": "撤回请求", "Search for something else": "搜索其他产品", "None of these? Send it to our sourcing agent": "都不合适？发送给采购代理", "Waiting to be sourced": "等待采购", "We're sourcing it": "正在为您采购", "Sourced": "已采购", "Note for the person who asked (optional)": "给提出请求者的备注（可选）", "Mark as sourced": "标为已采购", "Reopen": "重新打开", "Remove": "移除", "Sourcing requests": "采购请求", "Your sourcing requests": "您的采购请求", "Hide sourced": "隐藏已采购", "Nothing waiting to be sourced.": "没有待采购的请求。", "That isn't a photo.": "这不是图片。", "The search didn't finish. Try again.": "搜索未完成，请重试。", "Couldn't send it. Check your connection and try again.": "无法发送，请检查网络后重试。", "Photo": "图片", "Studio owner": "工作室负责人", "new": "新", "New": "新", "Add category": "添加类别", "Admins only": "仅限管理员", "New category": "新类别", "Name in English": "英文名称", "Name in Chinese": "中文名称", "e.g. Outdoor furniture": "例如：Outdoor furniture", "e.g. 户外家具": "例如：户外家具", "In a project, its products go under": "加入项目时归入", "Adding…": "正在添加…", "Cancel": "取消", "Give the category a name.": "请填写类别名称。", "There's already a category with that name.": "已有同名类别。", "Choose where its products go in a project.": "请选择加入项目时归入的分类。", "Only admins can add categories.": "只有管理员可以添加类别。", "No more categories can be added.": "无法再添加更多类别。", "Furniture": "家具", "Lighting": "灯具", "Plumbing": "卫浴", "Millwork": "木作", "Stone": "石材", "Finishes": "饰面", "Glazing": "玻璃", "Hardware": "五金", "Add photos of what you found": "添加找到的产品照片", "Attach photos or files": "添加照片或文件", "Up to 10 files per request.": "每个请求最多 10 个文件。", "That file is too big (25 MB at most).": "文件太大（最大 25 MB）。", "That file is empty.": "文件是空的。", "Only the studio and the sourcing agent can attach files to a request.": "只有工作室和采购代理可以为请求添加文件。", "Adding photos…": "正在添加照片…", "Photos of what was found": "找到的产品照片", "Up to 8 photos per request.": "每个请求最多 8 张照片。", "Only the studio and the sourcing agent can add photos to a request.": "只有工作室和采购代理可以为请求添加照片。",
     "You have 50 open requests. Wait for some to be sourced first.": "您有 50 个未完成的请求，请等部分采购完成后再提交。", "Only admins can remove a request.": "只有管理员可以移除请求。", "Only the studio and the sourcing agent can update a request.": "只有工作室和采购代理可以更新请求。", "Add a photo first.": "请先添加图片。", "Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.": "此服务器尚未设置 Claude。请在 Render 中添加 Anthropic API 密钥（ANTHROPIC_API_KEY）。",
     "Back to all product types": "返回全部产品类型", "Product types": "产品类型",
-    "Catalogues clients see": "客户可见的图册", "Catalogues": "图册", "Have something you want?": "有想要的东西吗？", "All products": "全部产品", "Back to all catalogues": "返回全部图册", "Specifier / designer": "设计师", "Hidden from clients": "对客户隐藏", "Show all to clients": "全部对客户显示", "Hide all from clients": "全部对客户隐藏", "For": "适用于", "All clients": "所有客户", "own list": "专属列表", "Use the list for all clients": "改回所有客户的设置", "Client": "客户",
+    "Catalogues clients see": "客户可见的图册", "Catalogues": "图册", "Rename": "重命名", "Save": "保存", "Rename catalogue": "重命名图册", "Catalogue name": "图册名称", "Second line (optional)": "第二行（可选）", "Clear both to go back to the original name.": "两项都清空即恢复原名。", "Catalogue cover": "图册封面", "Use this image as the cover": "用这张图片作封面", "This is the cover": "这是封面", "Back to page 1": "改回第 1 页", "Only the studio owner renames catalogues or changes their covers.": "只有工作室负责人可以重命名图册或更换封面。", "Have something you want?": "有想要的东西吗？", "All products": "全部产品", "Back to all catalogues": "返回全部图册", "Specifier / designer": "设计师", "Hidden from clients": "对客户隐藏", "Show all to clients": "全部对客户显示", "Hide all from clients": "全部对客户隐藏", "For": "适用于", "All clients": "所有客户", "own list": "专属列表", "Use the list for all clients": "改回所有客户的设置", "Client": "客户",
     "Clients only see the approved images in the catalogues ticked here, in the library and in photo searches. Specifiers and designers see every approved catalogue.": "客户只能看到这里勾选的图册中已批准的图片（包括图库和以图搜图）。设计师可以看到所有已批准的图册。",
     "Only admins choose what clients see.": "只有管理员可以设置客户可见内容。",
     "To be sourced": "待采购", "To review": "待审核", "With the studio": "工作室审核中", "With the sourcing agent": "采购代理处理中", "To find": "待寻找", "Turn on alerts for new requests": "开启新请求提醒", "Photos sent from the Sourcing library that we couldn't match. Review each one, then send it to the sourcing agent; with email set up, it goes to their QQ Mail with the photo attached.": "从采购图库提交、但未找到匹配的图片。逐一审核后发送给采购代理；设置邮件后会附上照片发送到其 QQ 邮箱。", "Items the studio has asked you to find. Mark each one sourced when you've found it, with a note on where.": "工作室请您寻找的产品。找到后请标记为已采购，并备注来源。", "Things you've asked us to find. We review each one and send it to our sourcing agent.": "您请我们寻找的产品。我们会逐一审核并交给采购代理。", "Nothing here.": "这里没有内容。", "Nothing to be sourced yet. Drop a photo in the box on the Sourcing library page.": "还没有待采购的产品。可在采购图库页面的方框中拖入图片。", "Sourcing agent's email (QQ Mail)": "采购代理的邮箱（QQ 邮箱）", "Email isn't set up yet, so this sends it in Sourcebook only. Add the SMTP settings in Render to email the agent's QQ Mail.": "尚未设置邮件，因此仅在选材手册中发送。在 Render 中添加 SMTP 设置后即可发送到代理的 QQ 邮箱。", "Message to the agent (optional)": "给代理的留言（可选）", "e.g. Need 6, walnut, by November": "例如：需要 6 件，胡桃木，11 月前", "Sending…": "正在发送…", "Send to the sourcing agent again": "再次发送给采购代理", "Send to the sourcing agent": "发送给采购代理", "Client": "客户", "Message to the agent": "给代理的留言", "Where it was found, for the person who asked (optional)": "在哪里找到的，告诉提出请求的人（可选）", "Add the sourcing agent's email first.": "请先填写采购代理的邮箱。", "Sent to the sourcing agent by email.": "已通过邮件发送给采购代理。", "Sent to the sourcing agent in Sourcebook.": "已在选材手册中发送给采购代理。", "Adding it to TBS (to be sourced)…": "正在加入待采购 TBS…", "Nothing similar in our library, so it's been added to TBS (to be sourced).": "图库中没有相似产品，已加入待采购 TBS。", "We couldn't find anything similar in our library, so it's been added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "图库中没有找到相似的产品，已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Added to TBS (to be sourced).": "已加入待采购 TBS。", "Added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Open TBS": "打开待采购 TBS", "None of these? Add it to TBS (to be sourced)": "都不合适？加入待采购 TBS", "Email isn't set up on this server yet. Add the SMTP settings in Render, or send it in Sourcebook only.": "此服务器尚未设置邮件。请在 Render 中添加 SMTP 设置，或仅在选材手册中发送。", "The email couldn't be sent. Check the SMTP settings in Render and try again.": "邮件无法发送，请检查 Render 中的 SMTP 设置后重试。", "That email doesn't look right.": "邮箱格式不正确。", "Only admins can send requests to the sourcing agent.": "只有管理员可以将请求发送给采购代理。",
@@ -70,6 +70,9 @@
 .sbl-covers{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,170px),1fr));gap:22px 16px;padding-top:6px}
 .sbl-cover{display:flex;flex-direction:column;gap:4px;background:none;border:0;padding:0;text-align:left;color:var(--ink);cursor:pointer;min-width:0}
 .sbl-cover .sbl-sw{position:relative;aspect-ratio:1;border:1px solid var(--rule);box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:4px}.sbl-cover:hover .sbl-sw{border-color:var(--ink)}.sbl-cover .sbl-bname{font-size:14px}.sbl-cover .sbl-sub{font-size:11px}
+.sbl-coverw{position:relative;min-width:0}.sbl-coverw .sbl-cover{width:100%}
+.sbl-ren{position:absolute;top:6px;right:6px;width:30px;height:30px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);font-size:14px;line-height:1;cursor:pointer;opacity:.85}.sbl-ren:hover{opacity:1;border-color:var(--ink)}
+.sbl-renf{display:flex;flex-direction:column;gap:6px;min-width:0}.sbl-renf .sbl-sw{aspect-ratio:1;border:1px solid var(--rule);margin-bottom:4px}.sbl-renf input{font:inherit;font-size:14px;padding:5px 0;border:0;border-bottom:1px solid var(--ink2);background:none;color:var(--ink);min-width:0}
 .sbl-cvnow{align-self:center;font-size:14px;color:var(--ink);padding-left:4px}
 .sbl-cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:18px 16px;padding-top:22px}
 .sbl-cat{display:flex;flex-direction:column;gap:7px;background:none;border:0;padding:0;text-align:left;color:var(--ink);cursor:pointer;min-width:0}
@@ -317,6 +320,8 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
 `;
   const style = document.createElement("style"); style.textContent = CSS; document.head.appendChild(style);
 
+  let libEdit = false; // this person may rename catalogues and pick covers (the studio owner)
+  let meta = {}; // librarymeta/main.c: { <catalogue>: { name, sub, cover } } set by admins
   let LIB = null, libP = null, on = {}, tov = {}, hideCli = new Set(), cliPer = {}, cliPeople = null, watching = false, qT = null, full = new Set(), up = null;
   // Product types, independent of the supplier catalogue. Images are sorted into them once (lib/data.json, item[7]);
   // an admin's corrections are stored as librarytypes/<catalogue> = { t: { key: code } }.
@@ -416,6 +421,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const r = await fetch("/api/db/col?path=librarytypes"); if (!r.ok) return;
     const j = await r.json(); const next = {}; j.docs.forEach(d => { next[d.id] = (d.data && d.data.t) || {}; }); tov = next;
     const rs = await fetch("/api/db/doc?path=libraryshow/main").catch(() => null); if (rs && rs.ok) { const d = await rs.json(); hideCli = new Set((d.exists && d.data && d.data.hide) || []); cliPer = (d.exists && d.data && d.data.per) || {}; }
+    const rm = await fetch("/api/db/doc?path=librarymeta/main").catch(() => null); if (rm && rm.ok) { const d = await rm.json(); meta = (d.exists && d.data && d.data.c) || {}; }
     const rc = await fetch("/api/db/col?path=librarycats").catch(() => null); if (rc && rc.ok) { const m = ((await rc.json()).docs || []).find(d => d.id === "main"); setCustom(m && m.data && m.data.types); }
     repaint();
   }
@@ -426,10 +432,11 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   let ready = null; // approvals and product types loaded, so isOn() and typeOf() can be trusted
   function watch() {
     if (watching) return; watching = true;
+    fetch("/api/me").then(r => r.ok ? r.json() : {}).then(j => { libEdit = !!j.libEdit; if (libEdit) repaint(); }).catch(() => {});
     ready = Promise.all([fetchOn().catch(() => {}), fetchTypes().catch(() => {})]); fetchFull().catch(() => {}); fetchFav().catch(() => {}); fetchCfav().catch(() => {}); fetchFeat().catch(() => {}); fetchReqs().catch(() => {});
     try {
       const es = new EventSource("/api/events");
-      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); fetchSeenSoon(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data && !was && isAdm() && inReview(m.data) && !(m.data.by && m.data.by.id === tbsCfg.me)) tbsAlert({ id, ...m.data }); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "") && JSON.stringify(was.sent || null) === JSON.stringify(m.data.sent || null) && JSON.stringify(was.found || []) === JSON.stringify(m.data.found || []) && JSON.stringify(was.files || []) === JSON.stringify(m.data.files || [])) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (m.path === "libraryshow/main") { hideCli = new Set((m.exists && m.data && m.data.hide) || []); cliPer = (m.exists && m.data && m.data.per) || {}; const w = $("#sbl-cliwrap"); if (w) w.innerHTML = cliHTML(); repaint(); return; } if (m.path === "libraryfeat/main") { setFeat(m.exists && m.data); repaint(); return; } if (m.path === "librarycats/main") { setCustom(m.exists && m.data && m.data.types); repaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); fetchSeenSoon(); } catch (_) {} };
+      es.onmessage = e => { try { const m = JSON.parse(e.data); if (m.path === "library" && m.index) { reloadIndex(); fetchSeenSoon(); return; } if (/^sourcing\/[^/]+$/.test(m.path)) { const id = m.path.slice(9); const was = reqs.get(id); if (m.exists && m.data && !was && isAdm() && inReview(m.data) && !(m.data.by && m.data.by.id === tbsCfg.me)) tbsAlert({ id, ...m.data }); if (m.exists && m.data) { if (was && was.status === m.data.status && (was.reply || "") === (m.data.reply || "") && JSON.stringify(was.sent || null) === JSON.stringify(m.data.sent || null) && JSON.stringify(was.found || []) === JSON.stringify(m.data.found || []) && JSON.stringify(was.files || []) === JSON.stringify(m.data.files || [])) { reqs.set(id, { id, ...m.data }); return; } reqs.set(id, { id, ...m.data }); } else { if (!was) return; reqs.delete(id); } findPaint(); return; } if (m.path === "libraryshow/main") { hideCli = new Set((m.exists && m.data && m.data.hide) || []); cliPer = (m.exists && m.data && m.data.per) || {}; const w = $("#sbl-cliwrap"); if (w) w.innerHTML = cliHTML(); repaint(); return; } if (m.path === "libraryfeat/main") { setFeat(m.exists && m.data); repaint(); return; } if (m.path === "librarymeta/main") { meta = (m.exists && m.data && m.data.c) || {}; supRankOf = null; if (ui.ren) repaint(); else rerender(); if (ui.open != null) host.layer(); return; } if (m.path === "librarycats/main") { setCustom(m.exists && m.data && m.data.types); repaint(); return; } if (/^librarytypes\/[^/]+$/.test(m.path)) { tov[m.path.slice(13)] = (m.exists && m.data && m.data.t) || {}; repaint(); return; } if (!/^library\/[^/]+$/.test(m.path)) return; const sup = m.path.slice(8); on[sup] = new Set(((m.exists && m.data && m.data.on) || []).map(Number)); repaint(); fetchSeenSoon(); } catch (_) {} };
       es.onopen = () => { fetchSeen().catch(() => {}); fetchCfav().catch(() => {}); fetchFeat().catch(() => {}); fetchOn().catch(() => {}); fetchTypes().catch(() => {}); fetchReqs().catch(() => {}); };
     } catch (_) {}
   }
@@ -437,7 +444,9 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   const isOn = o => !!(on[o.sup] && on[o.sup].has(o.key));
   const typeOf = o => (tov[o.sup] && tov[o.sup][o.key]) || o.t || "U";
   const sprite = o => { if (o.s == null) return `style="background-image:url(/lib/thumb/${encodeURIComponent(o.file)});background-size:contain;background-position:center"`; const g = LIB.grid; return `style="background-image:url(/lib/sprites/s${String(o.s).padStart(3, "0")}.jpg);background-size:${g * 100}% ${g * 100}%;background-position:${(o.k % g) / (g - 1) * 100}% ${Math.floor(o.k / g) / (g - 1) * 100}%"`; };
-  const label = sup => LIB_LABEL[sup] || (LIB && LIB.sups[sup] && LIB.sups[sup].label) || [sup, ""];
+  const label0 = sup => LIB_LABEL[sup] || (LIB && LIB.sups[sup] && LIB.sups[sup].label) || [sup, ""];
+  // An admin's name for the catalogue, if they renamed it, else the name it came with.
+  const label = sup => { const m = meta[sup]; return m && m.name != null ? [m.name || label0(sup)[0], m.sub || ""] : label0(sup); };
   // Catalogues A–Z by name: English names first, then Chinese names in pinyin order.
   const enC = new Intl.Collator("en", { sensitivity: "base", numeric: true }), zhC = new Intl.Collator("zh-u-co-pinyin", { sensitivity: "base", numeric: true });
   const supName = sup => label(sup).filter(Boolean).join(" · "), isHan = x => /^[\u3400-\u9fff\uf900-\ufaff]/.test(x.trim());
@@ -467,7 +476,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   function list() {
     const q = ui.q.toLowerCase().trim().split(/\s+/).filter(Boolean); const show = showMode();
     const src = ui.sup && LIB.bySup[ui.sup] ? LIB.bySup[ui.sup] : LIB.items;
-    return src.filter(o => { if (ui.type && !inType(o)) return false; const x = isOn(o); if (show === "on" && !x) return false; if (show === "off" && x) return false; return q.every(w => o.h.includes(w)); });
+    return src.filter(o => { if (ui.type && !inType(o)) return false; const x = isOn(o); if (show === "on" && !x) return false; if (show === "off" && x) return false; return q.every(w => o.h.includes(w) || (meta[o.sup] && supName(o.sup).toLowerCase().includes(w))); });
   }
   // As shown in the grid: outside a single catalogue, images new to this person come first.
   const markedNew = o => justSeen.has(o.file) || fresh.has(o.file);
@@ -476,7 +485,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   // of this type, and opening a cover shows just that catalogue's products of this type. The choice is remembered on this device.
   const covers = () => !!ui.type && ui.type !== "_BK" && ui.type !== "TBS" && ui.cv && !ui.sup;
   // A catalogue's cover: its first image on its lowest page (page 1 for every catalogue scanned so far).
-  const coverOf = s => (LIB.bySup[s] || []).reduce((a, o) => !a || o.page < a.page || (o.page === a.page && o.key < a.key) ? o : a, null);
+  const coverOf = s => (meta[s] && meta[s].cover && (LIB.bySup[s] || []).find(o => o.file === meta[s].cover)) || (LIB.bySup[s] || []).reduce((a, o) => !a || o.page < a.page || (o.page === a.page && o.key < a.key) ? o : a, null);
   function coversHTML(l) {
     const n = {}, nw = {}, cur = curating(); l.forEach(o => { n[o.sup] = (n[o.sup] || 0) + 1; if (markedNew(o)) nw[o.sup] = (nw[o.sup] || 0) + 1; });
     const ks = Object.keys(n).sort(bySupName), tn = typeName(ui.type);
@@ -577,7 +586,10 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = zh() ? `${nf(sups.length)} 本图册` : `${nf(sups.length)} catalogue${sups.length === 1 ? "" : "s"}`; }, 0);
     if (!sups.length) return `<p class="sbl-empty">${t("Nothing has been approved yet.")}</p>`;
     return `<div class="sbl-covers">${sups.map(s => { const L = label(s);
-      return `<button class="sbl-cover" data-sblbook="${esc(s)}" title="${esc(supName(s))}"><span class="sbl-sw" ${sprite(coverOf(s))}>${newBadge(nw[s])}</span><span class="sbl-bname">${esc(L[0])}</span>${L[1] ? `<span class="sbl-sub">${esc(L[1])}</span>` : ""}<span class="sbl-sub">${zh() ? `${nf(n[s])} 张图片` : `${nf(n[s])} image${n[s] === 1 ? "" : "s"}`}${cur && hideCli.has(s) ? ` · ${t("Hidden from clients")}` : ""}</span></button>`; }).join("")}</div>`;
+      // Admins rename a catalogue right on its tile: ✎ turns the name into two fields.
+      if (ui.ren === s) { const L0 = label0(s);
+        return `<div class="sbl-renf"><span class="sbl-sw" ${sprite(coverOf(s))}></span><input id="sbl-renn" maxlength="80" value="${esc(ui.renN)}" placeholder="${esc(L0[0])}" aria-label="${esc(t("Catalogue name"))}"><input id="sbl-rens" maxlength="80" value="${esc(ui.renS)}" placeholder="${esc(t("Second line (optional)"))}" aria-label="${esc(t("Second line (optional)"))}"><span class="sbl-row" style="margin-top:4px"><button class="btn sm" data-sbl="rensave" ${ui.renBusy ? "disabled" : ""}>${t("Save")}</button><button class="linkbtn" data-sbl="renx">${t("Cancel")}</button></span><span class="sbl-sub">${t("Clear both to go back to the original name.")}</span></div>`; }
+      return `<div class="sbl-coverw"><button class="sbl-cover" data-sblbook="${esc(s)}" title="${esc(supName(s))}"><span class="sbl-sw" ${sprite(coverOf(s))}>${newBadge(nw[s])}</span><span class="sbl-bname">${esc(L[0])}</span>${L[1] ? `<span class="sbl-sub">${esc(L[1])}</span>` : ""}<span class="sbl-sub">${zh() ? `${nf(n[s])} 张图片` : `${nf(n[s])} image${n[s] === 1 ? "" : "s"}`}${cur && hideCli.has(s) ? ` · ${t("Hidden from clients")}` : ""}</span></button>${libEdit ? `<button class="sbl-ren" data-sbl="ren" data-sup="${esc(s)}" title="${esc(t("Rename catalogue"))}" aria-label="${esc(t("Rename catalogue"))}: ${esc(supName(s))}">✎</button>` : ""}</div>`; }).join("")}</div>`;
   }
   function catsHTML() {
     const cur = curating(), vis = o => cur || isOn(o);
@@ -671,6 +683,22 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     } else html = `<div class="sbl-grid">${shown.map(tile).join("")}</div>`;
     return `${sorting ? sortBarHTML() : ""}${html}${l.length > ui.n ? `<div class="sbl-more"><button class="btn ghost" data-sblmore>${zh() ? `再显示 ${Math.min(120, l.length - ui.n)} 张（还有 ${nf(l.length - ui.n)} 张）` : `Show ${Math.min(120, l.length - ui.n)} more of ${nf(l.length - ui.n)}`}</button></div>` : ""}`;
   }
+  // Saves an admin's name or cover for a catalogue; the server tells every open page.
+  async function saveMeta(sup, body) {
+    const prev = meta[sup], next = { ...(prev || {}) };
+    if (body.name !== undefined) { if (!body.name.trim() && !body.sub.trim()) { delete next.name; delete next.sub; } else { next.name = body.name.trim(); next.sub = body.sub.trim(); } }
+    if (body.cover !== undefined) { if (body.cover) next.cover = body.cover; else delete next.cover; }
+    meta = { ...meta }; if (Object.keys(next).length) meta[sup] = next; else delete meta[sup]; supRankOf = null;
+    try { await api("/api/library/catalogue-meta", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ sup, ...body }) }); }
+    catch (e) { meta = { ...meta }; if (prev) meta[sup] = prev; else delete meta[sup]; supRankOf = null; host.toast(t(e.message || "Couldn't save. Check your connection and try again.")); repaint(); throw e; }
+  }
+  async function saveName() {
+    const sup = ui.ren; ui.renBusy = true;
+    try { await saveMeta(sup, { name: ui.renN || "", sub: ui.renS || "" }); ui.ren = null; } catch (_) {}
+    ui.renBusy = false; rerender();
+  }
+  document.addEventListener("input", e => { if (e.target.id === "sbl-renn") ui.renN = e.target.value; else if (e.target.id === "sbl-rens") ui.renS = e.target.value; });
+  document.addEventListener("keydown", e => { if (e.target.id !== "sbl-renn" && e.target.id !== "sbl-rens") return; if (e.key === "Enter") { e.preventDefault(); saveName(); } else if (e.key === "Escape") { e.stopPropagation(); ui.ren = null; repaint(); } });
   const sel = new Set();
   function sortBarHTML() {
     // "+ New category…" at the end of the list turns the bar into two name boxes; Enter creates it and moves the selection in.
@@ -810,7 +838,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
         </div>
         <div class="sbl-row" style="margin-top:22px;align-items:flex-end">${addControls(o)}</div>
         <section class="sbl-sec"><header><h5>${t("Source")}</h5></header>
-          <div class="sbl-kv"><div class="k">${t("Catalogue page")}</div><div><button class="linkbtn" data-sbl="gopage" data-i="${o.i}" title="${esc(t("Opens the page inside Sourcebook"))}">${pageBtn(o)} ›</button></div><div class="k">PDF</div><div><a href="${esc(pdfURL(S))}" target="_blank" rel="noopener">${esc(S.pdf)} ↗</a></div>
+          <div class="sbl-kv"><div class="k">${t("Catalogue page")}</div><div><button class="linkbtn" data-sbl="gopage" data-i="${o.i}" title="${esc(t("Opens the page inside Sourcebook"))}">${pageBtn(o)} ›</button></div><div class="k">PDF</div><div><a href="${esc(pdfURL(S))}" target="_blank" rel="noopener">${esc(S.pdf)} ↗</a></div>${libEdit ? `<div class="k">${t("Catalogue cover")}</div><div>${coverOf(o.sup) === o ? `✓ ${t("This is the cover")}${meta[o.sup] && meta[o.sup].cover ? ` · <button class="linkbtn" data-sbl="coverx">${t("Back to page 1")}</button>` : ""}` : `<button class="linkbtn" data-sbl="cover">${t("Use this image as the cover")}</button>`}</div>` : ""}
             ${host.internal() && !S.up ? `<div class="k">${t("Catalogue folder")}</div><div class="m">${esc(LIB_ROOT + S.cat)}</div>
             <div class="k">${t("Image file")}</div><div class="m">${esc(LIB_ROOT + "_IMAGE LIBRARY\\" + S.cat + "\\" + o.sup + "\\")}</div>` : ""}</div>
           ${host.internal() ? `<div class="sbl-note"><code id="sbl-note">${esc(sourceNote(o)).replace(/\n/g, "<br>")}</code><div class="sbl-row" style="margin-top:0"><button class="btn sm" data-sbl="copy">${t("Copy source note")}</button><span class="mono" style="font-size:11.5px;color:var(--muted)">${zh() ? `PDF 从第 1 页打开；此图片在第 ${o.page} 页。` : `The PDF opens at page 1; this image is on page ${o.page}.`}</span></div></div>` : ""}
@@ -1428,6 +1456,10 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     else if (a === "prev" || a === "next") { e.stopPropagation(); step(a === "next" ? 1 : -1); }
     else if (a === "zoom") { ui.zoom = true; host.layer(); }
     else if (a === "unzoom" && !e.target.closest(".sbl-nav")) { ui.zoom = false; host.layer(); }
+    else if (a === "ren" && libEdit) { const sup = el.dataset.sup, L = label(sup), m = meta[sup]; ui.ren = sup; ui.renN = m && m.name != null ? L[0] : ""; ui.renS = m && m.name != null ? L[1] : ""; if (!(m && m.name != null)) { ui.renN = L[0]; ui.renS = L[1]; } repaint(); const f = $("#sbl-renn"); if (f) { f.focus(); f.select(); } }
+    else if (a === "renx") { ui.ren = null; repaint(); }
+    else if (a === "rensave" && libEdit && ui.ren) saveName();
+    else if ((a === "cover" || a === "coverx") && libEdit) { const o = LIB.items[ui.open]; if (o) saveMeta(o.sup, { cover: a === "cover" ? o.file : "" }).then(() => host.layer()).catch(() => {}); }
     else if (a === "feat" && isAdm()) { const o = LIB.items[ui.open]; if (o) { toggleFeat(o); host.layer(); repaint(); } }
     else if (a === "fprev" || a === "fnext") fGo(fIdx + (a === "fnext" ? 1 : -1));
     else if (a === "fplay") { fUser = !fUser; fResume(); }

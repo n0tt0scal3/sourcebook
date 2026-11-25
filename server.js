@@ -417,6 +417,10 @@ function checkPass(u, pw) { if (!u.hash || !u.salt) return false; const a = Buff
 // The studio password (APP_PASSWORD) always signs in as the owner, an admin. It's the way back in if a login is lost.
 const OWNER_VER = crypto.createHash("sha256").update("owner:" + APP_PASSWORD).digest("hex").slice(0, 12);
 const OWNER = { id: "owner", name: "Studio owner", email: "", role: "admin", projects: [] };
+// Who may rename library catalogues and choose their covers: the studio owner (studio password), plus any admin whose
+// sign-in email is listed in LIBRARY_EDITORS (comma-separated) in Render. Other admins can't.
+const LIB_EDITORS = String(process.env.LIBRARY_EDITORS || "").toLowerCase().split(/[\s,;]+/).filter(Boolean);
+const canEditLib = u => !!u && u.role === "admin" && (u.id === "owner" || (!!u.email && LIB_EDITORS.includes(String(u.email).toLowerCase())));
 const sign = v => crypto.createHmac("sha256", people.secret).update(v).digest("hex");
 function tokenFor(u) { const ver = u.id === "owner" ? OWNER_VER : String(u.ver || 0); const v = `${u.id}.${ver}`; return `${v}.${sign(v)}`; }
 const allAccess = u => u.role === "admin" || (u.role === "agent" && u.allProjects !== false);
@@ -446,7 +450,7 @@ function currentUser(req) {
 const projectOf = p => { const m = /^projects\/([^/]+)/.exec(p || ""); return m ? m[1] : null; };
 function canSeeProject(u, id) { return allAccess(u) || (u.projects || []).includes(id); }
 // The sourcing library (library/<catalogue>) is studio-wide: everyone can see what's approved; only admins approve.
-const isLibPath = p => /^library(types|cats|show|feat)?(\/|$)/.test(p || "");
+const isLibPath = p => /^library(types|cats|show|feat|meta)?(\/|$)/.test(p || "");
 // Each person's own library lists (libraryfav/<user id> favourites, libraryseen/<user id> what's new) and the supplier RFIs
 // they've seen (rfiseen/<user id>): only that person,
 // admins included, and never as a whole collection. They are read and changed through /api/library/fav and /seen.
@@ -531,6 +535,7 @@ function forUser(u, p, data) {
   // Featured images from catalogues hidden from clients aren't sent to them.
   // A client never sees other clients' catalogue lists, only whether they have their own.
   if (p === "libraryshow/main") { const { per, ...o } = data; return o; }
+  if (p === "librarymeta/main" && libCache && data.c) return { ...data, c: Object.fromEntries(Object.entries(data.c).filter(([s]) => !libHiddenFor(u, s))) };
   if (p === "libraryfeat/main" && libCache) return { ...data, f: (data.f || []).filter(f => { const it = libCache.byFile.get(f); return it && !libHiddenFor(u, it[1]); }) };
   if (/^projects\/[^/]+\/project\/main$/.test(p)) { const o = { ...data }; CLIENT_COST_PROJECT.forEach(k => delete o[k]); return o; }
   if (!ITEM_DOC.test(p)) return data;
@@ -818,7 +823,7 @@ const server = http.createServer(async (req, res) => {
     const isAdmin = me.role === "admin", isClient = me.role === "client";
 
     // who's signed in
-    if (p === "/api/me" && req.method === "GET") return send(res, 200, { ...publicUser(me), ...(me.role === "client" ? { prices: CLIENT_PRICES } : {}) });
+    if (p === "/api/me" && req.method === "GET") return send(res, 200, { ...publicUser(me), ...(me.role === "client" ? { prices: CLIENT_PRICES } : {}), ...(canEditLib(me) ? { libEdit: true } : {}) });
     if (p === "/api/me/password" && req.method === "POST") {
       const { current, next } = await readJSON(req);
       if (me.id === "owner") return send(res, 400, { code: "invalid_argument", message: "The studio password is changed in Render (APP_PASSWORD)." });
@@ -1290,6 +1295,29 @@ const server = http.createServer(async (req, res) => {
       const next = { f: [...f], updated: new Date().toISOString() };
       store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
       persist(); return send(res, 200, { ok: true, files: next.f });
+    }
+    // An admin renames a catalogue or picks its cover image. librarymeta/main = { c: { <catalogue>: { name, sub, cover } } }.
+    // name/sub replace the catalogue's two-line label (both empty puts the original back); cover is one of its image files
+    // ("" puts page 1 back). Shown to everyone who can see the catalogue.
+    if (p === "/api/library/catalogue-meta" && req.method === "POST") {
+      if (!canEditLib(me)) return deny("Only the studio owner renames catalogues or changes their covers.");
+      const b = await readJSON(req), idx = await libIndex(), sup = String(b.sup || "");
+      if (!idx.sups[sup]) return send(res, 404, { code: "not_found", message: "That catalogue isn't in the library." });
+      const dp = "librarymeta/main", cur = store[dp], c = { ...(cur?.data?.c || {}) }, e = { ...(c[sup] || {}) };
+      if (b.name !== undefined || b.sub !== undefined) {
+        const name = String(b.name || "").trim().slice(0, 80), sub = String(b.sub || "").trim().slice(0, 80);
+        if (!name && !sub) { delete e.name; delete e.sub; } else { e.name = name; e.sub = sub; }
+      }
+      if (b.cover !== undefined) {
+        const f = String(b.cover || ""), it = f && idx.byFile.get(f);
+        if (f && (!it || it[1] !== sup)) return send(res, 400, { code: "invalid_argument", message: "That image isn't in this catalogue." });
+        if (f) e.cover = f; else delete e.cover;
+      }
+      if (Object.keys(e).length) c[sup] = e; else delete c[sup];
+      const next = { c, updated: new Date().toISOString(), by: me.name || "" };
+      store[dp] = { data: next, version: (cur?.version || 0) + 1, updatedAt: next.updated };
+      persist(); broadcast({ path: dp, exists: true, data: next });
+      return send(res, 200, { ok: true, meta: c[sup] || null });
     }
     // Featured products: the studio's picks, shown to everyone when the Sourcing library opens.
     // libraryfeat/main = { f: [file names, oldest first], at: { file: ms featured } }. Only admins pick, and only approved images.

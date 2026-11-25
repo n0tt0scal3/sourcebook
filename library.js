@@ -94,13 +94,14 @@
 .sbl-page span{display:flex;gap:14px}
 .sbl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px 14px;padding-top:18px}
 .sbl-pages{display:flex;flex-wrap:wrap;gap:16px;padding-top:18px}
-.sbl-pg{flex:1 1 calc(max(var(--n) * 128px,210px) + 26px);max-width:min(100%,calc(max(var(--n) * 128px,210px) * 1.6 + 26px));min-width:0;padding:4px 12px 12px;background:var(--paper);border:1px solid var(--rule)}
+.sbl-pg{flex:1 1 max(var(--n) * 220px,220px);max-width:min(100%,calc(max(var(--n) * 220px,220px) * 1.6));min-width:0;padding:0;background:none;border:0}
+.sbl-im{display:block;width:100%;height:auto;background:#fff;border:1px solid var(--rule2);transition:border-color .2s}.sbl-open:hover .sbl-im{border-color:var(--ink)}.sbl-tile.off .sbl-im{opacity:.38;filter:grayscale(1)}
 .sbl-pg .sbl-page{padding-top:6px;flex-wrap:wrap}
 .sbl-pg .sbl-page b{font-size:17px}
 .sbl-pg.hit{box-shadow:0 0 0 2px #c8a046}
 .sbl-tile.hit .sbl-open{outline:3px solid #c8a046;outline-offset:1px}
 .sbl-pg .sbl-page span{gap:10px;font-size:12.5px;white-space:nowrap}
-.sbl-pgimgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px 10px;padding-top:10px}
+.sbl-pgimgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px 14px;padding-top:6px}
 .sbl-tile{position:relative;display:flex;flex-direction:column;gap:6px;min-width:0;transition:opacity .2s}
 .sbl-tile.off .sbl-sw{opacity:.38;filter:grayscale(1)}
 .sbl-tile.off .sbl-cap{color:var(--muted)}
@@ -312,7 +313,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
 .sbl-siderule{display:block;height:1px;background:var(--rule);margin:8px 0}
 @media (max-width:760px){.sbl-split{grid-template-columns:1fr}.sbl-side{position:static;max-height:none;overflow:visible;padding-top:16px}.sbl-side summary{display:flex;align-items:baseline;gap:10px;cursor:pointer;list-style:none;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--rule);padding:10px 12px}.sbl-side summary::-webkit-details-marker{display:none}.sbl-side summary span{font-family:inherit;text-transform:none;letter-spacing:0;font-size:14px;color:var(--ink);flex:1}.sbl-side summary::after{content:"▾";color:var(--ink)}.sbl-side[open] summary::after{content:"▴"}.sbl-side nav{border:1px solid var(--rule);border-top:0;padding:6px 0;max-height:60vh;overflow:auto}}
 @media (max-width:900px){.sbl-sheet,.sbl-sheet.big{grid-template-columns:1fr;grid-template-rows:38vh 1fr}.sbl-sheet.big{grid-template-rows:52vh 1fr}}
-@media (max-width:760px){.sbl-head{grid-template-columns:1fr}.sbl-stat{border-left:0}.sbl-stat div:first-child{padding-left:0}.sbl-tools{position:static}.sbl-cats{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px}.sbl-name{font-size:16px}.sbl-cat .sbl-all{font-size:18px}.sbl-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.sbl-covers{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px}.sbl-pages{gap:12px}.sbl-pg{flex-basis:calc(max(var(--n) * 100px,150px) + 26px);padding:4px 10px 10px}.sbl-pgimgs{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}.sbl-facts{grid-template-columns:1fr 1fr}}
+@media (max-width:760px){.sbl-head{grid-template-columns:1fr}.sbl-stat{border-left:0}.sbl-stat div:first-child{padding-left:0}.sbl-tools{position:static}.sbl-cats{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px}.sbl-name{font-size:16px}.sbl-cat .sbl-all{font-size:18px}.sbl-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.sbl-covers{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px}.sbl-pages{gap:12px}.sbl-pg{flex-basis:max(var(--n) * 150px,150px)}.sbl-pgimgs{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px 10px}.sbl-facts{grid-template-columns:1fr 1fr}}
 `;
   const style = document.createElement("style"); style.textContent = CSS; document.head.appendChild(style);
 
@@ -668,7 +669,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (!sorting) sel.clear(); else { const ids = new Set(l.map(o => o.i)); [...sel].forEach(i => ids.has(i) || sel.delete(i)); }
     const bySup = !!ui.sup, shown = l.slice(0, ui.n);
     const tile = o => { const x = isOn(o);
-      return `<div class="sbl-tile ${cur && !x ? "off" : ""} ${sel.has(o.i) ? "sel" : ""}${o.i === ui.hit ? " hit" : ""}"><button class="sbl-open" data-sblopen="${o.i}" aria-label="${esc(o.file)}"><span class="sbl-sw" ${sprite(o)}></span></button>
+      return `<div class="sbl-tile ${cur && !x ? "off" : ""} ${sel.has(o.i) ? "sel" : ""}${o.i === ui.hit ? " hit" : ""}"><button class="sbl-open" data-sblopen="${o.i}" aria-label="${esc(o.file)}">${bySup && o.s == null ? `<img class="sbl-im" src="/lib/thumb/${encodeURIComponent(o.file)}" alt="" loading="lazy">` : `<span class="sbl-sw" ${sprite(o)}></span>`}</button>
         ${sorting ? `<label class="sbl-sel" title="${t("Select to move")}"><input type="checkbox" data-sblsel="${o.i}" ${sel.has(o.i) ? "checked" : ""} aria-label="${t("Select to move")} ${esc(o.file)}"></label>` : ""}
         ${cur ? `<label class="sbl-chk" title="${x ? t("Approved. Untick to hide it.") : t("Not approved. Tick to approve.")}"><input type="checkbox" data-sblkeep="${o.i}" ${x ? "checked" : ""} aria-label="${t("Approve")} ${esc(o.file)}"></label>` : ""}
         ${inP.has(o.file) ? `<span class="sbl-inproj">${t("In project")}${inCount(inP, o.file) > 1 ? " ×" + inCount(inP, o.file) : ""}</span>` : ""}${markedNew(o) ? `<span class="sbl-newt">● ${t("New")}</span>` : ""}${feat.has(o.file) && ui.type !== "FT" ? `<span class="sbl-ftag">◆ ${t("Featured")}</span>` : ""}${ui.type === "CF" && cfav.has(o.file) ? `<span class="sbl-cfby" title="${esc(cfav.get(o.file).join(", "))}">★ ${esc(cfav.get(o.file).join(", "))}</span>` : ""}
@@ -677,7 +678,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (bySup) {
       // Inside one catalogue, each page is a card and the cards tile across the screen, sized to their number of images.
       const pages = []; shown.forEach(o => { const g = pages[pages.length - 1]; if (g && g.p === o.page) g.l.push(o); else pages.push({ p: o.page, l: [o] }); });
-      html = `<div class="sbl-pages">${pages.map(g => `<section class="sbl-pg${g.l.some(o => o.i === ui.hit) ? " hit" : ""}" data-p="${g.p}" style="--n:${Math.min(g.l.length, 4)}"><div class="sbl-page"><b>${t("Page")} ${g.p}</b>${cur ? `<span><button class="linkbtn" data-sblpage="${g.p}" data-v="on">${t("Approve page")}</button><button class="linkbtn" data-sblpage="${g.p}" data-v="off">${t("Unapprove page")}</button></span>` : ""}</div><div class="sbl-pgimgs">${g.l.map(tile).join("")}</div></section>`).join("")}</div>`;
+      html = `<div class="sbl-pages">${pages.map(g => `<section class="sbl-pg${g.l.some(o => o.i === ui.hit) ? " hit" : ""}" data-p="${g.p}" style="--n:${Math.min(g.l.length, 4)}">${cur && g.l.length > 1 ? `<div class="sbl-page"><span><button class="linkbtn" data-sblpage="${g.p}" data-v="on">${t("Approve page")}</button><button class="linkbtn" data-sblpage="${g.p}" data-v="off">${t("Unapprove page")}</button></span></div>` : ""}<div class="sbl-pgimgs">${g.l.map(tile).join("")}</div></section>`).join("")}</div>`;
     } else html = `<div class="sbl-grid">${shown.map(tile).join("")}</div>`;
     return `${sorting ? sortBarHTML() : ""}${html}${l.length > ui.n ? `<div class="sbl-more"><button class="btn ghost" data-sblmore>${zh() ? `再显示 ${Math.min(120, l.length - ui.n)} 张（还有 ${nf(l.length - ui.n)} 张）` : `Show ${Math.min(120, l.length - ui.n)} more of ${nf(l.length - ui.n)}`}</button></div>` : ""}`;
   }

@@ -81,7 +81,7 @@
 .sbl-bar{display:block;height:3px;background:var(--rule2)}
 .sbl-crumb{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;padding-top:24px}
 .sbl-crumb h3{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(26px,3vw,36px);line-height:1.1}
-.sbl-chips{display:flex;flex-wrap:wrap;gap:6px;padding-top:14px}
+.sbl-chips{display:flex;flex-wrap:wrap;gap:6px;padding-top:14px}.sbl-chips:empty{display:none}
 .sbl-bar i{display:block;height:100%;background:var(--ok)}
 .sbl-tools{position:sticky;top:calc(env(safe-area-inset-top,0px) + 58px);z-index:4;background:var(--ground);display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding-block:14px;margin-top:26px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
 .sbl-tools .sbl-q{flex:1 1 240px;max-width:420px;border:0;border-bottom:1px solid var(--rule);background:transparent;padding:8px 2px;font-size:15px;color:var(--ink);min-width:0}
@@ -568,18 +568,17 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   document.addEventListener("visibilitychange", () => { document.hidden ? fHold() : fResume(); });
   // Catalogues as icons on the library's front page (each with its first approved page as its picture): one click shows
   // every approved image in that catalogue, page by page. Clients only get the catalogues they're allowed to see.
-  function booksHTML(chips) {
+  function booksHTML() {
     const cur = curating(), first = {}, n = {};
     LIB.items.forEach(o => { if (!(cur || isOn(o))) return; n[o.sup] = (n[o.sup] || 0) + 1; if (!first[o.sup]) first[o.sup] = o; });
     const sups = Object.keys(n).sort(bySupName);
-    if (chips) return sups.map(s => { const L = label(s); return `<button class="chip" data-sblbook="${esc(s)}" aria-pressed="${ui.sup === s}">${esc(L[0])}${L[1] ? " · " + esc(L[1]) : ""} · ${nf(n[s])}</button>`; }).join("");
     if (!sups.length) return "";
     return `<section class="sbl-books" aria-label="${esc(t("Catalogues"))}"><span class="eyebrow">${t("Catalogues")}</span><div class="sbl-bookrow">${sups.map(s => { const L = label(s);
       return `<button class="sbl-book" data-sblbook="${esc(s)}" title="${esc(L[0] + (L[1] ? " · " + L[1] : ""))}"><span class="sbl-sw" ${sprite(first[s])}></span><span class="sbl-bname">${esc(L[0])}</span>${L[1] ? `<span class="sbl-sub">${esc(L[1])}</span>` : ""}<span class="sbl-sub">${zh() ? `${nf(n[s])} 张图片` : `${nf(n[s])} image${n[s] === 1 ? "" : "s"}`}${cur && hideCli.has(s) ? ` · ${t("Hidden from clients")}` : ""}</span></button>`; }).join("")}</div></section>`;
   }
   function catsHTML() {
     const cur = curating(), vis = o => cur || isOn(o);
-    if (ui.type === "_BK") return booksHTML(true);
+    if (ui.type === "_BK") return ""; // one catalogue open: its name is the heading, so no row of every other catalogue
     if (ui.type) {
       const mine = LIB.items.filter(o => inType(o) && vis(o)); const n = {}, nw = {}; mine.forEach(o => { n[o.sup] = (n[o.sup] || 0) + 1; if (markedNew(o)) nw[o.sup] = (nw[o.sup] || 0) + 1; });
       // One toggle: every product, or a cover per catalogue. With a catalogue open, "‹ Catalogues" goes back to the covers.

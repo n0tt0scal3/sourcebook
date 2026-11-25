@@ -15,7 +15,7 @@
     "Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.": "把图片拖到这里，我们会在图库中搜索相似的产品。如果找不到，我们会为您采购。", "Choose a photo": "选择图片", "What are you looking for? (optional) e.g. the chair, in walnut": "您想找什么？（可选）例如：这把椅子，胡桃木", "Sending it to our sourcing agent…": "正在发送给采购代理…", "Searching our library for something similar…": "正在图库中搜索相似产品…", "We couldn't find anything similar in our library, so we've sent it to our sourcing agent. We'll source it for you.": "图库中没有找到相似的产品，已发送给采购代理，我们会为您采购。", "Sent to our sourcing agent. We'll source it for you.": "已发送给采购代理，我们会为您采购。", "Withdraw the request": "撤回请求", "Search for something else": "搜索其他产品", "None of these? Send it to our sourcing agent": "都不合适？发送给采购代理", "Waiting to be sourced": "等待采购", "We're sourcing it": "正在为您采购", "Sourced": "已采购", "Note for the person who asked (optional)": "给提出请求者的备注（可选）", "Mark as sourced": "标为已采购", "Reopen": "重新打开", "Remove": "移除", "Sourcing requests": "采购请求", "Your sourcing requests": "您的采购请求", "Hide sourced": "隐藏已采购", "Nothing waiting to be sourced.": "没有待采购的请求。", "That isn't a photo.": "这不是图片。", "The search didn't finish. Try again.": "搜索未完成，请重试。", "Couldn't send it. Check your connection and try again.": "无法发送，请检查网络后重试。", "Photo": "图片", "Studio owner": "工作室负责人", "new": "新", "New": "新", "Add category": "添加类别", "Admins only": "仅限管理员", "New category": "新类别", "Name in English": "英文名称", "Name in Chinese": "中文名称", "e.g. Outdoor furniture": "例如：Outdoor furniture", "e.g. 户外家具": "例如：户外家具", "In a project, its products go under": "加入项目时归入", "Adding…": "正在添加…", "Cancel": "取消", "Give the category a name.": "请填写类别名称。", "There's already a category with that name.": "已有同名类别。", "Choose where its products go in a project.": "请选择加入项目时归入的分类。", "Only admins can add categories.": "只有管理员可以添加类别。", "No more categories can be added.": "无法再添加更多类别。", "Furniture": "家具", "Lighting": "灯具", "Plumbing": "卫浴", "Millwork": "木作", "Stone": "石材", "Finishes": "饰面", "Glazing": "玻璃", "Hardware": "五金", "Add photos of what you found": "添加找到的产品照片", "Attach photos or files": "添加照片或文件", "Up to 10 files per request.": "每个请求最多 10 个文件。", "That file is too big (25 MB at most).": "文件太大（最大 25 MB）。", "That file is empty.": "文件是空的。", "Only the studio and the sourcing agent can attach files to a request.": "只有工作室和采购代理可以为请求添加文件。", "Adding photos…": "正在添加照片…", "Photos of what was found": "找到的产品照片", "Up to 8 photos per request.": "每个请求最多 8 张照片。", "Only the studio and the sourcing agent can add photos to a request.": "只有工作室和采购代理可以为请求添加照片。",
     "You have 50 open requests. Wait for some to be sourced first.": "您有 50 个未完成的请求，请等部分采购完成后再提交。", "Only admins can remove a request.": "只有管理员可以移除请求。", "Only the studio and the sourcing agent can update a request.": "只有工作室和采购代理可以更新请求。", "Add a photo first.": "请先添加图片。", "Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.": "此服务器尚未设置 Claude。请在 Render 中添加 Anthropic API 密钥（ANTHROPIC_API_KEY）。",
     "Back to all product types": "返回全部产品类型", "Product types": "产品类型",
-    "Catalogues clients see": "客户可见的图册", "Catalogues": "图册", "All products": "全部产品", "Back to all catalogues": "返回全部图册", "Specifier / designer": "设计师", "Hidden from clients": "对客户隐藏", "Show all to clients": "全部对客户显示", "Hide all from clients": "全部对客户隐藏", "For": "适用于", "All clients": "所有客户", "own list": "专属列表", "Use the list for all clients": "改回所有客户的设置", "Client": "客户",
+    "Catalogues clients see": "客户可见的图册", "Catalogues": "图册", "Have something you want?": "有想要的东西吗？", "All products": "全部产品", "Back to all catalogues": "返回全部图册", "Specifier / designer": "设计师", "Hidden from clients": "对客户隐藏", "Show all to clients": "全部对客户显示", "Hide all from clients": "全部对客户隐藏", "For": "适用于", "All clients": "所有客户", "own list": "专属列表", "Use the list for all clients": "改回所有客户的设置", "Client": "客户",
     "Clients only see the approved images in the catalogues ticked here, in the library and in photo searches. Specifiers and designers see every approved catalogue.": "客户只能看到这里勾选的图册中已批准的图片（包括图库和以图搜图）。设计师可以看到所有已批准的图册。",
     "Only admins choose what clients see.": "只有管理员可以设置客户可见内容。",
     "To be sourced": "待采购", "To review": "待审核", "With the studio": "工作室审核中", "With the sourcing agent": "采购代理处理中", "To find": "待寻找", "Turn on alerts for new requests": "开启新请求提醒", "Photos sent from the Sourcing library that we couldn't match. Review each one, then send it to the sourcing agent; with email set up, it goes to their QQ Mail with the photo attached.": "从采购图库提交、但未找到匹配的图片。逐一审核后发送给采购代理；设置邮件后会附上照片发送到其 QQ 邮箱。", "Items the studio has asked you to find. Mark each one sourced when you've found it, with a note on where.": "工作室请您寻找的产品。找到后请标记为已采购，并备注来源。", "Things you've asked us to find. We review each one and send it to our sourcing agent.": "您请我们寻找的产品。我们会逐一审核并交给采购代理。", "Nothing here.": "这里没有内容。", "Nothing to be sourced yet. Drop a photo in the box on the Sourcing library page.": "还没有待采购的产品。可在采购图库页面的方框中拖入图片。", "Sourcing agent's email (QQ Mail)": "采购代理的邮箱（QQ 邮箱）", "Email isn't set up yet, so this sends it in Sourcebook only. Add the SMTP settings in Render to email the agent's QQ Mail.": "尚未设置邮件，因此仅在选材手册中发送。在 Render 中添加 SMTP 设置后即可发送到代理的 QQ 邮箱。", "Message to the agent (optional)": "给代理的留言（可选）", "e.g. Need 6, walnut, by November": "例如：需要 6 件，胡桃木，11 月前", "Sending…": "正在发送…", "Send to the sourcing agent again": "再次发送给采购代理", "Send to the sourcing agent": "发送给采购代理", "Client": "客户", "Message to the agent": "给代理的留言", "Where it was found, for the person who asked (optional)": "在哪里找到的，告诉提出请求的人（可选）", "Add the sourcing agent's email first.": "请先填写采购代理的邮箱。", "Sent to the sourcing agent by email.": "已通过邮件发送给采购代理。", "Sent to the sourcing agent in Sourcebook.": "已在选材手册中发送给采购代理。", "Adding it to TBS (to be sourced)…": "正在加入待采购 TBS…", "Nothing similar in our library, so it's been added to TBS (to be sourced).": "图库中没有相似产品，已加入待采购 TBS。", "We couldn't find anything similar in our library, so it's been added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "图库中没有找到相似的产品，已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Added to TBS (to be sourced).": "已加入待采购 TBS。", "Added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Open TBS": "打开待采购 TBS", "None of these? Add it to TBS (to be sourced)": "都不合适？加入待采购 TBS", "Email isn't set up on this server yet. Add the SMTP settings in Render, or send it in Sourcebook only.": "此服务器尚未设置邮件。请在 Render 中添加 SMTP 设置，或仅在选材手册中发送。", "The email couldn't be sent. Check the SMTP settings in Render and try again.": "邮件无法发送，请检查 Render 中的 SMTP 设置后重试。", "That email doesn't look right.": "邮箱格式不正确。", "Only admins can send requests to the sourcing agent.": "只有管理员可以将请求发送给采购代理。",
@@ -124,7 +124,7 @@
 .sbl-star:hover{color:var(--ink)}
 .sbl-cat .sbl-addic{font-size:40px;color:var(--ink3,#888);border-style:dashed}
 .sbl-cat .sbl-empty-ic{font-family:var(--display);font-size:40px;color:var(--ink3,#999)}
-.sbl-addtype{gap:8px;padding:12px;background:var(--paper);border:1px solid var(--rule);cursor:default}
+.sbl-addtype{display:flex;flex-direction:column;gap:8px;padding:12px;margin-top:8px;background:var(--paper);border:1px solid var(--rule);cursor:default}
 .sbl-addtype label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--ink2)}
 .sbl-addtype input,.sbl-addtype select{font:inherit;font-size:14px;padding:5px 0;border:0;border-bottom:1px solid var(--rule);background:none;color:var(--ink)}
 .sbl-cat .sbl-favic{display:grid;place-items:center;width:100%;aspect-ratio:4/3;background:var(--paper);border:1px solid var(--rule);font-size:44px;color:#c8a046}
@@ -501,14 +501,14 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       ${host.ctx === "project" ? `<h2>${t("Sourcing library")}</h2>` : ""}
       <p>${t(lede)}</p></div>
       <div class="sbl-stat"><div><span class="eyebrow">${t("Approved")}</span><b id="sbl-kept">${nf(a)}</b></div>${cur ? `<div><span class="eyebrow">${t("Scanned")}</span><b>${nf(tot)}</b></div>` : ""}${host.ctx === "project" ? `<div><span class="eyebrow">${t("In this project")}</span><b>${host.inProject().size}</b></div>` : ""}</div>
-      ${cur ? `<div class="sbl-full" id="sbl-full">${fullHTML()}</div><div id="sbl-addwrap" style="grid-column:1/-1">${addCatHTML()}</div><div id="sbl-cliwrap" style="grid-column:1/-1">${cliHTML()}</div>` : ""}</section>${splitHTML(`
-    ${ui.type === "TBS" ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All product types")}</button><h3>TBS · ${t("To be sourced")}</h3></div><div id="sbl-tbs">${tbsHTML()}</div><div class="sbl-tools"><button class="btn ghost sm sbl-back" data-sbltype="" data-sbltop>‹ ${t("Back to all product types")}</button></div>`
-      : ""}${ui.type === "TBS" ? "" : `${ui.type ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All product types")}</button><h3>${esc(typeName(ui.type))}</h3></div><div class="sbl-chips" id="sbl-cats">${catsHTML()}</div>`
-      : `<div id="sbl-featwrap">${featHTML()}</div><div id="sbl-findwrap">${findHTML()}</div><div id="sbl-bookswrap">${booksHTML()}</div><div class="sbl-cats" id="sbl-cats">${catsHTML()}</div>`}
+      ${cur ? `<div class="sbl-full" id="sbl-full">${fullHTML()}</div><div id="sbl-addwrap" style="grid-column:1/-1">${addCatHTML()}</div><div id="sbl-cliwrap" style="grid-column:1/-1">${cliHTML()}</div>` : ""}</section>${ui.type ? "" : `<div id="sbl-featwrap">${featHTML()}</div>`}${splitHTML(`
+    ${ui.type === "TBS" ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All catalogues")}</button><h3>TBS · ${t("To be sourced")}</h3></div><div id="sbl-tbs">${tbsHTML()}</div><div class="sbl-tools"><button class="btn ghost sm sbl-back" data-sbltype="" data-sbltop>‹ ${t("Back to all catalogues")}</button></div>`
+      : ""}${ui.type === "TBS" ? "" : `${ui.type ? `<div class="sbl-crumb"><button class="linkbtn" data-sbltype="">‹ ${t("All catalogues")}</button><h3>${esc(typeName(ui.type))}</h3></div><div class="sbl-chips" id="sbl-cats">${catsHTML()}</div>`
+      : `<div id="sbl-findwrap">${findHTML()}</div><div class="sbl-chips" id="sbl-cats"></div>`}
     <div class="sbl-tools"><input class="sbl-q" type="search" id="sbl-q" value="${esc(ui.q)}" placeholder="${esc(t("Search a code, product or page, e.g. AA01, Ampleforth, p44"))}" autocomplete="off" aria-label="${esc(t("Sourcing library"))}">
       ${cur ? `<span class="sbl-seg" role="group" aria-label="${t("Show")}">${[["on", "Approved"], ["off", "Not approved"], ["all", "All"]].map(([v, l]) => `<button class="chip" data-sblshow="${v}" aria-pressed="${show === v}">${t(l)}</button>`).join("")}</span>` : ""}
       <span class="sbl-count" id="sbl-count"></span>
-      ${ui.type || ui.q.trim() ? `<button class="btn ghost sm sbl-back" data-sbltype="" data-sbltop>‹ ${t("Back to all product types")}</button>` : ""}
+      ${ui.type || ui.q.trim() ? `<button class="btn ghost sm sbl-back" data-sbltype="" data-sbltop>‹ ${t("Back to all catalogues")}</button>` : ""}
       ${cur && ui.sup && LIB.sups[ui.sup] && LIB.sups[ui.sup].up && LIB.sups[ui.sup].cat === "FURNITURE" ? `<button class="linkbtn" data-sbl="resort">${t("Re-sort into product types")}</button>` : ""}
       ${cur && ui.sup && LIB.sups[ui.sup] && LIB.sups[ui.sup].up ? `<button class="linkbtn" data-sbl="delcat" style="color:var(--crit)">${t("Delete this catalogue")}</button>` : ""}
       ${cur && (ui.sup || ui.type) && !covers() ? `<span class="sbl-bulk"><button class="linkbtn" data-sblbulk="on">${t("Approve all shown")}</button><button class="linkbtn" data-sblbulk="off">${t("Unapprove all shown")}</button></span>` : ""}</div>
@@ -517,19 +517,20 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   // Inside a product type, every category is listed down the left beside the grid so you can jump straight to another.
   // On phones the list folds into a "Product types" toggle above the grid.
   function splitHTML(body) {
-    if (!ui.type) return body;
     const narrow = (() => { try { return matchMedia("(max-width:760px)").matches; } catch (_) { return false; } })();
-    return `<div class="sbl-split"><details class="sbl-side" ${narrow ? "" : "open"}><summary>${t("Product types")}<span>${esc(ui.type === "TBS" ? "TBS · " + t("To be sourced") : typeName(ui.type))}</span></summary><nav id="sbl-side" aria-label="${esc(t("Product types"))}">${sideHTML()}</nav></details><div class="sbl-main">${body}</div></div>`;
+    return `<div class="sbl-split"><details class="sbl-side" ${narrow ? "" : "open"}><summary>${t("Product types")}<span>${esc(!ui.type ? t("All catalogues") : ui.type === "TBS" ? "TBS · " + t("To be sourced") : typeName(ui.type))}</span></summary><nav id="sbl-side" aria-label="${esc(t("Product types"))}">${sideHTML()}</nav></details><div class="sbl-main">${body}</div></div>`;
   }
   function sideHTML() {
     const cur = curating(), vis = o => cur || isOn(o), by = {}, nw = {};
     LIB.items.forEach(o => { if (!vis(o)) return; const c = typeOf(o); by[c] = (by[c] || 0) + 1; if (isNew(o)) nw[c] = (nw[c] || 0) + 1; });
     const row = (c, name, n, k) => `<button class="sbl-sidei" data-sbltype="${c}" aria-current="${ui.type === c ? "true" : "false"}"><span>${name}</span>${k ? `<b class="sbl-newc">● ${nf(k)}</b>` : ""}${n != null ? `<em>${nf(n)}</em>` : ""}</button>`;
     const fp = featPool().length, fv = LIB.items.filter(o => fav.has(o.file) && vis(o)).length, tb = tbsList(), tn = tbsTodo();
-    return (fp || cur ? row("FT", "◆ " + esc(t("Featured products")), fp) : "") + row("F", "★ " + esc(t("Favourites")), fv) + (showCfav() ? row("CF", "★ " + esc(t("Client & designer favourites")), LIB.items.filter(o => cfav.has(o.file) && vis(o)).length) : "")
+    return `<button class="sbl-sidei" data-sbltype="" aria-current="${!ui.type}"><span>▦ ${esc(t("All catalogues"))}</span><em>${nf(Object.keys(LIB.sups).filter(s => (LIB.bySup[s] || []).some(vis)).length)}</em></button>`
+      + (fp || cur ? row("FT", "◆ " + esc(t("Featured products")), fp) : "") + row("F", "★ " + esc(t("Favourites")), fv) + (showCfav() ? row("CF", "★ " + esc(t("Client & designer favourites")), LIB.items.filter(o => cfav.has(o.file) && vis(o)).length) : "")
       + (tb.length || staff() ? row("TBS", "TBS · " + esc(t("To be sourced")), tb.length, tn) : "")
       + `<span class="sbl-siderule"></span>`
-      + typesAZ().filter(([c]) => by[c] || (cur && custom.some(x => x.c === c))).map(([c]) => row(c, esc(typeName(c)), by[c] || 0, nw[c])).join("");
+      + typesAZ().filter(([c]) => by[c] || (cur && custom.some(x => x.c === c))).map(([c]) => row(c, esc(typeName(c)), by[c] || 0, nw[c])).join("")
+      + (cur ? (ui.addtype ? addTypeHTML() : `<button class="sbl-sidei" data-sbl="addtype"><span>+ ${esc(t("Add category"))}</span></button>`) : "");
   }
   // The landing slideshow: one featured product at a time, large, changing every few seconds. It pauses while the
   // pointer is over it, after a touch, while a product card is open, in a hidden tab, or when the viewer asked for less motion.
@@ -567,15 +568,16 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   document.addEventListener("touchstart", e => { if (e.target.closest && e.target.closest("#sbl-hero-f")) { fTouch = Date.now() + 15000; fHold(); clearTimeout(fTouchT); fTouchT = setTimeout(fResume, 15100); } }, { passive: true });
   let fTouchT = null;
   document.addEventListener("visibilitychange", () => { document.hidden ? fHold() : fResume(); });
-  // Catalogues as icons on the library's front page (each with its first approved page as its picture): one click shows
-  // every approved image in that catalogue, page by page. Clients only get the catalogues they're allowed to see.
+  // The library's front page: every catalogue as a cover tile (its page-1 image), A–Z. One click shows its images page by page.
+  // Clients only get the catalogues they're allowed to see, and only catalogues with approved images.
   function booksHTML() {
-    const cur = curating(), first = {}, n = {};
-    LIB.items.forEach(o => { if (!(cur || isOn(o))) return; n[o.sup] = (n[o.sup] || 0) + 1; if (!first[o.sup]) first[o.sup] = o; });
+    const cur = curating(), n = {}, nw = {};
+    LIB.items.forEach(o => { if (!(cur || isOn(o))) return; n[o.sup] = (n[o.sup] || 0) + 1; if (isNew(o)) nw[o.sup] = (nw[o.sup] || 0) + 1; });
     const sups = Object.keys(n).sort(bySupName);
-    if (!sups.length) return "";
-    return `<section class="sbl-books" aria-label="${esc(t("Catalogues"))}"><span class="eyebrow">${t("Catalogues")}</span><div class="sbl-bookrow">${sups.map(s => { const L = label(s);
-      return `<button class="sbl-book" data-sblbook="${esc(s)}" title="${esc(L[0] + (L[1] ? " · " + L[1] : ""))}"><span class="sbl-sw" ${sprite(first[s])}></span><span class="sbl-bname">${esc(L[0])}</span>${L[1] ? `<span class="sbl-sub">${esc(L[1])}</span>` : ""}<span class="sbl-sub">${zh() ? `${nf(n[s])} 张图片` : `${nf(n[s])} image${n[s] === 1 ? "" : "s"}`}${cur && hideCli.has(s) ? ` · ${t("Hidden from clients")}` : ""}</span></button>`; }).join("")}</div></section>`;
+    setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = zh() ? `${nf(sups.length)} 本图册` : `${nf(sups.length)} catalogue${sups.length === 1 ? "" : "s"}`; }, 0);
+    if (!sups.length) return `<p class="sbl-empty">${t("Nothing has been approved yet.")}</p>`;
+    return `<div class="sbl-covers">${sups.map(s => { const L = label(s);
+      return `<button class="sbl-cover" data-sblbook="${esc(s)}" title="${esc(supName(s))}"><span class="sbl-sw" ${sprite(coverOf(s))}>${newBadge(nw[s])}</span><span class="sbl-bname">${esc(L[0])}</span>${L[1] ? `<span class="sbl-sub">${esc(L[1])}</span>` : ""}<span class="sbl-sub">${zh() ? `${nf(n[s])} 张图片` : `${nf(n[s])} image${n[s] === 1 ? "" : "s"}`}${cur && hideCli.has(s) ? ` · ${t("Hidden from clients")}` : ""}</span></button>`; }).join("")}</div>`;
   }
   function catsHTML() {
     const cur = curating(), vis = o => cur || isOn(o);
@@ -587,20 +589,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       return `<span class="sbl-seg" role="group" aria-label="${esc(t("Show"))}"><button class="chip" data-sblcv="0" aria-pressed="${!cv}">${t("All products")} · ${nf(mine.length)}</button><button class="chip" data-sblcv="1" aria-pressed="${cv}"${ui.sup ? ` title="${esc(t("Back to all catalogues"))}"` : ""}>${ui.sup ? "‹ " : ""}${t("Catalogues")} · ${nf(Object.keys(n).length)}</button></span>` +
         (L ? `<span class="sbl-cvnow">› <b>${esc(L[0])}</b>${L[1] ? " · " + esc(L[1]) : ""} · ${nf(n[ui.sup] || 0)}${nw[ui.sup] ? ` <b class="sbl-newc">● ${nf(nw[ui.sup])} ${t("new")}</b>` : ""}${cur && hideCli.has(ui.sup) ? ` <span class="sbl-hid">· ${t("Hidden from clients")}</span>` : ""}</span>` : "");
     }
-    const sub = (n, of) => cur ? `${nf(n)} / ${nf(of)} ${t("Approved").toLowerCase()}` : zh() ? `${nf(n)} 张图片` : `${nf(n)} image${n === 1 ? "" : "s"}`;
-    const by = {}; LIB.items.forEach(o => (by[typeOf(o)] = by[typeOf(o)] || []).push(o));
-    const favs = LIB.items.filter(o => fav.has(o.file) && vis(o)), fc = favs[0];
-    const favTile = `<button class="sbl-cat" data-sbltype="F">${fc ? `<span class="sbl-sw" ${sprite(fc)}></span>` : `<span class="sbl-favic">★</span>`}<span class="sbl-name">★ ${t("Favourites")}</span><span class="sbl-sub">${favs.length ? (zh() ? `${nf(favs.length)} 张图片` : `${nf(favs.length)} image${favs.length === 1 ? "" : "s"}`) : t("Star images to save them here")}</span></button>`;
-    const cfs = showCfav() ? LIB.items.filter(o => cfav.has(o.file) && vis(o)) : [], cfc = cfs[0];
-    const cfTile = showCfav() ? `<button class="sbl-cat" data-sbltype="CF">${cfc ? `<span class="sbl-sw" ${sprite(cfc)}></span>` : `<span class="sbl-favic">★</span>`}<span class="sbl-name">★ ${t("Client & designer favourites")}</span><span class="sbl-sub">${cfs.length ? (zh() ? `${nf(cfs.length)} 张图片` : `${nf(cfs.length)} image${cfs.length === 1 ? "" : "s"}`) : t("What this project's clients and designers starred")}</span></button>` : "";
-    const fp = featPool(), ftc = fp[0];
-    const featTile = fp.length || cur ? `<button class="sbl-cat" data-sbltype="FT">${ftc ? `<span class="sbl-sw" ${sprite(ftc)}></span>` : `<span class="sbl-favic">◆</span>`}<span class="sbl-name">◆ ${t("Featured products")}</span><span class="sbl-sub">${fp.length ? (zh() ? `${nf(fp.length)} 张图片` : `${nf(fp.length)} image${fp.length === 1 ? "" : "s"}`) : t("The studio's picks")}</span></button>` : "";
-    return featTile + favTile + cfTile + tbsTileHTML() + typesAZ().filter(([c]) => (by[c] && (cur || by[c].some(isOn))) || (cur && custom.some(x => x.c === c))).map(([c]) => {
-      // Cover: an approved image if there is one, preferring product photos over tearsheet pages.
-      const arr = by[c] || [], ok = arr.filter(isOn), pool0 = cur && !ok.length ? arr : ok, photos = pool0.filter(o => !/tearsheet/i.test(o.sup)), pool = photos.length ? photos : pool0, cover = pool[Math.min(pool.length - 1, Math.floor(pool.length * .12))];
-      const nn = arr.filter(isNew).length;
-      return `<button class="sbl-cat" data-sbltype="${c}">${cover ? `<span class="sbl-sw" ${sprite(cover)}>${newBadge(nn)}</span>` : `<span class="sbl-favic sbl-empty-ic">${esc(typeName(c).slice(0, 1))}</span>`}<span class="sbl-name">${esc(typeName(c))}</span><span class="sbl-sub">${sub(ok.length, arr.length)}</span>${cur ? `<span class="sbl-bar"><i style="width:${arr.length ? ok.length / arr.length * 100 : 0}%"></i></span>` : ""}</button>`;
-    }).join("") + (cur ? addTypeHTML() : "");
+    return "";
   }
   // Which catalogues clients see. Specifiers, agents and admins see every approved catalogue. Clients follow the studio list
   // ticked here, unless an admin picks a client and changes their ticks: then that client sees only their own list.
@@ -633,7 +622,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const who = cliWho(), prevH = new Set(hideCli), prevP = { ...cliPer };
     if (who) { if (reset) { const n = { ...cliPer }; delete n[who.id]; cliPer = n; } else { const own = new Set(cliPer[who.id] || Object.keys(LIB.sups).filter(s => !hideCli.has(s))); sups.forEach(s => show ? own.add(s) : own.delete(s)); cliPer = { ...cliPer, [who.id]: [...own].sort() }; } }
     else sups.forEach(s => show ? hideCli.delete(s) : hideCli.add(s));
-    const w = $("#sbl-cliwrap"); if (w) w.innerHTML = cliHTML(); const c = $("#sbl-cats"); if (c) c.innerHTML = catsHTML();
+    const w = $("#sbl-cliwrap"); if (w) w.innerHTML = cliHTML(); repaint();
     if (!reset && !sups.length) return;
     try { await api("/api/library/show", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(who ? (reset ? { user: who.id, reset: true } : { user: who.id, sups, clients: show }) : { sups, clients: show }) }); }
     catch (e) { hideCli = prevH; cliPer = prevP; const w2 = $("#sbl-cliwrap"); if (w2) w2.innerHTML = cliHTML(); host.toast(t(e.message || "Couldn't save. Check your connection and try again.")); }
@@ -659,7 +648,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     } catch (e) { ui.addtype = true; repaint(); const g = $("#sbl-nten"); if (g) { g.value = keep.en; $("#sbl-ntzh").value = keep.zhn; $("#sbl-ntsec").value = keep.section; } host.toast(t(e.message || "Couldn't save. Check your connection and try again.")); }
   }
   function gridHTML() {
-    if (!ui.type && !ui.q.trim()) { setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = ""; }, 0); return `<p class="sbl-hint" style="padding-top:18px">${t("Choose a product type to see its images.")}</p>`; }
+    if (!ui.type && !ui.q.trim()) return booksHTML();
     const l = ordered(), cur = curating(), inP = host.ctx === "project" ? host.inProject() : new Map();
     setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = zh() ? `${nf(l.length)} 张图片` : `${nf(l.length)} image${l.length === 1 ? "" : "s"}`; autoMore(); }, 0);
     if (!l.length) return `<div class="sbl-grid"><p class="sbl-empty">${ui.type === "F" && !ui.q ? t("No favourites yet. Tap the star on any image to save it here.") : ui.type === "CF" && !ui.q ? t("No client or designer has starred anything in this project yet.") : ui.type === "FT" && !ui.q ? t("No featured products yet. Open an approved product and press Feature.") : ui.q ? t("Nothing matches that search.") : showMode() === "off" ? t("Nothing is waiting for approval here.") : t("Nothing has been approved yet.")}</p></div>`;
@@ -1280,13 +1269,6 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const msg = (zh() ? "新的待采购 TBS 需要审核：" : "New item to review in TBS: ") + ((zh() ? x.zh : x.what) || x.what || t("Photo")) + (x.by && x.by.name ? " · " + x.by.name : "");
     host.toast(msg);
     if (window.Notification && Notification.permission === "granted" && (document.hidden || !document.hasFocus())) { try { new Notification("Sourcebook · TBS", { body: msg, icon: "/icon-192.png", tag: "sb-tbs-" + x.id }); } catch (_) {} }
-  }
-  function tbsTileHTML() {
-    const all = tbsList(); if (!all.length && !staff()) return "";
-    const n = tbsTodo(), sub = isAdm() ? (zh() ? `${nf(all.filter(inReview).length)} 项待审核 · ${nf(all.filter(x => x.status === "sent").length)} 项采购中` : `${nf(all.filter(inReview).length)} to review · ${nf(all.filter(x => x.status === "sent").length)} with the agent`)
-      : tbsCfg.role === "agent" ? (zh() ? `${nf(n)} 项待寻找` : `${nf(n)} to find`) : (zh() ? `${nf(all.length)} 项请求` : `${nf(all.length)} request${all.length === 1 ? "" : "s"}`);
-    const cover = all.find(x => isAdm() ? inReview(x) : true) || all[0];
-    return `<button class="sbl-cat" data-sbltype="TBS">${cover ? `<span class="sbl-sw sbl-tbsic" style="background-image:url(/_blob/${esc(cover.photo)})">${n ? `<i>● ${nf(n)}${isAdm() ? " " + t("new") : ""}</i>` : ""}</span>` : `<span class="sbl-favic sbl-tbsword">TBS</span>`}<span class="sbl-name">TBS · ${t("To be sourced")}</span><span class="sbl-sub">${sub}</span></button>`;
   }
   const tbsState = x => inReview(x) ? "review" : x.status;
   function tbsHTML() {

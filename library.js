@@ -12,13 +12,13 @@
     "Ignore": "忽略", "Couldn't get the PDF from Google Drive. Try again.": "无法从 Google 云盘获取 PDF，请重试。", "Checking Google Drive…": "正在检查 Google 云盘…", "Google Drive couldn't be reached.": "无法连接 Google 云盘。",
     "The catalogue folder isn't shared with Sourcebook's Google account.": "目录文件夹尚未共享给选材手册的 Google 账号。", "That PDF isn't in the catalogue folder any more.": "该 PDF 已不在目录文件夹中。",
     "The Google key in Render (GOOGLE_SERVICE_ACCOUNT) couldn't be read.": "无法读取 Render 中的 Google 密钥（GOOGLE_SERVICE_ACCOUNT）。",
-    "Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.": "把图片拖到这里，我们会在图库中搜索相似的产品。如果找不到，我们会为您采购。", "Choose a photo": "选择图片", "What are you looking for? (optional) e.g. the chair, in walnut": "您想找什么？（可选）例如：这把椅子，胡桃木", "Sending it to our sourcing agent…": "正在发送给采购代理…", "Searching our library for something similar…": "正在图库中搜索相似产品…", "We couldn't find anything similar in our library, so we've sent it to our sourcing agent. We'll source it for you.": "图库中没有找到相似的产品，已发送给采购代理，我们会为您采购。", "Sent to our sourcing agent. We'll source it for you.": "已发送给采购代理，我们会为您采购。", "Withdraw the request": "撤回请求", "Search for something else": "搜索其他产品", "None of these? Send it to our sourcing agent": "都不合适？发送给采购代理", "Waiting to be sourced": "等待采购", "We're sourcing it": "正在为您采购", "Sourced": "已采购", "Note for the person who asked (optional)": "给提出请求者的备注（可选）", "Mark as sourced": "标为已采购", "Reopen": "重新打开", "Remove": "移除", "Sourcing requests": "采购请求", "Your sourcing requests": "您的采购请求", "Hide sourced": "隐藏已采购", "Nothing waiting to be sourced.": "没有待采购的请求。", "That isn't a photo.": "这不是图片。", "The search didn't finish. Try again.": "搜索未完成，请重试。", "Couldn't send it. Check your connection and try again.": "无法发送，请检查网络后重试。", "Photo": "图片", "Studio owner": "工作室负责人", "new": "新", "New": "新", "Add category": "添加类别", "Admins only": "仅限管理员", "New category": "新类别", "Name in English": "英文名称", "Name in Chinese": "中文名称", "e.g. Outdoor furniture": "例如：Outdoor furniture", "e.g. 户外家具": "例如：户外家具", "In a project, its products go under": "加入项目时归入", "Adding…": "正在添加…", "Cancel": "取消", "Give the category a name.": "请填写类别名称。", "There's already a category with that name.": "已有同名类别。", "Choose where its products go in a project.": "请选择加入项目时归入的分类。", "Only admins can add categories.": "只有管理员可以添加类别。", "No more categories can be added.": "无法再添加更多类别。", "Furniture": "家具", "Lighting": "灯具", "Plumbing": "卫浴", "Millwork": "木作", "Stone": "石材", "Finishes": "饰面", "Glazing": "玻璃", "Hardware": "五金", "Add photos of what you found": "添加找到的产品照片", "Attach photos or files": "添加照片或文件", "Up to 10 files per request.": "每个请求最多 10 个文件。", "That file is too big (25 MB at most).": "文件太大（最大 25 MB）。", "That file is empty.": "文件是空的。", "Only the studio and the sourcing agent can attach files to a request.": "只有工作室和采购代理可以为请求添加文件。", "Adding photos…": "正在添加照片…", "Photos of what was found": "找到的产品照片", "Up to 8 photos per request.": "每个请求最多 8 张照片。", "Only the studio and the sourcing agent can add photos to a request.": "只有工作室和采购代理可以为请求添加照片。",
+    "Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.": "把图片或文件拖到这里，我们会在图库中搜索相似的产品。如果找不到，我们会为您采购。", "Choose a photo or file": "选择图片或文件", "Add a photo or file first.": "请先添加图片或文件。", "What are you looking for? (optional) e.g. the chair, in walnut": "您想找什么？（可选）例如：这把椅子，胡桃木", "Sending it to our sourcing agent…": "正在发送给采购代理…", "Searching our library for something similar…": "正在图库中搜索相似产品…", "We couldn't find anything similar in our library, so we've sent it to our sourcing agent. We'll source it for you.": "图库中没有找到相似的产品，已发送给采购代理，我们会为您采购。", "Sent to our sourcing agent. We'll source it for you.": "已发送给采购代理，我们会为您采购。", "Withdraw the request": "撤回请求", "Search for something else": "搜索其他产品", "None of these? Send it to our sourcing agent": "都不合适？发送给采购代理", "Waiting to be sourced": "等待采购", "We're sourcing it": "正在为您采购", "Sourced": "已采购", "Note for the person who asked (optional)": "给提出请求者的备注（可选）", "Mark as sourced": "标为已采购", "Reopen": "重新打开", "Remove": "移除", "Sourcing requests": "采购请求", "Your sourcing requests": "您的采购请求", "Hide sourced": "隐藏已采购", "Nothing waiting to be sourced.": "没有待采购的请求。", "That isn't a photo.": "这不是图片。", "The search didn't finish. Try again.": "搜索未完成，请重试。", "Couldn't send it. Check your connection and try again.": "无法发送，请检查网络后重试。", "Photo": "图片", "Studio owner": "工作室负责人", "new": "新", "New": "新", "Add category": "添加类别", "Admins only": "仅限管理员", "New category": "新类别", "Name in English": "英文名称", "Name in Chinese": "中文名称", "e.g. Outdoor furniture": "例如：Outdoor furniture", "e.g. 户外家具": "例如：户外家具", "In a project, its products go under": "加入项目时归入", "Adding…": "正在添加…", "Cancel": "取消", "Give the category a name.": "请填写类别名称。", "There's already a category with that name.": "已有同名类别。", "Choose where its products go in a project.": "请选择加入项目时归入的分类。", "Only admins can add categories.": "只有管理员可以添加类别。", "No more categories can be added.": "无法再添加更多类别。", "Furniture": "家具", "Lighting": "灯具", "Plumbing": "卫浴", "Millwork": "木作", "Stone": "石材", "Finishes": "饰面", "Glazing": "玻璃", "Hardware": "五金", "Add photos of what you found": "添加找到的产品照片", "Attach photos or files": "添加照片或文件", "Up to 10 files per request.": "每个请求最多 10 个文件。", "That file is too big (25 MB at most).": "文件太大（最大 25 MB）。", "That file is empty.": "文件是空的。", "Only the studio and the sourcing agent can attach files to a request.": "只有工作室和采购代理可以为请求添加文件。", "Adding photos…": "正在添加照片…", "Photos of what was found": "找到的产品照片", "Up to 8 photos per request.": "每个请求最多 8 张照片。", "Only the studio and the sourcing agent can add photos to a request.": "只有工作室和采购代理可以为请求添加照片。",
     "You have 50 open requests. Wait for some to be sourced first.": "您有 50 个未完成的请求，请等部分采购完成后再提交。", "Only admins can remove a request.": "只有管理员可以移除请求。", "Only the studio and the sourcing agent can update a request.": "只有工作室和采购代理可以更新请求。", "Add a photo first.": "请先添加图片。", "Claude isn't set up on this server yet. Add an Anthropic API key (ANTHROPIC_API_KEY) in Render.": "此服务器尚未设置 Claude。请在 Render 中添加 Anthropic API 密钥（ANTHROPIC_API_KEY）。",
     "Back to all product types": "返回全部产品类型", "Product types": "产品类型",
-    "Catalogues clients see": "客户可见的图册", "Catalogues": "图册", "Rename": "重命名", "Save": "保存", "Rename catalogue": "重命名图册", "Catalogue name": "图册名称", "Second line (optional)": "第二行（可选）", "Clear both to go back to the original name.": "两项都清空即恢复原名。", "Catalogue cover": "图册封面", "Use this image as the cover": "用这张图片作封面", "This is the cover": "这是封面", "Back to page 1": "改回第 1 页", "Only the studio owner renames catalogues or changes their covers.": "只有工作室负责人可以重命名图册或更换封面。", "Have something you want?": "有想要的东西吗？", "All products": "全部产品", "Back to all catalogues": "返回全部图册", "Specifier / designer": "设计师", "Hidden from clients": "对客户隐藏", "Show all to clients": "全部对客户显示", "Hide all from clients": "全部对客户隐藏", "For": "适用于", "All clients": "所有客户", "own list": "专属列表", "Use the list for all clients": "改回所有客户的设置", "Client": "客户",
+    "Catalogues clients see": "客户可见的图册", "Catalogues": "图册", "Rename": "重命名", "Save": "保存", "Rename catalogue": "重命名图册", "Catalogue name": "图册名称", "Second line (optional)": "第二行（可选）", "Clear both to go back to the original name.": "两项都清空即恢复原名。", "Catalogue cover": "图册封面", "Use this image as the cover": "用这张图片作封面", "This is the cover": "这是封面", "Back to page 1": "改回第 1 页", "Change cover": "更换封面", "Choose a cover": "选择封面", "Tap an image to make it the cover.": "点一张图片即设为封面。", "Cover": "封面", "Only the studio owner renames catalogues or changes their covers.": "只有工作室负责人可以重命名图册或更换封面。", "Have something you want?": "有想要的东西吗？", "All products": "全部产品", "Back to all catalogues": "返回全部图册", "Specifier / designer": "设计师", "Hidden from clients": "对客户隐藏", "Show all to clients": "全部对客户显示", "Hide all from clients": "全部对客户隐藏", "For": "适用于", "All clients": "所有客户", "own list": "专属列表", "Use the list for all clients": "改回所有客户的设置", "Client": "客户",
     "Clients only see the approved images in the catalogues ticked here, in the library and in photo searches. Specifiers and designers see every approved catalogue.": "客户只能看到这里勾选的图册中已批准的图片（包括图库和以图搜图）。设计师可以看到所有已批准的图册。",
     "Only admins choose what clients see.": "只有管理员可以设置客户可见内容。",
-    "To be sourced": "待采购", "To review": "待审核", "With the studio": "工作室审核中", "With the sourcing agent": "采购代理处理中", "To find": "待寻找", "Turn on alerts for new requests": "开启新请求提醒", "Photos sent from the Sourcing library that we couldn't match. Review each one, then send it to the sourcing agent; with email set up, it goes to their QQ Mail with the photo attached.": "从采购图库提交、但未找到匹配的图片。逐一审核后发送给采购代理；设置邮件后会附上照片发送到其 QQ 邮箱。", "Items the studio has asked you to find. Mark each one sourced when you've found it, with a note on where.": "工作室请您寻找的产品。找到后请标记为已采购，并备注来源。", "Things you've asked us to find. We review each one and send it to our sourcing agent.": "您请我们寻找的产品。我们会逐一审核并交给采购代理。", "Nothing here.": "这里没有内容。", "Nothing to be sourced yet. Drop a photo in the box on the Sourcing library page.": "还没有待采购的产品。可在采购图库页面的方框中拖入图片。", "Sourcing agent's email (QQ Mail)": "采购代理的邮箱（QQ 邮箱）", "Email isn't set up yet, so this sends it in Sourcebook only. Add the SMTP settings in Render to email the agent's QQ Mail.": "尚未设置邮件，因此仅在选材手册中发送。在 Render 中添加 SMTP 设置后即可发送到代理的 QQ 邮箱。", "Message to the agent (optional)": "给代理的留言（可选）", "e.g. Need 6, walnut, by November": "例如：需要 6 件，胡桃木，11 月前", "Sending…": "正在发送…", "Send to the sourcing agent again": "再次发送给采购代理", "Send to the sourcing agent": "发送给采购代理", "Client": "客户", "Message to the agent": "给代理的留言", "Where it was found, for the person who asked (optional)": "在哪里找到的，告诉提出请求的人（可选）", "Add the sourcing agent's email first.": "请先填写采购代理的邮箱。", "Sent to the sourcing agent by email.": "已通过邮件发送给采购代理。", "Sent to the sourcing agent in Sourcebook.": "已在选材手册中发送给采购代理。", "Adding it to TBS (to be sourced)…": "正在加入待采购 TBS…", "Nothing similar in our library, so it's been added to TBS (to be sourced).": "图库中没有相似产品，已加入待采购 TBS。", "We couldn't find anything similar in our library, so it's been added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "图库中没有找到相似的产品，已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Added to TBS (to be sourced).": "已加入待采购 TBS。", "Added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Open TBS": "打开待采购 TBS", "None of these? Add it to TBS (to be sourced)": "都不合适？加入待采购 TBS", "Email isn't set up on this server yet. Add the SMTP settings in Render, or send it in Sourcebook only.": "此服务器尚未设置邮件。请在 Render 中添加 SMTP 设置，或仅在选材手册中发送。", "The email couldn't be sent. Check the SMTP settings in Render and try again.": "邮件无法发送，请检查 Render 中的 SMTP 设置后重试。", "That email doesn't look right.": "邮箱格式不正确。", "Only admins can send requests to the sourcing agent.": "只有管理员可以将请求发送给采购代理。",
+    "To be sourced": "待采购", "To review": "待审核", "With the studio": "工作室审核中", "With the sourcing agent": "采购代理处理中", "To find": "待寻找", "Turn on alerts for new requests": "开启新请求提醒", "Photos and files sent from the Sourcing library that we couldn't match. Review each one, then send it to the sourcing agent; with email set up, it goes to their QQ Mail with the photo or file attached.": "从采购图库提交、但未找到匹配的图片和文件。逐一审核后发送给采购代理；设置邮件后会附上照片或文件发送到其 QQ 邮箱。", "Items the studio has asked you to find. Mark each one sourced when you've found it, with a note on where.": "工作室请您寻找的产品。找到后请标记为已采购，并备注来源。", "Things you've asked us to find. We review each one and send it to our sourcing agent.": "您请我们寻找的产品。我们会逐一审核并交给采购代理。", "Nothing here.": "这里没有内容。", "Nothing to be sourced yet. Drop a photo or file in the box on the Sourcing library page.": "还没有待采购的产品。可在采购图库页面的方框中拖入图片或文件。", "Sourcing agent's email (QQ Mail)": "采购代理的邮箱（QQ 邮箱）", "Email isn't set up yet, so this sends it in Sourcebook only. Add the SMTP settings in Render to email the agent's QQ Mail.": "尚未设置邮件，因此仅在选材手册中发送。在 Render 中添加 SMTP 设置后即可发送到代理的 QQ 邮箱。", "Message to the agent (optional)": "给代理的留言（可选）", "e.g. Need 6, walnut, by November": "例如：需要 6 件，胡桃木，11 月前", "Sending…": "正在发送…", "Send to the sourcing agent again": "再次发送给采购代理", "Send to the sourcing agent": "发送给采购代理", "Client": "客户", "Message to the agent": "给代理的留言", "Where it was found, for the person who asked (optional)": "在哪里找到的，告诉提出请求的人（可选）", "Add the sourcing agent's email first.": "请先填写采购代理的邮箱。", "Sent to the sourcing agent by email.": "已通过邮件发送给采购代理。", "Sent to the sourcing agent in Sourcebook.": "已在选材手册中发送给采购代理。", "Adding it to TBS (to be sourced)…": "正在加入待采购 TBS…", "Nothing similar in our library, so it's been added to TBS (to be sourced).": "图库中没有相似产品，已加入待采购 TBS。", "We couldn't find anything similar in our library, so it's been added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "图库中没有找到相似的产品，已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Added to TBS (to be sourced).": "已加入待采购 TBS。", "Added to TBS (to be sourced). We'll review it and have our sourcing agent find it for you.": "已加入待采购 TBS。我们会审核后请采购代理为您寻找。", "Open TBS": "打开待采购 TBS", "None of these? Add it to TBS (to be sourced)": "都不合适？加入待采购 TBS", "Email isn't set up on this server yet. Add the SMTP settings in Render, or send it in Sourcebook only.": "此服务器尚未设置邮件。请在 Render 中添加 SMTP 设置，或仅在选材手册中发送。", "The email couldn't be sent. Check the SMTP settings in Render and try again.": "邮件无法发送，请检查 Render 中的 SMTP 设置后重试。", "That email doesn't look right.": "邮箱格式不正确。", "Only admins can send requests to the sourcing agent.": "只有管理员可以将请求发送给采购代理。",
     "Sourcing library": "采购图库", "Approved": "已批准", "Not approved": "未批准", "All": "全部", "Scanned": "已扫描", "In this project": "本项目中", "All catalogues": "全部图册",
     "Approve all shown": "批准全部显示项", "Move selected to…": "将所选移至…", "+ New category…": "+ 新类别…", "Create and move": "新建并移入", "Select all shown": "全选显示项", "Clear selection": "清除选择", "Select images first.": "请先选择图片。", "Select to move": "选择以移动", "Unapprove all shown": "取消批准全部显示项", "Approve page": "批准本页", "Unapprove page": "取消批准本页", "In project": "已在项目中",
     "Loading catalogues…": "正在加载图册…", "The catalogue index didn't load. Reload the page to try again.": "图册索引未能加载，请刷新页面重试。",
@@ -72,6 +72,14 @@
 .sbl-cover .sbl-sw{position:relative;aspect-ratio:1;border:1px solid var(--rule);box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:4px}.sbl-cover:hover .sbl-sw{border-color:var(--ink)}.sbl-cover .sbl-bname{font-size:14px}.sbl-cover .sbl-sub{font-size:11px}
 .sbl-coverw{position:relative;min-width:0}.sbl-coverw .sbl-cover{width:100%}
 .sbl-ren{position:absolute;top:6px;right:6px;width:30px;height:30px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);font-size:14px;line-height:1;cursor:pointer;opacity:.85}.sbl-ren:hover{opacity:1;border-color:var(--ink)}
+.sbl-cvb{top:42px;display:grid;place-items:center;padding:0}.sbl-cvb svg{width:16px;height:16px}
+.sbl-cvp{position:fixed;z-index:21;inset:clamp(0px,4vh,40px) clamp(0px,4vw,56px);display:flex;flex-direction:column;background:var(--paper);color:var(--ink);box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.sbl-cvph{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 22px 14px;border-bottom:1px solid var(--rule)}.sbl-cvph .sbl-bname{font-size:18px;margin-top:2px}.sbl-cvph .sbl-sub{margin-top:4px;font-size:13px;color:var(--muted)}
+.sbl-cvpx{flex:none;width:36px;height:36px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);font-size:20px;line-height:1;cursor:pointer}.sbl-cvpx:hover{border-color:var(--ink)}
+.sbl-cvpg{flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;padding:16px 22px 24px;align-content:start}
+.sbl-cvpi{position:relative;display:block;padding:0;border:1px solid var(--rule);background:#fff;cursor:pointer;content-visibility:auto;contain-intrinsic-size:auto 120px}.sbl-cvpi .sbl-sw{display:block;aspect-ratio:1}.sbl-cvpi:hover{border-color:var(--ink)}.sbl-cvpi.on{outline:2px solid var(--ink);outline-offset:1px}
+.sbl-cvpi em{position:absolute;left:6px;top:6px;font-style:normal;font-size:11px;padding:2px 6px;background:var(--ink);color:var(--paper)}.sbl-cvpi i{position:absolute;right:5px;bottom:4px;font-style:normal;font-size:10px;color:#777;background:rgba(255,255,255,.85);padding:0 3px}
+@media (max-width:760px){.sbl-cvpg{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px 14px 20px}.sbl-cvph{padding:14px}}
 .sbl-renf{display:flex;flex-direction:column;gap:6px;min-width:0}.sbl-renf .sbl-sw{aspect-ratio:1;border:1px solid var(--rule);margin-bottom:4px}.sbl-renf input{font:inherit;font-size:14px;padding:5px 0;border:0;border-bottom:1px solid var(--ink2);background:none;color:var(--ink);min-width:0}
 .sbl-cvnow{align-self:center;font-size:14px;color:var(--ink);padding-left:4px}
 .sbl-cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:18px 16px;padding-top:22px}
@@ -185,6 +193,13 @@
 .sbl-fwork span{color:var(--ink2);font-size:13.5px}
 .sbl-fwork .sbl-row{margin-top:6px}
 .sbl-fpic{width:96px;height:96px;object-fit:contain;background:#fff;border:1px solid var(--rule2);flex:none}
+/* The featured slideshow also uses .sbl-fpic; keep the box's picture small. */
+.sbl-fwork > .sbl-fpic{width:96px;height:96px;padding:0;margin:0;display:block;cursor:default;min-width:0}
+.sbl-fwork > .sbl-ffile{display:flex;padding:6px}
+.sbl-fwork .sbl-fext{color:var(--paper)}
+.sbl-ffile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:6px;box-sizing:border-box;text-align:center}
+.sbl-fwork .sbl-ffile small{font-size:10.5px;line-height:1.25;color:var(--ink2);overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow-wrap:anywhere;max-width:100%}
+.sbl-ffile .sbl-fext,.sbl-reqfile .sbl-fext{font-size:12px;padding:3px 7px}
 .sbl-fbar{display:block;height:3px;max-width:320px;margin-top:6px;background:var(--rule2);overflow:hidden}
 .sbl-fbar i{display:block;height:100%;width:35%;background:var(--ink);animation:sblbar 1.4s ease-in-out infinite}
 @keyframes sblbar{0%{transform:translateX(-100%)}100%{transform:translateX(290%)}}
@@ -235,6 +250,7 @@
 .sbl-req{display:flex;gap:14px;padding:12px;background:var(--paper);border:1px solid var(--rule)}
 .sbl-req.done{opacity:.75}
 .sbl-req img{width:88px;height:88px;object-fit:contain;background:#fff;border:1px solid var(--rule2);display:block}
+.sbl-reqfile{display:grid;place-items:center;width:88px;height:88px;flex:none;background:#fff;border:1px solid var(--rule2);text-decoration:none;box-sizing:border-box}
 .sbl-req > div{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
 .sbl-req b{font-weight:500;font-size:14.5px}
 .sbl-req p{margin:0;font-size:13.5px;color:var(--ink2);overflow-wrap:anywhere}
@@ -589,8 +605,24 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       // Admins rename a catalogue right on its tile: ✎ turns the name into two fields.
       if (ui.ren === s) { const L0 = label0(s);
         return `<div class="sbl-renf"><span class="sbl-sw" ${sprite(coverOf(s))}></span><input id="sbl-renn" maxlength="80" value="${esc(ui.renN)}" placeholder="${esc(L0[0])}" aria-label="${esc(t("Catalogue name"))}"><input id="sbl-rens" maxlength="80" value="${esc(ui.renS)}" placeholder="${esc(t("Second line (optional)"))}" aria-label="${esc(t("Second line (optional)"))}"><span class="sbl-row" style="margin-top:4px"><button class="btn sm" data-sbl="rensave" ${ui.renBusy ? "disabled" : ""}>${t("Save")}</button><button class="linkbtn" data-sbl="renx">${t("Cancel")}</button></span><span class="sbl-sub">${t("Clear both to go back to the original name.")}</span></div>`; }
-      return `<div class="sbl-coverw"><button class="sbl-cover" data-sblbook="${esc(s)}" title="${esc(supName(s))}"><span class="sbl-sw" ${sprite(coverOf(s))}>${newBadge(nw[s])}</span><span class="sbl-bname">${esc(L[0])}</span>${L[1] ? `<span class="sbl-sub">${esc(L[1])}</span>` : ""}<span class="sbl-sub">${zh() ? `${nf(n[s])} 张图片` : `${nf(n[s])} image${n[s] === 1 ? "" : "s"}`}${cur && hideCli.has(s) ? ` · ${t("Hidden from clients")}` : ""}</span></button>${libEdit ? `<button class="sbl-ren" data-sbl="ren" data-sup="${esc(s)}" title="${esc(t("Rename catalogue"))}" aria-label="${esc(t("Rename catalogue"))}: ${esc(supName(s))}">✎</button>` : ""}</div>`; }).join("")}</div>`;
+      return `<div class="sbl-coverw"><button class="sbl-cover" data-sblbook="${esc(s)}" title="${esc(supName(s))}"><span class="sbl-sw" ${sprite(coverOf(s))}>${newBadge(nw[s])}</span><span class="sbl-bname">${esc(L[0])}</span>${L[1] ? `<span class="sbl-sub">${esc(L[1])}</span>` : ""}<span class="sbl-sub">${zh() ? `${nf(n[s])} 张图片` : `${nf(n[s])} image${n[s] === 1 ? "" : "s"}`}${cur && hideCli.has(s) ? ` · ${t("Hidden from clients")}` : ""}</span></button>${libEdit ? `<button class="sbl-ren" data-sbl="ren" data-sup="${esc(s)}" title="${esc(t("Rename catalogue"))}" aria-label="${esc(t("Rename catalogue"))}: ${esc(supName(s))}">✎</button><button class="sbl-ren sbl-cvb" data-sbl="cvp" data-sup="${esc(s)}" title="${esc(t("Change cover"))}" aria-label="${esc(t("Change cover"))}: ${esc(supName(s))}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11"/><circle cx="5.5" cy="6" r="1.3"/><path d="M1.5 12l4-4 3 3 2-2 4 4"/></svg></button>` : ""}</div>`; }).join("")}</div>`;
   }
+  // The studio owner picks a catalogue's cover from its own images: the picture button under ✎ opens every image of that
+  // catalogue, page by page; one tap makes it the cover and closes the picker.
+  function cvpHTML() {
+    const s = ui.cvp, c = coverOf(s), L = label(s), l = (LIB.bySup[s] || []).slice().sort((a, b) => a.page - b.page || a.key - b.key);
+    return `<div class="sbl-scrim" data-sbl="cvpx"></div><div class="sbl-cvp" role="dialog" aria-modal="true" aria-label="${esc(t("Choose a cover"))}"><div class="sbl-cvph"><div><div class="eyebrow">${t("Choose a cover")}</div><div class="sbl-bname">${esc(L[0])}${L[1] ? ` · ${esc(L[1])}` : ""}</div><div class="sbl-sub">${t("Tap an image to make it the cover.")}${meta[s] && meta[s].cover ? ` · <button class="linkbtn" data-sbl="cvpreset">${t("Back to page 1")}</button>` : ""}</div></div><button class="sbl-cvpx" data-sbl="cvpx" title="${esc(t("Close"))}" aria-label="${esc(t("Close"))}">×</button></div>
+      <div class="sbl-cvpg">${l.map(o => `<button class="sbl-cvpi${o === c ? " on" : ""}" data-sbl="cvpset" data-i="${o.i}" title="${esc(t("Page"))} ${o.page}"><span class="sbl-sw" ${sprite(o)}></span>${o === c ? `<em>${t("Cover")}</em>` : ""}<i>p${o.page}</i></button>`).join("")}</div></div>`;
+  }
+  function cvpPaint() {
+    let w = document.getElementById("sbl-cvpw");
+    if (!ui.cvp || !libEdit || !LIB || !LIB.bySup[ui.cvp]) { ui.cvp = null; if (w) { w.remove(); document.body.style.overflow = ui.open != null ? "hidden" : ""; } return; }
+    if (!w) { w = document.createElement("div"); w.id = "sbl-cvpw"; document.body.appendChild(w); }
+    w.innerHTML = cvpHTML(); document.body.style.overflow = "hidden";
+    const on = w.querySelector(".sbl-cvpi.on"); if (on) on.scrollIntoView({ block: "center" });
+  }
+  function cvpSet(file) { const s = ui.cvp; ui.cvp = null; cvpPaint(); saveMeta(s, { cover: file }).then(rerender).catch(() => {}); }
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && ui.cvp) { e.stopPropagation(); ui.cvp = null; cvpPaint(); } }, true);
   function catsHTML() {
     const cur = curating(), vis = o => cur || isOn(o);
     if (ui.type === "_BK") return ""; // one catalogue open: its name is the heading, so no row of every other catalogue
@@ -1179,9 +1211,27 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
         : jobs.length ? `${nf(done - bad)} full-size image${done - bad === 1 ? "" : "s"} uploaded${bad ? `, ${nf(bad)} failed. Upload again to retry them` : ""}` : "None of those files match the library.");
     } catch (_) { up = null; fullLine(); host.toast(zh() ? "无法读取该压缩包。" : "Couldn't read that zip."); }
   }
-  // "Have something you want?": drop a photo, Claude looks for similar products among the images this person
-  // can see, and if there's nothing similar the photo goes to the sourcing agent as a sourcing request.
-  const find = { st: "idle", url: "", b64: "", note: "", what: "", zh: "", m: [], err: "", req: null, auto: false };
+  // "Have something you want?": drop a photo or a file, Claude looks for similar products among the images this person
+  // can see, and if there's nothing similar it goes to TBS (to be sourced). A PDF (a spec sheet) is searched by its
+  // first page and kept with the request; any other file (Word, Excel…) can't be searched, so it goes straight to TBS.
+  const find = { st: "idle", url: "", b64: "", file: null, note: "", what: "", zh: "", m: [], err: "", req: null, auto: false };
+  const isPDF = f => f.type === "application/pdf" || /\.pdf$/i.test(f.name || "");
+  const extOf = name => ((name || "").match(/\.([A-Za-z0-9]{1,5})$/) || [, "FILE"])[1].toUpperCase();
+  // The first page of a PDF, as a JPEG of up to 1024 px.
+  async function prepPDF(f) {
+    const pj = await pdfjs(), doc = await pj.getDocument({ data: new Uint8Array(await f.arrayBuffer()), isEvalSupported: false }).promise;
+    const page = await doc.getPage(1), v1 = page.getViewport({ scale: 1 }), vp = page.getViewport({ scale: 1024 / Math.max(v1.width, v1.height) });
+    const cv = document.createElement("canvas"); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+    const g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height);
+    await page.render({ canvasContext: g, viewport: vp }).promise; doc.destroy();
+    const url = cv.toDataURL("image/jpeg", .85); return { url, b64: url.split(",")[1] };
+  }
+  // A photo is searched as it is; a PDF by its first page (and kept); anything else is kept to send to TBS.
+  async function prepInput(f) {
+    if (/^image\//.test(f.type)) { try { return { ...(await prepPhoto(f)), file: null }; } catch (_) {} }
+    else if (isPDF(f)) { try { return { ...(await prepPDF(f)), file: f }; } catch (_) {} }
+    return { url: "", b64: "", file: f };
+  }
   let reqs = new Map(), showDone = false;
   const staff = () => host.internal();
   async function fetchReqs() { const r = await fetch("/api/sourcing"); if (!r.ok) return; const j = await r.json(); reqs = new Map((j.requests || []).map(x => [x.id, x])); tbsCfg = { role: j.role || "", me: j.me || "", mail: !!j.mail, agentEmail: j.agentEmail || tbsCfg.agentEmail || "" }; findPaint(); }
@@ -1215,9 +1265,12 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   async function findSearch(f) {
     if (!LIB || find.st === "type" || find.st === "match") return;
     const note = (($("#sbl-fnote") || {}).value || find.note || "").trim();
-    Object.assign(find, { st: "type", note, m: [], err: "", req: null, auto: false, what: "", zh: "" }); findPaint();
+    if (f.size > 25 * 1024 * 1024) { Object.assign(find, { st: "error", err: t("That file is too big (25 MB at most).") }); findPaint(); return; }
+    Object.assign(find, { st: "type", note, m: [], err: "", req: null, auto: false, what: "", zh: "", url: "", b64: "", file: null }); findPaint();
     try {
-      Object.assign(find, await prepPhoto(f)); findPaint();
+      Object.assign(find, await prepInput(f)); findPaint();
+      // Nothing to look at (a Word or Excel file, say): straight to TBS.
+      if (!find.b64) { find.what = find.file.name.replace(/\.[A-Za-z0-9]{1,5}$/, ""); await sendReq(); return; }
       const image = { media_type: "image/jpeg", data: find.b64 };
       const ty = await api("/api/library/similar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ step: "type", image, note }) });
       find.what = ty.what || ""; find.zh = ty.zh || ""; find.st = "match"; findPaint();
@@ -1236,10 +1289,16 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     } catch (e) { find.st = "error"; find.err = e.code === "sampling_disabled" ? t(e.message) : t("The search didn't finish. Try again."); findPaint(); }
   }
   async function sendReq() {
-    if (!find.b64 || find.st === "sending") return;
+    if ((!find.b64 && !find.file) || find.st === "sending") return;
     find.st = "sending"; findPaint();
     try {
-      const j = await api("/api/sourcing/request", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ photo: find.b64, note: find.note, what: find.what, zh: find.zh, project: host.ctx === "project" ? host.project() : "" }) });
+      const f = find.file;
+      const j = await api("/api/sourcing/request", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ photo: find.b64, file: f ? f.name : "", note: find.note, what: find.what, zh: find.zh, project: host.ctx === "project" ? host.project() : "" }) });
+      // The file goes on the request too (to download, and with the email to the sourcing agent). If it can't, take the request back.
+      if (f) {
+        try { await api(`/api/sourcing/file?id=${encodeURIComponent(j.id)}&name=${encodeURIComponent(f.name)}`, { method: "POST", headers: { "content-type": "application/octet-stream" }, body: f }); }
+        catch (e) { api("/api/sourcing/update", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: j.id, remove: true }) }).catch(() => {}); throw e; }
+      }
       find.req = j.id; find.st = "sent"; fetchReqs().catch(() => {});
     } catch (e) { find.st = "error"; find.err = e.message && e.code === "invalid_argument" ? t(e.message) : t("Couldn't send it. Check your connection and try again."); }
     findPaint();
@@ -1257,10 +1316,10 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       <span class="sbl-cap"><b>${esc(o.codes[0] || label(o.sup)[0])}</b><span>${esc(typeName(typeOf(o)))}</span><button class="sbl-star" data-sblfav="${o.i}" aria-pressed="${fav.has(o.file)}" title="${t(fav.has(o.file) ? "Remove from favourites" : "Add to favourites")}">${fav.has(o.file) ? "★" : "☆"}</button></span></div>`;
   }
   function findHTML() {
-    const pic = find.url ? `<img class="sbl-fpic" src="${find.url}" alt="">` : "";
+    const pic = find.url ? `<img class="sbl-fpic" src="${find.url}" alt="">` : find.file ? `<span class="sbl-fpic sbl-ffile"><span class="sbl-fext">${esc(extOf(find.file.name))}</span><small>${esc(find.file.name)}</small></span>` : "";
     const what = (zh() ? find.zh : find.what) || find.what;
     let body;
-    if (find.st === "idle" || find.st === "error") body = `<label class="sbl-fdrop"><input type="file" id="sbl-fimg" accept="image/*"><span class="sbl-fcopy"><b>${t("Have something you want?")}</b><span>${t("Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.")}</span></span><span class="btn ghost sm">${t("Choose a photo")}</span></label>
+    if (find.st === "idle" || find.st === "error") body = `<label class="sbl-fdrop"><input type="file" id="sbl-fimg"><span class="sbl-fcopy"><b>${t("Have something you want?")}</b><span>${t("Drop it here and we'll search for something similar in our library. If we can't find it, we'll source it for you.")}</span></span><span class="btn ghost sm">${t("Choose a photo or file")}</span></label>
       <input class="sbl-fnote" id="sbl-fnote" value="${esc(find.note)}" maxlength="300" autocomplete="off" placeholder="${esc(t("What are you looking for? (optional) e.g. the chair, in walnut"))}">
       ${find.st === "error" ? `<p class="sbl-ferr">${esc(find.err)}</p>` : ""}`;
     else if (find.st === "type" || find.st === "match" || find.st === "sending") body = `<div class="sbl-fwork">${pic}<div><b>${t(find.st === "sending" ? "Adding it to TBS (to be sourced)…" : "Searching our library for something similar…")}</b>${what ? `<span>${esc(what)}</span>` : ""}<span class="sbl-fbar"><i></i></span></div></div>`;
@@ -1306,9 +1365,9 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     const list = all.filter(x => tbsFilter === "all" || tbsState(x) === tbsFilter);
     const chips = st ? `<div class="sbl-chips">${(adm ? [["review", "To review"], ["sent", "With the sourcing agent"], ["sourced", "Sourced"], ["all", "All"]] : [["sent", "To find"], ["sourced", "Sourced"], ["all", "All"]]).map(([k, l]) => `<button class="chip" data-sbltbsf="${k}" aria-pressed="${tbsFilter === k}">${t(l)}${k === "all" ? "" : " · " + nf(counts[k])}</button>`).join("")}</div>` : "";
     const alerts = adm && window.Notification && Notification.permission === "default" ? `<button class="linkbtn" data-sbl="tbsalerts">${t("Turn on alerts for new requests")}</button>` : "";
-    const lede = adm ? "Photos sent from the Sourcing library that we couldn't match. Review each one, then send it to the sourcing agent; with email set up, it goes to their QQ Mail with the photo attached."
+    const lede = adm ? "Photos and files sent from the Sourcing library that we couldn't match. Review each one, then send it to the sourcing agent; with email set up, it goes to their QQ Mail with the photo or file attached."
       : tbsCfg.role === "agent" ? "Items the studio has asked you to find. Mark each one sourced when you've found it, with a note on where." : "Things you've asked us to find. We review each one and send it to our sourcing agent.";
-    return `<p class="sbl-hint" style="max-width:70ch">${t(lede)} ${alerts}</p>${chips}${list.length ? `<div class="sbl-reqlist">${list.map(tbsCard).join("")}</div>` : `<p class="sbl-empty">${t(all.length ? "Nothing here." : "Nothing to be sourced yet. Drop a photo in the box on the Sourcing library page.")}</p>`}`;
+    return `<p class="sbl-hint" style="max-width:70ch">${t(lede)} ${alerts}</p>${chips}${list.length ? `<div class="sbl-reqlist">${list.map(tbsCard).join("")}</div>` : `<p class="sbl-empty">${t(all.length ? "Nothing here." : "Nothing to be sourced yet. Drop a photo or file in the box on the Sourcing library page.")}</p>`}`;
   }
   function tbsCard(x) {
     const st = staff(), adm = isAdm(), s = tbsState(x), sending = tbsSending.has(x.id), found = Array.isArray(x.found) ? x.found : [], files = Array.isArray(x.files) ? x.files : [];
@@ -1319,14 +1378,14 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
         ${tbsCfg.mail ? `<label>${t("Sourcing agent's email (QQ Mail)")}<input data-sbltbsto="${esc(x.id)}" value="${esc(tbsCfg.agentEmail)}" placeholder="12345678@qq.com" autocomplete="off"></label>` : `<p class="sbl-hint" style="margin:0">${t("Email isn't set up yet, so this sends it in Sourcebook only. Add the SMTP settings in Render to email the agent's QQ Mail.")}</p>`}
         <label>${t("Message to the agent (optional)")}<input data-sbltbsmsg="${esc(x.id)}" maxlength="2000" autocomplete="off" placeholder="${esc(t("e.g. Need 6, walnut, by November"))}"></label>
         <span class="sbl-row"><button class="btn sm" data-sbl="tbssend" data-id="${esc(x.id)}" ${sending ? "disabled" : ""}>${t(sending ? "Sending…" : s === "sent" ? "Send to the sourcing agent again" : "Send to the sourcing agent")}</button></span></div>` : "";
-    return `<article class="sbl-req${s === "sourced" ? " done" : ""}${tbsFocus === x.id ? " focus" : ""}" id="sbl-req-${esc(x.id)}"><a href="/_blob/${esc(x.photo)}" target="_blank" rel="noopener"><img src="/_blob/${esc(x.photo)}" alt="" loading="lazy"></a><div>
+    return `<article class="sbl-req${s === "sourced" ? " done" : ""}${tbsFocus === x.id ? " focus" : ""}" id="sbl-req-${esc(x.id)}">${x.photo ? `<a href="/_blob/${esc(x.photo)}" target="_blank" rel="noopener"><img src="/_blob/${esc(x.photo)}" alt="" loading="lazy"></a>` : files[0] ? `<a class="sbl-reqfile" href="/_blob/${esc(files[0].id)}" download="${esc(files[0].name)}"><span class="sbl-fext">${esc(extOf(files[0].name))}</span></a>` : `<span class="sbl-reqfile"><span class="sbl-fext">FILE</span></span>`}<div>
       ${adm && tbsNew(x) ? `<span class="sbl-newtag">● ${t("New")}</span>` : ""}<b>${esc((zh() ? x.zh : x.what) || x.what || t("Photo"))}</b>${x.note ? `<p>“${esc(x.note)}”</p>` : ""}
       <span class="sbl-sub">${st ? esc(x.by && x.by.name || t("Studio owner")) + (x.by && x.by.role === "client" ? " · " + t("Client") : x.by && x.by.role === "specifier" ? " · " + t("Specifier / designer") : "") + " · " : ""}${esc(ago(x.at))}${x.project && x.project.name ? " · " + esc(x.project.name) : ""}</span>
       ${chip}
       ${x.sent && x.sent.message && st ? `<p class="sbl-rmsg">${t("Message to the agent")}: ${esc(x.sent.message)}</p>` : ""}
       ${x.reply && !st ? `<p class="sbl-rreply">${esc(x.reply)}</p>` : ""}
       ${found.length ? `<span class="sbl-found" title="${esc(t("Photos of what was found"))}">${found.map(ph => `<span><a href="/_blob/${esc(ph)}" target="_blank" rel="noopener"><img src="/_blob/${esc(ph)}" alt="" loading="lazy"></a>${st ? `<button data-sbl="rfoundrm" data-id="${esc(x.id)}" data-ph="${esc(ph)}" title="${esc(t("Remove"))}" aria-label="${esc(t("Remove"))}">×</button>` : ""}</span>`).join("")}</span>` : ""}
-      ${files.length ? `<ul class="sbl-files">${files.map(f => `<li><a href="/_blob/${esc(f.id)}" download="${esc(f.name)}"><span class="sbl-fext">${esc((f.name.match(/\.([A-Za-z0-9]{1,5})$/) || [, "FILE"])[1].toUpperCase())}</span>${esc(f.name)}<small>${esc(fsize(f.size))}</small></a>${st ? `<button class="linkbtn" data-sbl="rfilerm" data-id="${esc(x.id)}" data-f="${esc(f.id)}" title="${esc(t("Remove"))}" aria-label="${esc(t("Remove"))}">×</button>` : ""}</li>`).join("")}</ul>` : ""}
+      ${files.length ? `<ul class="sbl-files">${files.map(f => `<li><a href="/_blob/${esc(f.id)}" download="${esc(f.name)}"><span class="sbl-fext">${esc(extOf(f.name))}</span>${esc(f.name)}<small>${esc(fsize(f.size))}</small></a>${st ? `<button class="linkbtn" data-sbl="rfilerm" data-id="${esc(x.id)}" data-f="${esc(f.id)}" title="${esc(t("Remove"))}" aria-label="${esc(t("Remove"))}">×</button>` : ""}</li>`).join("")}</ul>` : ""}
       ${sendForm}
       ${st && s !== "review" ? `<input class="sbl-fnote" data-sblreply="${esc(x.id)}" value="${esc(x.reply || "")}" maxlength="2000" placeholder="${esc(t("Where it was found, for the person who asked (optional)"))}"><label class="btn ghost sm sbl-addfound"><input type="file" multiple data-sblfound="${esc(x.id)}">${t(tbsUp.has(x.id) ? "Adding…" : "Attach photos or files")}</label>` : ""}
       <span class="sbl-row">${st && s === "sent" ? `<button class="btn sm" data-sbl="rdone" data-id="${esc(x.id)}">${t("Mark as sourced")}</button>` : ""}${st && s === "sourced" ? `<button class="linkbtn" data-sbl="ropen" data-id="${esc(x.id)}">${t("Reopen")}</button>` : ""}
@@ -1358,12 +1417,12 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   document.addEventListener("dragleave", e => { const z = findZone(e); if (z && !z.contains(e.relatedTarget)) z.classList.remove("over"); });
   document.addEventListener("drop", e => {
     const z = findZone(e); if (!z) return; e.preventDefault(); z.classList.remove("over");
-    const f = [...e.dataTransfer.files].find(f => /^image\//.test(f.type)); if (!f) { host.toast(t("That isn't a photo.")); return; }
+    const fs = [...e.dataTransfer.files], f = fs.find(f => /^image\//.test(f.type)) || fs.find(isPDF) || fs[0]; if (!f) return;
     findSearch(f);
   });
   document.addEventListener("paste", e => {
     if (!$("#sbl-find") || ui.open != null || (find.st !== "idle" && find.st !== "error")) return;
-    const f = [...(e.clipboardData && e.clipboardData.files || [])].find(f => /^image\//.test(f.type)); if (f) { e.preventDefault(); findSearch(f); }
+    const fs = [...(e.clipboardData && e.clipboardData.files || [])], f = fs.find(f => /^image\//.test(f.type)) || fs[0]; if (f) { e.preventDefault(); findSearch(f); }
   });
   const fsize = n => n >= 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB";
   async function tbsAddFound(id, files) {
@@ -1458,6 +1517,10 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     else if (a === "unzoom" && !e.target.closest(".sbl-nav")) { ui.zoom = false; host.layer(); }
     else if (a === "ren" && libEdit) { const sup = el.dataset.sup, L = label(sup), m = meta[sup]; ui.ren = sup; ui.renN = m && m.name != null ? L[0] : ""; ui.renS = m && m.name != null ? L[1] : ""; if (!(m && m.name != null)) { ui.renN = L[0]; ui.renS = L[1]; } repaint(); const f = $("#sbl-renn"); if (f) { f.focus(); f.select(); } }
     else if (a === "renx") { ui.ren = null; repaint(); }
+    else if (a === "cvp" && libEdit) { ui.cvp = el.dataset.sup; cvpPaint(); }
+    else if (a === "cvpx") { ui.cvp = null; cvpPaint(); }
+    else if (a === "cvpset" && libEdit && ui.cvp) { const o = LIB.items[+el.dataset.i]; if (o) cvpSet(o.file); }
+    else if (a === "cvpreset" && libEdit && ui.cvp) cvpSet("");
     else if (a === "rensave" && libEdit && ui.ren) saveName();
     else if ((a === "cover" || a === "coverx") && libEdit) { const o = LIB.items[ui.open]; if (o) saveMeta(o.sup, { cover: a === "cover" ? o.file : "" }).then(() => host.layer()).catch(() => {}); }
     else if (a === "feat" && isAdm()) { const o = LIB.items[ui.open]; if (o) { toggleFeat(o); host.layer(); repaint(); } }

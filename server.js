@@ -488,6 +488,16 @@ async function libJSONFor(u) {
 }
 // Sourcing requests (sourcing/<id>): admins see them all; sourcing agents the ones sent to them; anyone else their own
 // and the ones asked from a project they're on, never another project's.
+// Let the studio know there's a new TBS item to review (by email, when mail is set up).
+function tbsNotify(req, me, id, doc, attachments, fileName) {
+  const notify = (process.env.TBS_NOTIFY_EMAIL || "").split(/[,;\s]+/).filter(Boolean);
+  const admins = notify.length ? notify : people.users.filter(u => u.role === "admin" && u.email && !u.disabled).map(u => u.email);
+  if (!mailOn() || !admins.length || me.role === "admin") return;
+  const link = `${origin(req)}/?tbs=${id}`, what = doc.photo ? (fileName ? "a photo and a file" : "a photo") : "a file";
+  sendMail(admins, `Sourcebook · New item to review (TBS): ${doc.what || (doc.photo ? "photo" : fileName || "file")}`,
+    `${doc.by.name || "Someone"} (${doc.by.role}) sent ${what} of something they want.\n\n${doc.what ? "What it is: " + doc.what + "\n" : ""}${fileName ? "File: " + fileName + "\n" : ""}${doc.note ? "Their note: " + doc.note + "\n" : ""}${doc.project ? "Project: " + doc.project.name + "\n" : ""}\nReview it and send it to the sourcing agent: ${link}\n`,
+    attachments.filter(a => a.data)).catch(e => console.error("TBS notify email:", e.message));
+}
 const isSourcingPath = p => /^sourcing(\/|$)/.test(p || "");
 function canSeeRequest(u, d) {
   if (!d) return false; if (u.role === "admin" || d.by?.id === u.id) return true;
@@ -1411,28 +1421,25 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
     }
     if (p === "/api/sourcing/request" && req.method === "POST") {
       const b = await readJSON(req, 6 * 1024 * 1024);
-      const buf = typeof b.photo === "string" && b.photo.length < 4e6 ? Buffer.from(b.photo, "base64") : null;
-      if (!buf || sniffBuf(buf) !== "image/jpeg") return send(res, 400, { code: "invalid_argument", message: "Add a photo first." });
+      // A photo, a file (a spec sheet, a PDF, a Word or Excel file: uploaded next with /api/sourcing/file), or both.
+      const buf = typeof b.photo === "string" && b.photo.length < 4e6 && b.photo ? Buffer.from(b.photo, "base64") : null;
+      const fileName = String(b.file || "").replace(/[\\/\r\n"]+/g, "_").trim().slice(0, 120);
+      if (buf ? sniffBuf(buf) !== "image/jpeg" : !fileName) return send(res, 400, { code: "invalid_argument", message: "Add a photo or file first." });
       const mine = Object.entries(store).filter(([k, v]) => /^sourcing\//.test(k) && v.data?.by?.id === me.id && v.data.status !== "sourced").length;
       if (mine >= 50) return send(res, 400, { code: "invalid_argument", message: "You have 50 open requests. Wait for some to be sourced first." });
-      const photo = crypto.randomBytes(16).toString("hex");
-      await fsp.writeFile(path.join(BLOB_DIR, photo), buf);
-      await fsp.writeFile(path.join(BLOB_DIR, photo + ".json"), JSON.stringify({ contentType: "image/jpeg", sizeBytes: buf.length, createdAt: new Date().toISOString(), source: "sourcing request" }));
+      const photo = buf ? crypto.randomBytes(16).toString("hex") : null;
+      if (buf) {
+        await fsp.writeFile(path.join(BLOB_DIR, photo), buf);
+        await fsp.writeFile(path.join(BLOB_DIR, photo + ".json"), JSON.stringify({ contentType: "image/jpeg", sizeBytes: buf.length, createdAt: new Date().toISOString(), source: "sourcing request" }));
+      }
       const pid = String(b.project || ""), proj = pid && store["projects/" + pid] && canSeeProject(me, pid) ? { id: pid, name: String(store["projects/" + pid].data?.name || "") } : null;
-      const doc = { photo, note: String(b.note || "").trim().slice(0, 1000), what: String(b.what || "").slice(0, 200), zh: String(b.zh || "").slice(0, 200), project: proj,
+      const doc = { photo, note: String(b.note || "").trim().slice(0, 1000), what: String(b.what || "").slice(0, 200) || fileName.replace(/\.[A-Za-z0-9]{1,5}$/, ""), zh: String(b.zh || "").slice(0, 200), project: proj,
         by: { id: me.id, name: me.name || "", role: me.role }, at: new Date().toISOString(), status: "review" };
       const id = crypto.randomBytes(10).toString("hex"), dp = "sourcing/" + id;
       store[dp] = { data: doc, version: 1, updatedAt: doc.at };
       persist(); broadcast({ path: dp, exists: true, data: doc });
-      // Let the studio know there's something to review (by email, when mail is set up).
-      const notify = (process.env.TBS_NOTIFY_EMAIL || "").split(/[,;\s]+/).filter(Boolean);
-      const admins = notify.length ? notify : people.users.filter(u => u.role === "admin" && u.email && !u.disabled).map(u => u.email);
-      if (mailOn() && admins.length && me.role !== "admin") {
-        const link = `${origin(req)}/?tbs=${id}`;
-        sendMail(admins, `Sourcebook · New item to review (TBS): ${doc.what || "photo"}`,
-          `${doc.by.name || "Someone"} (${doc.by.role}) sent a photo of something they want.\n\n${doc.what ? "What it looks like: " + doc.what + "\n" : ""}${doc.note ? "Their note: " + doc.note + "\n" : ""}${proj ? "Project: " + proj.name + "\n" : ""}\nReview it and send it to the sourcing agent: ${link}\n`,
-          [{ name: "photo.jpg", type: "image/jpeg", data: buf }]).catch(e => console.error("TBS notify email:", e.message));
-      }
+      // With a file to follow, the studio is told once it has arrived, so the email can carry it.
+      if (!fileName) tbsNotify(req, me, id, doc, [{ name: "photo.jpg", type: "image/jpeg", data: buf }]);
       return send(res, 200, { ok: true, id });
     }
     if (p === "/api/sourcing/send" && req.method === "POST") {
@@ -1447,12 +1454,16 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
         if (!to.every(e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))) return send(res, 400, { code: "invalid_argument", message: "That email doesn't look right." });
         if (!mailOn()) return send(res, 503, { code: "mail_disabled", message: "Email isn't set up on this server yet. Add the SMTP settings in Render, or send it in Sourcebook only." });
         const d = cur.data, link = `${origin(req)}/?tbs=${b.id}`;
-        let photo = null; try { photo = await fsp.readFile(path.join(BLOB_DIR, d.photo)); } catch (_) {}
+        let photo = null; if (d.photo) { try { photo = await fsp.readFile(path.join(BLOB_DIR, d.photo)); } catch (_) {} }
+        // The files on the request (the asker's spec sheet, a PDF…) go along too, up to 20 MB in all.
+        const att = photo ? [{ name: "photo.jpg", type: "image/jpeg", data: photo }] : [];
+        let room = 20 * 1024 * 1024;
+        for (const f of Array.isArray(d.files) ? d.files : []) { if (f.size > room) continue; try { att.push({ name: f.name, type: "application/octet-stream", data: await fsp.readFile(path.join(BLOB_DIR, f.id)) }); room -= f.size; } catch (_) {} }
         try {
-          await sendMail(to, `选材手册 · 待采购 TBS：${d.zh || d.what || "照片"}`,
-            `您好，\n\n请帮忙寻找这件产品，照片见附件。\n\n${d.zh || d.what ? "描述：" + (d.zh || d.what) + "\n" : ""}${d.note ? "请求人备注：" + d.note + "\n" : ""}${msg ? "工作室留言：" + msg + "\n" : ""}${d.project ? "项目：" + d.project.name + "\n" : ""}\n在选材手册中查看，找到后请标记为“已采购”：${link}\n\n` +
-            `----\nHello,\n\nPlease find this item for us. The photo is attached.\n\n${d.what ? "What it looks like: " + d.what + "\n" : ""}${d.note ? "Note from the person who asked: " + d.note + "\n" : ""}${msg ? "Message from the studio: " + msg + "\n" : ""}${d.project ? "Project: " + d.project.name + "\n" : ""}\nOpen it in Sourcebook and mark it sourced when you find it: ${link}\n`,
-            photo ? [{ name: "photo.jpg", type: "image/jpeg", data: photo }] : []);
+          await sendMail(to, `选材手册 · 待采购 TBS：${d.zh || d.what || (photo ? "照片" : "文件")}`,
+            `您好，\n\n请帮忙寻找这件产品，${photo ? "照片" : "文件"}见附件。\n\n${d.zh || d.what ? "描述：" + (d.zh || d.what) + "\n" : ""}${d.note ? "请求人备注：" + d.note + "\n" : ""}${msg ? "工作室留言：" + msg + "\n" : ""}${d.project ? "项目：" + d.project.name + "\n" : ""}\n在选材手册中查看，找到后请标记为“已采购”：${link}\n\n` +
+            `----\nHello,\n\nPlease find this item for us. The ${photo ? "photo is" : "file is"} attached.\n\n${d.what ? "What it looks like: " + d.what + "\n" : ""}${d.note ? "Note from the person who asked: " + d.note + "\n" : ""}${msg ? "Message from the studio: " + msg + "\n" : ""}${d.project ? "Project: " + d.project.name + "\n" : ""}\nOpen it in Sourcebook and mark it sourced when you find it: ${link}\n`,
+            att);
           emailed = true;
         } catch (e) { console.error("TBS email:", e.message); return send(res, 502, { code: "mail_failed", message: "The email couldn't be sent. Check the SMTP settings in Render and try again." }); }
         const cfg = store["tbscfg/main"];
@@ -1469,9 +1480,10 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
       // the raw file is the body, ?id=<request>&name=<file name>. ?id=..&remove=<blob> takes one off.
       const id = String(url.searchParams.get("id") || ""), dp = "sourcing/" + id, cur = store[dp];
       if (!/^sourcing\/[0-9a-f]{20}$/.test(dp) || !cur || !canRead(me, dp)) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
-      if (me.role !== "admin" && me.role !== "agent") return deny("Only the studio and the sourcing agent can attach files to a request.");
+      const rm = url.searchParams.get("remove"), asker = cur.data.by?.id === me.id && ["review", "open"].includes(cur.data.status) && !rm;
+      if (me.role !== "admin" && me.role !== "agent" && !asker) return deny("Only the studio and the sourcing agent can attach files to a request.");
       let files;
-      const rm = url.searchParams.get("remove"), buf = rm ? null : await readBody(req, 25 * 1024 * 1024).catch(() => null);
+      const buf = rm ? null : await readBody(req, 25 * 1024 * 1024).catch(() => null);
       if (!rm && !buf) return send(res, 413, { code: "too_large", message: "That file is too big (25 MB at most)." });
       // Read the list after the upload has arrived, so files sent one after another all stay on it.
       const fresh = store[dp]; if (!fresh) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
@@ -1486,9 +1498,14 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
         if (!buf.length) return send(res, 400, { code: "invalid_argument", message: "That file is empty." });
         const blob = crypto.randomBytes(16).toString("hex");
         await fsp.writeFile(path.join(BLOB_DIR, blob), buf);
-        await fsp.writeFile(path.join(BLOB_DIR, blob + ".json"), JSON.stringify({ contentType: "application/octet-stream", download: name, sizeBytes: buf.length, createdAt: new Date().toISOString(), source: "sourcing reply" }));
+        await fsp.writeFile(path.join(BLOB_DIR, blob + ".json"), JSON.stringify({ contentType: "application/octet-stream", download: name, sizeBytes: buf.length, createdAt: new Date().toISOString(), source: cur.data.by?.id === me.id ? "sourcing request" : "sourcing reply" }));
         const latest = store[dp]?.data?.files;
         files = [...(Array.isArray(latest) ? latest : have), { id: blob, name, size: buf.length, by: me.name || "", at: new Date().toISOString() }];
+        // The asker's own file (sent from the "Have something you want?" box): now tell the studio, with the file attached.
+        if (asker && !have.length) {
+          let photo = null; if (cur.data.photo) { try { photo = await fsp.readFile(path.join(BLOB_DIR, cur.data.photo)); } catch (_) {} }
+          tbsNotify(req, me, id, cur.data, [...(photo ? [{ name: "photo.jpg", type: "image/jpeg", data: photo }] : []), ...(buf.length <= 15 * 1024 * 1024 ? [{ name, type: "application/octet-stream", data: buf }] : [])], name);
+        }
       }
       const now = store[dp]; if (!now) return send(res, 404, { code: "not_found", message: "That request no longer exists." });
       const next = { ...now.data, files };
@@ -1531,7 +1548,7 @@ Reply with JSON only: {"matches":[{"s":1,"c":5,"score":82}]}  (s = sheet number,
         // The person who asked can withdraw it until it's sent to the agent; admins can remove any.
         if (!isAdmin && !(own && inReview)) return deny("Only admins can remove a request.");
         delete store[dp]; persist(); broadcast({ path: dp, exists: false });
-        for (const ph of [cur.data.photo, ...(Array.isArray(cur.data.found) ? cur.data.found : []), ...(Array.isArray(cur.data.files) ? cur.data.files.map(f => f.id) : [])]) { fsp.unlink(path.join(BLOB_DIR, ph)).catch(() => {}); fsp.unlink(path.join(BLOB_DIR, ph + ".json")).catch(() => {}); }
+        for (const ph of [cur.data.photo, ...(Array.isArray(cur.data.found) ? cur.data.found : []), ...(Array.isArray(cur.data.files) ? cur.data.files.map(f => f.id) : [])].filter(Boolean)) { fsp.unlink(path.join(BLOB_DIR, ph)).catch(() => {}); fsp.unlink(path.join(BLOB_DIR, ph + ".json")).catch(() => {}); }
         return send(res, 200, { ok: true });
       }
       if (!staff) return deny("Only the studio and the sourcing agent can update a request.");

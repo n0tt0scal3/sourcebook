@@ -67,10 +67,10 @@
 .sbl-book{flex:0 0 116px;display:flex;flex-direction:column;gap:4px;background:none;border:0;padding:0;text-align:left;color:var(--ink);cursor:pointer;min-width:0}
 .sbl-book .sbl-sw{width:116px;aspect-ratio:3/4;border:1px solid var(--rule);box-shadow:0 1px 3px rgba(0,0,0,.08)}.sbl-book:hover .sbl-sw{border-color:var(--ink)}
 .sbl-bname{font-size:13px;font-weight:500;line-height:1.2;overflow-wrap:anywhere}.sbl-book .sbl-sub{font-size:10.5px}
-.sbl-covers{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,170px),1fr));gap:22px 16px;padding-top:6px}
+.sbl-covers{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:28px 20px;padding-top:6px}
 .sbl-cover{display:flex;flex-direction:column;gap:4px;background:none;border:0;padding:0;text-align:left;color:var(--ink);cursor:pointer;min-width:0}
-.sbl-cover .sbl-sw{position:relative;aspect-ratio:1;border:1px solid var(--rule);box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:4px}.sbl-cover:hover .sbl-sw{border-color:var(--ink)}.sbl-cover .sbl-bname{font-size:14px}.sbl-cover .sbl-sub{font-size:11px}
-.sbl-coverw{position:relative;min-width:0}.sbl-coverw .sbl-cover{width:100%}
+.sbl-cover .sbl-sw{position:relative;aspect-ratio:1;border:1px solid var(--rule);box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:4px}.sbl-cover:hover .sbl-sw{border-color:var(--ink)}.sbl-cover .sbl-bname{font-size:17px}.sbl-cover .sbl-sub{font-size:12px}
+.sbl-cvim{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff}.sbl-coverw{position:relative;min-width:0}.sbl-coverw .sbl-cover{width:100%}
 .sbl-ren{position:absolute;top:6px;right:6px;width:30px;height:30px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);font-size:14px;line-height:1;cursor:pointer;opacity:.85}.sbl-ren:hover{opacity:1;border-color:var(--ink)}
 .sbl-cvb{top:42px;display:grid;place-items:center;padding:0}.sbl-cvb svg{width:16px;height:16px}
 .sbl-cvp{position:fixed;z-index:21;inset:clamp(0px,4vh,40px) clamp(0px,4vw,56px);display:flex;flex-direction:column;background:var(--paper);color:var(--ink);box-shadow:0 10px 40px rgba(0,0,0,.25)}
@@ -332,7 +332,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
 .sbl-siderule{display:block;height:1px;background:var(--rule);margin:8px 0}
 @media (max-width:760px){.sbl-split{grid-template-columns:1fr}.sbl-side{position:static;max-height:none;overflow:visible;padding-top:16px}.sbl-side summary{display:flex;align-items:baseline;gap:10px;cursor:pointer;list-style:none;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--rule);padding:10px 12px}.sbl-side summary::-webkit-details-marker{display:none}.sbl-side summary span{font-family:inherit;text-transform:none;letter-spacing:0;font-size:14px;color:var(--ink);flex:1}.sbl-side summary::after{content:"▾";color:var(--ink)}.sbl-side[open] summary::after{content:"▴"}.sbl-side nav{border:1px solid var(--rule);border-top:0;padding:6px 0;max-height:60vh;overflow:auto}}
 @media (max-width:900px){.sbl-sheet,.sbl-sheet.big{grid-template-columns:1fr;grid-template-rows:38vh 1fr}.sbl-sheet.big{grid-template-rows:52vh 1fr}}
-@media (max-width:760px){.sbl-head{grid-template-columns:1fr}.sbl-stat{border-left:0}.sbl-stat div:first-child{padding-left:0}.sbl-tools{position:static}.sbl-cats{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px}.sbl-name{font-size:16px}.sbl-cat .sbl-all{font-size:18px}.sbl-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.sbl-covers{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 12px}.sbl-pages{gap:12px}.sbl-pg{flex-basis:max(var(--n) * 150px,150px)}.sbl-pgimgs{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px 10px}.sbl-facts{grid-template-columns:1fr 1fr}}
+@media (max-width:760px){.sbl-head{grid-template-columns:1fr}.sbl-stat{border-left:0}.sbl-stat div:first-child{padding-left:0}.sbl-tools{position:static}.sbl-cats{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px}.sbl-name{font-size:16px}.sbl-cat .sbl-all{font-size:18px}.sbl-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}.sbl-covers{grid-template-columns:1fr;gap:22px}.sbl-pages{gap:12px}.sbl-pg{flex-basis:max(var(--n) * 150px,150px)}.sbl-pgimgs{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px 10px}.sbl-facts{grid-template-columns:1fr 1fr}}
 `;
   const style = document.createElement("style"); style.textContent = CSS; document.head.appendChild(style);
 
@@ -399,7 +399,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   }
   const isNew = o => fresh.has(o.file) && (curating() || isOn(o));
   const newBadge = n => n ? `<i class="sbl-newb">● ${nf(n)} ${t("new")}</i>` : "";
-  const ui = { type: null, sup: null, cv: (() => { try { return localStorage.getItem("sbl_cv") === "1"; } catch (_) { return false; } })(), q: "", show: null, n: 120, hit: null, open: null, adding: false, target: "", zoom: false, seq: [] };
+  const ui = { type: null, sup: null, q: "", show: null, n: 120, hit: null, open: null, adding: false, target: "", zoom: false, seq: [] };
   const done = new Map(); // file -> [{project, pname, code, id, existing}] added from the card this visit, shown on the card
   // host.ctx: "studio" (dashboard) or "project". canEdit: may approve (admins, on the dashboard).
   // project(): this project's id (project ctx). projects(): [{id, name}] to add to (studio ctx).
@@ -497,17 +497,19 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
   // As shown in the grid: outside a single catalogue, images new to this person come first.
   const markedNew = o => justSeen.has(o.file) || fresh.has(o.file);
   function ordered() { const l = list(); if (ui.type === "FT") return l.sort((a, b) => feat.get(b.file) - feat.get(a.file)); if (!ui.sup) { const r = supOrder(); l.sort((a, b) => r.get(a.sup) - r.get(b.sup)); } if (!ui.sup && l.some(markedNew)) l.sort((a, b) => markedNew(b) - markedNew(a)); return l; }
-  // Inside a product type, "All products" shows every image; "Catalogues" shows one cover per catalogue that has products
-  // of this type, and opening a cover shows just that catalogue's products of this type. The choice is remembered on this device.
-  const covers = () => !!ui.type && ui.type !== "_BK" && ui.type !== "TBS" && ui.cv && !ui.sup;
+  // A product type from the sidebar shows one cover per catalogue that has products of this type; opening a cover shows
+  // just that catalogue's products of this type. A search still lists the matching products.
+  const covers = () => !!ui.type && !["_BK", "TBS", "F", "CF", "FT"].includes(ui.type) && !ui.sup && !ui.q.trim();
   // A catalogue's cover: its first image on its lowest page (page 1 for every catalogue scanned so far).
   const coverOf = s => (meta[s] && meta[s].cover && (LIB.bySup[s] || []).find(o => o.file === meta[s].cover)) || (LIB.bySup[s] || []).reduce((a, o) => !a || o.page < a.page || (o.page === a.page && o.key < a.key) ? o : a, null);
+  // Covers are shown large, so lay the full-size image (where uploaded) over the small sprite cell to keep them sharp.
+  const coverSw = (o, badge) => `<span class="sbl-sw" ${sprite(o)}>${o && full.has(o.file) ? `<img class="sbl-cvim" src="/lib/full/${encodeURIComponent(o.file)}" alt="" loading="lazy">` : ""}${badge || ""}</span>`;
   function coversHTML(l) {
     const n = {}, nw = {}, cur = curating(); l.forEach(o => { n[o.sup] = (n[o.sup] || 0) + 1; if (markedNew(o)) nw[o.sup] = (nw[o.sup] || 0) + 1; });
     const ks = Object.keys(n).sort(bySupName), tn = typeName(ui.type);
     setTimeout(() => { const c = $("#sbl-count"); if (c) c.textContent = zh() ? `${nf(ks.length)} 本图册 · ${nf(l.length)} 张图片` : `${nf(ks.length)} catalogue${ks.length === 1 ? "" : "s"} · ${nf(l.length)} image${l.length === 1 ? "" : "s"}`; }, 0);
     return `<div class="sbl-covers">${ks.map(s => { const L = label(s);
-      return `<button class="sbl-cover" data-sblsup="${esc(s)}" title="${esc(supName(s))}"><span class="sbl-sw" ${sprite(coverOf(s))}>${newBadge(nw[s])}</span><span class="sbl-bname">${esc(L[0])}</span>${L[1] ? `<span class="sbl-sub">${esc(L[1])}</span>` : ""}<span class="sbl-sub">${zh() ? `${esc(tn)} ${nf(n[s])} 张` : `${nf(n[s])} in ${esc(tn)}`}${cur && hideCli.has(s) ? ` · ${t("Hidden from clients")}` : ""}</span></button>`; }).join("")}</div>`;
+      return `<button class="sbl-cover" data-sblsup="${esc(s)}" title="${esc(supName(s))}">${coverSw(coverOf(s), newBadge(nw[s]))}<span class="sbl-bname">${esc(L[0])}</span>${L[1] ? `<span class="sbl-sub">${esc(L[1])}</span>` : ""}<span class="sbl-sub">${zh() ? `${esc(tn)} ${nf(n[s])} 张` : `${nf(n[s])} in ${esc(tn)}`}${cur && hideCli.has(s) ? ` · ${t("Hidden from clients")}` : ""}</span></button>`; }).join("")}</div>`;
   }
   const sups = () => Object.keys(LIB.sups).filter(s => curating() || approved(LIB.bySup[s]));
 
@@ -605,7 +607,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       // Admins rename a catalogue right on its tile: ✎ turns the name into two fields.
       if (ui.ren === s) { const L0 = label0(s);
         return `<div class="sbl-renf"><span class="sbl-sw" ${sprite(coverOf(s))}></span><input id="sbl-renn" maxlength="80" value="${esc(ui.renN)}" placeholder="${esc(L0[0])}" aria-label="${esc(t("Catalogue name"))}"><input id="sbl-rens" maxlength="80" value="${esc(ui.renS)}" placeholder="${esc(t("Second line (optional)"))}" aria-label="${esc(t("Second line (optional)"))}"><span class="sbl-row" style="margin-top:4px"><button class="btn sm" data-sbl="rensave" ${ui.renBusy ? "disabled" : ""}>${t("Save")}</button><button class="linkbtn" data-sbl="renx">${t("Cancel")}</button></span><span class="sbl-sub">${t("Clear both to go back to the original name.")}</span></div>`; }
-      return `<div class="sbl-coverw"><button class="sbl-cover" data-sblbook="${esc(s)}" title="${esc(supName(s))}"><span class="sbl-sw" ${sprite(coverOf(s))}>${newBadge(nw[s])}</span><span class="sbl-bname">${esc(L[0])}</span>${L[1] ? `<span class="sbl-sub">${esc(L[1])}</span>` : ""}<span class="sbl-sub">${zh() ? `${nf(n[s])} 张图片` : `${nf(n[s])} image${n[s] === 1 ? "" : "s"}`}${cur && hideCli.has(s) ? ` · ${t("Hidden from clients")}` : ""}</span></button>${libEdit ? `<button class="sbl-ren" data-sbl="ren" data-sup="${esc(s)}" title="${esc(t("Rename catalogue"))}" aria-label="${esc(t("Rename catalogue"))}: ${esc(supName(s))}">✎</button><button class="sbl-ren sbl-cvb" data-sbl="cvp" data-sup="${esc(s)}" title="${esc(t("Change cover"))}" aria-label="${esc(t("Change cover"))}: ${esc(supName(s))}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11"/><circle cx="5.5" cy="6" r="1.3"/><path d="M1.5 12l4-4 3 3 2-2 4 4"/></svg></button>` : ""}</div>`; }).join("")}</div>`;
+      return `<div class="sbl-coverw"><button class="sbl-cover" data-sblbook="${esc(s)}" title="${esc(supName(s))}">${coverSw(coverOf(s), newBadge(nw[s]))}<span class="sbl-bname">${esc(L[0])}</span>${L[1] ? `<span class="sbl-sub">${esc(L[1])}</span>` : ""}<span class="sbl-sub">${zh() ? `${nf(n[s])} 张图片` : `${nf(n[s])} image${n[s] === 1 ? "" : "s"}`}${cur && hideCli.has(s) ? ` · ${t("Hidden from clients")}` : ""}</span></button>${libEdit ? `<button class="sbl-ren" data-sbl="ren" data-sup="${esc(s)}" title="${esc(t("Rename catalogue"))}" aria-label="${esc(t("Rename catalogue"))}: ${esc(supName(s))}">✎</button><button class="sbl-ren sbl-cvb" data-sbl="cvp" data-sup="${esc(s)}" title="${esc(t("Change cover"))}" aria-label="${esc(t("Change cover"))}: ${esc(supName(s))}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11"/><circle cx="5.5" cy="6" r="1.3"/><path d="M1.5 12l4-4 3 3 2-2 4 4"/></svg></button>` : ""}</div>`; }).join("")}</div>`;
   }
   // The studio owner picks a catalogue's cover from its own images: the picture button under ✎ opens every image of that
   // catalogue, page by page; one tap makes it the cover and closes the picker.
@@ -628,9 +630,9 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
     if (ui.type === "_BK") return ""; // one catalogue open: its name is the heading, so no row of every other catalogue
     if (ui.type) {
       const mine = LIB.items.filter(o => inType(o) && vis(o)); const n = {}, nw = {}; mine.forEach(o => { n[o.sup] = (n[o.sup] || 0) + 1; if (markedNew(o)) nw[o.sup] = (nw[o.sup] || 0) + 1; });
-      // One toggle: every product, or a cover per catalogue. With a catalogue open, "‹ Catalogues" goes back to the covers.
-      const cv = ui.cv || !!ui.sup, L = ui.sup ? label(ui.sup) : null;
-      return `<span class="sbl-seg" role="group" aria-label="${esc(t("Show"))}"><button class="chip" data-sblcv="0" aria-pressed="${!cv}">${t("All products")} · ${nf(mine.length)}</button><button class="chip" data-sblcv="1" aria-pressed="${cv}"${ui.sup ? ` title="${esc(t("Back to all catalogues"))}"` : ""}>${ui.sup ? "‹ " : ""}${t("Catalogues")} · ${nf(Object.keys(n).length)}</button></span>` +
+      // Covers only. With a catalogue open, "‹ Catalogues" goes back to the covers of this type.
+      const L = ui.sup ? label(ui.sup) : null; if (!L) return "";
+      return `<button class="chip" data-sblcv="1" title="${esc(t("Back to all catalogues"))}">‹ ${t("Catalogues")} · ${nf(Object.keys(n).length)}</button>` +
         (L ? `<span class="sbl-cvnow">› <b>${esc(L[0])}</b>${L[1] ? " · " + esc(L[1]) : ""} · ${nf(n[ui.sup] || 0)}${nw[ui.sup] ? ` <b class="sbl-newc">● ${nf(nw[ui.sup])} ${t("new")}</b>` : ""}${cur && hideCli.has(ui.sup) ? ` <span class="sbl-hid">· ${t("Hidden from clients")}</span>` : ""}</span>` : "");
     }
     return "";
@@ -1472,7 +1474,7 @@ button[data-sbl=addcat].over{outline:1.5px dashed var(--ink);outline-offset:4px}
       el.setAttribute("aria-pressed", x); el.textContent = x ? "★" : "☆"; el.title = t(x ? "Remove from favourites" : "Add to favourites"); return;
     }
     if (el.dataset.sblbook !== undefined) { ui.type = "_BK"; ui.sup = el.dataset.sblbook; ui.n = 120; ui.hit = null; ui.q = ""; rerender(); try { $("#sblib").scrollIntoView({ block: "start" }); } catch (_) {} return; }
-    if (el.dataset.sblcv !== undefined) { ui.cv = el.dataset.sblcv === "1"; try { localStorage.setItem("sbl_cv", ui.cv ? "1" : "0"); } catch (_) {} ui.sup = null; ui.n = 120; ui.hit = null; rerender(); return; }
+    if (el.dataset.sblcv !== undefined) { ui.sup = null; ui.n = 120; ui.hit = null; rerender(); return; }
     if (el.dataset.sblsup !== undefined) { ui.sup = el.dataset.sblsup || null; ui.n = 120; ui.hit = null; rerender(); if (ui.sup && el.classList.contains("sbl-cover")) { try { $("#sblib").scrollIntoView({ block: "start" }); } catch (_) {} } return; }
     if (el.dataset.sbltype !== undefined) { ui.type = el.dataset.sbltype || null; ui.sup = null; ui.n = 120; ui.hit = null; if (ui.type && ui.type !== "TBS") markSeen(LIB.items.filter(o => inType(o) && isNew(o)).map(o => o.file)); if (el.dataset.sbltop !== undefined) { ui.q = ""; } rerender(); const r = $("#sblib"); if (r && (ui.type || el.dataset.sbltop !== undefined)) r.scrollIntoView({ block: "start" }); return; }
     if (el.dataset.sblshow) { ui.show = el.dataset.sblshow; ui.n = 120; document.querySelectorAll("[data-sblshow]").forEach(b => b.setAttribute("aria-pressed", b === el)); repaint(); return; }
